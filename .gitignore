@@ -1,0 +1,48 @@
+# OS/editor noise
+.DS_Store
+.idea/
+.vscode/
+
+# Local environment and secrets
+.env
+.env.*
+!.env.example
+
+# Node / Next.js
+node_modules/
+.next/
+out/
+dist/
+build/
+coverage/
+.turbo/
+.vercel/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# Python / FastAPI
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.ruff_cache/
+.mypy_cache/
+.venv/
+venv/
+htmlcov/
+
+# Generated project data
+uploads/
+media/
+artifacts/
+reports/generated/
+models/
+*.pt
+*.onnx
+
+# Local analysis scratch space
+tmp/
+.superpowers/
+
+AGENTS.md
