@@ -35,6 +35,7 @@ sample scenario data
 Phase 1 must deliver a working web application and backend with realistic scenario data:
 
 - Next.js dashboard UI.
+- Korean/English language selection in the dashboard UI.
 - FastAPI backend API.
 - PostgreSQL database.
 - Seeded scenario data for at least one intersection.
@@ -53,6 +54,7 @@ Phase 2 replaces mocked adapters without changing dashboard contracts:
 
 - Real YOLO/OpenCV analysis for uploaded sample image or short video.
 - Real SUMO/TraCI simulation for queue length, waiting time, throughput, and recommended-plan comparison.
+- Replacement of the central dashboard simulation viewport with a real simulation renderer while preserving surrounding dashboard API contracts.
 - File upload and analysis job status.
 - More complete event ingestion from real analysis outputs.
 
@@ -117,12 +119,14 @@ Required dashboard regions:
   - current scenario time
   - analysis status
   - connection/data freshness status
+  - compact Korean/English language selector
 - Central digital twin:
   - four-way intersection
   - current signal phase
   - queue lengths by direction
   - pedestrian waiting state
   - emergency vehicle approach marker when scenario includes it
+  - replaceable simulation viewport boundary for future real SUMO/TraCI or another renderer
 - Event timeline:
   - recent events ordered by time
   - severity
@@ -145,7 +149,14 @@ Required dashboard regions:
   - generate report action
   - latest report summary
 
-Frontend visual direction will be decided separately before implementation. Any generated design concept must preserve this information architecture unless the user approves a change.
+Frontend visual direction is the approved glassy translucent panel concept at `docs/design/assets/dashboard-concept-approved.png`. Any implementation must preserve this information architecture unless the user approves a change.
+
+Language behavior:
+
+- Phase 1 uses a lightweight frontend text dictionary for Korean and English.
+- The operator can switch between Korean and English without changing backend API contracts.
+- API payload values remain stable identifiers where they are part of the contract; the frontend maps them to localized labels.
+- Do not add a full i18n framework unless the UI grows beyond the first dashboard screen.
 
 ## Backend Design
 
@@ -400,6 +411,7 @@ Build in this order:
    - Recommendation / AI Agent panel.
    - Metrics/simulation comparison.
    - Chat/report panel.
+   - Korean/English language selector.
    - Clear safety boundary copy: recommendation and simulation only.
 
 8. Connect frontend to backend APIs.
@@ -477,11 +489,12 @@ The Phase 1 MVP is accepted when:
 - The report endpoint returns a 10-minute-style summary.
 - Frontend copy clearly states recommendation/simulation-only authority.
 - Tests cover recommendation rules and adapter contracts.
-- The architecture has clear replacement points for real YOLO/OpenCV and SUMO/TraCI integrations.
+- The architecture has clear replacement points for real YOLO/OpenCV, SUMO/TraCI integrations, and the central simulation viewport renderer.
 
 ## Implementation Decisions For The Next Plan
 
 - Frontend framework: keep `Next.js + React + TypeScript` as stated in the project plan and approved C direction.
+- Frontend language handling: support Korean and English with a small local dictionary first; avoid adding a new i18n dependency until a larger localization surface exists.
 - Backend persistence: use SQLAlchemy 2.x plus Alembic for PostgreSQL migrations.
 - Phase 1 chat/report behavior: use deterministic summaries from stored data. Add OpenAI later behind a service interface after API-key setup and current model/pricing verification are approved.
 - Frontend visual implementation: before coding the dashboard UI, create and approve a visual concept because the Build Web Apps skill requires concept approval for new dashboard work unless the user explicitly opts out.

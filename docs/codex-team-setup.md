@@ -23,6 +23,36 @@ This repository is intended for teammates who also work with Codex.
 4. Enable or install the Superpowers and Build Web Apps plugins in your own Codex environment.
 5. Use the repo-scoped `karpathy-guidelines` skill when coding, reviewing, debugging, or planning changes.
 
+## Local Development Setup
+
+Install Docker Desktop, Node.js/npm, and Python 3.12+.
+
+```bash
+npm install
+python3 -m venv apps/api/.venv
+apps/api/.venv/bin/python -m pip install -e "apps/api[dev]"
+docker compose -f infra/docker-compose.yml up -d postgres
+cd apps/api
+.venv/bin/alembic upgrade head
+```
+
+Useful verification commands:
+
+```bash
+apps/api/.venv/bin/python -m pytest apps/api/tests -v
+npm run build:web
+docker compose -f infra/docker-compose.yml ps
+```
+
+## Current Build State
+
+- Backend scaffold, database schema, scenario adapters, API routes, deterministic recommendations, chat, reports, and simulation comparison are implemented.
+- Docker Compose PostgreSQL is the shared local database path.
+- Dashboard UI implementation should follow the approved glassy translucent dashboard concept.
+- The dashboard must support Korean/English selection with a lightweight frontend dictionary.
+- The central digital twin must stay replaceable for a later real simulation renderer.
+- Do not add OpenAI, pgvector, real YOLO, real SUMO, or Unity in Phase 1 without a separate approval.
+
 ## Not Tracked Yet
 
 - `.codex/config.toml` is not tracked because we have not standardized a project-specific MCP server, hook, sandbox policy, or model default.

@@ -22,6 +22,8 @@ Key approved decisions:
 - Use SQLAlchemy 2.x plus Alembic.
 - Use deterministic Phase 1 recommendation and summary logic.
 - Keep mocked YOLO/SUMO behind replaceable adapters.
+- Add Korean/English language selection in the dashboard UI without adding a new i18n dependency in Phase 1.
+- Keep the central dashboard simulation viewport replaceable so Phase 2 can swap in a real simulation renderer without changing surrounding API contracts.
 - Do not add OpenAI, pgvector, real YOLO, real SUMO, or Unity in Phase 1 without a separate approval.
 - Before visual dashboard implementation, create and approve a dashboard concept because the Build Web Apps skill requires this unless the user opts out.
 
@@ -77,6 +79,7 @@ apps/web/components/RecommendationPanel.tsx
 apps/web/components/MetricsPanel.tsx
 apps/web/components/ChatReportPanel.tsx
 apps/web/lib/api.ts
+apps/web/lib/i18n.ts
 apps/web/lib/types.ts
 docs/design/dashboard-concept-notes.md
 docs/design/assets/dashboard-concept-approved.png
@@ -1800,13 +1803,17 @@ Before implementing the dashboard UI, generate a full dashboard concept image. T
 
 ```text
 top system bar
+Korean/English language selector
 central four-way digital twin
+replaceable simulation viewport treatment
 event timeline
 Recommendation / AI Agent panel
 metrics panel
 chat/report panel
 recommendation and simulation-only safety boundary
 ```
+
+The approved visual direction is a glassy translucent panel UI with an Apple-style premium feel, without Apple branding or copied proprietary assets. Keep it calm, operational, and readable; avoid neon cyberpunk styling.
 
 - [ ] **Step 2: Ask user to approve visual direction**
 
@@ -1826,7 +1833,9 @@ Approved concept path: `docs/design/assets/dashboard-concept-approved.png`
 Required information architecture:
 
 - Top system bar
+- Korean/English language selector
 - Central digital twin
+- Replaceable simulation viewport treatment
 - Event timeline
 - Recommendation / AI Agent panel
 - Metrics panel
@@ -1836,8 +1845,11 @@ Required information architecture:
 Implementation constraints:
 
 - Use code-native text and controls.
+- Use a lightweight frontend dictionary for Korean and English labels in Phase 1.
+- Keep backend API identifiers stable and localize labels in the frontend.
 - Do not copy the old mockup literally.
 - Keep the UI operations-first, not a landing page.
+- Keep the central simulation component replaceable for real SUMO/TraCI or another renderer later.
 - Preserve the approved Phase 1 API contracts.
 ```
 
@@ -2013,11 +2025,13 @@ git commit -m "feat: add dashboard API client"
 **Files:**
 - Create: `docs/superpowers/plans/2026-06-08-dashboard-ui-implementation.md`
 - Create through the Task 7 sub-plan: `apps/web/components/DashboardShell.tsx`
+- Create through the Task 7 sub-plan: `apps/web/components/LanguageToggle.tsx`
 - Create through the Task 7 sub-plan: `apps/web/components/DigitalTwin.tsx`
 - Create through the Task 7 sub-plan: `apps/web/components/EventTimeline.tsx`
 - Create through the Task 7 sub-plan: `apps/web/components/RecommendationPanel.tsx`
 - Create through the Task 7 sub-plan: `apps/web/components/MetricsPanel.tsx`
 - Create through the Task 7 sub-plan: `apps/web/components/ChatReportPanel.tsx`
+- Create through the Task 7 sub-plan: `apps/web/lib/i18n.ts`
 - Modify through the Task 7 sub-plan: `apps/web/app/page.tsx`
 - Modify through the Task 7 sub-plan: `apps/web/app/globals.css`
 
@@ -2027,11 +2041,13 @@ After Task 5 is complete, create `docs/superpowers/plans/2026-06-08-dashboard-ui
 
 ```text
 apps/web/components/DashboardShell.tsx
+apps/web/components/LanguageToggle.tsx
 apps/web/components/DigitalTwin.tsx
 apps/web/components/EventTimeline.tsx
 apps/web/components/RecommendationPanel.tsx
 apps/web/components/MetricsPanel.tsx
 apps/web/components/ChatReportPanel.tsx
+apps/web/lib/i18n.ts
 apps/web/app/page.tsx
 apps/web/app/globals.css
 ```
@@ -2055,6 +2071,16 @@ export type DashboardShellProps = {
 };
 ```
 
+The dashboard UI plan must include a lightweight language contract:
+
+```tsx
+export type Locale = "ko" | "en";
+```
+
+The implemented dashboard must show a `한국어 / EN` language selector, localize visible labels and status copy, and keep API payload identifiers stable.
+
+The central digital twin component should be treated as a replaceable `SimulationViewport` boundary even if the first component name remains `DigitalTwin.tsx`. It must receive normalized dashboard data through props and avoid hard-coding backend calls inside the visualization, so a real simulation renderer can replace it later.
+
 It must also include the exact safety copy required by the approved spec:
 
 ```text
@@ -2065,6 +2091,7 @@ The dashboard UI implementation plan must include tests or browser checks for th
 
 ```text
 initial dashboard data loads from the FastAPI routes
+language selector switches visible dashboard labels between Korean and English
 question input submits to /api/chat and renders the answer
 generate report action submits to /api/report and renders the latest summary
 refresh recommendation action submits to /api/recommend-signal
