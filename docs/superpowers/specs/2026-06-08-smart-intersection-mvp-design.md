@@ -14,7 +14,7 @@ No real traffic signal control is in scope for this MVP. The product must presen
 
 ## Product Goal
 
-Build a public traffic-control decision-support dashboard for a four-way smart-city intersection. The system helps an operator understand current traffic conditions, inspect event evidence, review AI-generated recommendations, compare simulated signal-plan outcomes, ask natural-language questions, and generate a short traffic situation report.
+Build a public traffic-control decision-support dashboard for a four-way smart-city intersection. The system helps an operator understand current traffic conditions, inspect event evidence, review rule-based signal recommendations with AI-ready explanations, compare simulated signal-plan outcomes, ask natural-language questions, and generate a short traffic situation report.
 
 The first build must be useful as a working demo while preserving a direct path to the original project plan:
 
@@ -129,7 +129,7 @@ Required dashboard regions:
   - direction
   - event type
   - short summary
-- AI recommendation panel:
+- Recommendation / AI Agent panel:
   - current situation
   - recommended action
   - evidence
@@ -334,7 +334,7 @@ The AI explanation can summarize and phrase the recommendation, but the safety-s
 
 ## AI Boundaries
 
-The AI layer may:
+Phase 1 may use deterministic local summaries for chat and reports. After API-key setup and current model/pricing verification are approved, the AI layer may:
 
 - summarize the current situation
 - answer questions using current status and recent events
@@ -397,7 +397,7 @@ Build in this order:
    - Operations-first layout.
    - Central digital twin.
    - Event timeline.
-   - AI recommendation panel.
+   - Recommendation / AI Agent panel.
    - Metrics/simulation comparison.
    - Chat/report panel.
    - Clear safety boundary copy: recommendation and simulation only.
