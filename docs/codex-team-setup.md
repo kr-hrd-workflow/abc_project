@@ -48,10 +48,11 @@ docker compose -f infra/docker-compose.yml ps
 
 - Backend scaffold, database schema, scenario adapters, API routes, deterministic recommendations, chat, reports, and simulation comparison are implemented.
 - Docker Compose PostgreSQL is the shared local database path.
-- Dashboard UI implementation should follow the approved glassy translucent dashboard concept.
-- The dashboard must support Korean/English selection with a lightweight frontend dictionary.
-- The central digital twin must stay replaceable for a later real simulation renderer.
+- Dashboard UI implementation follows the approved glassy translucent dashboard concept.
+- The dashboard supports Korean/English selection with a lightweight frontend dictionary.
+- The central digital twin stays replaceable for a later real simulation renderer.
 - Do not add OpenAI, pgvector, real YOLO, real SUMO, or Unity in Phase 1 without a separate approval.
+- Phase 2 replacement notes are in `docs/superpowers/plans/2026-06-08-phase-2-integration-notes.md`.
 
 ## Not Tracked Yet
 

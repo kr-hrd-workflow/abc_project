@@ -10,8 +10,9 @@ The approved stack is:
 
 The current build has the backend domain model, scenario adapters, persistence,
 deterministic recommendations, simulation comparison, chat summaries, and report
-generation in place. Dashboard UI implementation is intentionally gated on
-approval of the visual concept.
+generation in place. The dashboard UI now follows the approved glassy
+translucent panel concept with Korean/English language selection and a
+replaceable central simulation viewport.
 
 The approved dashboard direction includes Korean/English language selection and
 a central digital-twin simulation viewport that can later be replaced by a real
@@ -75,15 +76,16 @@ POST /api/report
 All recommendations are simulation-only. The app must not imply real traffic
 signal control.
 
-## Current Frontend Gate
+## Current Frontend Direction
 
-Before dashboard UI coding continues, use the approved glassy translucent panel
-concept recorded at:
+The approved glassy translucent panel concept is recorded at:
 
 ```text
 docs/design/assets/dashboard-concept-approved.png
 docs/design/dashboard-concept-notes.md
 ```
 
-Then continue with the dashboard UI implementation plan listed in
-`docs/superpowers/plans/2026-06-08-smart-intersection-mvp.md`.
+The central viewport is intentionally a replaceable simulation boundary. Phase 2
+should replace the scenario-backed adapters and simulation renderer without
+changing the surrounding dashboard API contracts; see
+`docs/superpowers/plans/2026-06-08-phase-2-integration-notes.md`.
