@@ -1,0 +1,1 @@
+"""Smart intersection API package."""

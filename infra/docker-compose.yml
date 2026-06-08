@@ -1,0 +1,20 @@
+services:
+  postgres:
+    image: postgres:16
+    container_name: smart-intersection-postgres
+    environment:
+      POSTGRES_USER: smart_intersection
+      POSTGRES_PASSWORD: smart_intersection
+      POSTGRES_DB: smart_intersection
+    ports:
+      - "5432:5432"
+    volumes:
+      - smart_intersection_pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U smart_intersection -d smart_intersection"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+volumes:
+  smart_intersection_pgdata:
