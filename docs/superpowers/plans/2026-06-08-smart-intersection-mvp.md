@@ -118,8 +118,7 @@ Create `package.json`:
   "private": true,
   "scripts": {
     "dev:web": "npm --workspace apps/web run dev",
-    "build:web": "npm --workspace apps/web run build",
-    "lint:web": "npm --workspace apps/web run lint"
+    "build:web": "npm --workspace apps/web run build"
   },
   "workspaces": [
     "apps/web"
@@ -258,8 +257,7 @@ Create `apps/web/package.json`:
   "private": true,
   "scripts": {
     "dev": "next dev",
-    "build": "next build",
-    "lint": "next lint"
+    "build": "next build"
   },
   "dependencies": {
     "next": "^15.0.0",
@@ -270,8 +268,6 @@ Create `apps/web/package.json`:
     "@types/node": "^22.0.0",
     "@types/react": "^19.0.0",
     "@types/react-dom": "^19.0.0",
-    "eslint": "^9.0.0",
-    "eslint-config-next": "^15.0.0",
     "typescript": "^5.6.0"
   }
 }
