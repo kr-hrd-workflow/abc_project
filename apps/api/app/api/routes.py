@@ -1,10 +1,15 @@
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 
 from app.adapters.simulation import ScenarioTrafficSimulationAdapter
-from app.adapters.vision import ScenarioVisionAnalysisAdapter
+from app.adapters.vision import (
+    FixtureYoloFrameAnalyzer,
+    OpenCVYoloVisionAnalysisAdapter,
+    ScenarioVisionAnalysisAdapter,
+)
 from app.db.session import get_session
 from app.domain.schemas import ChatRequest, ChatResponse
+from app.scenarios.fixtures import SAMPLE_INPUT_FIXTURES, fixture_to_payload
 from app.services.chat import answer_question
 from app.services.persistence import (
     create_chat_log,
@@ -13,7 +18,6 @@ from app.services.persistence import (
     create_simulation_run,
     ensure_scenario_snapshot,
     event_to_payload,
-    load_scenario_snapshot,
     recommendation_to_payload,
     report_to_payload,
     select_recommendation_trigger_event,
@@ -24,7 +28,39 @@ from app.services.reports import generate_scenario_report
 
 router = APIRouter()
 vision_adapter = ScenarioVisionAnalysisAdapter()
+fixture_vision_adapter = OpenCVYoloVisionAnalysisAdapter(
+    detector=FixtureYoloFrameAnalyzer()
+)
 simulation_adapter = ScenarioTrafficSimulationAdapter()
+
+
+@router.get("/api/fixtures")
+def list_fixtures() -> list[dict[str, str]]:
+    return [
+        fixture_to_payload(fixture_id, fixture)
+        for fixture_id, fixture in SAMPLE_INPUT_FIXTURES.items()
+    ]
+
+
+@router.post("/api/fixtures/{fixture_id}/ingest")
+def ingest_fixture(
+    fixture_id: str,
+    session: Session = Depends(get_session),
+) -> dict[str, object]:
+    fixture = SAMPLE_INPUT_FIXTURES.get(fixture_id)
+    if fixture is None:
+        raise HTTPException(status_code=404, detail="Fixture not found")
+
+    observation = fixture_vision_adapter.analyze(fixture["scenario_id"])
+    status, events = ensure_scenario_snapshot(session, observation)
+
+    return {
+        **fixture_to_payload(fixture_id, fixture),
+        "analysis_status": "ingested",
+        "observation": observation.model_dump(mode="json"),
+        "status_id": status.id,
+        "event_ids": [event.id for event in events],
+    }
 
 
 @router.get("/api/intersection/status")
@@ -53,7 +89,7 @@ def load_scenario(
     session: Session = Depends(get_session),
 ) -> dict[str, object]:
     observation = vision_adapter.analyze(scenario_id)
-    status, events = load_scenario_snapshot(session, observation)
+    status, events = ensure_scenario_snapshot(session, observation)
     return {
         "intersection_id": observation.intersection_id,
         "scenario_id": scenario_id,

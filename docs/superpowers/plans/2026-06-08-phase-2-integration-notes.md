@@ -87,3 +87,33 @@ present recommendations as executed real-world actions.
 5. Add tests that compare SUMO output against `SimulationComparison`.
 6. Replace the center viewport renderer while preserving dashboard props and API
    payload shapes.
+
+## Implemented Phase 2 Slice: Fixture Ingestion Path
+
+The backend now exposes a fixture-only ingestion path for Phase 2 adapter work:
+
+- `GET /api/fixtures` lists the available image/video sample inputs.
+- `POST /api/fixtures/{fixture_id}/ingest` ingests one sample fixture through
+  the existing scenario-backed `VisionObservation` contract and persists the
+  resulting status/events with `source = "fixture_ingestion_mock"`.
+
+This does not add real YOLO/OpenCV, file upload handling, SUMO/TraCI, OpenAI,
+pgvector, RAG, Unity, or frontend framework changes. The next implementation
+slice should replace the fixture-backed vision path with an
+`OpenCVYoloVisionAnalysisAdapter` while preserving the `VisionObservation`
+fields listed above.
+
+## Implemented Phase 2 Slice: OpenCV/YOLO Adapter Seam
+
+The backend now has an `OpenCVYoloVisionAnalysisAdapter` that implements the
+existing `VisionAnalysisAdapter` shape:
+
+- accepts YOLO-shaped frame analysis from a detector object
+- normalizes object counts, queue metrics, emergency vehicle metadata,
+  pedestrian state, blocked-intersection state, and congestion level
+- returns the existing `VisionObservation` contract with `source = "opencv_yolo"`
+
+The fixture-ingestion endpoint now flows through this adapter seam by using a
+fixture-backed detector. This keeps the dashboard/API contract stable while
+preparing the next slice, where the detector can be replaced with real
+OpenCV/YOLO inference after separate approval for that dependency/runtime work.

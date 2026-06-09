@@ -187,6 +187,33 @@ def load_scenario_snapshot(
     return status, events
 
 
+def _collapse_duplicate_events(
+    events: list[models.TrafficEvent],
+) -> list[models.TrafficEvent]:
+    unique_events: list[models.TrafficEvent] = []
+    seen: set[tuple[object, ...]] = set()
+
+    for event in events:
+        key = (
+            event.intersection_id,
+            event.occurred_at,
+            event.direction,
+            event.event_type,
+            event.severity,
+            event.object_count,
+            event.ai_summary,
+            event.recommendation,
+            event.status,
+            event.source,
+        )
+        if key in seen:
+            continue
+        seen.add(key)
+        unique_events.append(event)
+
+    return unique_events
+
+
 def ensure_scenario_snapshot(
     session: Session,
     observation: VisionObservation,
@@ -209,7 +236,7 @@ def ensure_scenario_snapshot(
     )
     if status is None or not events:
         return load_scenario_snapshot(session, observation)
-    return status, events
+    return status, _collapse_duplicate_events(events)
 
 
 def status_to_payload(status: models.IntersectionStatus) -> dict[str, object]:

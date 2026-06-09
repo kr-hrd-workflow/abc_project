@@ -12,8 +12,12 @@ from app.db.session import get_session
 from app.domain.enums import RecommendationAction
 from app.domain.schemas import EmergencyVehicle
 from app.main import app
-from app.scenarios.data import BLOCKED_SCENARIO
-from app.services.persistence import build_events, select_recommendation_trigger_event
+from app.scenarios.data import BLOCKED_SCENARIO, EMERGENCY_SCENARIO
+from app.services.persistence import (
+    build_events,
+    load_scenario_snapshot,
+    select_recommendation_trigger_event,
+)
 
 engine = create_engine(
     "sqlite+pysqlite:///:memory:",
@@ -57,6 +61,91 @@ def test_load_scenario_persists_status_and_events(client: TestClient) -> None:
     assert events_response.status_code == 200
     event_payload = events_response.json()
     assert loaded["event_ids"][0] in [event["id"] for event in event_payload]
+
+
+def test_repeated_scenario_load_keeps_seeded_events_idempotent(client: TestClient) -> None:
+    first_response = client.post("/api/scenarios/emergency/load")
+    second_response = client.post("/api/scenarios/emergency/load")
+
+    assert first_response.status_code == 200
+    assert second_response.status_code == 200
+    assert second_response.json()["event_ids"] == first_response.json()["event_ids"]
+
+    events_response = client.get("/api/events")
+
+    assert events_response.status_code == 200
+    events = events_response.json()
+    assert len(events) == 2
+    assert {
+        (event["event_type"], event["direction"])
+        for event in events
+    } == {
+        ("emergency_vehicle_approach", "east"),
+        ("queue_threshold_exceeded", "north"),
+    }
+
+
+def test_events_endpoint_collapses_existing_duplicate_seeded_events(
+    client: TestClient,
+) -> None:
+    with TestingSessionLocal() as session:
+        load_scenario_snapshot(session, EMERGENCY_SCENARIO)
+        load_scenario_snapshot(session, EMERGENCY_SCENARIO)
+
+    events_response = client.get("/api/events")
+
+    assert events_response.status_code == 200
+    events = events_response.json()
+    assert len(events) == 2
+    assert {
+        (event["event_type"], event["direction"])
+        for event in events
+    } == {
+        ("emergency_vehicle_approach", "east"),
+        ("queue_threshold_exceeded", "north"),
+    }
+
+
+def test_list_fixtures_exposes_image_and_video_inputs(client: TestClient) -> None:
+    response = client.get("/api/fixtures")
+
+    assert response.status_code == 200
+    fixtures = response.json()
+    assert {
+        (fixture["fixture_id"], fixture["media_type"], fixture["scenario_id"])
+        for fixture in fixtures
+    } == {
+        ("emergency-east-frame", "image", "emergency"),
+        ("blocked-intersection-clip", "video", "blocked"),
+    }
+
+
+def test_ingest_fixture_returns_observation_and_persists_snapshot(
+    client: TestClient,
+) -> None:
+    response = client.post("/api/fixtures/emergency-east-frame/ingest")
+
+    assert response.status_code == 200
+    payload = response.json()
+    assert payload["fixture_id"] == "emergency-east-frame"
+    assert payload["media_type"] == "image"
+    assert payload["scenario_id"] == "emergency"
+    assert payload["analysis_status"] == "ingested"
+    assert payload["observation"]["source"] == "opencv_yolo"
+    assert payload["observation"]["objects"]["car"] == 42
+    assert payload["event_ids"]
+
+    with TestingSessionLocal() as session:
+        status = session.get(models.IntersectionStatus, payload["status_id"])
+        assert status is not None
+        assert status.source == "opencv_yolo"
+
+
+def test_ingest_fixture_rejects_unknown_fixture(client: TestClient) -> None:
+    response = client.post("/api/fixtures/missing-fixture/ingest")
+
+    assert response.status_code == 404
+    assert response.json()["detail"] == "Fixture not found"
 
 
 def test_recommend_signal_returns_emergency_priority_with_safety_boundary(
