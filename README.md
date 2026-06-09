@@ -102,6 +102,12 @@ docker compose -f infra/docker-compose.yml ps
 npm run runtime:readiness
 ```
 
+런타임 게이트가 끝났다고 판단할 때 실패 코드까지 확인:
+
+```bash
+npm run runtime:readiness:strict
+```
+
 ## API 스모크 경로
 
 PostgreSQL 실행 및 Alembic 마이그레이션 후 기본 API 흐름은 다음과 같습니다.

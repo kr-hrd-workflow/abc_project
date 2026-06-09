@@ -23,6 +23,13 @@ Run this anytime to see the current local state:
 npm run runtime:readiness
 ```
 
+After an approved gate is expected to be complete, use the strict command to
+make missing requirements fail the shell step:
+
+```bash
+npm run runtime:readiness:strict
+```
+
 ## Gate 1: YOLO/OpenCV Inference
 
 Approval required before installing optional dependencies or downloading model
@@ -166,6 +173,12 @@ Run the full validation set after any gate changes:
 
 ```bash
 npm run verify
+```
+
+After all approved runtime gates are expected to be ready, also run:
+
+```bash
+npm run runtime:readiness:strict
 ```
 
 The goal is not complete until every unchecked runtime gate above has direct

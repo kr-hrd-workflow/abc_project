@@ -87,6 +87,8 @@ historical implementation recipe; this tracker is the current progress summary.
   run the DB-aware readiness check without copy-pasting Python snippets.
 - [x] Utility slice: add root `npm` scripts for API tests, web tests, runtime
   readiness, and full verification.
+- [x] Utility slice: add strict runtime readiness exit code support so future
+  gate verification can fail when any required runtime check is still missing.
 - [x] Documentation handoff slice: rewrite `README.md` in Korean so teammates
   can see current status, setup commands, validation commands, remaining gates,
   and the next files to work from.

@@ -6,6 +6,7 @@
     "test:api": "apps/api/.venv/bin/python -m pytest apps/api/tests -v",
     "test:web": "npm --workspace apps/web run test",
     "runtime:readiness": "cd apps/api && .venv/bin/python -m app.cli.runtime_readiness",
+    "runtime:readiness:strict": "cd apps/api && .venv/bin/python -m app.cli.runtime_readiness --fail-on-missing",
     "verify": "npm run test:api && npm run test:web && npm run build:web && git diff --check"
   },
   "workspaces": [

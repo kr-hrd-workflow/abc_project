@@ -1,8 +1,8 @@
-from app.cli.runtime_readiness import format_readiness_report
+from app.cli import runtime_readiness as cli
 
 
 def test_format_readiness_report_includes_missing_details_without_secrets() -> None:
-    report = format_readiness_report(
+    report = cli.format_readiness_report(
         {
             "openai": {
                 "ready": False,
@@ -31,3 +31,58 @@ def test_format_readiness_report_includes_missing_details_without_secrets() -> N
     assert "vision ready=True mode=fixture" in report
     assert "missing: -" in report
     assert "sk-test-secret" not in report
+
+
+def test_readiness_exit_code_can_fail_when_any_gate_is_missing() -> None:
+    readiness = {
+        "vision": {
+            "ready": False,
+            "mode": "opencv_yolo",
+            "missing": ["python module cv2"],
+            "checks": [],
+        },
+        "simulation": {
+            "ready": True,
+            "mode": "sumo_traci",
+            "missing": [],
+            "checks": [],
+        },
+    }
+
+    assert cli.readiness_exit_code(readiness, fail_on_missing=False) == 0
+    assert cli.readiness_exit_code(readiness, fail_on_missing=True) == 1
+
+
+def test_readiness_exit_code_passes_strict_mode_when_all_gates_are_ready() -> None:
+    readiness = {
+        "vision": {
+            "ready": True,
+            "mode": "opencv_yolo",
+            "missing": [],
+            "checks": [],
+        }
+    }
+
+    assert cli.readiness_exit_code(readiness, fail_on_missing=True) == 0
+
+
+def test_main_fail_on_missing_prints_report_and_returns_failure(
+    monkeypatch, capsys
+) -> None:
+    readiness = {
+        "vision": {
+            "ready": False,
+            "mode": "opencv_yolo",
+            "missing": ["python module cv2"],
+            "checks": [],
+        }
+    }
+
+    monkeypatch.setattr(
+        cli,
+        "get_runtime_readiness",
+        lambda *_args, **_kwargs: readiness,
+    )
+
+    assert cli.main(["--fail-on-missing"]) == 1
+    assert "vision ready=False mode=opencv_yolo" in capsys.readouterr().out
