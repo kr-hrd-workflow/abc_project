@@ -420,6 +420,8 @@ source/tests.
   - [x] Add root `npm` scripts for runtime readiness and full verification.
   - [x] Add strict readiness exit code support for future gate-completion
     verification.
+  - [x] Add section-scoped strict readiness checks for one-gate runtime
+    verification.
   - [ ] Install and verify real OpenCV/Ultralytics/model weights in the target
     runtime before marking real inference complete.
 - [x] Implement `SumoTraciTrafficSimulationAdapter` behind the existing

@@ -30,6 +30,16 @@ make missing requirements fail the shell step:
 npm run runtime:readiness:strict
 ```
 
+For one approved gate, scope strict mode to that section so unrelated
+approval-gated work does not block the check:
+
+```bash
+npm run runtime:readiness:strict -- --section vision
+npm run runtime:readiness:strict -- --section simulation
+npm run runtime:readiness:strict -- --section openai
+npm run runtime:readiness:strict -- --section pgvector
+```
+
 ## Gate 1: YOLO/OpenCV Inference
 
 Approval required before installing optional dependencies or downloading model
@@ -52,6 +62,12 @@ YOLO_CONFIDENCE_THRESHOLD=0.25
 
 - [ ] Verify readiness no longer reports missing `cv2`, `ultralytics`, or the
   model file.
+- [ ] Run strict section verification:
+
+```bash
+npm run runtime:readiness:strict -- --section vision
+```
+
 - [ ] Run the adapter tests:
 
 ```bash
@@ -96,6 +112,12 @@ SUMO_STEP_COUNT=300
 
 - [ ] Verify readiness no longer reports missing `traci`, `sumolib`, `sumo`,
   `netconvert`, or the SUMO config.
+- [ ] Run strict section verification:
+
+```bash
+npm run runtime:readiness:strict -- --section simulation
+```
+
 - [ ] Run the simulation adapter tests:
 
 ```bash
@@ -130,6 +152,12 @@ OPENAI_API_KEY=...
 ```
 
 - [ ] Verify readiness no longer reports missing `openai` or `OPENAI_API_KEY`.
+- [ ] Run strict section verification:
+
+```bash
+npm run runtime:readiness:strict -- --section openai
+```
+
 - [ ] Add a minimal OpenAI client boundary that can be tested without returning
   or logging secrets.
 - [ ] Add tests that mock the client and prove chat/report code does not invent
@@ -160,6 +188,12 @@ cd apps/api
   database.
 - [ ] Verify `/api/runtime/readiness` no longer reports missing `pgvector` or
   `PostgreSQL vector extension`.
+- [ ] Run strict section verification:
+
+```bash
+npm run runtime:readiness:strict -- --section pgvector
+```
+
 - [ ] Add an Alembic migration for vector columns only after the extension is
   verified.
 - [ ] Replace local keyword scoring with pgvector-backed embedding search.
@@ -180,6 +214,9 @@ After all approved runtime gates are expected to be ready, also run:
 ```bash
 npm run runtime:readiness:strict
 ```
+
+For a single approved gate, use the matching `--section` command above and keep
+the other approval-gated checkboxes unchecked until their own evidence exists.
 
 The goal is not complete until every unchecked runtime gate above has direct
 evidence from the target runtime, database, or approved external API.

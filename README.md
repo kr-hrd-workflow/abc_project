@@ -108,6 +108,15 @@ npm run runtime:readiness
 npm run runtime:readiness:strict
 ```
 
+특정 게이트만 확인할 때:
+
+```bash
+npm run runtime:readiness:strict -- --section vision
+npm run runtime:readiness:strict -- --section simulation
+npm run runtime:readiness:strict -- --section openai
+npm run runtime:readiness:strict -- --section pgvector
+```
+
 ## API 스모크 경로
 
 PostgreSQL 실행 및 Alembic 마이그레이션 후 기본 API 흐름은 다음과 같습니다.

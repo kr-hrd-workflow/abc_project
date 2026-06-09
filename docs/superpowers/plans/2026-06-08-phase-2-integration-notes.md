@@ -136,6 +136,8 @@ Current as of 2026-06-09.
     full verification.
   - [x] Add `--fail-on-missing` strict readiness mode and a root strict script
     for future gate completion checks.
+  - [x] Add section-scoped strict readiness checks for `vision`, `simulation`,
+    `openai`, and `pgvector`.
   - [x] Keep OpenAI client calls and pgvector execution out of this slice until
     API-key and target database setup are approved and verified.
 
@@ -368,3 +370,6 @@ and `npm run verify` runs the full local validation sequence.
 Use `npm run runtime:readiness:strict` only when a runtime gate is expected to be
 complete; it exits nonzero if any readiness section still has missing
 requirements.
+
+For one approved runtime gate, scope the strict check with `--section vision`,
+`--section simulation`, `--section openai`, or `--section pgvector`.

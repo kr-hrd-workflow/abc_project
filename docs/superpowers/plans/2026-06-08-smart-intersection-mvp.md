@@ -89,6 +89,8 @@ historical implementation recipe; this tracker is the current progress summary.
   readiness, and full verification.
 - [x] Utility slice: add strict runtime readiness exit code support so future
   gate verification can fail when any required runtime check is still missing.
+- [x] Utility slice: add section-scoped strict readiness checks so one approved
+  runtime gate can be verified without unrelated gates blocking the command.
 - [x] Documentation handoff slice: rewrite `README.md` in Korean so teammates
   can see current status, setup commands, validation commands, remaining gates,
   and the next files to work from.

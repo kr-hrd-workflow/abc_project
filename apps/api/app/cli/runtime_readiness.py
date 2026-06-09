@@ -22,11 +22,24 @@ def format_readiness_report(readiness: dict[str, RuntimeSection]) -> str:
 
 
 def readiness_exit_code(
-    readiness: dict[str, RuntimeSection], *, fail_on_missing: bool
+    readiness: dict[str, RuntimeSection],
+    *,
+    fail_on_missing: bool,
+    selected_sections: Sequence[str] | None = None,
 ) -> int:
     if not fail_on_missing:
         return 0
-    return 1 if any(not payload["ready"] for payload in readiness.values()) else 0
+    selected_readiness = filter_readiness(readiness, selected_sections)
+    return 1 if any(not payload["ready"] for payload in selected_readiness.values()) else 0
+
+
+def filter_readiness(
+    readiness: dict[str, RuntimeSection],
+    selected_sections: Sequence[str] | None,
+) -> dict[str, RuntimeSection]:
+    if not selected_sections:
+        return readiness
+    return {section: readiness[section] for section in selected_sections}
 
 
 def build_readiness() -> dict[str, RuntimeSection]:
@@ -49,10 +62,21 @@ def main(argv: Sequence[str] | None = None) -> int:
         action="store_true",
         help="return exit code 1 when any readiness gate has missing requirements",
     )
+    parser.add_argument(
+        "--section",
+        action="append",
+        choices=["vision", "simulation", "openai", "pgvector"],
+        help="limit the report and strict exit check to one readiness section",
+    )
     args = parser.parse_args(argv)
     readiness = build_readiness()
-    print(format_readiness_report(readiness))
-    return readiness_exit_code(readiness, fail_on_missing=args.fail_on_missing)
+    selected_readiness = filter_readiness(readiness, args.section)
+    print(format_readiness_report(selected_readiness))
+    return readiness_exit_code(
+        readiness,
+        fail_on_missing=args.fail_on_missing,
+        selected_sections=args.section,
+    )
 
 
 if __name__ == "__main__":
