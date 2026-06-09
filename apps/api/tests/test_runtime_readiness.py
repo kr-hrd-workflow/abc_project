@@ -1,4 +1,7 @@
+from pathlib import Path
+
 from app.core.config import Settings
+from app.services import runtime_readiness
 from app.services.runtime_readiness import (
     get_runtime_readiness,
     is_vector_extension_enabled,
@@ -91,6 +94,34 @@ def test_runtime_readiness_marks_runtime_gates_ready_when_requirements_exist() -
     assert readiness["openai"]["ready"] is True
     assert readiness["pgvector"]["ready"] is True
     assert "sk-test-secret" not in str(readiness)
+
+
+def test_binary_available_finds_python_environment_scripts(
+    tmp_path: Path,
+    monkeypatch,
+) -> None:
+    python_bin = tmp_path / "bin"
+    python_bin.mkdir()
+    python_executable = python_bin / "python"
+    sumo_binary = python_bin / "sumo"
+    python_executable.write_text("")
+    sumo_binary.write_text("")
+    sumo_binary.chmod(0o755)
+    monkeypatch.setattr(
+        runtime_readiness.sys,
+        "executable",
+        str(python_executable),
+    )
+
+    assert runtime_readiness._binary_available("sumo") is True
+
+
+def test_committed_sumo_network_fixture_files_exist() -> None:
+    base_path = Path(__file__).resolve().parents[1] / "networks"
+
+    assert (base_path / "intersection.sumocfg").is_file()
+    assert (base_path / "intersection.net.xml").is_file()
+    assert (base_path / "intersection.rou.xml").is_file()
 
 
 def test_vector_extension_verifier_queries_pg_extension() -> None:

@@ -12,7 +12,10 @@ or chat output. Keep `.env` local.
 Current as of 2026-06-09:
 
 - [ ] Real YOLO/OpenCV inference is not verified.
-- [ ] Real SUMO/TraCI execution is not verified.
+- [x] Real SUMO/TraCI execution is verified locally with packaged SUMO 1.27.0,
+  TraCI/sumolib 1.27.0, `apps/api/networks/intersection.sumocfg`, strict
+  simulation readiness, and `/api/simulate-signal` returning
+  `source = "sumo_traci"`.
 - [ ] OpenAI client calls are not verified.
 - [ ] PostgreSQL `vector` extension, pgvector columns, and embedding search are
   not verified.
@@ -93,24 +96,26 @@ apps/api/.venv/bin/python -m pytest apps/api/tests/test_adapters.py -v
 
 ## Gate 2: SUMO/TraCI Execution
 
-Approval required before installing system binaries or adding network files.
+Approval required before installing binaries or adding network files.
 
-- [ ] Approve local SUMO/TraCI runtime setup.
-- [ ] Install the simulation extra:
+- [x] Approve local SUMO/TraCI runtime setup.
+- [x] Install the simulation extra:
 
 ```bash
 apps/api/.venv/bin/python -m pip install -e "apps/api[simulation]"
 ```
 
-- [ ] Install SUMO system binaries for this machine.
-- [ ] Verify binaries are available:
+- [x] Install SUMO binaries for this machine. This checkout uses the official
+  `eclipse-sumo` Python package included in `apps/api[simulation]`, which
+  provides packaged `sumo` and `netconvert` binaries.
+- [x] Verify binaries are available:
 
 ```bash
-which sumo
-which netconvert
+apps/api/.venv/bin/sumo --version
+apps/api/.venv/bin/netconvert --version
 ```
 
-- [ ] Add or point to a real SUMO config file, then update `.env`:
+- [x] Add or point to a real SUMO config file, then update `.env`:
 
 ```dotenv
 SUMO_SIMULATION_MODE=sumo_traci
@@ -119,24 +124,24 @@ SUMO_CONFIG_PATH=networks/intersection.sumocfg
 SUMO_STEP_COUNT=300
 ```
 
-- [ ] Verify readiness no longer reports missing `traci`, `sumolib`, `sumo`,
+- [x] Verify readiness no longer reports missing `traci`, `sumolib`, `sumo`,
   `netconvert`, or the SUMO config.
-- [ ] Run strict section verification:
+- [x] Run strict section verification:
 
 ```bash
 npm run runtime:readiness:strict -- --section simulation
 ```
 
-- [ ] Run the simulation adapter tests:
+- [x] Run the simulation adapter tests:
 
 ```bash
 apps/api/.venv/bin/python -m pytest apps/api/tests/test_adapters.py -v
 ```
 
-- [ ] Run `/api/simulate-signal` with `SUMO_SIMULATION_MODE=sumo_traci`.
-- [ ] Confirm the response keeps the same `SimulationComparison` shape and
+- [x] Run `/api/simulate-signal` with `SUMO_SIMULATION_MODE=sumo_traci`.
+- [x] Confirm the response keeps the same `SimulationComparison` shape and
   returns `source = "sumo_traci"`.
-- [ ] Update the docs checkboxes after a live SUMO run is proven.
+- [x] Update the docs checkboxes after a live SUMO run is proven.
 
 ## Gate 3: OpenAI Client Calls
 

@@ -23,6 +23,9 @@
 - `/api/runtime/readiness`에서 PostgreSQL `vector` 확장 활성화 여부 조회
 - `/api/runtime/readiness`에서 누락된 모듈, 바이너리, 모델 파일, API 키,
   DB 확장에 대한 다음 설정 힌트 제공
+- 실제 SUMO/TraCI 1.27.0 로컬 실행 검증
+- `apps/api/networks/intersection.sumocfg` 기반 라이브 시뮬레이션 스모크
+  검증
 - `AGENTS.md`에 팀원/에이전트 작업 규칙 정리
 
 ### 아직 끝나지 않은 범위
@@ -30,15 +33,14 @@
 아래 항목은 문서의 체크박스에도 아직 미완료로 남아 있습니다.
 
 - 실제 OpenCV/Ultralytics 설치, YOLO 모델 가중치 준비, 라이브 샘플 추론 검증
-- 실제 SUMO/TraCI 바이너리와 네트워크 설정 설치 및 라이브 시뮬레이션 검증
 - PostgreSQL `vector` 확장과 pgvector 컬럼/검색
 - OpenAI API 키 설정 후 실제 OpenAI 클라이언트 호출과 임베딩 검색
 
-현재 로컬 런타임 준비 상태 기준으로 `cv2`, `ultralytics`, `traci`,
-`sumolib`, `sumo`, `netconvert`, `openai`, `pgvector`, `OPENAI_API_KEY`,
-PostgreSQL `vector` 확장은 아직 준비되지 않았습니다. 단,
-`/api/runtime/readiness`는 데이터베이스가 연결될 경우 `pg_extension`에서
-`vector` 확장 활성화 여부를 직접 조회합니다.
+현재 로컬 런타임 준비 상태 기준으로 SUMO/TraCI 시뮬레이션 섹션은
+준비됐습니다. 아직 남은 것은 `cv2`, `ultralytics`, YOLO 모델 파일,
+`openai`, `pgvector`, `OPENAI_API_KEY`, PostgreSQL `vector` 확장입니다.
+단, `/api/runtime/readiness`는 데이터베이스가 연결될 경우
+`pg_extension`에서 `vector` 확장 활성화 여부를 직접 조회합니다.
 
 ## 처음 시작할 때 읽을 문서
 
@@ -162,19 +164,23 @@ GET  /api/analysis-jobs/{job_id}
   - `VISION_ANALYSIS_MODE=opencv_yolo`로 업로드 샘플 추론 검증
   - 검증 후 관련 체크박스 갱신
 
-### 실제 SUMO/TraCI 실행
+### SUMO/TraCI 실행 확장 또는 유지보수
 
 - 시작 파일:
   - `docs/runtime-setup.md`
   - `apps/api/app/adapters/simulation.py`
   - `apps/api/app/services/runtime_readiness.py`
   - `apps/api/tests/test_adapters.py`
+  - `apps/api/networks/intersection.sumocfg`
   - `docs/superpowers/plans/2026-06-08-phase-2-integration-notes.md`
-- 해야 할 일:
-  - `apps/api[simulation]` 의존성 설치 검증
-  - `sumo`, `netconvert` 바이너리 설치 검증
-  - `SUMO_CONFIG_PATH`가 가리키는 실제 네트워크 설정 준비
-  - `SUMO_SIMULATION_MODE=sumo_traci`로 라이브 시뮬레이션 검증
+- 현재 상태:
+  - `apps/api[simulation]`으로 TraCI/sumolib과 packaged SUMO 바이너리를
+    설치합니다.
+  - `SUMO_SIMULATION_MODE=sumo_traci`와
+    `SUMO_CONFIG_PATH=networks/intersection.sumocfg`로 라이브 실행이
+    검증됐습니다.
+  - 다음 작업은 더 현실적인 네트워크/교통량으로 확장하거나, UI
+    시뮬레이션 뷰포트와 더 깊게 연결할 때 시작하면 됩니다.
 
 ### OpenAI/pgvector 기반 RAG
 

@@ -66,7 +66,7 @@ historical implementation recipe; this tracker is the current progress summary.
 - [x] Next build slice: add optional SUMO/TraCI runtime configuration and a
   `TraciSumoSimulationRunner` that can collect real TraCI metrics behind the
   existing simulation adapter boundary.
-- [ ] Remaining SUMO runtime gate: install/verify SUMO binaries, TraCI/sumolib,
+- [x] Remaining SUMO runtime gate: install/verify SUMO binaries, TraCI/sumolib,
   network config, and a live simulation run before claiming fixture replacement
   is complete.
 - [x] Phase 3 local evidence slice: add policy/operation-guide ingestion,

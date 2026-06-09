@@ -1,5 +1,9 @@
 from dataclasses import dataclass
 import hashlib
+import os
+from pathlib import Path
+from shutil import which
+import sys
 from typing import Protocol
 
 from app.domain.schemas import SimulationComparison, SimulationMetrics
@@ -94,7 +98,7 @@ class TraciSumoSimulationRunner:
 
     def _command(self, scenario_id: str, plan_name: str) -> list[str]:
         return [
-            self.sumo_binary,
+            _resolve_executable(self.sumo_binary),
             "-c",
             self.sumo_config_path,
             "--quit-on-end",
@@ -222,6 +226,16 @@ def _load_traci_module() -> object:
             "and SUMO binary before enabling SUMO_SIMULATION_MODE=sumo_traci."
         ) from exc
     return traci
+
+
+def _resolve_executable(binary_name: str) -> str:
+    resolved = which(binary_name)
+    if resolved is not None:
+        return resolved
+    python_bin_candidate = Path(sys.executable).parent / binary_name
+    if python_bin_candidate.exists() and os.access(python_bin_candidate, os.X_OK):
+        return str(python_bin_candidate)
+    return binary_name
 
 
 def _is_emergency_vehicle(vehicle_id: str) -> bool:

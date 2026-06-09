@@ -431,9 +431,10 @@ source/tests.
   slice.
 - [x] Add contract tests that compare SUMO output against the existing
   `SimulationComparison` schema.
-- [ ] Replace fixture-backed SUMO metrics with real SUMO/TraCI execution after
+- [x] Replace fixture-backed SUMO metrics with real SUMO/TraCI execution after
   dependency/runtime setup.
-  - [x] Add optional API `simulation` dependencies for TraCI and sumolib.
+  - [x] Add optional API `simulation` dependencies for packaged SUMO, TraCI,
+    and sumolib.
   - [x] Add `SUMO_SIMULATION_MODE`, `SUMO_BINARY`, `SUMO_CONFIG_PATH`, and
     `SUMO_STEP_COUNT` runtime configuration.
   - [x] Add `TraciSumoSimulationRunner` and tests that collect wait, delay,
@@ -443,7 +444,7 @@ source/tests.
     netconvert, and configured SUMO network file availability.
   - [x] Add `docs/runtime-setup.md` with approval and validation checkboxes for
     live SUMO/TraCI setup.
-  - [ ] Install and verify the SUMO binary/network config in the target runtime
+  - [x] Install and verify the SUMO binary/network config in the target runtime
     before marking real SUMO execution complete.
 - [x] Replace the center simulation viewport renderer while preserving
   surrounding dashboard props and API payload shapes.

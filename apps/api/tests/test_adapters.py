@@ -1,6 +1,7 @@
 from datetime import datetime
 from zoneinfo import ZoneInfo
 
+from app.adapters import simulation as simulation_module
 from app.adapters.simulation import (
     ScenarioTrafficSimulationAdapter,
     SumoSimulationMetrics,
@@ -212,7 +213,10 @@ def test_sumo_traci_adapter_returns_simulation_comparison_contract() -> None:
     assert comparison.improvement["emergency_clearance_delta_seconds"] == -19
 
 
-def test_traci_sumo_runner_collects_baseline_and_recommended_metrics() -> None:
+def test_traci_sumo_runner_collects_baseline_and_recommended_metrics(
+    tmp_path,
+    monkeypatch,
+) -> None:
     class FakeSimulation:
         def __init__(self, traci: "FakeTraci") -> None:
             self.traci = traci
@@ -275,6 +279,20 @@ def test_traci_sumo_runner_collects_baseline_and_recommended_metrics() -> None:
         def close(self) -> None:
             self.closed += 1
 
+    python_bin = tmp_path / "bin"
+    python_bin.mkdir()
+    python_executable = python_bin / "python"
+    sumo_executable = python_bin / "sumo"
+    python_executable.write_text("")
+    sumo_executable.write_text("")
+    sumo_executable.chmod(0o755)
+    monkeypatch.setenv("PATH", "")
+    monkeypatch.setattr(
+        simulation_module.sys,
+        "executable",
+        str(python_executable),
+    )
+
     fake_traci = FakeTraci()
     runner = TraciSumoSimulationRunner(
         sumo_binary="sumo",
@@ -285,24 +303,16 @@ def test_traci_sumo_runner_collects_baseline_and_recommended_metrics() -> None:
 
     result = runner.compare_plans("emergency")
 
-    assert fake_traci.commands[0][:-1] == [
-        "sumo",
-        "-c",
-        "networks/intersection.sumocfg",
-        "--quit-on-end",
-        "--no-step-log",
-        "true",
-        "--seed",
-    ]
-    assert fake_traci.commands[1][:-1] == [
-        "sumo",
-        "-c",
-        "networks/intersection.sumocfg",
-        "--quit-on-end",
-        "--no-step-log",
-        "true",
-        "--seed",
-    ]
+    for command in fake_traci.commands:
+        assert command[0] == str(sumo_executable)
+        assert command[1:-1] == [
+            "-c",
+            "networks/intersection.sumocfg",
+            "--quit-on-end",
+            "--no-step-log",
+            "true",
+            "--seed",
+        ]
     assert fake_traci.commands[0][-1].isdigit()
     assert fake_traci.commands[1][-1].isdigit()
     assert 1 <= int(fake_traci.commands[0][-1]) <= 2_147_483_647

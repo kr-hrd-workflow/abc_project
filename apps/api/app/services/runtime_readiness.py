@@ -3,6 +3,7 @@ from importlib.util import find_spec
 import os
 from pathlib import Path
 from shutil import which
+import sys
 from typing import Literal, TypedDict
 
 from sqlalchemy import text
@@ -181,7 +182,13 @@ def _module_available(module_name: str) -> bool:
 
 
 def _binary_available(binary_name: str) -> bool:
-    return which(binary_name) is not None
+    if which(binary_name) is not None:
+        return True
+    python_bin_candidate = Path(sys.executable).parent / binary_name
+    return python_bin_candidate.exists() and os.access(
+        python_bin_candidate,
+        os.X_OK,
+    )
 
 
 def _path_exists(path: str) -> bool:

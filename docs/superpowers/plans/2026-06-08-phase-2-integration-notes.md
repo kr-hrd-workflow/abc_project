@@ -104,15 +104,16 @@ Current as of 2026-06-09.
   `TrafficSimulationAdapter` interface. This is the recommended next build
   slice because the vision seam already exists.
 - [x] Add tests that compare SUMO output against `SimulationComparison`.
-- [ ] Replace fixture-backed SUMO metrics with real SUMO/TraCI execution after
+- [x] Replace fixture-backed SUMO metrics with real SUMO/TraCI execution after
   approval for SUMO runtime setup.
-  - [x] Add optional API `simulation` dependencies for `traci` and `sumolib`.
+  - [x] Add optional API `simulation` dependencies for `eclipse-sumo`,
+    `traci`, and `sumolib`.
   - [x] Add runtime settings for `SUMO_SIMULATION_MODE`, `SUMO_BINARY`,
     `SUMO_CONFIG_PATH`, and `SUMO_STEP_COUNT`.
   - [x] Add `TraciSumoSimulationRunner` with tested TraCI metric collection.
   - [x] Add `/api/runtime/readiness` checks for TraCI, sumolib, SUMO binaries,
     netconvert, and configured SUMO network file availability.
-  - [ ] Install/verify the SUMO binary and network config in the target runtime
+  - [x] Install/verify the SUMO binary and network config in the target runtime
     before marking fixture replacement complete.
 - [x] Replace the center viewport renderer while preserving dashboard props and
   API payload shapes.
@@ -257,12 +258,12 @@ separate approval.
     `OpenCVYoloFrameAnalyzer` are implemented.
   - [ ] Real OpenCV/Ultralytics installation, model weights, and a live sample
     inference run are not verified in this checkout.
-- [ ] Replace fixture-backed SUMO metrics with real SUMO/TraCI execution after
+- [x] Replace fixture-backed SUMO metrics with real SUMO/TraCI execution after
   approval for SUMO runtime setup.
   - [x] Runtime configuration, optional dependency metadata, and
     `TraciSumoSimulationRunner` are implemented.
-  - [ ] Local `sumo`/`netconvert` binaries and a real SUMO network/config run
-    are not verified in this checkout.
+  - [x] Local `sumo`/`netconvert` binaries and a real SUMO network/config run
+    are verified in this checkout.
 - [x] Replace the center viewport renderer while preserving dashboard props and
   API payload shapes.
 
@@ -290,7 +291,7 @@ The API now has the first real-runtime simulation path behind the existing
 simulation adapter boundary:
 
 - `apps/api/pyproject.toml` exposes a `simulation` optional dependency group
-  for `traci` and `sumolib`
+  for `eclipse-sumo`, `traci`, and `sumolib`
 - `.env.example` documents `SUMO_SIMULATION_MODE`, `SUMO_BINARY`,
   `SUMO_CONFIG_PATH`, and `SUMO_STEP_COUNT`
 - `TraciSumoSimulationRunner` lazily loads TraCI only when
@@ -301,8 +302,11 @@ simulation adapter boundary:
   delay, throughput, emergency clearance, and recommended phase-duration
   application
 
-Local runtime audit on 2026-06-09 found `sumo`, `netconvert`, `traci`, and
-`sumolib` absent, so this slice does not prove a live SUMO network execution.
+Local runtime verification on 2026-06-09 installed the approved simulation
+extra with packaged SUMO 1.27.0, verified `sumo`, `netconvert`, `traci`, and
+`sumolib`, added `apps/api/networks/intersection.sumocfg`, passed strict
+simulation readiness, and proved `/api/simulate-signal` can return
+`source = "sumo_traci"` through the live TraCI path.
 
 ## Implemented Phase 2 Slice: Dashboard Simulation Viewport Renderer
 
