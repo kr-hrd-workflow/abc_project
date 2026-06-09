@@ -11,7 +11,10 @@ or chat output. Keep `.env` local.
 
 Current as of 2026-06-09:
 
-- [ ] Real YOLO/OpenCV inference is not verified.
+- [x] Real YOLO/OpenCV inference is verified locally with OpenCV
+  4.13.0.92, Ultralytics 8.4.62, local ignored
+  `apps/api/models/yolov8n.pt`, strict vision readiness, and
+  `/api/uploads/analyze` returning `observation.source = "opencv_yolo"`.
 - [x] Real SUMO/TraCI execution is verified locally with packaged SUMO 1.27.0,
   TraCI/sumolib 1.27.0, `apps/api/networks/intersection.sumocfg`, strict
   simulation readiness, and `/api/simulate-signal` returning
@@ -57,14 +60,14 @@ GET /api/runtime/readiness?section=pgvector
 Approval required before installing optional dependencies or downloading model
 weights.
 
-- [ ] Approve local vision runtime setup.
-- [ ] Install the vision extra:
+- [x] Approve local vision runtime setup.
+- [x] Install the vision extra:
 
 ```bash
 apps/api/.venv/bin/python -m pip install -e "apps/api[vision]"
 ```
 
-- [ ] Place model weights at the configured path, or update `.env`:
+- [x] Place model weights at the configured path, or update `.env`:
 
 ```dotenv
 VISION_ANALYSIS_MODE=opencv_yolo
@@ -72,23 +75,23 @@ YOLO_MODEL_PATH=models/yolov8n.pt
 YOLO_CONFIDENCE_THRESHOLD=0.25
 ```
 
-- [ ] Verify readiness no longer reports missing `cv2`, `ultralytics`, or the
+- [x] Verify readiness no longer reports missing `cv2`, `ultralytics`, or the
   model file.
-- [ ] Run strict section verification:
+- [x] Run strict section verification:
 
 ```bash
 npm run runtime:readiness:strict -- --section vision
 ```
 
-- [ ] Run the adapter tests:
+- [x] Run the adapter tests:
 
 ```bash
 apps/api/.venv/bin/python -m pytest apps/api/tests/test_adapters.py -v
 ```
 
-- [ ] Run a live sample upload with `VISION_ANALYSIS_MODE=opencv_yolo`.
-- [ ] Confirm the upload result returns `observation.source = "opencv_yolo"`.
-- [ ] Update these checkboxes after the live inference evidence exists:
+- [x] Run a live sample upload with `VISION_ANALYSIS_MODE=opencv_yolo`.
+- [x] Confirm the upload result returns `observation.source = "opencv_yolo"`.
+- [x] Update these checkboxes after the live inference evidence exists:
   - `docs/superpowers/specs/2026-06-08-smart-intersection-mvp-design.md`
   - `docs/superpowers/plans/2026-06-08-smart-intersection-mvp.md`
   - `docs/superpowers/plans/2026-06-08-phase-2-integration-notes.md`

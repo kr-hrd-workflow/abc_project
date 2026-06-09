@@ -23,6 +23,8 @@
 - `/api/runtime/readiness`에서 PostgreSQL `vector` 확장 활성화 여부 조회
 - `/api/runtime/readiness`에서 누락된 모듈, 바이너리, 모델 파일, API 키,
   DB 확장에 대한 다음 설정 힌트 제공
+- 실제 OpenCV 4.13.0.92, Ultralytics 8.4.62, YOLOv8n 모델 기반 라이브
+  샘플 추론 검증
 - 실제 SUMO/TraCI 1.27.0 로컬 실행 검증
 - `apps/api/networks/intersection.sumocfg` 기반 라이브 시뮬레이션 스모크
   검증
@@ -32,13 +34,12 @@
 
 아래 항목은 문서의 체크박스에도 아직 미완료로 남아 있습니다.
 
-- 실제 OpenCV/Ultralytics 설치, YOLO 모델 가중치 준비, 라이브 샘플 추론 검증
 - PostgreSQL `vector` 확장과 pgvector 컬럼/검색
 - OpenAI API 키 설정 후 실제 OpenAI 클라이언트 호출과 임베딩 검색
 
-현재 로컬 런타임 준비 상태 기준으로 SUMO/TraCI 시뮬레이션 섹션은
-준비됐습니다. 아직 남은 것은 `cv2`, `ultralytics`, YOLO 모델 파일,
-`openai`, `pgvector`, `OPENAI_API_KEY`, PostgreSQL `vector` 확장입니다.
+현재 로컬 런타임 준비 상태 기준으로 YOLO/OpenCV 비전 섹션과
+SUMO/TraCI 시뮬레이션 섹션은 준비됐습니다. 아직 남은 것은 `openai`,
+`pgvector`, `OPENAI_API_KEY`, PostgreSQL `vector` 확장입니다.
 단, `/api/runtime/readiness`는 데이터베이스가 연결될 경우
 `pg_extension`에서 `vector` 확장 활성화 여부를 직접 조회합니다.
 
@@ -150,7 +151,7 @@ GET  /api/analysis-jobs/{job_id}
 
 ## 다음 작업자는 어디서 시작하면 되나
 
-### 실제 YOLO/OpenCV 추론
+### YOLO/OpenCV 추론 확장 또는 유지보수
 
 - 시작 파일:
   - `docs/runtime-setup.md`
@@ -158,11 +159,14 @@ GET  /api/analysis-jobs/{job_id}
   - `apps/api/tests/test_adapters.py`
   - `apps/api/tests/test_api_flow.py`
   - `.env.example`
-- 해야 할 일:
-  - `apps/api[vision]` 의존성 설치 검증
-  - YOLO 모델 파일 경로 준비
-  - `VISION_ANALYSIS_MODE=opencv_yolo`로 업로드 샘플 추론 검증
-  - 검증 후 관련 체크박스 갱신
+- 현재 상태:
+  - `apps/api[vision]`으로 OpenCV/Ultralytics 런타임을 설치합니다.
+  - 로컬 모델 파일은 `apps/api/models/yolov8n.pt`에 있으며 git에는
+    커밋하지 않습니다.
+  - `VISION_ANALYSIS_MODE=opencv_yolo`로 `/api/uploads/analyze` 라이브
+    추론이 검증됐습니다.
+  - 다음 작업은 더 좋은 카메라 샘플, 방향 추정 로직, 또는 실제
+    교차로 영상으로 검증 범위를 넓힐 때 시작하면 됩니다.
 
 ### SUMO/TraCI 실행 확장 또는 유지보수
 

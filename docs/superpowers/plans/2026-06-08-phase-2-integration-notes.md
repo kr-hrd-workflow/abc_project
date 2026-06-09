@@ -88,7 +88,7 @@ Current as of 2026-06-09.
 - [x] Add tests that compare YOLO-shaped adapter output against
   `VisionObservation`.
 - [x] Add sample upload handling and analysis job status.
-- [ ] Replace the fixture-backed YOLO detector with real OpenCV/YOLO inference
+- [x] Replace the fixture-backed YOLO detector with real OpenCV/YOLO inference
   after separate approval for dependency/runtime setup.
   - [x] Add optional API `vision` dependencies for `opencv-python-headless` and
     `ultralytics`.
@@ -98,7 +98,7 @@ Current as of 2026-06-09.
     normalization.
   - [x] Add `/api/runtime/readiness` checks for OpenCV, Ultralytics, and model
     file availability without importing the optional runtime.
-  - [ ] Install/verify OpenCV, Ultralytics, and real model weights in the target
+  - [x] Install/verify OpenCV, Ultralytics, and real model weights in the target
     runtime before marking fixture replacement complete.
 - [x] Implement `SumoTraciTrafficSimulationAdapter` behind the existing
   `TrafficSimulationAdapter` interface. This is the recommended next build
@@ -252,12 +252,12 @@ separate approval.
 
 ## Remaining Approval-Gated Phase 2 Work
 
-- [ ] Replace fixture-backed YOLO detection with real OpenCV/YOLO inference
+- [x] Replace fixture-backed YOLO detection with real OpenCV/YOLO inference
   after approval for dependency/runtime setup.
   - [x] Runtime configuration, optional dependency metadata, and
     `OpenCVYoloFrameAnalyzer` are implemented.
-  - [ ] Real OpenCV/Ultralytics installation, model weights, and a live sample
-    inference run are not verified in this checkout.
+  - [x] Real OpenCV/Ultralytics installation, model weights, and a live sample
+    inference run are verified in this checkout.
 - [x] Replace fixture-backed SUMO metrics with real SUMO/TraCI execution after
   approval for SUMO runtime setup.
   - [x] Runtime configuration, optional dependency metadata, and
@@ -282,8 +282,11 @@ adapter boundary:
 - tests verify YOLO box output is normalized into queues, object counts,
   pedestrian state, emergency vehicle detection, and congestion level
 
-Local runtime audit on 2026-06-09 found `cv2`, `ultralytics`, and target model
-weights absent, so this slice does not prove a live real-model inference run.
+Local runtime verification on 2026-06-09 installed the approved vision extra,
+verified OpenCV 4.13.0.92 and Ultralytics 8.4.62, downloaded the ignored local
+`apps/api/models/yolov8n.pt` weight file, passed strict vision readiness, and
+proved `/api/uploads/analyze` can return `observation.source = "opencv_yolo"`
+through the live OpenCV/YOLO path.
 
 ## Implemented Phase 2 Slice: SUMO/TraCI Runtime Config And Runner
 

@@ -60,7 +60,7 @@ historical implementation recipe; this tracker is the current progress summary.
 - [x] Next build slice: add optional OpenCV/YOLO runtime configuration and an
   `OpenCVYoloFrameAnalyzer` that can normalize real YOLO box output behind the
   existing upload adapter boundary.
-- [ ] Remaining vision runtime gate: install/verify OpenCV, Ultralytics, model
+- [x] Remaining vision runtime gate: install/verify OpenCV, Ultralytics, model
   weights, and a live sample inference run before claiming fixture replacement
   is complete.
 - [x] Next build slice: add optional SUMO/TraCI runtime configuration and a

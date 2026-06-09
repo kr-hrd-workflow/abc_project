@@ -404,7 +404,7 @@ source/tests.
 - [x] Add contract tests for fixture ingestion and the YOLO-shaped
   `VisionObservation` output.
 - [x] Add sample upload handling and analysis job status.
-- [ ] Add real OpenCV/YOLO dependency, model/runtime configuration, and
+- [x] Add real OpenCV/YOLO dependency, model/runtime configuration, and
   inference after separate approval for dependency/runtime work.
   - [x] Add optional API `vision` dependencies for OpenCV and Ultralytics.
   - [x] Add `VISION_ANALYSIS_MODE`, `YOLO_MODEL_PATH`, and
@@ -424,7 +424,7 @@ source/tests.
     verification.
   - [x] Add section filtering to `/api/runtime/readiness` for one-gate HTTP
     smoke checks.
-  - [ ] Install and verify real OpenCV/Ultralytics/model weights in the target
+  - [x] Install and verify real OpenCV/Ultralytics/model weights in the target
     runtime before marking real inference complete.
 - [x] Implement `SumoTraciTrafficSimulationAdapter` behind the existing
   `TrafficSimulationAdapter` interface. This is the recommended next build
