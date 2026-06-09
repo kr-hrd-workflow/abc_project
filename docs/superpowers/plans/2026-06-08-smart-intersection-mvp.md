@@ -85,6 +85,8 @@ historical implementation recipe; this tracker is the current progress summary.
   for the remaining YOLO/OpenCV, SUMO/TraCI, OpenAI, and pgvector gates.
 - [x] Utility slice: add `python -m app.cli.runtime_readiness` so teammates can
   run the DB-aware readiness check without copy-pasting Python snippets.
+- [x] Utility slice: add root `npm` scripts for API tests, web tests, runtime
+  readiness, and full verification.
 - [x] Documentation handoff slice: rewrite `README.md` in Korean so teammates
   can see current status, setup commands, validation commands, remaining gates,
   and the next files to work from.

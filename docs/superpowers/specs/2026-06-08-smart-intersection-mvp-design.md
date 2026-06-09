@@ -417,6 +417,7 @@ source/tests.
     live YOLO/OpenCV setup.
   - [x] Add `python -m app.cli.runtime_readiness` as the canonical local
     readiness command.
+  - [x] Add root `npm` scripts for runtime readiness and full verification.
   - [ ] Install and verify real OpenCV/Ultralytics/model weights in the target
     runtime before marking real inference complete.
 - [x] Implement `SumoTraciTrafficSimulationAdapter` behind the existing

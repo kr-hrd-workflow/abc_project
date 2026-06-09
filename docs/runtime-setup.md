@@ -20,8 +20,7 @@ Current as of 2026-06-09:
 Run this anytime to see the current local state:
 
 ```bash
-cd apps/api
-.venv/bin/python -m app.cli.runtime_readiness
+npm run runtime:readiness
 ```
 
 ## Gate 1: YOLO/OpenCV Inference
@@ -166,10 +165,7 @@ cd apps/api
 Run the full validation set after any gate changes:
 
 ```bash
-apps/api/.venv/bin/python -m pytest apps/api/tests -v
-npm --workspace apps/web run test
-npm run build:web
-git diff --check
+npm run verify
 ```
 
 The goal is not complete until every unchecked runtime gate above has direct

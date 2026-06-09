@@ -75,13 +75,13 @@ cd apps/api
 백엔드 테스트:
 
 ```bash
-apps/api/.venv/bin/python -m pytest apps/api/tests -v
+npm run test:api
 ```
 
 프론트엔드 테스트:
 
 ```bash
-npm --workspace apps/web run test
+npm run test:web
 ```
 
 프론트엔드 빌드:
@@ -99,8 +99,7 @@ docker compose -f infra/docker-compose.yml ps
 런타임 준비 상태 확인:
 
 ```bash
-cd apps/api
-.venv/bin/python -m app.cli.runtime_readiness
+npm run runtime:readiness
 ```
 
 ## API 스모크 경로

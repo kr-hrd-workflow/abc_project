@@ -2,7 +2,11 @@
   "private": true,
   "scripts": {
     "dev:web": "npm --workspace apps/web run dev",
-    "build:web": "npm --workspace apps/web run build"
+    "build:web": "npm --workspace apps/web run build",
+    "test:api": "apps/api/.venv/bin/python -m pytest apps/api/tests -v",
+    "test:web": "npm --workspace apps/web run test",
+    "runtime:readiness": "cd apps/api && .venv/bin/python -m app.cli.runtime_readiness",
+    "verify": "npm run test:api && npm run test:web && npm run build:web && git diff --check"
   },
   "workspaces": [
     "apps/web"

@@ -132,6 +132,8 @@ Current as of 2026-06-09.
     YOLO/OpenCV, SUMO/TraCI, OpenAI, and pgvector setup.
   - [x] Add `python -m app.cli.runtime_readiness` as the canonical local
     readiness command.
+  - [x] Add root `npm` scripts for API tests, web tests, runtime readiness, and
+    full verification.
   - [x] Keep OpenAI client calls and pgvector execution out of this slice until
     API-key and target database setup are approved and verified.
 
@@ -357,3 +359,6 @@ checklist before marking any live runtime gate complete.
 
 From `apps/api`, run `.venv/bin/python -m app.cli.runtime_readiness` for the
 same DB-aware readiness report used by the runbook.
+
+From the repository root, `npm run runtime:readiness` runs that readiness report
+and `npm run verify` runs the full local validation sequence.
