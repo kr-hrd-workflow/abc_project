@@ -20,24 +20,8 @@ Current as of 2026-06-09:
 Run this anytime to see the current local state:
 
 ```bash
-apps/api/.venv/bin/python - <<'PY'
-from app.core.config import settings
-from app.db.session import SessionLocal
-from app.services.runtime_readiness import (
-    get_runtime_readiness,
-    is_vector_extension_enabled,
-)
-
-for section, payload in get_runtime_readiness(
-    settings,
-    vector_extension_verified=lambda: is_vector_extension_enabled(SessionLocal),
-).items():
-    print(section, payload["ready"], payload["mode"])
-    print("missing:", ", ".join(payload["missing"]) or "-")
-    for check in payload["checks"]:
-        if not check["available"]:
-            print("detail:", check.get("detail", "-"))
-PY
+cd apps/api
+.venv/bin/python -m app.cli.runtime_readiness
 ```
 
 ## Gate 1: YOLO/OpenCV Inference

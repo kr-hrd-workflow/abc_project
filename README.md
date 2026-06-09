@@ -99,20 +99,8 @@ docker compose -f infra/docker-compose.yml ps
 런타임 준비 상태 확인:
 
 ```bash
-apps/api/.venv/bin/python - <<'PY'
-from app.core.config import settings
-from app.db.session import SessionLocal
-from app.services.runtime_readiness import (
-    get_runtime_readiness,
-    is_vector_extension_enabled,
-)
-
-for section, payload in get_runtime_readiness(
-    settings,
-    vector_extension_verified=lambda: is_vector_extension_enabled(SessionLocal),
-).items():
-    print(section, payload["ready"], payload["missing"])
-PY
+cd apps/api
+.venv/bin/python -m app.cli.runtime_readiness
 ```
 
 ## API 스모크 경로

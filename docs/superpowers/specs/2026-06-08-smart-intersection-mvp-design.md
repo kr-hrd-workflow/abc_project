@@ -415,6 +415,8 @@ source/tests.
     file availability without importing the optional runtime.
   - [x] Add `docs/runtime-setup.md` with approval and validation checkboxes for
     live YOLO/OpenCV setup.
+  - [x] Add `python -m app.cli.runtime_readiness` as the canonical local
+    readiness command.
   - [ ] Install and verify real OpenCV/Ultralytics/model weights in the target
     runtime before marking real inference complete.
 - [x] Implement `SumoTraciTrafficSimulationAdapter` behind the existing

@@ -83,6 +83,8 @@ historical implementation recipe; this tracker is the current progress summary.
   database extensions point to the required setup gate.
 - [x] Documentation slice: add `docs/runtime-setup.md` with checkbox runbooks
   for the remaining YOLO/OpenCV, SUMO/TraCI, OpenAI, and pgvector gates.
+- [x] Utility slice: add `python -m app.cli.runtime_readiness` so teammates can
+  run the DB-aware readiness check without copy-pasting Python snippets.
 - [x] Documentation handoff slice: rewrite `README.md` in Korean so teammates
   can see current status, setup commands, validation commands, remaining gates,
   and the next files to work from.
