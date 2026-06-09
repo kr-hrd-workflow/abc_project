@@ -75,6 +75,9 @@ historical implementation recipe; this tracker is the current progress summary.
 - [x] Next build slice: add `/api/runtime/readiness` so remaining OpenCV/YOLO,
   SUMO/TraCI, OpenAI, and pgvector setup gates are observable without installing
   runtimes, calling external APIs, or returning secrets.
+- [x] Documentation handoff slice: rewrite `README.md` in Korean so teammates
+  can see current status, setup commands, validation commands, remaining gates,
+  and the next files to work from.
 - [ ] Remaining AI/RAG gate: approve and verify API-key setup, pgvector database
   extension, live embeddings, and OpenAI client calls before claiming full
   RAG/AI integration is complete.
