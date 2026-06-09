@@ -100,6 +100,8 @@ historical implementation recipe; this tracker is the current progress summary.
   Responses/embeddings client boundary without API keys or live external calls.
 - [x] Next AI/RAG slice: verify official API pricing for `gpt-5.5` and
   `text-embedding-3-small` before any live API use.
+- [x] Next AI/RAG slice: add an `OPENAI_MONTHLY_BUDGET_USD` readiness guard so
+  live OpenAI use requires an explicit spend-limit decision.
 - [ ] Remaining AI/RAG gate: approve and verify API-key setup, pgvector database
   extension, spend-limit decision, live embeddings, and OpenAI client calls
   before claiming full RAG/AI integration is complete.

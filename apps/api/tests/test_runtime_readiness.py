@@ -57,9 +57,13 @@ def test_runtime_readiness_reports_missing_optional_runtime_gates() -> None:
     assert readiness["openai"]["missing"] == [
         "python module openai",
         "OPENAI_API_KEY",
+        "OPENAI_MONTHLY_BUDGET_USD",
     ]
     assert readiness["openai"]["checks"][0]["detail"] == (
         "install the API ai extra before enabling OpenAI client calls"
+    )
+    assert readiness["openai"]["checks"][2]["detail"] == (
+        "set a monthly OpenAI API budget before enabling live client calls"
     )
     assert readiness["pgvector"]["missing"] == [
         "python module pgvector",
@@ -78,6 +82,7 @@ def test_runtime_readiness_marks_runtime_gates_ready_when_requirements_exist() -
         yolo_model_path="models/yolov8n.pt",
         sumo_binary="sumo",
         sumo_config_path="networks/intersection.sumocfg",
+        openai_monthly_budget_usd=10.0,
     )
 
     readiness = get_runtime_readiness(

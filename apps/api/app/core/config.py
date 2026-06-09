@@ -16,6 +16,7 @@ class Settings(BaseSettings):
     openai_model: str = "gpt-5.5"
     openai_embedding_model: str = "text-embedding-3-small"
     openai_embedding_dimensions: int = Field(default=1536, ge=1)
+    openai_monthly_budget_usd: float | None = Field(default=None, gt=0)
 
     model_config = SettingsConfigDict(env_file=".env", env_file_encoding="utf-8", extra="ignore")
 

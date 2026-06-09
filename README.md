@@ -31,6 +31,7 @@
 - `apps/api[ai]`로 OpenAI/pgvector Python 패키지 설치
 - OpenAI Responses/embeddings 클라이언트 경계와 목업 테스트
 - 공식 OpenAI API 가격 문서 재확인
+- live API 호출 전 월 예산 설정을 확인하는 readiness guard
 - `AGENTS.md`에 팀원/에이전트 작업 규칙 정리
 
 ### 아직 끝나지 않은 범위
@@ -43,10 +44,10 @@
 
 현재 로컬 런타임 준비 상태 기준으로 YOLO/OpenCV 비전 섹션과
 SUMO/TraCI 시뮬레이션 섹션은 준비됐고, `openai`와 `pgvector` Python
-패키지도 설치됐습니다. 아직 남은 것은 `OPENAI_API_KEY`와 PostgreSQL
-`vector` 확장입니다. 단, `/api/runtime/readiness`는 데이터베이스가
-연결될 경우 `pg_extension`에서 `vector` 확장 활성화 여부를 직접
-조회합니다.
+패키지도 설치됐습니다. 아직 남은 것은 `OPENAI_API_KEY`,
+`OPENAI_MONTHLY_BUDGET_USD`, PostgreSQL `vector` 확장입니다. 단,
+`/api/runtime/readiness`는 데이터베이스가 연결될 경우 `pg_extension`에서
+`vector` 확장 활성화 여부를 직접 조회합니다.
 
 ## 처음 시작할 때 읽을 문서
 
@@ -208,8 +209,10 @@ GET  /api/analysis-jobs/{job_id}
     테스트되어 있고, 실제 API 호출은 아직 하지 않았습니다.
   - 2026-06-09 기준 공식 OpenAI API 가격 문서에서 `gpt-5.5`와
     `text-embedding-3-small` 가격을 확인했습니다.
+  - `OPENAI_MONTHLY_BUDGET_USD`가 없으면 live OpenAI gate가 준비 완료로
+    표시되지 않습니다.
   - `/api/runtime/readiness` 기준 남은 OpenAI 게이트는
-    `OPENAI_API_KEY`입니다.
+    `OPENAI_API_KEY`와 `OPENAI_MONTHLY_BUDGET_USD`입니다.
   - `/api/runtime/readiness` 기준 남은 pgvector 게이트는 PostgreSQL
     `vector` 확장입니다.
 - 해야 할 일:

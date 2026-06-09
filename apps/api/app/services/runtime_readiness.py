@@ -125,6 +125,14 @@ def get_runtime_readiness(
                     bool(env.get("OPENAI_API_KEY")),
                     detail="presence only; value is never returned",
                 ),
+                _check(
+                    "OPENAI_MONTHLY_BUDGET_USD",
+                    settings.openai_monthly_budget_usd is not None,
+                    detail=(
+                        "set a monthly OpenAI API budget before enabling "
+                        "live client calls"
+                    ),
+                ),
             ],
         ),
         "pgvector": _section(

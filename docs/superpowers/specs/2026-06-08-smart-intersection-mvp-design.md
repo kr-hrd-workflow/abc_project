@@ -477,6 +477,8 @@ source/tests.
     `OPENAI_EMBEDDING_DIMENSIONS` runtime configuration.
   - [x] Add `/api/runtime/readiness` checks for OpenAI client package and
     API-key presence without returning secret values.
+  - [x] Add an `OPENAI_MONTHLY_BUDGET_USD` readiness guard so live API use also
+    requires an explicit project spend-limit decision.
   - [x] Add `docs/runtime-setup.md` with approval and validation checkboxes for
     OpenAI client setup.
   - [x] Add a mocked OpenAI Responses/embeddings client boundary that can be

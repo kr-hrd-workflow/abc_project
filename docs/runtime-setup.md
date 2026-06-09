@@ -22,6 +22,7 @@ Current as of 2026-06-09:
 - [x] OpenAI client boundary is mocked and tested without secrets or live calls.
 - [ ] Live OpenAI client calls are not verified.
 - [x] OpenAI API pricing guidance is re-checked against official docs.
+- [x] OpenAI monthly budget readiness guard is implemented without live calls.
 - [x] The pgvector Python package is installed locally.
 - [ ] PostgreSQL `vector` extension, pgvector columns, and embedding search are
   not verified.
@@ -169,11 +170,14 @@ apps/api/.venv/bin/python -m pip install -e "apps/api[ai]"
 OPENAI_MODEL=gpt-5.5
 OPENAI_EMBEDDING_MODEL=text-embedding-3-small
 OPENAI_EMBEDDING_DIMENSIONS=1536
+OPENAI_MONTHLY_BUDGET_USD=...
 OPENAI_API_KEY=...
 ```
 
 - [x] Verify readiness no longer reports missing `openai`.
 - [ ] Verify readiness no longer reports missing `OPENAI_API_KEY`.
+- [ ] Verify readiness no longer reports missing `OPENAI_MONTHLY_BUDGET_USD`
+  after the project spend limit is approved.
 - [ ] Run strict section verification:
 
 ```bash
@@ -184,6 +188,7 @@ npm run runtime:readiness:strict -- --section openai
   or logging secrets.
 - [x] Add tests that mock the client boundary and keep instructions scoped to
   provided scenario and policy evidence.
+- [x] Add a non-secret monthly budget setting to readiness before live calls.
 - [ ] Run one approved live API smoke call.
 - [ ] Update docs checkboxes after live API evidence exists.
 

@@ -348,6 +348,8 @@ OpenAI API key or pgvector runtime:
   `text-embedding-3-small` before any live API calls
 - `apps/api/app/services/openai_clients.py` adds a mocked/tested
   Responses/embeddings boundary for future live wiring
+- `OPENAI_MONTHLY_BUDGET_USD` is now part of OpenAI readiness, so live calls
+  require both API-key approval and a project spend-limit decision
 
 This does not store API keys, call external AI services, enable the PostgreSQL
 `vector` extension, or perform live embedding search. Those remain gated by
