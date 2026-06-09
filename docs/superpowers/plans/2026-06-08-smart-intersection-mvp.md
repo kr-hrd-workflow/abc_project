@@ -108,6 +108,9 @@ historical implementation recipe; this tracker is the current progress summary.
 - [ ] Remaining OpenAI live gate: set and verify `OPENAI_API_KEY`, approve and
   set `OPENAI_MONTHLY_BUDGET_USD`, then run live embeddings/OpenAI client smoke
   before claiming full external AI integration is complete.
+  - [x] Add `npm run openai:smoke` as the guarded smoke command for the live
+    OpenAI Responses and embeddings path.
+  - [ ] Run `npm run openai:smoke` after the key and monthly budget are present.
 
 ## File Structure
 

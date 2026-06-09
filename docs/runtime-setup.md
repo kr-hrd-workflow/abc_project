@@ -189,6 +189,13 @@ npm run runtime:readiness:strict -- --section openai
 - [x] Add tests that mock the client boundary and keep instructions scoped to
   provided scenario and policy evidence.
 - [x] Add a non-secret monthly budget setting to readiness before live calls.
+- [x] Add a guarded live OpenAI smoke command that refuses to run without
+  `OPENAI_API_KEY` and `OPENAI_MONTHLY_BUDGET_USD`:
+
+```bash
+npm run openai:smoke
+```
+
 - [ ] Run one approved live API smoke call.
 - [ ] Update docs checkboxes after live API evidence exists.
 
@@ -197,6 +204,8 @@ npm run runtime:readiness:strict -- --section openai
 - `npm run runtime:readiness:strict -- --section openai` failed as expected
   because local environment values are still missing:
   `OPENAI_API_KEY`, `OPENAI_MONTHLY_BUDGET_USD`.
+- `npm run openai:smoke` is expected to fail until those values exist; it does
+  not print secrets when it runs.
 - No live OpenAI API call was attempted without those values.
 
 Pricing evidence checked on 2026-06-09:

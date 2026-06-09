@@ -35,6 +35,7 @@
 - `pgvector/pgvector:pg16` 기반 PostgreSQL `vector` 확장 검증
 - `knowledge_chunks` 벡터 컬럼 마이그레이션과 pgvector 검색 경로
 - `KNOWLEDGE_SEARCH_MODE=pgvector`로 켤 수 있는 임베딩 검색 모드
+- `npm run openai:smoke`로 실행하는 guarded OpenAI live smoke 명령
 - `AGENTS.md`에 팀원/에이전트 작업 규칙 정리
 
 ### 아직 끝나지 않은 범위
@@ -131,6 +132,15 @@ npm run runtime:readiness:strict -- --section openai
 npm run runtime:readiness:strict -- --section pgvector
 ```
 
+OpenAI 키와 월 예산 값을 설정한 뒤 실제 API smoke를 확인할 때:
+
+```bash
+npm run openai:smoke
+```
+
+이 명령은 `OPENAI_API_KEY`와 `OPENAI_MONTHLY_BUDGET_USD`가 없으면 실패하며,
+성공해도 API 키 값을 출력하지 않습니다.
+
 ## API 스모크 경로
 
 PostgreSQL 실행 및 Alembic 마이그레이션 후 기본 API 흐름은 다음과 같습니다.
@@ -221,6 +231,8 @@ GET  /api/analysis-jobs/{job_id}
   - 로컬 기본값은 `KNOWLEDGE_SEARCH_MODE=keyword`입니다. 실제 임베딩 검색을
     켜려면 `.env`에서 `KNOWLEDGE_SEARCH_MODE=pgvector`로 바꾸고 OpenAI 키와
     월 예산 값을 설정해야 합니다.
+  - `npm run openai:smoke`는 live OpenAI smoke를 실행하기 위한 명령이고,
+    키/예산 값이 없으면 외부 호출 전에 실패합니다.
   - `OPENAI_MONTHLY_BUDGET_USD`가 없으면 live OpenAI gate가 준비 완료로
     표시되지 않습니다.
   - `/api/runtime/readiness` 기준 남은 OpenAI 게이트는

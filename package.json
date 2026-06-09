@@ -7,6 +7,7 @@
     "test:web": "npm --workspace apps/web run test",
     "runtime:readiness": "cd apps/api && .venv/bin/python -m app.cli.runtime_readiness",
     "runtime:readiness:strict": "cd apps/api && .venv/bin/python -m app.cli.runtime_readiness --fail-on-missing",
+    "openai:smoke": "cd apps/api && .venv/bin/python -m app.cli.openai_smoke",
     "verify": "npm run test:api && npm run test:web && npm run build:web && git diff --check"
   },
   "workspaces": [
