@@ -13,6 +13,7 @@ import type {
   SimulationComparison,
   TrafficEvent
 } from "../lib/types";
+import { SCENARIO_OPTIONS } from "../lib/types";
 
 const status: IntersectionStatus = {
   intersection_id: "INT-0001",
@@ -122,12 +123,26 @@ function renderDashboard(overrides = {}) {
       onGenerateReport={vi.fn()}
       onRefreshRecommendation={vi.fn()}
       onRunSimulation={vi.fn()}
+      selectedScenarioId="emergency"
+      scenarioOptions={SCENARIO_OPTIONS}
+      scenarioLoading={false}
+      onScenarioChange={vi.fn()}
       {...overrides}
     />
   );
 }
 
 describe("DashboardShell", () => {
+  test("renders a clear dashboard heading and scenario rail", () => {
+    renderDashboard({ selectedScenarioId: "emergency" });
+
+    expect(
+      screen.getByRole("heading", { level: 1, name: "스마트 교차로 운영 시스템" })
+    ).toBeTruthy();
+    expect(screen.getByLabelText("시나리오 08:42")).toBeTruthy();
+    expect(screen.getByText("긴급차량 우선 통과")).toBeTruthy();
+  });
+
   test("renders the approved safety and simulation viewport copy", () => {
     renderDashboard();
 
@@ -155,6 +170,29 @@ describe("DashboardShell", () => {
     expect(screen.getByRole("button", { name: "Settings" })).toBeTruthy();
   });
 
+  test("renders scenario options and marks the selected scenario", () => {
+    renderDashboard({ selectedScenarioId: "blocked" });
+
+    expect(screen.getByRole("button", { name: /차단/ }).getAttribute("aria-pressed")).toBe(
+      "true"
+    );
+    expect(
+      screen.getByRole("button", { name: /긴급차량/ }).getAttribute("aria-pressed")
+    ).toBe("false");
+  });
+
+  test("calls scenario change handler from the segmented control", async () => {
+    const onScenarioChange = vi.fn();
+    renderDashboard({
+      selectedScenarioId: "emergency",
+      onScenarioChange
+    });
+
+    await userEvent.click(screen.getByRole("button", { name: /보행자/ }));
+
+    expect(onScenarioChange).toHaveBeenCalledWith("pedestrian");
+  });
+
   test("submits chat questions through the provided handler", async () => {
     const onAskQuestion = vi.fn().mockResolvedValue(undefined);
     renderDashboard({ onAskQuestion });
@@ -176,5 +214,26 @@ describe("DashboardShell", () => {
 
     expect(onRunSimulation).toHaveBeenCalledTimes(1);
     expect(await screen.findByText("시뮬레이션 갱신 완료")).toBeTruthy();
+  });
+
+  test("disables recommendation refresh while refresh is running", async () => {
+    const user = userEvent.setup();
+    let resolveRefresh: () => void = () => undefined;
+    const onRefreshRecommendation = vi.fn(
+      () =>
+        new Promise<void>((resolve) => {
+          resolveRefresh = resolve;
+        })
+    );
+
+    renderDashboard({ onRefreshRecommendation });
+
+    const refreshButton = screen.getByRole("button", { name: "추천 새로고침" });
+    await user.click(refreshButton);
+
+    expect((refreshButton as HTMLButtonElement).disabled).toBe(true);
+    expect(screen.getByText("추천 새로고침 중")).toBeTruthy();
+
+    resolveRefresh();
   });
 });

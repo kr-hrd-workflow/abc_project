@@ -3,6 +3,7 @@ import type {
   IntersectionStatus,
   Recommendation,
   Report,
+  ScenarioId,
   SimulationComparison,
   TrafficEvent
 } from "./types";
@@ -27,33 +28,51 @@ async function requestJson<T>(path: string, init?: RequestInit): Promise<T> {
   return response.json() as Promise<T>;
 }
 
-export async function getIntersectionStatus(): Promise<IntersectionStatus> {
-  return requestJson<IntersectionStatus>("/api/intersection/status");
+function withScenario(path: string, scenarioId?: ScenarioId): string {
+  if (!scenarioId) return path;
+
+  const separator = path.includes("?") ? "&" : "?";
+  return `${path}${separator}scenario_id=${encodeURIComponent(scenarioId)}`;
 }
 
-export async function getEvents(): Promise<TrafficEvent[]> {
-  return requestJson<TrafficEvent[]>("/api/events");
+export async function getIntersectionStatus(
+  scenarioId?: ScenarioId
+): Promise<IntersectionStatus> {
+  return requestJson<IntersectionStatus>(
+    withScenario("/api/intersection/status", scenarioId)
+  );
 }
 
-export async function recommendSignal(): Promise<Recommendation> {
-  return requestJson<Recommendation>("/api/recommend-signal", {
+export async function getEvents(scenarioId?: ScenarioId): Promise<TrafficEvent[]> {
+  return requestJson<TrafficEvent[]>(withScenario("/api/events", scenarioId));
+}
+
+export async function recommendSignal(
+  scenarioId?: ScenarioId
+): Promise<Recommendation> {
+  return requestJson<Recommendation>(withScenario("/api/recommend-signal", scenarioId), {
     method: "POST"
   });
 }
 
-export async function simulateSignal(): Promise<SimulationComparison> {
-  return requestJson<SimulationComparison>("/api/simulate-signal", {
+export async function simulateSignal(
+  scenarioId?: ScenarioId
+): Promise<SimulationComparison> {
+  return requestJson<SimulationComparison>(withScenario("/api/simulate-signal", scenarioId), {
     method: "POST"
   });
 }
 
-export async function askQuestion(question: string): Promise<ChatResponse> {
-  return requestJson<ChatResponse>("/api/chat", {
+export async function askQuestion(
+  question: string,
+  scenarioId?: ScenarioId
+): Promise<ChatResponse> {
+  return requestJson<ChatResponse>(withScenario("/api/chat", scenarioId), {
     method: "POST",
     body: JSON.stringify({ question })
   });
 }
 
-export async function generateReport(): Promise<Report> {
-  return requestJson<Report>("/api/report", { method: "POST" });
+export async function generateReport(scenarioId?: ScenarioId): Promise<Report> {
+  return requestJson<Report>(withScenario("/api/report", scenarioId), { method: "POST" });
 }

@@ -1,3 +1,7 @@
+"use client";
+
+import { useState } from "react";
+
 import type { Recommendation } from "../lib/types";
 import type { Locale } from "../lib/i18n";
 import { copy, formatDirection } from "../lib/i18n";
@@ -14,6 +18,21 @@ export function RecommendationPanel({
   onRefreshRecommendation
 }: RecommendationPanelProps) {
   const t = copy[locale];
+  const [refreshState, setRefreshState] = useState<"idle" | "running">("idle");
+
+  async function handleRefreshRecommendation() {
+    setRefreshState("running");
+    const startedAt = Date.now();
+    try {
+      await onRefreshRecommendation();
+    } finally {
+      const elapsed = Date.now() - startedAt;
+      if (elapsed < 300) {
+        await new Promise((resolve) => setTimeout(resolve, 300 - elapsed));
+      }
+      setRefreshState("idle");
+    }
+  }
 
   return (
     <section className="panel recommendation-panel">
@@ -27,10 +46,16 @@ export function RecommendationPanel({
           <button
             type="button"
             aria-label={t.refreshRecommendation}
-            onClick={onRefreshRecommendation}
+            onClick={handleRefreshRecommendation}
+            disabled={refreshState === "running"}
           >
-            i
+            {refreshState === "running" ? "..." : "i"}
           </button>
+          {refreshState === "running" ? (
+            <small role="status">
+              {locale === "ko" ? "추천 새로고침 중" : "Refreshing recommendation"}
+            </small>
+          ) : null}
         </div>
       </div>
 

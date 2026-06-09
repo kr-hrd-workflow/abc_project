@@ -1,113 +1,101 @@
-"use client";
+import Link from "next/link";
 
-import { useEffect, useState } from "react";
-
-import { DashboardShell } from "../components/DashboardShell";
-import {
-  askQuestion,
-  generateReport,
-  getEvents,
-  getIntersectionStatus,
-  recommendSignal,
-  simulateSignal
-} from "../lib/api";
-import type {
-  ChatResponse,
-  IntersectionStatus,
-  Recommendation,
-  Report,
-  SimulationComparison,
-  TrafficEvent
-} from "../lib/types";
-
-type DashboardData = {
-  status: IntersectionStatus;
-  events: TrafficEvent[];
-  recommendation: Recommendation;
-  simulation: SimulationComparison;
-  report: Report;
-  chat: ChatResponse | null;
-};
+import { LandingNetworkScene } from "../components/LandingNetworkScene";
 
 export default function Page() {
-  const [data, setData] = useState<DashboardData | null>(null);
-  const [error, setError] = useState<string | null>(null);
-
-  useEffect(() => {
-    void loadDashboard();
-  }, []);
-
-  async function loadDashboard() {
-    try {
-      const [status, events, recommendation, simulation, report] =
-        await Promise.all([
-          getIntersectionStatus(),
-          getEvents(),
-          recommendSignal(),
-          simulateSignal(),
-          generateReport()
-        ]);
-
-      setData({ status, events, recommendation, simulation, report, chat: null });
-      setError(null);
-    } catch (loadError) {
-      setError(loadError instanceof Error ? loadError.message : "Failed to load dashboard");
-    }
-  }
-
-  async function handleAskQuestion(question: string) {
-    const chat = await askQuestion(question);
-    setData((current) => (current ? { ...current, chat } : current));
-  }
-
-  async function handleGenerateReport() {
-    const report = await generateReport();
-    setData((current) => (current ? { ...current, report } : current));
-  }
-
-  async function handleRefreshRecommendation() {
-    const recommendation = await recommendSignal();
-    setData((current) => (current ? { ...current, recommendation } : current));
-  }
-
-  async function handleRunSimulation() {
-    const simulation = await simulateSignal();
-    setData((current) => (current ? { ...current, simulation } : current));
-  }
-
-  if (error) {
-    return (
-      <main className="loading-shell">
-        <h1>Smart Intersection Ops</h1>
-        <p>{error}</p>
-        <button type="button" onClick={loadDashboard}>
-          Retry
-        </button>
-      </main>
-    );
-  }
-
-  if (!data) {
-    return (
-      <main className="loading-shell">
-        <h1>Smart Intersection Ops</h1>
-        <p>Loading dashboard...</p>
-      </main>
-    );
-  }
-
   return (
-    <DashboardShell
-      status={data.status}
-      events={data.events}
-      recommendation={data.recommendation}
-      simulation={data.simulation}
-      report={data.report}
-      chat={data.chat}
-      onAskQuestion={handleAskQuestion}
-      onGenerateReport={handleGenerateReport}
-      onRefreshRecommendation={handleRefreshRecommendation}
-      onRunSimulation={handleRunSimulation}
-    />
+    <main className="landing-shell">
+      <section className="landing-hero" aria-labelledby="landing-title">
+        <div className="landing-hero-copy">
+          <p className="landing-kicker">Civic traffic decision support</p>
+          <h1 id="landing-title">Smart Intersection Ops</h1>
+          <p>
+            See traffic conditions, compare signal recommendations, and brief
+            operators from one live civic view.
+          </p>
+          <div className="landing-actions">
+            <Link href="/dashboard" className="primary-link">
+              Open dashboard
+            </Link>
+            <a href="#decision-workflow" className="secondary-link">
+              View decision workflow
+            </a>
+          </div>
+        </div>
+        <LandingNetworkScene />
+      </section>
+      <section className="landing-section landing-proof" aria-labelledby="live-picture-title">
+        <div>
+          <h2 id="live-picture-title">Live intersection picture</h2>
+          <p>
+            Queue lengths, pedestrian demand, emergency approach, and recent events
+            stay visible before any recommendation is considered.
+          </p>
+        </div>
+        <div className="landing-proof-grid" aria-label="Dashboard preview metrics">
+          <span>
+            <strong>16</strong> west queue
+          </span>
+          <span>
+            <strong>12s</strong> emergency ETA
+          </span>
+          <span>
+            <strong>-18%</strong> simulated wait
+          </span>
+        </div>
+      </section>
+
+      <section className="landing-section landing-boundary" aria-labelledby="boundary-title">
+        <h2 id="boundary-title">Recommendation boundary</h2>
+        <p>
+          Smart Intersection Ops recommends and simulates traffic plans. It does not
+          control real signals, connect to live controllers, or override operator
+          judgment.
+        </p>
+      </section>
+
+      <section
+        id="decision-workflow"
+        className="landing-section landing-workflow"
+        aria-labelledby="workflow-title"
+      >
+        <h2 id="workflow-title">Scenario workflow</h2>
+        <ol>
+          <li>
+            <strong>Events</strong>
+            <span>Traffic evidence is normalized by direction, severity, and source.</span>
+          </li>
+          <li>
+            <strong>Recommendation</strong>
+            <span>The system proposes a simulation-only signal plan.</span>
+          </li>
+          <li>
+            <strong>Simulation</strong>
+            <span>Fixed and recommended plans are compared before operator review.</span>
+          </li>
+          <li>
+            <strong>Brief</strong>
+            <span>Chat and report surfaces turn the scenario into a readable handoff.</span>
+          </li>
+        </ol>
+      </section>
+
+      <section
+        className="landing-section landing-dashboard-preview"
+        aria-labelledby="dashboard-preview-title"
+      >
+        <div>
+          <h2 id="dashboard-preview-title">Dashboard preview</h2>
+          <p>
+            The dashboard stays practical: scenario switching, digital twin, event
+            timeline, recommendation evidence, metrics, chat, and reports remain in
+            one operator flow.
+          </p>
+        </div>
+        <Link href="/dashboard" className="primary-link compact">
+          Open dashboard
+        </Link>
+      </section>
+    </main>
   );
 }

@@ -7,6 +7,8 @@ import type {
   IntersectionStatus,
   Recommendation,
   Report,
+  ScenarioId,
+  ScenarioOption,
   SimulationComparison,
   TrafficEvent
 } from "../lib/types";
@@ -26,10 +28,14 @@ export type DashboardShellProps = {
   simulation: SimulationComparison;
   report: Report;
   chat: ChatResponse | null;
+  selectedScenarioId: ScenarioId;
+  scenarioOptions: ScenarioOption[];
+  scenarioLoading: boolean;
   onAskQuestion: (question: string) => Promise<void>;
   onGenerateReport: () => Promise<void>;
   onRefreshRecommendation: () => Promise<void>;
   onRunSimulation: () => Promise<void>;
+  onScenarioChange: (scenarioId: ScenarioId) => void;
 };
 
 export function DashboardShell({
@@ -39,70 +45,124 @@ export function DashboardShell({
   simulation,
   report,
   chat,
+  selectedScenarioId,
+  scenarioOptions,
+  scenarioLoading,
   onAskQuestion,
   onGenerateReport,
   onRefreshRecommendation,
-  onRunSimulation
+  onRunSimulation,
+  onScenarioChange
 }: DashboardShellProps) {
   const [locale, setLocale] = useState<Locale>("ko");
   const t = copy[locale];
+  const selectedScenario = scenarioOptions.find(
+    (option) => option.id === selectedScenarioId
+  );
+  const selectedScenarioLabel =
+    locale === "ko" ? selectedScenario?.labelKo : selectedScenario?.labelEn;
+  const selectedScenarioDescription =
+    locale === "ko"
+      ? selectedScenario?.descriptionKo
+      : selectedScenario?.descriptionEn;
+  const scenarioLoadingText =
+    locale === "ko" ? "시나리오 새로고침 중" : "Refreshing scenario";
 
   return (
     <main className="dashboard-shell">
-      <header className="top-bar">
-        <div className="brand-block">
-          <div className="brand-mark" aria-hidden="true">
-            <span />
-            <span />
-            <span />
+      <header className="dashboard-header">
+        <div className="dashboard-identity-row">
+          <div className="brand-block">
+            <div className="brand-mark" aria-hidden="true">
+              <span />
+              <span />
+              <span />
+            </div>
+            <div className="brand-copy">
+              <h1>{t.appName}</h1>
+              <span>{t.appSubtitle}</span>
+            </div>
           </div>
-          <div className="brand-copy">
-            <strong>{t.appName}</strong>
-            <span>{t.appSubtitle}</span>
+          <div className="top-meta">
+            <strong>{t.intersection}</strong>
+            <span>{t.intersectionSub}</span>
           </div>
-        </div>
-        <div className="top-meta">
-          <strong>{t.intersection}</strong>
-          <span>{t.intersectionSub}</span>
-        </div>
-        <div className="top-meta">
-          <strong>{t.scenario}</strong>
-          <span>Scenario 08:42</span>
-        </div>
-        <div className="status-chip success">
-          <span>
-            <strong>{t.analysisReady}</strong>
-            <small>{t.analysisReadySub}</small>
-          </span>
-        </div>
-        <div className="status-chip freshness">
-          <span>
-            <strong>{t.fresh}</strong>
-            <small>{t.freshSub}</small>
-          </span>
-        </div>
-        <LanguageToggle locale={locale} onChange={setLocale} />
-        <nav className="top-actions" aria-label="Dashboard actions">
-          <button type="button" className="icon-action alert-action">
-            <span aria-hidden="true" className="toolbar-icon bell" />
-            <span>{t.alerts}</span>
-          </button>
-          <button type="button" className="icon-action">
-            <span aria-hidden="true" className="toolbar-icon document" />
-            <span>{t.reports}</span>
-          </button>
-          <button type="button" className="icon-action">
-            <span aria-hidden="true" className="toolbar-icon gear" />
-            <span>{t.settings}</span>
-          </button>
-        </nav>
-        <div className="operator-card" aria-label={t.operator}>
-          <span aria-hidden="true" className="operator-avatar" />
-          <div>
-            <strong>{t.operator}</strong>
-            <small>Operator A</small>
+          <div className="status-strip" aria-label="Dashboard status">
+            <div className="status-chip success">
+              <span>
+                <strong>{t.analysisReady}</strong>
+                <small>{t.analysisReadySub}</small>
+              </span>
+            </div>
+            <div className="status-chip freshness">
+              <span>
+                <strong>{t.fresh}</strong>
+                <small>{t.freshSub}</small>
+              </span>
+            </div>
           </div>
-          <span aria-hidden="true" className="chevron" />
+          <LanguageToggle locale={locale} onChange={setLocale} />
+        </div>
+
+        <div className="dashboard-scenario-row">
+          <section className="scenario-control" aria-label={t.scenario}>
+            <div className="scenario-control-copy">
+              <strong>{selectedScenarioLabel ? selectedScenarioLabel : t.scenario}</strong>
+              <span>
+                {scenarioLoading
+                  ? scenarioLoadingText
+                  : selectedScenarioDescription
+                    ? selectedScenarioDescription
+                    : t.scenario}
+              </span>
+            </div>
+            <div
+              className="segment-control"
+              aria-label={locale === "ko" ? "시나리오 선택" : "Scenario selection"}
+            >
+              {scenarioOptions.map((option) => {
+                const selected = option.id === selectedScenarioId;
+                const label = locale === "ko" ? option.labelKo : option.labelEn;
+
+                return (
+                  <button
+                    key={option.id}
+                    type="button"
+                    className={selected ? "active" : ""}
+                    aria-pressed={selected}
+                    disabled={scenarioLoading || selected}
+                    onClick={() => onScenarioChange(option.id)}
+                  >
+                    {label}
+                  </button>
+                );
+              })}
+            </div>
+          </section>
+
+          <nav className="top-actions" aria-label="Dashboard actions">
+            <button type="button" className="icon-action alert-action">
+              <span aria-hidden="true" className="toolbar-icon bell" />
+              <span>{t.alerts}</span>
+            </button>
+            <button type="button" className="icon-action">
+              <span aria-hidden="true" className="toolbar-icon document" />
+              <span>{t.reports}</span>
+            </button>
+            <button type="button" className="icon-action">
+              <span aria-hidden="true" className="toolbar-icon gear" />
+              <span>{t.settings}</span>
+            </button>
+          </nav>
+
+          <div className="operator-card" aria-label={t.operator}>
+            <span aria-hidden="true" className="operator-avatar" />
+            <div>
+              <strong>{t.operator}</strong>
+              <small>Operator A</small>
+            </div>
+            <span aria-hidden="true" className="chevron" />
+          </div>
         </div>
       </header>
 

@@ -31,6 +31,22 @@ describe("dashboard API client", () => {
     );
   });
 
+  test("adds scenario query parameters to dashboard API requests", async () => {
+    const fetchMock = vi
+      .spyOn(globalThis, "fetch")
+      .mockReturnValue(mockJsonResponse({ id: 1, action: "pedestrian_service" }));
+
+    await recommendSignal("pedestrian");
+
+    expect(fetchMock).toHaveBeenCalledWith(
+      "http://127.0.0.1:8000/api/recommend-signal?scenario_id=pedestrian",
+      expect.objectContaining({
+        method: "POST",
+        cache: "no-store"
+      })
+    );
+  });
+
   test("posts chat questions as JSON", async () => {
     const fetchMock = vi
       .spyOn(globalThis, "fetch")
@@ -43,6 +59,23 @@ describe("dashboard API client", () => {
       expect.objectContaining({
         method: "POST",
         body: JSON.stringify({ question: "현재 상황은?" }),
+        headers: expect.objectContaining({ "Content-Type": "application/json" })
+      })
+    );
+  });
+
+  test("adds scenario query parameters to chat requests", async () => {
+    const fetchMock = vi
+      .spyOn(globalThis, "fetch")
+      .mockReturnValue(mockJsonResponse({ answer: "ok", referenced_event_ids: [] }));
+
+    await askQuestion("blocked?", "blocked");
+
+    expect(fetchMock).toHaveBeenCalledWith(
+      "http://127.0.0.1:8000/api/chat?scenario_id=blocked",
+      expect.objectContaining({
+        method: "POST",
+        body: JSON.stringify({ question: "blocked?" }),
         headers: expect.objectContaining({ "Content-Type": "application/json" })
       })
     );
