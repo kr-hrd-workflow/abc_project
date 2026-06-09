@@ -5,6 +5,9 @@ from pathlib import Path
 from shutil import which
 from typing import TypedDict
 
+from sqlalchemy import text
+from sqlalchemy.exc import SQLAlchemyError
+
 from app.core.config import Settings
 
 
@@ -40,34 +43,79 @@ def get_runtime_readiness(
         "vision": _section(
             mode=settings.vision_analysis_mode,
             checks=[
-                _check("python module cv2", module_available("cv2")),
-                _check("python module ultralytics", module_available("ultralytics")),
+                _check(
+                    "python module cv2",
+                    module_available("cv2"),
+                    detail=(
+                        "install the API vision extra before enabling "
+                        "opencv_yolo mode"
+                    ),
+                ),
+                _check(
+                    "python module ultralytics",
+                    module_available("ultralytics"),
+                    detail=(
+                        "install the API vision extra before enabling "
+                        "opencv_yolo mode"
+                    ),
+                ),
                 _check(
                     f"model file {settings.yolo_model_path}",
                     path_exists(settings.yolo_model_path),
+                    detail="set YOLO_MODEL_PATH to a local model file",
                 ),
             ],
         ),
         "simulation": _section(
             mode=settings.sumo_simulation_mode,
             checks=[
-                _check("python module traci", module_available("traci")),
-                _check("python module sumolib", module_available("sumolib")),
+                _check(
+                    "python module traci",
+                    module_available("traci"),
+                    detail=(
+                        "install the API simulation extra before enabling "
+                        "sumo_traci mode"
+                    ),
+                ),
+                _check(
+                    "python module sumolib",
+                    module_available("sumolib"),
+                    detail=(
+                        "install the API simulation extra before enabling "
+                        "sumo_traci mode"
+                    ),
+                ),
                 _check(
                     f"binary {settings.sumo_binary}",
                     binary_available(settings.sumo_binary),
+                    detail=(
+                        "install SUMO system binaries and keep SUMO_BINARY "
+                        "configured"
+                    ),
                 ),
-                _check("binary netconvert", binary_available("netconvert")),
+                _check(
+                    "binary netconvert",
+                    binary_available("netconvert"),
+                    detail="install SUMO system binaries",
+                ),
                 _check(
                     f"SUMO config {settings.sumo_config_path}",
                     path_exists(settings.sumo_config_path),
+                    detail="set SUMO_CONFIG_PATH to a local .sumocfg file",
                 ),
             ],
         ),
         "openai": _section(
             mode=settings.openai_model,
             checks=[
-                _check("python module openai", module_available("openai")),
+                _check(
+                    "python module openai",
+                    module_available("openai"),
+                    detail=(
+                        "install the API ai extra before enabling OpenAI "
+                        "client calls"
+                    ),
+                ),
                 _check(
                     "OPENAI_API_KEY",
                     bool(env.get("OPENAI_API_KEY")),
@@ -78,11 +126,21 @@ def get_runtime_readiness(
         "pgvector": _section(
             mode="database",
             checks=[
-                _check("python module pgvector", module_available("pgvector")),
+                _check(
+                    "python module pgvector",
+                    module_available("pgvector"),
+                    detail=(
+                        "install the API ai extra before enabling pgvector "
+                        "search"
+                    ),
+                ),
                 _check(
                     "PostgreSQL vector extension",
                     vector_extension_verified(),
-                    detail="requires target database approval and verification",
+                    detail=(
+                        "requires approved target database setup before "
+                        "enabling vector columns"
+                    ),
                 ),
             ],
         ),
@@ -116,6 +174,20 @@ def _binary_available(binary_name: str) -> bool:
 
 def _path_exists(path: str) -> bool:
     return Path(path).expanduser().exists()
+
+
+def is_vector_extension_enabled(session_factory: Callable[[], object]) -> bool:
+    try:
+        with session_factory() as session:
+            result = session.execute(
+                text(
+                    "select count(*) from pg_extension "
+                    "where extname = 'vector'"
+                )
+            )
+            return int(result.scalar_one()) > 0
+    except (OSError, RuntimeError, SQLAlchemyError):
+        return False
 
 
 def _vector_extension_not_verified() -> bool:

@@ -75,6 +75,14 @@ historical implementation recipe; this tracker is the current progress summary.
 - [x] Next build slice: add `/api/runtime/readiness` so remaining OpenCV/YOLO,
   SUMO/TraCI, OpenAI, and pgvector setup gates are observable without installing
   runtimes, calling external APIs, or returning secrets.
+- [x] Next build slice: make pgvector readiness inspect the target database for
+  an enabled PostgreSQL `vector` extension when the database is reachable,
+  without enabling the extension or adding vector columns.
+- [x] Next build slice: add actionable setup details to `/api/runtime/readiness`
+  checks so missing optional modules, binaries, model files, API keys, and
+  database extensions point to the required setup gate.
+- [x] Documentation slice: add `docs/runtime-setup.md` with checkbox runbooks
+  for the remaining YOLO/OpenCV, SUMO/TraCI, OpenAI, and pgvector gates.
 - [x] Documentation handoff slice: rewrite `README.md` in Korean so teammates
   can see current status, setup commands, validation commands, remaining gates,
   and the next files to work from.

@@ -205,7 +205,10 @@ def test_runtime_readiness_endpoint_reports_gates_without_secrets(
     client: TestClient,
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    def fake_runtime_readiness(_settings) -> dict[str, object]:
+    def fake_runtime_readiness(
+        _settings,
+        **_kwargs: object,
+    ) -> dict[str, object]:
         return {
             "openai": {
                 "ready": False,

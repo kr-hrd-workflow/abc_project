@@ -413,6 +413,8 @@ source/tests.
     the existing `VisionObservation` contract.
   - [x] Add `/api/runtime/readiness` checks for OpenCV, Ultralytics, and model
     file availability without importing the optional runtime.
+  - [x] Add `docs/runtime-setup.md` with approval and validation checkboxes for
+    live YOLO/OpenCV setup.
   - [ ] Install and verify real OpenCV/Ultralytics/model weights in the target
     runtime before marking real inference complete.
 - [x] Implement `SumoTraciTrafficSimulationAdapter` behind the existing
@@ -430,6 +432,8 @@ source/tests.
     module.
   - [x] Add `/api/runtime/readiness` checks for TraCI, sumolib, SUMO binaries,
     netconvert, and configured SUMO network file availability.
+  - [x] Add `docs/runtime-setup.md` with approval and validation checkboxes for
+    live SUMO/TraCI setup.
   - [ ] Install and verify the SUMO binary/network config in the target runtime
     before marking real SUMO execution complete.
 - [x] Replace the center simulation viewport renderer while preserving
@@ -441,6 +445,10 @@ source/tests.
   - [x] Add optional API `ai` dependencies for `openai` and `pgvector`.
   - [x] Add `/api/runtime/readiness` checks for the pgvector Python module and
     target-database vector extension verification status.
+  - [x] Wire the pgvector readiness check to inspect `pg_extension` on the
+    configured database when it is reachable, without enabling the extension.
+  - [x] Add `docs/runtime-setup.md` with approval and validation checkboxes for
+    pgvector setup and embedding search.
   - [ ] Enable PostgreSQL `vector` extension and vector columns after target
     database setup is approved and verified.
 - [x] Add policy and operation-guide document ingestion.
@@ -457,6 +465,8 @@ source/tests.
     `OPENAI_EMBEDDING_DIMENSIONS` runtime configuration.
   - [x] Add `/api/runtime/readiness` checks for OpenAI client package and
     API-key presence without returning secret values.
+  - [x] Add `docs/runtime-setup.md` with approval and validation checkboxes for
+    OpenAI client setup.
   - [ ] Add an OpenAI client call path only after API-key setup is approved and
     validated.
 

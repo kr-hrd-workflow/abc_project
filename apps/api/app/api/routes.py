@@ -17,7 +17,7 @@ from app.adapters.vision import (
     ScenarioVisionAnalysisAdapter,
 )
 from app.core.config import settings
-from app.db.session import get_session
+from app.db.session import SessionLocal, get_session
 from app.domain.schemas import ChatRequest, ChatResponse
 from app.scenarios.fixtures import SAMPLE_INPUT_FIXTURES, fixture_to_payload
 from app.services.chat import answer_question
@@ -36,7 +36,10 @@ from app.services.persistence import (
 )
 from app.services.recommendations import recommend_signal_action
 from app.services.reports import generate_scenario_report
-from app.services.runtime_readiness import get_runtime_readiness
+from app.services.runtime_readiness import (
+    get_runtime_readiness,
+    is_vector_extension_enabled,
+)
 
 router = APIRouter()
 vision_adapter = ScenarioVisionAnalysisAdapter()
@@ -166,7 +169,10 @@ def get_analysis_job(job_id: str) -> dict[str, object]:
 
 @router.get("/api/runtime/readiness")
 def get_runtime_readiness_status() -> dict[str, object]:
-    return get_runtime_readiness(settings)
+    return get_runtime_readiness(
+        settings,
+        vector_extension_verified=lambda: is_vector_extension_enabled(SessionLocal),
+    )
 
 
 def _analyze_uploaded_sample(

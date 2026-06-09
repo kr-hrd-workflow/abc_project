@@ -123,6 +123,13 @@ Current as of 2026-06-09.
   - [x] Add configurable OpenAI model and embedding settings.
   - [x] Add `/api/runtime/readiness` checks for OpenAI API-key presence and
     pgvector setup status without returning secrets or calling external APIs.
+  - [x] Make pgvector readiness inspect the configured database for an enabled
+    PostgreSQL `vector` extension when the database is reachable.
+  - [x] Add setup-detail text to runtime readiness checks so missing gates point
+    to the needed optional dependency, binary, model path, API key, or database
+    setup.
+  - [x] Add `docs/runtime-setup.md` as the approval-gated checklist for live
+    YOLO/OpenCV, SUMO/TraCI, OpenAI, and pgvector setup.
   - [x] Keep OpenAI client calls and pgvector execution out of this slice until
     API-key and target database setup are approved and verified.
 
@@ -334,9 +341,14 @@ which optional runtime gates are available before trying live integrations:
   `netconvert`, and configured SUMO config file presence
 - OpenAI readiness checks client-package availability and API-key presence
   without returning secret values
-- pgvector readiness checks Python package availability and reports the
-  target-database vector extension as unverified until DB setup is approved and
-  checked
+- pgvector readiness checks Python package availability and inspects the
+  configured database for an enabled PostgreSQL `vector` extension when the
+  database is reachable
+- each readiness check includes setup-detail text for the missing dependency,
+  binary, path, API key, or database gate without returning secret values
 
 This does not install OpenCV/Ultralytics, model weights, SUMO, TraCI, OpenAI,
 pgvector, or a database extension. It only makes the remaining gates observable.
+
+Use `docs/runtime-setup.md` for the step-by-step approval and validation
+checklist before marking any live runtime gate complete.

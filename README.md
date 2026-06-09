@@ -20,6 +20,9 @@
 - 교체 가능한 중앙 시뮬레이션 뷰포트
 - 정책/운영 가이드 문서 기반의 로컬 근거 검색
 - `/api/runtime/readiness` 런타임 준비 상태 점검 API
+- `/api/runtime/readiness`에서 PostgreSQL `vector` 확장 활성화 여부 조회
+- `/api/runtime/readiness`에서 누락된 모듈, 바이너리, 모델 파일, API 키,
+  DB 확장에 대한 다음 설정 힌트 제공
 - `AGENTS.md`에 팀원/에이전트 작업 규칙 정리
 
 ### 아직 끝나지 않은 범위
@@ -33,7 +36,9 @@
 
 현재 로컬 런타임 준비 상태 기준으로 `cv2`, `ultralytics`, `traci`,
 `sumolib`, `sumo`, `netconvert`, `openai`, `pgvector`, `OPENAI_API_KEY`,
-PostgreSQL `vector` 확장은 아직 준비되지 않았습니다.
+PostgreSQL `vector` 확장은 아직 준비되지 않았습니다. 단,
+`/api/runtime/readiness`는 데이터베이스가 연결될 경우 `pg_extension`에서
+`vector` 확장 활성화 여부를 직접 조회합니다.
 
 ## 처음 시작할 때 읽을 문서
 
@@ -48,6 +53,9 @@ PostgreSQL `vector` 확장은 아직 준비되지 않았습니다.
    - YOLO, SUMO, OpenAI, pgvector로 넘어갈 때 지켜야 하는 통합 메모입니다.
 5. `docs/superpowers/plans/2026-06-08-dashboard-ui-implementation.md`
    - 대시보드 UI 구현 현황과 검증 기록입니다.
+6. `docs/runtime-setup.md`
+   - 실제 YOLO/OpenCV, SUMO/TraCI, OpenAI, pgvector 설정을 승인 후 진행할
+     때 쓰는 체크리스트입니다.
 
 ## 로컬 실행 준비
 
@@ -93,9 +101,16 @@ docker compose -f infra/docker-compose.yml ps
 ```bash
 apps/api/.venv/bin/python - <<'PY'
 from app.core.config import settings
-from app.services.runtime_readiness import get_runtime_readiness
+from app.db.session import SessionLocal
+from app.services.runtime_readiness import (
+    get_runtime_readiness,
+    is_vector_extension_enabled,
+)
 
-for section, payload in get_runtime_readiness(settings).items():
+for section, payload in get_runtime_readiness(
+    settings,
+    vector_extension_verified=lambda: is_vector_extension_enabled(SessionLocal),
+).items():
     print(section, payload["ready"], payload["missing"])
 PY
 ```
@@ -130,6 +145,7 @@ GET  /api/analysis-jobs/{job_id}
 ### 실제 YOLO/OpenCV 추론
 
 - 시작 파일:
+  - `docs/runtime-setup.md`
   - `apps/api/app/adapters/vision.py`
   - `apps/api/tests/test_adapters.py`
   - `apps/api/tests/test_api_flow.py`
@@ -143,6 +159,7 @@ GET  /api/analysis-jobs/{job_id}
 ### 실제 SUMO/TraCI 실행
 
 - 시작 파일:
+  - `docs/runtime-setup.md`
   - `apps/api/app/adapters/simulation.py`
   - `apps/api/app/services/runtime_readiness.py`
   - `apps/api/tests/test_adapters.py`
@@ -156,6 +173,7 @@ GET  /api/analysis-jobs/{job_id}
 ### OpenAI/pgvector 기반 RAG
 
 - 시작 파일:
+  - `docs/runtime-setup.md`
   - `apps/api/app/services/knowledge.py`
   - `apps/api/app/services/chat.py`
   - `apps/api/app/db/models.py`
@@ -166,6 +184,8 @@ GET  /api/analysis-jobs/{job_id}
   - 공식 OpenAI 문서로 모델/임베딩 사용법 재확인
   - PostgreSQL `vector` 확장과 pgvector 컬럼 마이그레이션
   - 로컬 키워드 검색을 임베딩 검색으로 교체
+  - `/api/runtime/readiness`로 `pgvector` 패키지와 PostgreSQL `vector`
+    확장 활성화 상태 재확인
 
 ## 안전 경계
 
