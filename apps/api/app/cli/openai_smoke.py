@@ -25,9 +25,12 @@ def run_openai_smoke(
     env: Mapping[str, str] | None = None,
     client_factory: Callable[[str], OpenAIClientProtocol] = build_openai_client,
 ) -> str:
-    if settings.openai_monthly_budget_usd is None:
+    env = os.environ if env is None else env
+    missing_requirements = _missing_openai_smoke_requirements(settings, env)
+    if missing_requirements:
         raise OpenAISmokeError(
-            "OPENAI_MONTHLY_BUDGET_USD is required before live OpenAI smoke calls"
+            ", ".join(missing_requirements)
+            + " required before live OpenAI smoke calls"
         )
 
     try:
@@ -73,6 +76,18 @@ def run_openai_smoke(
             "response_text_present=True",
         ]
     )
+
+
+def _missing_openai_smoke_requirements(
+    settings: Settings,
+    env: Mapping[str, str],
+) -> list[str]:
+    missing = []
+    if not env.get("OPENAI_API_KEY", "").strip():
+        missing.append("OPENAI_API_KEY")
+    if settings.openai_monthly_budget_usd is None:
+        missing.append("OPENAI_MONTHLY_BUDGET_USD")
+    return missing
 
 
 def main(

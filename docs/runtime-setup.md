@@ -210,7 +210,8 @@ npm run openai:smoke
   because local environment values are still missing:
   `OPENAI_API_KEY`, `OPENAI_MONTHLY_BUDGET_USD`.
 - `npm run openai:smoke` is expected to fail until those values exist; it does
-  not print secrets when it runs.
+  not print secrets when it runs, and currently reports both missing gate values
+  before constructing a live OpenAI client.
 - No live OpenAI API call was attempted without those values.
 - Per user direction, this missing live-key step is deferred rather than a
   blocker for the current build handoff.

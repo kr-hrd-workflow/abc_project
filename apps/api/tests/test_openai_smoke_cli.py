@@ -127,3 +127,4 @@ def test_openai_smoke_main_returns_failure_without_ready_env(
 
     assert exit_code == 1
     assert "OPENAI_MONTHLY_BUDGET_USD" in captured.err
+    assert "OPENAI_API_KEY" in captured.err
