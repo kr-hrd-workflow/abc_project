@@ -477,6 +477,8 @@ source/tests.
     API-key presence without returning secret values.
   - [x] Add `docs/runtime-setup.md` with approval and validation checkboxes for
     OpenAI client setup.
+  - [x] Add a mocked OpenAI Responses/embeddings client boundary that can be
+    tested without secrets or live external calls.
   - [ ] Add an OpenAI client call path only after API-key setup is approved and
     validated.
 

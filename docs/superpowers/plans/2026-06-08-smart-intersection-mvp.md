@@ -96,9 +96,11 @@ historical implementation recipe; this tracker is the current progress summary.
 - [x] Documentation handoff slice: rewrite `README.md` in Korean so teammates
   can see current status, setup commands, validation commands, remaining gates,
   and the next files to work from.
+- [x] Next AI/RAG slice: install the API `ai` extra and add a mocked OpenAI
+  Responses/embeddings client boundary without API keys or live external calls.
 - [ ] Remaining AI/RAG gate: approve and verify API-key setup, pgvector database
-  extension, live embeddings, and OpenAI client calls before claiming full
-  RAG/AI integration is complete.
+  extension, pricing/usage review, live embeddings, and OpenAI client calls
+  before claiming full RAG/AI integration is complete.
 
 ## File Structure
 

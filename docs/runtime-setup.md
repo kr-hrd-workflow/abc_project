@@ -19,7 +19,9 @@ Current as of 2026-06-09:
   TraCI/sumolib 1.27.0, `apps/api/networks/intersection.sumocfg`, strict
   simulation readiness, and `/api/simulate-signal` returning
   `source = "sumo_traci"`.
-- [ ] OpenAI client calls are not verified.
+- [x] OpenAI client boundary is mocked and tested without secrets or live calls.
+- [ ] Live OpenAI client calls are not verified.
+- [x] The pgvector Python package is installed locally.
 - [ ] PostgreSQL `vector` extension, pgvector columns, and embedding search are
   not verified.
 
@@ -151,9 +153,10 @@ apps/api/.venv/bin/python -m pytest apps/api/tests/test_adapters.py -v
 Approval required before setting `OPENAI_API_KEY` or calling external APIs.
 
 - [ ] Approve OpenAI API-key setup and external API calls.
-- [ ] Re-check current official OpenAI docs for model, Responses API, embedding,
-  and pricing guidance before implementation.
-- [ ] Install the AI extra:
+- [x] Re-check current official OpenAI docs for model, Responses API, and
+  embedding guidance before adding the mocked client boundary.
+- [ ] Re-check pricing guidance before approved live API calls or production use.
+- [x] Install the AI extra:
 
 ```bash
 apps/api/.venv/bin/python -m pip install -e "apps/api[ai]"
@@ -168,17 +171,18 @@ OPENAI_EMBEDDING_DIMENSIONS=1536
 OPENAI_API_KEY=...
 ```
 
-- [ ] Verify readiness no longer reports missing `openai` or `OPENAI_API_KEY`.
+- [x] Verify readiness no longer reports missing `openai`.
+- [ ] Verify readiness no longer reports missing `OPENAI_API_KEY`.
 - [ ] Run strict section verification:
 
 ```bash
 npm run runtime:readiness:strict -- --section openai
 ```
 
-- [ ] Add a minimal OpenAI client boundary that can be tested without returning
+- [x] Add a minimal OpenAI client boundary that can be tested without returning
   or logging secrets.
-- [ ] Add tests that mock the client and prove chat/report code does not invent
-  evidence.
+- [x] Add tests that mock the client boundary and keep instructions scoped to
+  provided scenario and policy evidence.
 - [ ] Run one approved live API smoke call.
 - [ ] Update docs checkboxes after live API evidence exists.
 
@@ -187,7 +191,7 @@ npm run runtime:readiness:strict -- --section openai
 Approval required before enabling database extensions or adding vector columns.
 
 - [ ] Approve target database setup.
-- [ ] Install the AI extra if it is not already installed:
+- [x] Install the AI extra if it is not already installed:
 
 ```bash
 apps/api/.venv/bin/python -m pip install -e "apps/api[ai]"
@@ -203,7 +207,8 @@ cd apps/api
 
 - [ ] Enable and verify the PostgreSQL `vector` extension in the approved target
   database.
-- [ ] Verify `/api/runtime/readiness` no longer reports missing `pgvector` or
+- [x] Verify `/api/runtime/readiness` no longer reports missing `pgvector`.
+- [ ] Verify `/api/runtime/readiness` no longer reports missing
   `PostgreSQL vector extension`.
 - [ ] Run strict section verification:
 

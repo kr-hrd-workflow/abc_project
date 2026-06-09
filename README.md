@@ -28,6 +28,8 @@
 - 실제 SUMO/TraCI 1.27.0 로컬 실행 검증
 - `apps/api/networks/intersection.sumocfg` 기반 라이브 시뮬레이션 스모크
   검증
+- `apps/api[ai]`로 OpenAI/pgvector Python 패키지 설치
+- OpenAI Responses/embeddings 클라이언트 경계와 목업 테스트
 - `AGENTS.md`에 팀원/에이전트 작업 규칙 정리
 
 ### 아직 끝나지 않은 범위
@@ -35,13 +37,15 @@
 아래 항목은 문서의 체크박스에도 아직 미완료로 남아 있습니다.
 
 - PostgreSQL `vector` 확장과 pgvector 컬럼/검색
-- OpenAI API 키 설정 후 실제 OpenAI 클라이언트 호출과 임베딩 검색
+- OpenAI API 키 설정 후 실제 OpenAI 클라이언트 호출
+- 실제 임베딩 검색과 RAG 연결
 
 현재 로컬 런타임 준비 상태 기준으로 YOLO/OpenCV 비전 섹션과
-SUMO/TraCI 시뮬레이션 섹션은 준비됐습니다. 아직 남은 것은 `openai`,
-`pgvector`, `OPENAI_API_KEY`, PostgreSQL `vector` 확장입니다.
-단, `/api/runtime/readiness`는 데이터베이스가 연결될 경우
-`pg_extension`에서 `vector` 확장 활성화 여부를 직접 조회합니다.
+SUMO/TraCI 시뮬레이션 섹션은 준비됐고, `openai`와 `pgvector` Python
+패키지도 설치됐습니다. 아직 남은 것은 `OPENAI_API_KEY`와 PostgreSQL
+`vector` 확장입니다. 단, `/api/runtime/readiness`는 데이터베이스가
+연결될 경우 `pg_extension`에서 `vector` 확장 활성화 여부를 직접
+조회합니다.
 
 ## 처음 시작할 때 읽을 문서
 
@@ -195,12 +199,23 @@ GET  /api/analysis-jobs/{job_id}
   - `apps/api/app/db/models.py`
   - `apps/api/alembic/versions/`
   - `apps/api/app/services/runtime_readiness.py`
+  - `apps/api/app/services/openai_clients.py`
+- 현재 상태:
+  - `apps/api[ai]` 설치로 `openai`와 `pgvector` Python 패키지는
+    준비됐습니다.
+  - `OpenAITextGateway`와 `OpenAIEmbeddingGateway`는 목업 클라이언트로
+    테스트되어 있고, 실제 API 호출은 아직 하지 않았습니다.
+  - `/api/runtime/readiness` 기준 남은 OpenAI 게이트는
+    `OPENAI_API_KEY`입니다.
+  - `/api/runtime/readiness` 기준 남은 pgvector 게이트는 PostgreSQL
+    `vector` 확장입니다.
 - 해야 할 일:
   - OpenAI API 키 설정 승인 및 검증
-  - 공식 OpenAI 문서로 모델/임베딩 사용법 재확인
+  - 실제 호출 전에 공식 OpenAI 문서로 가격/사용량 조건 재확인
+  - 승인된 live API smoke call 실행
   - PostgreSQL `vector` 확장과 pgvector 컬럼 마이그레이션
   - 로컬 키워드 검색을 임베딩 검색으로 교체
-  - `/api/runtime/readiness`로 `pgvector` 패키지와 PostgreSQL `vector`
+  - `/api/runtime/readiness`로 `OPENAI_API_KEY`와 PostgreSQL `vector`
     확장 활성화 상태 재확인
 
 ## 안전 경계

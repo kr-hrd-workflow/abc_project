@@ -141,8 +141,10 @@ Current as of 2026-06-09.
     `openai`, and `pgvector`.
   - [x] Add section filtering to `/api/runtime/readiness` for targeted HTTP
     smoke checks.
-  - [x] Keep OpenAI client calls and pgvector execution out of this slice until
-    API-key and target database setup are approved and verified.
+  - [x] Keep live OpenAI client calls and pgvector execution out of this slice
+    until API-key and target database setup are approved and verified.
+  - [x] Add a mocked OpenAI Responses/embeddings client boundary without storing
+    secrets or calling external services.
 
 ## Implemented Phase 2 Slice: Fixture Ingestion Path
 
@@ -342,10 +344,12 @@ OpenAI API key or pgvector runtime:
   `OPENAI_EMBEDDING_DIMENSIONS`
 - official OpenAI docs were checked on 2026-06-09 for `gpt-5.5`,
   Responses API guidance, and embedding-model constraints before adding config
+- `apps/api/app/services/openai_clients.py` adds a mocked/tested
+  Responses/embeddings boundary for future live wiring
 
-This does not create an OpenAI client, store API keys, call external AI
-services, enable the PostgreSQL `vector` extension, or perform live embedding
-search. Those remain gated by API-key approval and target database setup.
+This does not store API keys, call external AI services, enable the PostgreSQL
+`vector` extension, or perform live embedding search. Those remain gated by
+API-key approval and target database setup.
 
 ## Implemented Slice: Runtime Gate Readiness
 
@@ -364,8 +368,10 @@ which optional runtime gates are available before trying live integrations:
 - each readiness check includes setup-detail text for the missing dependency,
   binary, path, API key, or database gate without returning secret values
 
-This does not install OpenCV/Ultralytics, model weights, SUMO, TraCI, OpenAI,
-pgvector, or a database extension. It only makes the remaining gates observable.
+The readiness slice itself only made the gates observable. Later local
+verification installed OpenCV/Ultralytics/model weights, SUMO/TraCI, and the
+OpenAI/pgvector Python packages, but it still does not store API keys, call
+external AI services, or enable the PostgreSQL `vector` extension.
 
 Use `docs/runtime-setup.md` for the step-by-step approval and validation
 checklist before marking any live runtime gate complete.
