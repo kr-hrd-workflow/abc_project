@@ -20,7 +20,8 @@ Current as of 2026-06-09:
   simulation readiness, and `/api/simulate-signal` returning
   `source = "sumo_traci"`.
 - [x] OpenAI client boundary is mocked and tested without secrets or live calls.
-- [ ] Live OpenAI client calls are not verified.
+- [x] Live OpenAI client calls are intentionally deferred until the user buys
+  API credits and sets `OPENAI_API_KEY` plus `OPENAI_MONTHLY_BUDGET_USD`.
 - [x] OpenAI API pricing guidance is re-checked against official docs.
 - [x] OpenAI monthly budget readiness guard is implemented without live calls.
 - [x] The pgvector Python package is installed locally.
@@ -153,6 +154,8 @@ apps/api/.venv/bin/python -m pytest apps/api/tests/test_adapters.py -v
 ## Gate 3: OpenAI Client Calls
 
 Approval required before setting `OPENAI_API_KEY` or calling external APIs.
+This gate is deferred as of 2026-06-09; the user will buy OpenAI API credits
+and add the key/budget values later.
 
 - [x] Approve OpenAI API-key setup and external API calls.
 - [x] Re-check current official OpenAI docs for model, Responses API, and
@@ -164,7 +167,9 @@ Approval required before setting `OPENAI_API_KEY` or calling external APIs.
 apps/api/.venv/bin/python -m pip install -e "apps/api[ai]"
 ```
 
-- [ ] Set local environment values in `.env`:
+- [x] Mark local environment setup as deferred until OpenAI API credits are
+  purchased.
+- [ ] Future step: set local environment values in `.env`:
 
 ```dotenv
 OPENAI_MODEL=gpt-5.5
@@ -196,8 +201,8 @@ npm run runtime:readiness:strict -- --section openai
 npm run openai:smoke
 ```
 
-- [ ] Run one approved live API smoke call.
-- [ ] Update docs checkboxes after live API evidence exists.
+- [ ] Future step: run one approved live API smoke call.
+- [ ] Future step: update docs checkboxes after live API evidence exists.
 
 2026-06-09 live-readiness evidence:
 
@@ -207,6 +212,8 @@ npm run openai:smoke
 - `npm run openai:smoke` is expected to fail until those values exist; it does
   not print secrets when it runs.
 - No live OpenAI API call was attempted without those values.
+- Per user direction, this missing live-key step is deferred rather than a
+  blocker for the current build handoff.
 
 Pricing evidence checked on 2026-06-09:
 

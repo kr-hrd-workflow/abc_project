@@ -38,18 +38,19 @@
 - `npm run openai:smoke`로 실행하는 guarded OpenAI live smoke 명령
 - `AGENTS.md`에 팀원/에이전트 작업 규칙 정리
 
-### 아직 끝나지 않은 범위
+### 나중에 진행할 범위
 
-아래 항목은 문서의 체크박스에도 아직 미완료로 남아 있습니다.
+아래 항목은 사용자가 OpenAI API credit을 구매하고 키를 넣은 뒤 진행합니다.
+현재 빌드 handoff에서는 의도적으로 보류합니다.
 
 - OpenAI API 키 설정 후 실제 OpenAI 클라이언트 호출
 - 실제 OpenAI 임베딩 호출을 사용하는 live RAG 스모크 검증
 
 현재 로컬 런타임 준비 상태 기준으로 YOLO/OpenCV 비전 섹션과
 SUMO/TraCI 시뮬레이션 섹션, pgvector 섹션은 준비됐고, `openai`와
-`pgvector` Python 패키지도 설치됐습니다. 아직 남은 것은
-`OPENAI_API_KEY`와 `OPENAI_MONTHLY_BUDGET_USD`입니다. 실제 OpenAI 호출은
-두 값이 설정된 뒤에만 실행해야 합니다.
+`pgvector` Python 패키지도 설치됐습니다. `OPENAI_API_KEY`와
+`OPENAI_MONTHLY_BUDGET_USD`는 나중에 설정합니다. 실제 OpenAI 호출은 두
+값이 설정된 뒤에만 실행해야 합니다.
 
 ## 처음 시작할 때 읽을 문서
 
@@ -235,15 +236,13 @@ GET  /api/analysis-jobs/{job_id}
     키/예산 값이 없으면 외부 호출 전에 실패합니다.
   - `OPENAI_MONTHLY_BUDGET_USD`가 없으면 live OpenAI gate가 준비 완료로
     표시되지 않습니다.
-  - `/api/runtime/readiness` 기준 남은 OpenAI 게이트는
-    `OPENAI_API_KEY`와 `OPENAI_MONTHLY_BUDGET_USD`입니다.
-- 해야 할 일:
-  - OpenAI API 키 설정 및 검증
-  - 실제 호출 전 월 예산/사용량 제한 결정
+  - 2026-06-09 기준 live OpenAI smoke는 의도적으로 보류했습니다.
+- 나중에 해야 할 일:
+  - OpenAI API credit 구매
+  - `.env`에 `OPENAI_API_KEY`와 `OPENAI_MONTHLY_BUDGET_USD` 설정
+  - `/api/runtime/readiness`로 두 값 활성화 상태 재확인
   - 승인된 live API smoke call 실행
   - `KNOWLEDGE_SEARCH_MODE=pgvector` 상태에서 실제 임베딩 검색 스모크 실행
-  - `/api/runtime/readiness`로 `OPENAI_API_KEY`와
-    `OPENAI_MONTHLY_BUDGET_USD` 활성화 상태 재확인
 
 ## 안전 경계
 

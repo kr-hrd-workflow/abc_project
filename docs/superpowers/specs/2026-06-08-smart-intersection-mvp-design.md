@@ -467,7 +467,7 @@ source/tests.
     blocked-intersection guidance without external API calls.
   - [x] Replace local keyword scoring with pgvector-backed embedding search
     after database extension and embedding setup are verified.
-- [ ] Add configurable OpenAI model and prompt settings only after API-key setup
+- [x] Add configurable OpenAI model and prompt settings only after API-key setup
   approval and current official OpenAI docs verification.
   - [x] Verify official docs for `gpt-5.5` and Responses API guidance on
     2026-06-09 via `developers.openai.com`.
@@ -486,8 +486,10 @@ source/tests.
   - [x] Add a guarded OpenAI embedding client call path for pgvector mode.
   - [x] Add a guarded `npm run openai:smoke` command for live Responses and
     embeddings verification after credentials are present.
-  - [ ] Validate the live OpenAI client call path after `OPENAI_API_KEY` and
-    `OPENAI_MONTHLY_BUDGET_USD` are set.
+  - [x] Defer live OpenAI validation until the user buys API credits and sets
+    `OPENAI_API_KEY` plus `OPENAI_MONTHLY_BUDGET_USD`.
+  - [ ] Future step: validate the live OpenAI client call path after those
+    values are set.
 
 ## Testing Plan
 
