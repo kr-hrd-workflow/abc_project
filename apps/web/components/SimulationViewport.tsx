@@ -22,6 +22,8 @@ export function SimulationViewport({
     (event) => event.event_type === "emergency_vehicle_approach"
   );
   const delayPercent = simulation.improvement.total_delay_percent;
+  const activeDirection = signalPhaseDirection(status.signal_phase);
+  const emergencyDirection = emergencyEvent?.direction ?? null;
 
   return (
     <div className="simulation-viewport">
@@ -44,8 +46,9 @@ export function SimulationViewport({
       <div className="lane-markers horizontal-lanes" />
       <div className="turn-pocket north-pocket" />
       <div className="turn-pocket east-pocket" />
-      <div className="priority-corridor east-priority" />
-      <div className="priority-corridor south-priority" />
+      {activeDirection ? (
+        <div className={`priority-corridor ${activeDirection}-priority`} />
+      ) : null}
       <div className="crosswalk crosswalk-north" />
       <div className="crosswalk crosswalk-south" />
       <div className="crosswalk crosswalk-east" />
@@ -61,21 +64,31 @@ export function SimulationViewport({
       <VehicleLane side="east" count={status.queues.east} />
       <VehicleLane side="west" count={status.queues.west} />
 
-      <SignalStack className="signal-north" />
-      <SignalStack className="signal-south" />
-      <SignalStack className="signal-east active" />
-      <SignalStack className="signal-west" />
+      <SignalStack className={`signal-north ${activeDirection === "north" ? "active" : ""}`} />
+      <SignalStack className={`signal-south ${activeDirection === "south" ? "active" : ""}`} />
+      <SignalStack className={`signal-east ${activeDirection === "east" ? "active" : ""}`} />
+      <SignalStack className={`signal-west ${activeDirection === "west" ? "active" : ""}`} />
       {status.pedestrian_request ? <div className="pedestrian-marker" aria-label={t.pedestrian} /> : null}
       {emergencyEvent ? (
         <div className="emergency-marker">
           <span aria-hidden="true" className="emergency-triangle" />
-          <strong>{locale === "ko" ? "긴급차량 동쪽 접근" : "Emergency Vehicle"}</strong>
-          <small>{locale === "ko" ? "Emergency Vehicle" : "Emergency from East"}</small>
+          <strong>
+            {locale === "ko"
+              ? `긴급차량 ${formatDirection(emergencyDirection, locale)} 접근`
+              : "Emergency Vehicle"}
+          </strong>
+          <small>
+            {locale === "ko"
+              ? "Emergency Vehicle"
+              : `Emergency from ${formatDirection(emergencyDirection, locale)}`}
+          </small>
         </div>
       ) : null}
-      <div className="emergency-vehicle" aria-label={t.emergency}>
-        <span />
-      </div>
+      {emergencyEvent ? (
+        <div className="emergency-vehicle" aria-label={t.emergency}>
+          <span />
+        </div>
+      ) : null}
       <div className="live-badge">
         <strong>LIVE</strong>
         <time>{formatTime(status.captured_at)}</time>
@@ -139,4 +152,12 @@ function formatTime(value: string) {
 function formatPercent(value: number) {
   const normalizedValue = value > 0 ? -value : value;
   return `${normalizedValue}%`;
+}
+
+function signalPhaseDirection(value: string) {
+  if (value.includes("north")) return "north";
+  if (value.includes("south")) return "south";
+  if (value.includes("east")) return "east";
+  if (value.includes("west")) return "west";
+  return null;
 }

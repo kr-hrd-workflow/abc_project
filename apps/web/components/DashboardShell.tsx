@@ -69,7 +69,7 @@ export function DashboardShell({
     locale === "ko" ? "시나리오 새로고침 중" : "Refreshing scenario";
 
   return (
-    <main className="dashboard-shell">
+    <main className="dashboard-shell launch-dashboard" data-theme="launch-cinematic">
       <header className="dashboard-header">
         <div className="dashboard-identity-row">
           <div className="brand-block">
@@ -105,7 +105,7 @@ export function DashboardShell({
         </div>
 
         <div className="dashboard-scenario-row">
-          <section className="scenario-control" aria-label={t.scenario}>
+          <section id="scenario-control" className="scenario-control" aria-label={t.scenario}>
             <div className="scenario-control-copy">
               <strong>{selectedScenarioLabel ? selectedScenarioLabel : t.scenario}</strong>
               <span>
@@ -141,18 +141,18 @@ export function DashboardShell({
           </section>
 
           <nav className="top-actions" aria-label="Dashboard actions">
-            <button type="button" className="icon-action alert-action">
+            <a href="#events" className="icon-action alert-action">
               <span aria-hidden="true" className="toolbar-icon bell" />
               <span>{t.alerts}</span>
-            </button>
-            <button type="button" className="icon-action">
+            </a>
+            <a href="#reports" className="icon-action">
               <span aria-hidden="true" className="toolbar-icon document" />
               <span>{t.reports}</span>
-            </button>
-            <button type="button" className="icon-action">
+            </a>
+            <a href="#scenario-control" className="icon-action">
               <span aria-hidden="true" className="toolbar-icon gear" />
-              <span>{t.settings}</span>
-            </button>
+              <span>{t.scenarios}</span>
+            </a>
           </nav>
 
           <div className="operator-card" aria-label={t.operator}>
@@ -165,6 +165,28 @@ export function DashboardShell({
           </div>
         </div>
       </header>
+
+      <section
+        className="dashboard-flow-strip"
+        aria-label={t.operatorFlow}
+      >
+        <span>
+          <i aria-hidden="true" />
+          <strong>{t.sense}</strong>
+          <small>{t.senseCopy}</small>
+        </span>
+        <span>
+          <i aria-hidden="true" />
+          <strong>{t.simulate}</strong>
+          <small>{t.simulateCopy}</small>
+        </span>
+        <span>
+          <i aria-hidden="true" />
+          <strong>{t.brief}</strong>
+          <small>{t.briefCopy}</small>
+        </span>
+        <em>{t.noRealControl}</em>
+      </section>
 
       <div className="dashboard-grid">
         <EventTimeline events={events} locale={locale} />

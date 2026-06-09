@@ -47,24 +47,27 @@ Use `webapp-testing` to run a local browser smoke test for the dashboard.
 
 ## Recommended Frontend Workflow
 
-Use one lead skill and one support skill. Do not stack every design skill at once.
+Use the smallest useful design-skill set. Do not stack overlapping design skills by default.
 
-Rule of thumb:
+Default routing:
 
-- `impeccable` shapes and critiques the interface. Make it the lead for product screens, dashboards, redesigns, UX states, responsive behavior, and implementation polish.
-- `ui-ux-pro-max` gives structured design-system recommendations. Make it the lead for accessibility, layout systems, typography, color systems, reusable components, and UX quality checks.
-- Taste skills push the aesthetic direction. Use one Taste skill as support when the visual language matters, such as `minimalist-ui`, `industrial-brutalist-ui`, `design-taste-frontend`, `gpt-taste`, `brandkit`, or `image-to-code`.
+- Use `impeccable` as the lead skill for frontend design, implementation, critique, audit, polish, layout, accessibility, responsive behavior, and UI hardening.
+- Use `ui-ux-pro-max` only when structured design-system reasoning is useful: product/category fit, color, typography, charts, mobile interaction, accessibility, or UX checklist grounding.
+- Use Taste Skill variants only for explicit visual direction or specialized workflows.
 
-Default pairing:
+Normal cap:
 
-```text
-lead: impeccable or ui-ux-pro-max
-support: one Taste skill
-```
+- Use 1 design skill for most tasks.
+- Use 2 when one is lead and one is support.
+- Use 3 only for rare greenfield visual work.
 
-Pick `impeccable` + one Taste skill for actual interface shaping. Pick `ui-ux-pro-max` + one Taste skill for design-system guidance. Use a Taste skill as lead only when the main request is aesthetic direction, brand mood, or visual exploration.
+Concrete routing:
 
-Avoid invoking the whole Taste Skill collection at once. Too many design skills can conflict and make the output overdesigned.
+- App, dashboard, or product UI: `impeccable` lead; add `ui-ux-pro-max` only for design-system, chart, mobile, or accessibility grounding.
+- Landing page or portfolio: `design-taste-frontend` lead; add `ui-ux-pro-max` for structured color, typography, layout, or category reasoning; use `impeccable` for final polish.
+- Existing redesign: `impeccable` or `redesign-existing-projects`; use both only when the redesign scope is substantial.
+- Charts, mobile interaction, accessibility, or UX checklist work: add `ui-ux-pro-max`.
+- Experimental visual splash pages: `gpt-taste`, used carefully.
 
 ## Taste Skill Collection
 

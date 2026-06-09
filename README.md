@@ -47,10 +47,12 @@
 - 실제 OpenAI 임베딩 호출을 사용하는 live RAG 스모크 검증
 
 현재 로컬 런타임 준비 상태 기준으로 YOLO/OpenCV 비전 섹션과
-SUMO/TraCI 시뮬레이션 섹션, pgvector 섹션은 준비됐고, `openai`와
-`pgvector` Python 패키지도 설치됐습니다. `OPENAI_API_KEY`와
-`OPENAI_MONTHLY_BUDGET_USD`는 나중에 설정합니다. 실제 OpenAI 호출은 두
-값이 설정된 뒤에만 실행해야 합니다.
+SUMO/TraCI 시뮬레이션 섹션은 fixture/real-runtime readiness가 준비됐고,
+`openai`와 `pgvector` Python 패키지도 설치됐습니다. 다만 2026-06-09
+23:05 KST 재확인 기준으로 Docker daemon이 실행 중이 아니어서 현재
+PostgreSQL/pgvector readiness는 다시 녹색으로 증명되지 않았습니다.
+`OPENAI_API_KEY`와 `OPENAI_MONTHLY_BUDGET_USD`는 나중에 설정합니다. 실제
+OpenAI 호출은 두 값이 설정된 뒤에만 실행해야 합니다.
 
 ## 처음 시작할 때 읽을 문서
 
@@ -111,6 +113,10 @@ Docker/PostgreSQL 상태:
 ```bash
 docker compose -f infra/docker-compose.yml ps
 ```
+
+2026-06-09 23:05 KST 기준 이 명령은 Docker daemon 미실행으로 실패했습니다.
+Docker Desktop을 시작한 뒤 PostgreSQL 컨테이너와 Alembic 마이그레이션을 다시
+확인해야 pgvector runtime을 출시 준비 완료로 주장할 수 있습니다.
 
 런타임 준비 상태 확인:
 
@@ -226,7 +232,10 @@ GET  /api/analysis-jobs/{job_id}
   - 2026-06-09 기준 공식 OpenAI API 가격 문서에서 `gpt-5.5`와
     `text-embedding-3-small` 가격을 확인했습니다.
   - PostgreSQL `vector` 확장, `knowledge_chunks.embedding` 벡터 컬럼,
-    `npm run runtime:readiness:strict -- --section pgvector`는 검증됐습니다.
+    `npm run runtime:readiness:strict -- --section pgvector`는 이전 로컬
+    설정에서 검증됐습니다. 2026-06-09 23:05 KST 재확인 기준 현재 머신은
+    Docker daemon 미실행으로 pgvector readiness가 다시 녹색으로 증명되지
+    않았습니다.
   - 1536차원 fake embedding으로 로컬 pgvector 검색 스모크를 실행했고,
     ambulance priority 질의에서 `emergency-priority-guide`가 반환됐습니다.
   - 로컬 기본값은 `KNOWLEDGE_SEARCH_MODE=keyword`입니다. 실제 임베딩 검색을

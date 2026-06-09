@@ -17,20 +17,17 @@ export function EventTimeline({ events, locale }: EventTimelineProps) {
     .slice(0, 5);
 
   return (
-    <section className="panel timeline-panel">
+    <section id="events" className="panel timeline-panel">
       <div className="panel-heading">
         <div className="heading-copy">
           <h2>{t.eventTimeline}</h2>
           <span>{t.eventTimelineSub}</span>
         </div>
-        <div className="timeline-tools">
-          <button type="button">{t.all}</button>
-          <button type="button" aria-label={locale === "ko" ? "필터" : "Filter"}>
-            <span aria-hidden="true" className="toolbar-icon filter" />
-          </button>
-          <button type="button" aria-label={locale === "ko" ? "일시정지" : "Pause"}>
-            <span aria-hidden="true" className="toolbar-icon pause" />
-          </button>
+        <div className="timeline-tools" aria-label={locale === "ko" ? "이벤트 표시 범위" : "Event range"}>
+          <span>{t.all}</span>
+          <small>
+            {t.showingLatest} {recentEvents.length}/{events.length}
+          </small>
         </div>
       </div>
       <div className="timeline-list">
@@ -54,10 +51,13 @@ export function EventTimeline({ events, locale }: EventTimelineProps) {
           </article>
         ))}
       </div>
-      <button type="button" className="more-button">
-        {t.more}
-        <span aria-hidden="true" className="chevron down" />
-      </button>
+      <p className="list-footnote">
+        {events.length > recentEvents.length
+          ? `${events.length - recentEvents.length} ${locale === "ko" ? "개 이벤트가 더 있습니다." : "more events available."}`
+          : locale === "ko"
+            ? "모든 이벤트가 표시되었습니다."
+            : "All events are visible."}
+      </p>
     </section>
   );
 }

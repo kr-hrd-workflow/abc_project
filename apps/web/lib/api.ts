@@ -22,10 +22,24 @@ async function requestJson<T>(path: string, init?: RequestInit): Promise<T> {
   });
 
   if (!response.ok) {
-    throw new Error(`API request failed: ${response.status} ${path}`);
+    const detail = await readErrorDetail(response);
+    throw new Error(
+      detail
+        ? `API request failed: ${response.status} ${path}: ${detail}`
+        : `API request failed: ${response.status} ${path}`
+    );
   }
 
   return response.json() as Promise<T>;
+}
+
+async function readErrorDetail(response: Response): Promise<string | null> {
+  try {
+    const body = (await response.json()) as { detail?: unknown };
+    return typeof body.detail === "string" ? body.detail : null;
+  } catch {
+    return null;
+  }
 }
 
 function withScenario(path: string, scenarioId?: ScenarioId): string {

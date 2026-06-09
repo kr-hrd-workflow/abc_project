@@ -73,10 +73,9 @@ export function MetricsPanel({ status, simulation, locale }: MetricsPanelProps) 
           <h2>{t.performance}</h2>
           <span>{t.performanceSub}</span>
         </div>
-        <div className="segment-control">
-          <button type="button" className="active">5 min</button>
-          <button type="button">15 min</button>
-          <button type="button">30 min</button>
+        <div className="metrics-window" aria-label={locale === "ko" ? "성과 비교 기간" : "Comparison window"}>
+          <span>5 min</span>
+          <small>{locale === "ko" ? "현재 시뮬레이션 기준" : "Current simulation window"}</small>
         </div>
       </div>
       <div className="metrics-table" role="table" aria-label={t.performance}>

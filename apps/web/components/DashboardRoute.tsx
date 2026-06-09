@@ -95,13 +95,21 @@ export function DashboardRoute() {
   }
 
   if (error) {
+    const detail = formatDashboardError(error);
+
     return (
-      <main className="loading-shell">
-        <h1>Smart Intersection Ops</h1>
-        <p>{error}</p>
-        <button type="button" onClick={() => void loadDashboard(selectedScenarioId)}>
-          Retry
-        </button>
+      <main className="loading-shell dashboard-error-shell">
+        <div className="error-card">
+          <span className="error-kicker">Connection check</span>
+          <h1>Dashboard API unavailable</h1>
+          <p>{detail}</p>
+          <div className="error-actions">
+            <button type="button" onClick={() => void loadDashboard(selectedScenarioId)}>
+              Retry connection
+            </button>
+            <a href="/">Back to landing</a>
+          </div>
+        </div>
       </main>
     );
   }
@@ -133,4 +141,15 @@ export function DashboardRoute() {
       onScenarioChange={(scenarioId) => void handleScenarioChange(scenarioId)}
     />
   );
+}
+
+function formatDashboardError(error: string) {
+  const detailSeparator = ": Database unavailable.";
+  if (error.includes(detailSeparator)) {
+    return `Database unavailable.${error.split(detailSeparator)[1]}`;
+  }
+  if (error === "Failed to fetch") {
+    return "The API server is not reachable. Start the API service and try again.";
+  }
+  return error;
 }

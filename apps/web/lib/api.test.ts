@@ -88,4 +88,18 @@ describe("dashboard API client", () => {
       "API request failed: 500 /api/report"
     );
   });
+
+  test("includes backend error details when available", async () => {
+    vi.spyOn(globalThis, "fetch").mockReturnValue(
+      mockJsonResponse(
+        { detail: "Database unavailable. Start PostgreSQL and run migrations." },
+        false,
+        503
+      )
+    );
+
+    await expect(generateReport()).rejects.toThrow(
+      "Database unavailable. Start PostgreSQL and run migrations."
+    );
+  });
 });

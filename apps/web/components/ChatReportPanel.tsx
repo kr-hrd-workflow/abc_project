@@ -23,13 +23,48 @@ export function ChatReportPanel({
 }: ChatReportPanelProps) {
   const t = copy[locale];
   const [question, setQuestion] = useState("");
+  const [chatState, setChatState] = useState<"idle" | "submitting">("idle");
+  const [chatError, setChatError] = useState(false);
+  const [reportState, setReportState] = useState<"idle" | "generating">("idle");
+  const [reportError, setReportError] = useState(false);
 
   async function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
     const trimmed = question.trim();
     if (!trimmed) return;
-    await onAskQuestion(trimmed);
-    setQuestion("");
+    setChatState("submitting");
+    setChatError(false);
+    try {
+      await onAskQuestion(trimmed);
+      setQuestion("");
+    } catch {
+      setChatError(true);
+    } finally {
+      setChatState("idle");
+    }
+  }
+
+  async function handleGenerateReport() {
+    setReportState("generating");
+    setReportError(false);
+    try {
+      await onGenerateReport();
+    } catch {
+      setReportError(true);
+    } finally {
+      setReportState("idle");
+    }
+  }
+
+  function handleDownloadReport() {
+    const reportJson = JSON.stringify(report, null, 2);
+    const blob = new Blob([reportJson], { type: "application/json" });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = `smart-intersection-report-${report.id}.json`;
+    link.click();
+    URL.revokeObjectURL(url);
   }
 
   return (
@@ -58,36 +93,59 @@ export function ChatReportPanel({
           <div className="message-row">
             <span className="agent-avatar" aria-hidden="true" />
             <div className="message-bubble assistant-message">
-              <p>{chat?.answer ?? "..."}</p>
+              <p className={chat ? "" : "chat-empty"}>
+                {chat?.answer ?? t.chatEmpty}
+              </p>
               <time>08:42</time>
             </div>
           </div>
         </div>
         <form onSubmit={handleSubmit} className="chat-form">
+          <label className="sr-only" htmlFor="dashboard-chat-question">
+            {t.askPrompt}
+          </label>
           <input
+            id="dashboard-chat-question"
             value={question}
             onChange={(event) => setQuestion(event.target.value)}
             placeholder={t.askPlaceholder}
+            disabled={chatState === "submitting"}
+            aria-describedby={chatError ? "dashboard-chat-error" : undefined}
           />
-          <button type="submit">
-            <span>{t.send}</span>
+          <button type="submit" disabled={!question.trim() || chatState === "submitting"}>
+            <span>{chatState === "submitting" ? t.sending : t.send}</span>
             <span aria-hidden="true" className="send-icon" />
           </button>
+          {chatError ? (
+            <p id="dashboard-chat-error" className="action-error" role="alert">
+              {t.chatError}
+            </p>
+          ) : null}
         </form>
       </div>
 
-      <div className="panel report-panel">
+      <div id="reports" className="panel report-panel">
         <div className="panel-heading">
           <div className="heading-copy">
             <h2>{t.reports}</h2>
             <span>Reports</span>
           </div>
         </div>
-        <button type="button" className="report-button" onClick={onGenerateReport}>
+        <button
+          type="button"
+          className="report-button"
+          onClick={handleGenerateReport}
+          disabled={reportState === "generating"}
+        >
           <span aria-hidden="true" className="report-icon" />
-          {t.generateReport}
+          {reportState === "generating" ? t.reportGenerating : t.generateReport}
           <small>Generate Report</small>
         </button>
+        {reportError ? (
+          <p className="action-error" role="alert">
+            {t.reportError}
+          </p>
+        ) : null}
         <div className="report-card">
           <span>{t.latestReport}</span>
           <strong>{report.summary}</strong>
@@ -98,7 +156,7 @@ export function ChatReportPanel({
             </div>
           </dl>
         </div>
-        <button type="button" className="download-row">
+        <button type="button" className="download-row" onClick={handleDownloadReport}>
           <span aria-hidden="true" className="download-icon" />
           {t.download}
           <span aria-hidden="true" className="chevron" />

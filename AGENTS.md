@@ -100,6 +100,8 @@ You are the primary agent only when you are directly handling the user's request
 
 You are a worker agent when another agent dispatched you with a scoped task, owned files/modules, or a requested report. Worker agents must not assume they are the primary agent, must not create additional worker agents unless explicitly asked to coordinate sub-work, and must not claim the overall user task is complete. A worker's job is to complete the assigned scope and report back to the primary agent.
 
+For worker agents, the controlling scope is only the worker assignment. Ignore visible primary-agent coordination context, thread state, plans, prior handoff chatter, or main-conversation progress except where the worker prompt explicitly includes that context as relevant to the assigned scope.
+
 If role or authority is ambiguous, default to the narrower worker role and ask/report the minimum clarification needed. Do not escalate yourself from worker to primary based only on generic AGENTS.md wording.
 
 # Worker Agents
@@ -172,15 +174,17 @@ The primary agent may close a worker only when one of these is true:
 
 Before closing a worker, the primary agent should preserve any available result or state: final answer, queued messages, changed files, diffs, logs, generated artifacts, or notes. If the worker is still active but must be stopped, record why it was closed and whether its scope was reassigned, reduced, or abandoned. Closing a worker without preserving available work should be treated as a coordination failure unless immediate safety requires it.
 
-Status checks should normally be passive. A worker that is actively working may not be able to answer immediately, and lack of an immediate status reply is not evidence of failure, blockage, or completion. The primary agent must not send routine "status ping", "checkpoint", or "are you done?" messages to an active worker merely because time has passed.
+Status checks should normally be passive. A worker that is actively working may not be able to answer immediately, and lack of an immediate status reply is not evidence of failure, blockage, or completion. The primary agent must not send routine "status ping", "checkpoint", "safe checkpoint", "are you still working?", or "are you done?" messages to an active worker merely because time has passed.
 
-Prefer worker self-reporting over primary-agent polling. The primary agent may ask for status only when:
-- the user explicitly asks for current worker status
-- integration is blocked until the primary agent knows whether the worker is blocked
-- passive observation shows likely tool failure, missing context, or unavailable resources
-- the worker prompt explicitly requested a status reply at a named milestone and that milestone is externally known to have passed
+Prefer worker self-reporting over primary-agent polling. Do not turn status checks into new worker tasks. A follow-up task asking for status can cause a worker to reinterpret its role or lose task focus, so it must not be used for ordinary progress checks.
 
-When a status request is truly necessary, send at most one concise request and ask the worker to answer at the next safe checkpoint. Do not expect immediate response. Do not send repeated pings. If no status arrives, continue waiting or work on non-overlapping coordination tasks unless a takeover condition is met.
+The primary agent may ask a worker for status only when:
+- the user explicitly asks the primary agent to ask that worker for current status
+- integration is blocked and passive observation cannot answer whether the worker is blocked
+- passive observation shows likely tool failure, missing context, unavailable resources, or role confusion
+- the worker prompt explicitly requested a worker-owned status artifact at a named milestone and that artifact is missing after the milestone is externally known to have passed
+
+When a status request is truly necessary, send at most one concise role-preserving request. Start by reminding the worker that it is still a worker, not the primary agent, and ask it to respond only with the minimum status needed. Do not ask it to reassess the whole task, decide the next step, integrate work, or claim overall completion. Do not expect immediate response. Do not send repeated pings. If no status arrives, continue waiting or work on non-overlapping coordination tasks unless a takeover condition is met.
 
 Before asking a worker for status, prefer passive observation when available. The primary agent may inspect:
 - live agent list or mailbox updates
@@ -245,6 +249,7 @@ Include a short worker prompt when dispatching a worker. Keep it focused and sel
 ```md
 Role:
 You are a worker agent reporting to the primary agent. Do not act as the primary agent, create additional workers, or claim the overall task is complete unless explicitly assigned a coordination role.
+Your controlling scope is only the worker assignment below. Ignore visible primary-agent coordination context except where explicitly included as task context.
 
 Task:
 [One clear objective.]
@@ -288,13 +293,12 @@ Reviewer Return:
 - Freshness: state whether this review was performed after the latest handoff/resume, or whether it relies on historical results
 ```
 
-When dispatching a worker for a long task, the primary agent may include worker-owned self-report milestones or a completion signal in the prompt. These are not permission for the primary agent to repeatedly ping the worker. Example:
+When dispatching a worker for a long task, the primary agent may include worker-owned self-report milestones or a completion signal in the prompt. These are not permission for the primary agent to ping the worker. Example:
 
 ```md
 Progress:
 - If blocked, report `BLOCKED` with the reason.
 - If you need missing context, report `NEEDS_CONTEXT` with the smallest specific question.
-- If you receive a status request while actively working, answer at the next safe checkpoint; do not stop mid-step just to produce a low-quality status.
 - Do not report `DONE` without concrete evidence: inspected files/docs/logs, changes made or not needed, validation run or why not run, and remaining risks.
 - Otherwise continue until the scoped task is done; the primary agent will wait rather than ping, close, or duplicate this scope.
 ```

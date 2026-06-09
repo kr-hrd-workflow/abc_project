@@ -47,14 +47,10 @@ export function DigitalTwin({
           </p>
         </div>
         <div className="viewport-controls">
-          <button type="button" aria-label={locale === "ko" ? "밝기" : "Lighting"}>
-            <span aria-hidden="true" className="toolbar-icon sun" />
-          </button>
-          <button type="button">2D</button>
-          <button type="button" className="active">3D</button>
-          <button type="button" aria-label={locale === "ko" ? "전체화면" : "Fullscreen"}>
-            <span aria-hidden="true" className="toolbar-icon expand" />
-          </button>
+          <span className="viewport-mode">
+            {locale === "ko" ? "운영 뷰" : "Operations view"}
+          </span>
+          <span className="viewport-mode">{status.signal_phase}</span>
           <button
             type="button"
             onClick={handleRunSimulation}

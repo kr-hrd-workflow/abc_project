@@ -108,6 +108,7 @@ const chat: ChatResponse = {
 afterEach(() => {
   cleanup();
   vi.restoreAllMocks();
+  vi.unstubAllGlobals();
 });
 
 function renderDashboard(overrides = {}) {
@@ -134,19 +135,24 @@ function renderDashboard(overrides = {}) {
 
 describe("DashboardShell", () => {
   test("renders a clear dashboard heading and scenario rail", () => {
-    renderDashboard({ selectedScenarioId: "emergency" });
+    const { container } = renderDashboard({ selectedScenarioId: "emergency" });
 
+    expect(container.querySelector('[data-theme="launch-cinematic"]')).toBeTruthy();
     expect(
       screen.getByRole("heading", { level: 1, name: "스마트 교차로 운영 시스템" })
     ).toBeTruthy();
     expect(screen.getByLabelText("시나리오 08:42")).toBeTruthy();
     expect(screen.getByText("긴급차량 우선 통과")).toBeTruthy();
+    expect(screen.getByLabelText("운영 흐름")).toBeTruthy();
+    expect(screen.getByText("감지")).toBeTruthy();
+    expect(screen.getByText("시뮬레이션")).toBeTruthy();
+    expect(screen.getByText("브리핑")).toBeTruthy();
   });
 
   test("renders the approved safety and simulation viewport copy", () => {
     renderDashboard();
 
-    expect(screen.getByText("실제 신호 제어 없음")).toBeTruthy();
+    expect(screen.getAllByText("실제 신호 제어 없음").length).toBeGreaterThanOrEqual(1);
     expect(screen.getByText(/교체형 시뮬레이션 뷰/)).toBeTruthy();
   });
 
@@ -154,7 +160,7 @@ describe("DashboardShell", () => {
     renderDashboard();
 
     expect(screen.getByText("SUMO/TraCI Renderer")).toBeTruthy();
-    expect(screen.getByText("sumo_traci")).toBeTruthy();
+    expect(screen.getAllByText("sumo_traci").length).toBeGreaterThanOrEqual(1);
     expect(screen.getByText("Delay -18%")).toBeTruthy();
   });
 
@@ -164,10 +170,14 @@ describe("DashboardShell", () => {
     await userEvent.click(screen.getByRole("button", { name: "EN" }));
 
     expect(screen.getByText("Event Timeline")).toBeTruthy();
-    expect(screen.getByText("No real signal control")).toBeTruthy();
-    expect(screen.getByRole("button", { name: "Alert" })).toBeTruthy();
-    expect(screen.getByRole("button", { name: "Reports" })).toBeTruthy();
-    expect(screen.getByRole("button", { name: "Settings" })).toBeTruthy();
+    expect(screen.getAllByText("No real signal control").length).toBeGreaterThanOrEqual(1);
+    expect(screen.getByLabelText("Operator flow")).toBeTruthy();
+    expect(screen.getByText("Sense")).toBeTruthy();
+    expect(screen.getByText("Simulate")).toBeTruthy();
+    expect(screen.getByText("Brief")).toBeTruthy();
+    expect(screen.getByRole("link", { name: "Alert" })).toBeTruthy();
+    expect(screen.getByRole("link", { name: "Reports" })).toBeTruthy();
+    expect(screen.getByRole("link", { name: "Scenarios" })).toBeTruthy();
   });
 
   test("renders scenario options and marks the selected scenario", () => {
@@ -193,6 +203,51 @@ describe("DashboardShell", () => {
     expect(onScenarioChange).toHaveBeenCalledWith("pedestrian");
   });
 
+  test("uses real navigation targets for header actions", () => {
+    renderDashboard();
+
+    expect(screen.getByRole("link", { name: /알림/ }).getAttribute("href")).toBe(
+      "#events"
+    );
+    expect(screen.getByRole("link", { name: /리포트/ }).getAttribute("href")).toBe(
+      "#reports"
+    );
+    expect(screen.getByRole("link", { name: /시나리오/ }).getAttribute("href")).toBe(
+      "#scenario-control"
+    );
+  });
+
+  test("keeps recommendation and simulation copy aligned to non-emergency data", () => {
+    renderDashboard({
+      selectedScenarioId: "pedestrian",
+      status: {
+        ...status,
+        signal_phase: "pedestrian_phase",
+        emergency_priority: false
+      },
+      events: [
+        {
+          ...events[0],
+          event_type: "pedestrian_waiting",
+          severity: "warning",
+          direction: null,
+          ai_summary: "Pedestrians waiting at the crossing."
+        }
+      ],
+      recommendation: {
+        ...recommendation,
+        action: "pedestrian_phase",
+        recommended_plan: { pedestrian_crossing: 20 },
+        evidence: { reason: "pedestrian_waiting" }
+      }
+    });
+
+    expect(screen.getByText("보행자 횡단 단계 권고")).toBeTruthy();
+    expect(screen.getByText("보행자 대기 요청이 감지되었습니다.")).toBeTruthy();
+    expect(screen.queryByText("긴급차량이 동쪽에서 접근 중입니다.")).toBeNull();
+    expect(screen.queryByLabelText("긴급차량")).toBeNull();
+  });
+
   test("submits chat questions through the provided handler", async () => {
     const onAskQuestion = vi.fn().mockResolvedValue(undefined);
     renderDashboard({ onAskQuestion });
@@ -204,6 +259,67 @@ describe("DashboardShell", () => {
     await userEvent.click(screen.getByRole("button", { name: "전송" }));
 
     expect(onAskQuestion).toHaveBeenCalledWith("동쪽 상황은?");
+  });
+
+  test("shows recoverable chat errors without clearing the operator question", async () => {
+    const onAskQuestion = vi.fn().mockRejectedValue(new Error("network down"));
+    renderDashboard({ onAskQuestion });
+
+    await userEvent.type(
+      screen.getByPlaceholderText("현재 교통 상황 질문"),
+      "동쪽 상황은?"
+    );
+    await userEvent.click(screen.getByRole("button", { name: "전송" }));
+
+    const alert = await screen.findByRole("alert");
+
+    expect(alert.textContent).toContain("질문 전송 실패");
+    expect(screen.getByDisplayValue("동쪽 상황은?")).toBeTruthy();
+  });
+
+  test("shows recoverable report generation errors", async () => {
+    const onGenerateReport = vi.fn().mockRejectedValue(new Error("network down"));
+    renderDashboard({ onGenerateReport });
+
+    await userEvent.click(screen.getByRole("button", { name: /리포트 생성/ }));
+
+    const alert = await screen.findByRole("alert");
+
+    expect(alert.textContent).toContain("리포트 생성 실패");
+    expect(screen.getByRole("button", { name: /리포트 생성/ })).toBeTruthy();
+  });
+
+  test("downloads the current report as JSON", async () => {
+    const createObjectURL = vi.fn(() => "blob:report");
+    const revokeObjectURL = vi.fn();
+    const click = vi.fn();
+    const originalCreateElement = document.createElement.bind(document);
+
+    vi.stubGlobal("URL", {
+      ...URL,
+      createObjectURL,
+      revokeObjectURL
+    });
+
+    renderDashboard();
+
+    vi.spyOn(document, "createElement").mockImplementation((tagName, options) => {
+      if (tagName === "a") {
+        return {
+          click,
+          download: "",
+          href: ""
+        } as unknown as HTMLAnchorElement;
+      }
+
+      return originalCreateElement(tagName, options);
+    });
+
+    await userEvent.click(screen.getByRole("button", { name: "다운로드" }));
+
+    expect(createObjectURL).toHaveBeenCalledWith(expect.any(Blob));
+    expect(click).toHaveBeenCalledTimes(1);
+    expect(revokeObjectURL).toHaveBeenCalledWith("blob:report");
   });
 
   test("shows feedback after running the simulation", async () => {
