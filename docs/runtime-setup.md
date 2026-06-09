@@ -40,6 +40,15 @@ npm run runtime:readiness:strict -- --section openai
 npm run runtime:readiness:strict -- --section pgvector
 ```
 
+The HTTP readiness endpoint accepts the same section names for smoke checks:
+
+```text
+GET /api/runtime/readiness?section=vision
+GET /api/runtime/readiness?section=simulation
+GET /api/runtime/readiness?section=openai
+GET /api/runtime/readiness?section=pgvector
+```
+
 ## Gate 1: YOLO/OpenCV Inference
 
 Approval required before installing optional dependencies or downloading model

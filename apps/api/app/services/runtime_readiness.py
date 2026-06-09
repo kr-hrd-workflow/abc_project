@@ -1,9 +1,9 @@
-from collections.abc import Callable, Mapping
+from collections.abc import Callable, Mapping, Sequence
 from importlib.util import find_spec
 import os
 from pathlib import Path
 from shutil import which
-from typing import TypedDict
+from typing import Literal, TypedDict
 
 from sqlalchemy import text
 from sqlalchemy.exc import SQLAlchemyError
@@ -22,6 +22,9 @@ class RuntimeSection(TypedDict):
     mode: str
     missing: list[str]
     checks: list[RuntimeCheck]
+
+
+RuntimeSectionName = Literal["vision", "simulation", "openai", "pgvector"]
 
 
 def get_runtime_readiness(
@@ -145,6 +148,15 @@ def get_runtime_readiness(
             ],
         ),
     }
+
+
+def filter_runtime_readiness(
+    readiness: dict[str, RuntimeSection],
+    selected_sections: Sequence[str] | None,
+) -> dict[str, RuntimeSection]:
+    if not selected_sections:
+        return readiness
+    return {section: readiness[section] for section in selected_sections}
 
 
 def _section(*, mode: str, checks: list[RuntimeCheck]) -> RuntimeSection:

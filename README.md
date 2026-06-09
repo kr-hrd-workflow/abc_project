@@ -131,6 +131,10 @@ POST /api/simulate-signal
 POST /api/chat
 POST /api/report
 GET  /api/runtime/readiness
+GET  /api/runtime/readiness?section=vision
+GET  /api/runtime/readiness?section=simulation
+GET  /api/runtime/readiness?section=openai
+GET  /api/runtime/readiness?section=pgvector
 ```
 
 샘플 입력 관련 API:

@@ -2,7 +2,7 @@ from pathlib import Path
 from tempfile import NamedTemporaryFile
 from uuid import uuid4
 
-from fastapi import APIRouter, Depends, HTTPException, Request
+from fastapi import APIRouter, Depends, HTTPException, Query, Request
 from sqlalchemy.orm import Session
 
 from app.adapters.simulation import (
@@ -37,6 +37,8 @@ from app.services.persistence import (
 from app.services.recommendations import recommend_signal_action
 from app.services.reports import generate_scenario_report
 from app.services.runtime_readiness import (
+    RuntimeSectionName,
+    filter_runtime_readiness,
     get_runtime_readiness,
     is_vector_extension_enabled,
 )
@@ -168,11 +170,14 @@ def get_analysis_job(job_id: str) -> dict[str, object]:
 
 
 @router.get("/api/runtime/readiness")
-def get_runtime_readiness_status() -> dict[str, object]:
-    return get_runtime_readiness(
+def get_runtime_readiness_status(
+    section: list[RuntimeSectionName] | None = Query(default=None),
+) -> dict[str, object]:
+    readiness = get_runtime_readiness(
         settings,
         vector_extension_verified=lambda: is_vector_extension_enabled(SessionLocal),
     )
+    return filter_runtime_readiness(readiness, section)
 
 
 def _analyze_uploaded_sample(

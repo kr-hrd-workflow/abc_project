@@ -5,6 +5,7 @@ from app.core.config import settings
 from app.db.session import SessionLocal
 from app.services.runtime_readiness import (
     RuntimeSection,
+    filter_runtime_readiness,
     get_runtime_readiness,
     is_vector_extension_enabled,
 )
@@ -29,17 +30,8 @@ def readiness_exit_code(
 ) -> int:
     if not fail_on_missing:
         return 0
-    selected_readiness = filter_readiness(readiness, selected_sections)
+    selected_readiness = filter_runtime_readiness(readiness, selected_sections)
     return 1 if any(not payload["ready"] for payload in selected_readiness.values()) else 0
-
-
-def filter_readiness(
-    readiness: dict[str, RuntimeSection],
-    selected_sections: Sequence[str] | None,
-) -> dict[str, RuntimeSection]:
-    if not selected_sections:
-        return readiness
-    return {section: readiness[section] for section in selected_sections}
 
 
 def build_readiness() -> dict[str, RuntimeSection]:
@@ -70,7 +62,7 @@ def main(argv: Sequence[str] | None = None) -> int:
     )
     args = parser.parse_args(argv)
     readiness = build_readiness()
-    selected_readiness = filter_readiness(readiness, args.section)
+    selected_readiness = filter_runtime_readiness(readiness, args.section)
     print(format_readiness_report(selected_readiness))
     return readiness_exit_code(
         readiness,

@@ -422,6 +422,8 @@ source/tests.
     verification.
   - [x] Add section-scoped strict readiness checks for one-gate runtime
     verification.
+  - [x] Add section filtering to `/api/runtime/readiness` for one-gate HTTP
+    smoke checks.
   - [ ] Install and verify real OpenCV/Ultralytics/model weights in the target
     runtime before marking real inference complete.
 - [x] Implement `SumoTraciTrafficSimulationAdapter` behind the existing

@@ -138,6 +138,8 @@ Current as of 2026-06-09.
     for future gate completion checks.
   - [x] Add section-scoped strict readiness checks for `vision`, `simulation`,
     `openai`, and `pgvector`.
+  - [x] Add section filtering to `/api/runtime/readiness` for targeted HTTP
+    smoke checks.
   - [x] Keep OpenAI client calls and pgvector execution out of this slice until
     API-key and target database setup are approved and verified.
 
@@ -373,3 +375,6 @@ requirements.
 
 For one approved runtime gate, scope the strict check with `--section vision`,
 `--section simulation`, `--section openai`, or `--section pgvector`.
+
+The HTTP readiness endpoint accepts the same section values with
+`/api/runtime/readiness?section=<gate>`.

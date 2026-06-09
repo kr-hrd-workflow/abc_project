@@ -238,6 +238,41 @@ def test_runtime_readiness_endpoint_reports_gates_without_secrets(
     assert "sk-test-secret" not in response.text
 
 
+def test_runtime_readiness_endpoint_can_filter_to_one_gate(
+    client: TestClient,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    def fake_runtime_readiness(
+        _settings,
+        **_kwargs: object,
+    ) -> dict[str, object]:
+        return {
+            "openai": {
+                "ready": False,
+                "mode": "gpt-5.5",
+                "missing": ["OPENAI_API_KEY"],
+                "checks": [],
+            },
+            "vision": {
+                "ready": True,
+                "mode": "fixture",
+                "missing": [],
+                "checks": [],
+            },
+        }
+
+    monkeypatch.setattr(
+        "app.api.routes.get_runtime_readiness",
+        fake_runtime_readiness,
+    )
+
+    response = client.get("/api/runtime/readiness?section=openai")
+
+    assert response.status_code == 200
+    assert list(response.json()) == ["openai"]
+    assert response.json()["openai"]["missing"] == ["OPENAI_API_KEY"]
+
+
 def test_recommend_signal_returns_emergency_priority_with_safety_boundary(
     client: TestClient,
 ) -> None:

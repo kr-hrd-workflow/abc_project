@@ -91,6 +91,8 @@ historical implementation recipe; this tracker is the current progress summary.
   gate verification can fail when any required runtime check is still missing.
 - [x] Utility slice: add section-scoped strict readiness checks so one approved
   runtime gate can be verified without unrelated gates blocking the command.
+- [x] Utility slice: add section filtering to `/api/runtime/readiness` so HTTP
+  smoke checks can inspect one runtime gate at a time.
 - [x] Documentation handoff slice: rewrite `README.md` in Korean so teammates
   can see current status, setup commands, validation commands, remaining gates,
   and the next files to work from.
