@@ -36,8 +36,32 @@ export function ChatReportPanel({
     <section className="chat-report-grid">
       <div className="panel chat-panel">
         <div className="panel-heading">
-          <h2>{t.aiAgent}</h2>
+          <div className="heading-copy">
+            <h2>{t.aiAgent}</h2>
+            <span>AI Agent</span>
+          </div>
           <span className="online">Online</span>
+        </div>
+        <div className="chat-thread">
+          <div className="chat-prompt-label">
+            <strong>{t.askPrompt}</strong>
+            <span>Ask about current traffic situation</span>
+          </div>
+          <div className="message-bubble user-message">
+            <p>
+              {locale === "ko"
+                ? "현재 교차로 상황과 권고 조치의 효과는 어떤가요?"
+                : "What is the current intersection status and recommendation effect?"}
+            </p>
+            <time>08:42</time>
+          </div>
+          <div className="message-row">
+            <span className="agent-avatar" aria-hidden="true" />
+            <div className="message-bubble assistant-message">
+              <p>{chat?.answer ?? "..."}</p>
+              <time>08:42</time>
+            </div>
+          </div>
         </div>
         <form onSubmit={handleSubmit} className="chat-form">
           <input
@@ -45,26 +69,40 @@ export function ChatReportPanel({
             onChange={(event) => setQuestion(event.target.value)}
             placeholder={t.askPlaceholder}
           />
-          <button type="submit">{t.send}</button>
+          <button type="submit">
+            <span>{t.send}</span>
+            <span aria-hidden="true" className="send-icon" />
+          </button>
         </form>
-        <div className="answer-box">
-          <span>{t.latestAnswer}</span>
-          <p>{chat?.answer ?? "..."}</p>
-        </div>
       </div>
 
       <div className="panel report-panel">
         <div className="panel-heading">
-          <h2>{t.reports}</h2>
+          <div className="heading-copy">
+            <h2>{t.reports}</h2>
+            <span>Reports</span>
+          </div>
         </div>
         <button type="button" className="report-button" onClick={onGenerateReport}>
+          <span aria-hidden="true" className="report-icon" />
           {t.generateReport}
+          <small>Generate Report</small>
         </button>
         <div className="report-card">
           <span>{t.latestReport}</span>
           <strong>{report.summary}</strong>
-          <small>{new Date(report.generated_at).toLocaleTimeString()}</small>
+          <dl>
+            <div>
+              <dt>{t.generatedTime}</dt>
+              <dd>{new Date(report.generated_at).toLocaleTimeString()}</dd>
+            </div>
+          </dl>
         </div>
+        <button type="button" className="download-row">
+          <span aria-hidden="true" className="download-icon" />
+          {t.download}
+          <span aria-hidden="true" className="chevron" />
+        </button>
       </div>
     </section>
   );

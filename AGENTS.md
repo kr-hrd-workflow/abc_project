@@ -116,10 +116,28 @@ The primary agent remains responsible for:
 - deciding whether parallel workers are appropriate
 - assigning non-overlapping scopes and file ownership
 - providing each worker with only the context needed for its task
+- waiting for dispatched workers to report before taking over their assigned scope
 - resolving conflicts between worker outputs
 - integrating final changes
 - running final validation
 - deciding when the overall task is complete
+
+After dispatching a worker, the primary agent must not start doing that worker's assigned work just because the worker is taking time. While a worker is running, the primary agent may:
+- work on a different non-overlapping task
+- inspect coordination context that does not duplicate the worker's scope
+- wait for the worker result
+- answer worker clarification requests
+- prepare integration or validation steps
+
+The primary agent may take over a worker's assigned scope only when:
+- the worker reports `BLOCKED` and the primary agent can resolve or reassign the issue
+- the worker reports `NEEDS_CONTEXT` and the missing context cannot be supplied efficiently
+- the worker fails, is closed, or becomes unavailable
+- the user explicitly redirects the primary agent to take over
+- the task becomes urgent for safety, data-loss, security, or external-side-effect reasons
+- the primary agent first cancels or closes the worker, or clearly narrows the worker's scope to avoid duplicate work
+
+If a worker is slow, the default action is to wait or request a status update, not to duplicate the worker's work. Do not race workers against the primary agent on the same files or same problem.
 
 Worker agents must:
 - identify themselves as workers for the dispatched scope
@@ -177,6 +195,15 @@ Return:
 - Tests or checks run
 - Remaining risks, conflicts, or open questions
 - Status: DONE, DONE_WITH_CONCERNS, NEEDS_CONTEXT, or BLOCKED
+```
+
+When dispatching a worker for a long task, the primary agent should include an expected status point or completion signal in the prompt. Example:
+
+```md
+Progress:
+- If blocked, report `BLOCKED` with the reason.
+- If you need missing context, report `NEEDS_CONTEXT` with the smallest specific question.
+- Otherwise continue until the scoped task is done; the primary agent will wait rather than duplicate this scope.
 ```
 
 # Planning

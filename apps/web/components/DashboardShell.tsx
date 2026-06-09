@@ -50,10 +50,16 @@ export function DashboardShell({
   return (
     <main className="dashboard-shell">
       <header className="top-bar">
-        <div className="brand-mark" aria-hidden="true">◆</div>
-        <div className="brand-copy">
-          <strong>{t.appName}</strong>
-          <span>{t.appSubtitle}</span>
+        <div className="brand-block">
+          <div className="brand-mark" aria-hidden="true">
+            <span />
+            <span />
+            <span />
+          </div>
+          <div className="brand-copy">
+            <strong>{t.appName}</strong>
+            <span>{t.appSubtitle}</span>
+          </div>
         </div>
         <div className="top-meta">
           <strong>{t.intersection}</strong>
@@ -63,14 +69,41 @@ export function DashboardShell({
           <strong>{t.scenario}</strong>
           <span>Scenario 08:42</span>
         </div>
-        <div className="status-chip success">{t.analysisReady}</div>
-        <div className="status-chip">{t.fresh}</div>
+        <div className="status-chip success">
+          <span>
+            <strong>{t.analysisReady}</strong>
+            <small>{t.analysisReadySub}</small>
+          </span>
+        </div>
+        <div className="status-chip freshness">
+          <span>
+            <strong>{t.fresh}</strong>
+            <small>{t.freshSub}</small>
+          </span>
+        </div>
         <LanguageToggle locale={locale} onChange={setLocale} />
         <nav className="top-actions" aria-label="Dashboard actions">
-          <button type="button">{t.alerts}</button>
-          <button type="button">{t.reports}</button>
-          <button type="button">{t.settings}</button>
+          <button type="button" className="icon-action alert-action">
+            <span aria-hidden="true" className="toolbar-icon bell" />
+            <span>{t.alerts}</span>
+          </button>
+          <button type="button" className="icon-action">
+            <span aria-hidden="true" className="toolbar-icon document" />
+            <span>{t.reports}</span>
+          </button>
+          <button type="button" className="icon-action">
+            <span aria-hidden="true" className="toolbar-icon gear" />
+            <span>{t.settings}</span>
+          </button>
         </nav>
+        <div className="operator-card" aria-label={t.operator}>
+          <span aria-hidden="true" className="operator-avatar" />
+          <div>
+            <strong>{t.operator}</strong>
+            <small>Operator A</small>
+          </div>
+          <span aria-hidden="true" className="chevron" />
+        </div>
       </header>
 
       <div className="dashboard-grid">

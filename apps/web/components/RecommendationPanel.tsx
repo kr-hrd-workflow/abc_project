@@ -18,17 +18,27 @@ export function RecommendationPanel({
   return (
     <section className="panel recommendation-panel">
       <div className="panel-heading">
-        <div>
+        <div className="heading-copy">
           <h2>{t.aiRecommendation}</h2>
-          <p>{t.simulationOnly}</p>
+          <span>{t.aiRecommendationSub}</span>
         </div>
-        <button type="button" onClick={onRefreshRecommendation}>
-          {t.refreshRecommendation}
-        </button>
+        <div className="simulation-mode">
+          <span>{t.simulationOnly}</span>
+          <button
+            type="button"
+            aria-label={t.refreshRecommendation}
+            onClick={onRefreshRecommendation}
+          >
+            i
+          </button>
+        </div>
       </div>
 
       <div className="situation-block">
-        <span>{t.currentSituation}</span>
+        <span>
+          {t.currentSituation}
+          <small>Current Situation</small>
+        </span>
         <p>
           {locale === "ko"
             ? "긴급차량이 동쪽에서 접근 중입니다."
@@ -37,16 +47,23 @@ export function RecommendationPanel({
       </div>
 
       <div className="recommendation-card">
-        <span>{t.recommendedAction}</span>
-        <strong>{t.recommendEast}</strong>
-        <small>{recommendation.action}</small>
+        <div>
+          <span>{t.recommendedAction}</span>
+          <strong>{t.recommendEast}</strong>
+          <small>{recommendation.action}</small>
+        </div>
+        <div className="signal-preview" aria-hidden="true">
+          <i className="red-light" />
+          <i className="amber-light" />
+          <i className="green-arrow" />
+        </div>
       </div>
 
       <div className="evidence-table">
         <h3>{t.evidence}</h3>
         {Object.entries(recommendation.evidence).map(([key, value]) => (
           <div key={key}>
-            <span>{key}</span>
+            <span>{formatEvidenceKey(key, locale)}</span>
             <strong>{key === "direction" ? formatDirection(String(value), locale) : String(value)}</strong>
           </div>
         ))}
@@ -58,4 +75,14 @@ export function RecommendationPanel({
       </div>
     </section>
   );
+}
+
+function formatEvidenceKey(key: string, locale: Locale) {
+  const labels: Record<string, Record<Locale, string>> = {
+    reason: { ko: "긴급차량 도착 시간", en: "ETA" },
+    direction: { ko: "접근 방향", en: "Approach" },
+    estimated_arrival_seconds: { ko: "예상 도착", en: "Estimated arrival" }
+  };
+
+  return labels[key]?.[locale] ?? key;
 }
