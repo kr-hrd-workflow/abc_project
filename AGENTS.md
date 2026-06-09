@@ -155,17 +155,32 @@ The primary agent may take over a worker's assigned scope only when:
 - the worker fails, is closed, or becomes unavailable
 - the user explicitly redirects the primary agent to take over
 - the task becomes urgent for safety, data-loss, security, or external-side-effect reasons
-- the primary agent first cancels or closes the worker, or clearly narrows the worker's scope to avoid duplicate work
+- the primary agent first follows the worker shutdown protocol or clearly narrows the worker's scope to avoid duplicate work
 
 If a worker is slow, the default action is to wait, not to duplicate the worker's work. Do not race workers against the primary agent on the same files or same problem.
 
-Status checks must be non-blocking and infrequent. A worker that is actively working may not be able to answer immediately, and lack of an immediate status reply is not evidence of failure, blockage, or completion. The primary agent should request status only when:
-- the worker has exceeded the expected status point or a reasonable task-specific wait interval
-- integration depends on knowing whether the worker is blocked
-- the user asks for current status
-- the worker may be stuck because of missing context, tool failure, or unavailable resources
+Closing a worker is a last-resort coordination action, not a progress-management tool. The primary agent must not close a worker merely because it is slow, quiet, mid-tool-call, expensive, inconvenient, or taking longer than expected.
 
-When sending a status request, ask for the next natural checkpoint rather than interrupting the worker. Do not repeatedly ping a worker that has not had enough time to make progress. If no status arrives, continue waiting or work on non-overlapping coordination tasks unless a takeover condition is met.
+The primary agent may close a worker only when one of these is true:
+- the worker returned a final result and the primary agent has captured the result, evidence, and changed-file summary
+- the worker is duplicating another active scope and the primary agent has preserved the better source of truth
+- the worker is blocked and cannot be unblocked with a small clarification
+- the worker is repeatedly failing tools or producing unusable output
+- the user explicitly asks to stop or close the worker
+- safety, data-loss, security, destructive-action, or external-side-effect risk requires stopping it
+- the worker has become unavailable and passive observation plus a reasonable wait show no recoverable path
+
+Before closing a worker, the primary agent should preserve any available result or state: final answer, queued messages, changed files, diffs, logs, generated artifacts, or notes. If the worker is still active but must be stopped, record why it was closed and whether its scope was reassigned, reduced, or abandoned. Closing a worker without preserving available work should be treated as a coordination failure unless immediate safety requires it.
+
+Status checks should normally be passive. A worker that is actively working may not be able to answer immediately, and lack of an immediate status reply is not evidence of failure, blockage, or completion. The primary agent must not send routine "status ping", "checkpoint", or "are you done?" messages to an active worker merely because time has passed.
+
+Prefer worker self-reporting over primary-agent polling. The primary agent may ask for status only when:
+- the user explicitly asks for current worker status
+- integration is blocked until the primary agent knows whether the worker is blocked
+- passive observation shows likely tool failure, missing context, or unavailable resources
+- the worker prompt explicitly requested a status reply at a named milestone and that milestone is externally known to have passed
+
+When a status request is truly necessary, send at most one concise request and ask the worker to answer at the next safe checkpoint. Do not expect immediate response. Do not send repeated pings. If no status arrives, continue waiting or work on non-overlapping coordination tasks unless a takeover condition is met.
 
 Before asking a worker for status, prefer passive observation when available. The primary agent may inspect:
 - live agent list or mailbox updates
@@ -273,7 +288,7 @@ Reviewer Return:
 - Freshness: state whether this review was performed after the latest handoff/resume, or whether it relies on historical results
 ```
 
-When dispatching a worker for a long task, the primary agent should include an expected status point or completion signal in the prompt. Example:
+When dispatching a worker for a long task, the primary agent may include worker-owned self-report milestones or a completion signal in the prompt. These are not permission for the primary agent to repeatedly ping the worker. Example:
 
 ```md
 Progress:
@@ -281,7 +296,7 @@ Progress:
 - If you need missing context, report `NEEDS_CONTEXT` with the smallest specific question.
 - If you receive a status request while actively working, answer at the next safe checkpoint; do not stop mid-step just to produce a low-quality status.
 - Do not report `DONE` without concrete evidence: inspected files/docs/logs, changes made or not needed, validation run or why not run, and remaining risks.
-- Otherwise continue until the scoped task is done; the primary agent will wait rather than duplicate this scope.
+- Otherwise continue until the scoped task is done; the primary agent will wait rather than ping, close, or duplicate this scope.
 ```
 
 # Planning
