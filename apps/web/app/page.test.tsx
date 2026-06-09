@@ -2,94 +2,108 @@
 
 import { cleanup, render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import { afterEach, describe, expect, test } from "vitest";
+import { afterEach, describe, expect, test, vi } from "vitest";
 
 import Page from "./page";
 
 afterEach(() => {
   cleanup();
+  vi.restoreAllMocks();
+  vi.unstubAllGlobals();
 });
 
 describe("Landing page", () => {
-  test("renders the living civic pulse landing page in English and Korean", async () => {
-    const user = userEvent.setup();
-
-    render(<Page />);
+  test("renders the approved cinematic six-section landing structure", () => {
+    const { container } = render(<Page />);
 
     expect(
       screen.getByRole("heading", {
         level: 1,
-        name: "See the intersection before the signal changes",
+        name: "Intersections that think before they change",
       })
     ).toBeTruthy();
-    expect(
-      screen.getByText(
-        "One sharp product view for live awareness, phase-plan comparison, and operator-ready simulation briefings."
-      )
-    ).toBeTruthy();
-
-    const dashboardLinks = screen.getAllByRole("link", { name: "Open dashboard" });
-    expect(dashboardLinks).toHaveLength(2);
-    dashboardLinks.forEach((link) => {
-      expect(link.getAttribute("href")).toBe("/dashboard");
-    });
-    expect(
-      screen.getByRole("link", { name: "See the workflow" }).getAttribute("href")
-    ).toBe("#decision-workflow");
-    expect(screen.getByText("Simulation-only. Never controls real signals.")).toBeTruthy();
-    expect(screen.getByLabelText("Interactive product preview")).toBeTruthy();
-    expect(screen.getByText("Phase plan comparison")).toBeTruthy();
-    expect(screen.getByText("Switch to Plan B")).toBeTruthy();
-    expect(screen.getByText("Scroll-driven product tour")).toBeTruthy();
-    expect(
-      screen.getByRole("heading", {
-        level: 2,
-        name: "The intersection breathes before it decides",
-      })
-    ).toBeTruthy();
-    expect(
-      screen.getByRole("heading", { level: 2, name: "Operator boundary" })
-    ).toBeTruthy();
-    expect(
-      screen.getByRole("heading", { level: 2, name: "Dashboard preview" })
-    ).toBeTruthy();
-    expect(screen.getByText(/does not control real signals/i)).toBeTruthy();
-    expect(screen.getByText("Emergency approach")).toBeTruthy();
-    expect(screen.getByText("Pedestrian demand")).toBeTruthy();
-    expect(screen.getByText("SMART INTERSECTION OPS")).toBeTruthy();
-    expect(screen.getByText("Operator in control")).toBeTruthy();
-    expect(screen.getByText("Test safely")).toBeTruthy();
-    expect(screen.getByText("See the impact")).toBeTruthy();
-    expect(screen.getByText("Built for teams")).toBeTruthy();
-    expect(screen.getByText("Live events")).toBeTruthy();
-    expect(screen.getAllByText("Live awareness").length).toBeGreaterThan(0);
-    expect(screen.getAllByText("Compare phase plans").length).toBeGreaterThan(0);
-    expect(screen.getAllByText("Lock the briefing").length).toBeGreaterThan(0);
-
-    await user.click(screen.getByRole("button", { name: "한국어" }));
-
-    expect(
-      screen.getByRole("heading", {
-        level: 1,
-        name: "신호가 바뀌기 전에 교차로를 먼저 확인하세요",
-      })
-    ).toBeTruthy();
-    expect(screen.getAllByRole("link", { name: "대시보드 열기" })).toHaveLength(2);
-    expect(screen.getByRole("link", { name: "흐름 보기" }).getAttribute("href")).toBe(
+    expect(screen.getByText(/Simulation workspace for traffic teams/i)).toBeTruthy();
+    expect(screen.getAllByRole("link", { name: "Open dashboard" }).length).toBeGreaterThanOrEqual(2);
+    expect(screen.getByRole("link", { name: "Watch the motion" }).getAttribute("href")).toBe(
       "#decision-workflow"
     );
-    expect(screen.getByText("시뮬레이션 전용. 실제 신호는 제어하지 않습니다.")).toBeTruthy();
-    expect(screen.getByLabelText("인터랙티브 제품 미리보기")).toBeTruthy();
-    expect(screen.getAllByText("단계 계획 비교").length).toBeGreaterThan(0);
-    expect(screen.getByText("B안으로 전환")).toBeTruthy();
-    expect(screen.getByText("긴급차량 접근")).toBeTruthy();
-    expect(screen.getByText("보행자 수요")).toBeTruthy();
-    expect(screen.getByText("운영자 통제 유지")).toBeTruthy();
-    expect(screen.getByText("실시간 이벤트")).toBeTruthy();
-    expect(screen.getByText("운영자 판단 경계")).toBeTruthy();
-    expect(screen.getByText("스크롤 기반 제품 투어")).toBeTruthy();
-    expect(screen.getAllByText("실시간 인식").length).toBeGreaterThan(0);
-    expect(screen.getAllByText("단계 계획 비교").length).toBeGreaterThan(0);
-    expect(screen.getAllByText("브리핑 고정").length).toBeGreaterThan(0);
+
+    expect(container.querySelector('[data-section="hero"]')).toBeTruthy();
+    expect(container.querySelector('[data-section="signal-bento"]')).toBeTruthy();
+    expect(container.querySelector('[data-section="scroll-reel"]')).toBeTruthy();
+    expect(container.querySelector('[data-section="operator-accordion"]')).toBeTruthy();
+    expect(container.querySelector('[data-section="proof-marquee"]')).toBeTruthy();
+    expect(container.querySelector('[data-section="final-cta"]')).toBeTruthy();
+    expect(container.querySelector('[data-existing-intersection-image="true"]')).toBeTruthy();
+  });
+
+  test("exposes the GSAP scroll contract and bento density markers", () => {
+    const { container } = render(<Page />);
+
+    const scrollReel = screen.getByTestId("landing-gsap-scroll-reel");
+    expect(scrollReel.getAttribute("data-gsap-scrolltrigger")).toBe("true");
+    expect(scrollReel.getAttribute("data-remotion-sequence")).toBe("LandingScrollReel");
+    expect(scrollReel.getAttribute("data-remotion-fps")).toBe("30");
+    expect(scrollReel.getAttribute("data-motion-scenes")).toBe("4");
+    expect(container.querySelectorAll("[data-scroll-panel]")).toHaveLength(4);
+
+    const bento = screen.getByTestId("landing-gapless-bento");
+    expect(bento.getAttribute("data-grid-flow")).toBe("dense");
+    expect(bento.querySelectorAll("[data-bento-cell]")).toHaveLength(4);
+    expect(bento.textContent).toContain("Sense");
+    expect(bento.textContent).toContain("Compare");
+    expect(bento.textContent).toContain("Brief");
+    expect(bento.textContent).toContain("Simulation-only boundary");
+  });
+
+  test("renders the operator accordion and proof marquee without meta labels", () => {
+    const { container } = render(<Page />);
+
+    expect(screen.getByText("Live sensing")).toBeTruthy();
+    expect(screen.getByText("Scenario compare")).toBeTruthy();
+    expect(screen.getByText("Recommendation evidence")).toBeTruthy();
+    expect(screen.getByText("Operator handoff")).toBeTruthy();
+    expect(screen.getByLabelText("City team motion marquee")).toBeTruthy();
+    expect(screen.getByText(/Simulation-only. Never controls real signals./i)).toBeTruthy();
+
+    expect(container.textContent).not.toContain("SECTION");
+    expect(container.textContent).not.toContain("QUESTION");
+    expect(container.textContent).not.toContain("TRUST / PROOF");
+  });
+
+  test("exposes the operator accordion active state accessibly", async () => {
+    render(<Page />);
+
+    const liveSensing = screen.getByRole("button", { name: /Live sensing/i });
+    const scenarioCompare = screen.getByRole("button", { name: /Scenario compare/i });
+
+    expect(liveSensing.getAttribute("aria-pressed")).toBe("true");
+    expect(liveSensing.getAttribute("aria-expanded")).toBe("true");
+    expect(scenarioCompare.getAttribute("aria-pressed")).toBe("false");
+    expect(scenarioCompare.getAttribute("aria-expanded")).toBe("false");
+
+    await userEvent.click(scenarioCompare);
+
+    expect(liveSensing.getAttribute("aria-pressed")).toBe("false");
+    expect(liveSensing.getAttribute("aria-expanded")).toBe("false");
+    expect(scenarioCompare.getAttribute("aria-pressed")).toBe("true");
+    expect(scenarioCompare.getAttribute("aria-expanded")).toBe("true");
+  });
+
+  test("switches visible landing copy between English and Korean", async () => {
+    render(<Page />);
+
+    await userEvent.click(screen.getByRole("button", { name: "한국어" }));
+
+    expect(
+      screen.getByRole("heading", {
+        level: 1,
+        name: "바꾸기 전에 생각하는 교차로",
+      })
+    ).toBeTruthy();
+    expect(screen.getAllByRole("link", { name: "대시보드 열기" }).length).toBeGreaterThanOrEqual(2);
+    expect(screen.getByRole("link", { name: "움직임 보기" }).getAttribute("href")).toBe(
+      "#decision-workflow"
+    );
   });
 });
