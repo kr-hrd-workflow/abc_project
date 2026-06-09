@@ -82,6 +82,12 @@ def require_openai_api_key(env: Mapping[str, str] | None = None) -> str:
     return api_key
 
 
+def build_openai_client(api_key: str) -> OpenAIClientProtocol:
+    from openai import OpenAI
+
+    return cast(OpenAIClientProtocol, OpenAI(api_key=api_key))
+
+
 def _grounded_answer_input(
     question: str,
     scenario_summary: str,

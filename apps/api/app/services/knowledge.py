@@ -1,6 +1,9 @@
 import re
+from collections.abc import Mapping
 from dataclasses import dataclass
-from typing import Sequence
+from typing import Protocol, Sequence
+
+from sqlalchemy import text
 
 
 @dataclass(frozen=True)
@@ -18,6 +21,35 @@ class KnowledgeChunk:
     content: str
     title_keywords: frozenset[str]
     keywords: frozenset[str]
+
+
+class EmbeddingGateway(Protocol):
+    model: str
+
+    def embed_text(self, text: str) -> list[float]:
+        pass
+
+
+class MappingRows(Protocol):
+    def all(self) -> Sequence[Mapping[str, str]]:
+        pass
+
+
+class SqlResult(Protocol):
+    def mappings(self) -> MappingRows:
+        pass
+
+
+class SqlSession(Protocol):
+    def execute(
+        self,
+        statement: object,
+        params: Mapping[str, object] | None = None,
+    ) -> SqlResult:
+        pass
+
+    def commit(self) -> None:
+        pass
 
 
 DEFAULT_POLICY_DOCUMENTS: tuple[PolicyDocument, ...] = (
@@ -51,6 +83,41 @@ DEFAULT_POLICY_DOCUMENTS: tuple[PolicyDocument, ...] = (
             "command."
         ),
     ),
+)
+
+
+UPSERT_POLICY_CHUNK_SQL = text(
+    """
+    insert into knowledge_chunks (
+        document_id,
+        chunk_id,
+        title,
+        content,
+        embedding
+    )
+    values (
+        :document_id,
+        :chunk_id,
+        :title,
+        :content,
+        cast(:embedding as vector)
+    )
+    on conflict (chunk_id) do update
+    set
+        document_id = excluded.document_id,
+        title = excluded.title,
+        content = excluded.content,
+        embedding = excluded.embedding
+    """
+)
+
+SEARCH_POLICY_EVIDENCE_SQL = text(
+    """
+    select document_id, chunk_id, title, content
+    from knowledge_chunks
+    order by embedding <-> cast(:query_embedding as vector), document_id
+    limit :limit
+    """
 )
 
 
@@ -96,6 +163,48 @@ def search_policy_evidence(
     ][:limit]
 
 
+def sync_policy_embeddings(
+    *,
+    session: SqlSession,
+    embedding_gateway: EmbeddingGateway,
+    documents: Sequence[PolicyDocument] = DEFAULT_POLICY_DOCUMENTS,
+) -> None:
+    for chunk in ingest_policy_documents(documents):
+        session.execute(
+            UPSERT_POLICY_CHUNK_SQL,
+            {
+                "document_id": chunk.document_id,
+                "chunk_id": chunk.chunk_id,
+                "title": chunk.title,
+                "content": chunk.content,
+                "embedding": _vector_literal(
+                    embedding_gateway.embed_text(_embedding_input(chunk))
+                ),
+            },
+        )
+    session.commit()
+
+
+def search_policy_evidence_pgvector(
+    *,
+    query: str,
+    session: SqlSession,
+    embedding_gateway: EmbeddingGateway,
+    limit: int = 2,
+) -> list[KnowledgeChunk]:
+    result = session.execute(
+        SEARCH_POLICY_EVIDENCE_SQL,
+        {
+            "query_embedding": _vector_literal(embedding_gateway.embed_text(query)),
+            "limit": limit,
+        },
+    )
+    return [
+        _row_to_chunk(row)
+        for row in result.mappings().all()
+    ]
+
+
 def format_policy_evidence(chunks: Sequence[KnowledgeChunk]) -> str:
     if not chunks:
         return ""
@@ -104,6 +213,27 @@ def format_policy_evidence(chunks: Sequence[KnowledgeChunk]) -> str:
         for chunk in chunks
     )
     return f" Policy evidence: {evidence}"
+
+
+def _embedding_input(chunk: KnowledgeChunk) -> str:
+    return f"{chunk.title}\n{chunk.content}"
+
+
+def _row_to_chunk(row: Mapping[str, str]) -> KnowledgeChunk:
+    title = row["title"]
+    content = row["content"]
+    return KnowledgeChunk(
+        document_id=row["document_id"],
+        chunk_id=row["chunk_id"],
+        title=title,
+        content=content,
+        title_keywords=_tokens(title),
+        keywords=_tokens(f"{title} {content}"),
+    )
+
+
+def _vector_literal(embedding: Sequence[float]) -> str:
+    return "[" + ",".join(f"{float(value):.12g}" for value in embedding) + "]"
 
 
 def _tokens(text: str) -> frozenset[str]:

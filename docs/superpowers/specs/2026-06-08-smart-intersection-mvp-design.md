@@ -451,7 +451,7 @@ source/tests.
 
 ### Phase 3 AI/RAG
 
-- [ ] Add pgvector only after event/report contracts settle.
+- [x] Add pgvector only after event/report contracts settle.
   - [x] Add optional API `ai` dependencies for `openai` and `pgvector`.
   - [x] Add `/api/runtime/readiness` checks for the pgvector Python module and
     target-database vector extension verification status.
@@ -459,13 +459,13 @@ source/tests.
     configured database when it is reachable, without enabling the extension.
   - [x] Add `docs/runtime-setup.md` with approval and validation checkboxes for
     pgvector setup and embedding search.
-  - [ ] Enable PostgreSQL `vector` extension and vector columns after target
+  - [x] Enable PostgreSQL `vector` extension and vector columns after target
     database setup is approved and verified.
 - [x] Add policy and operation-guide document ingestion.
 - [x] Add local RAG-style policy evidence retrieval for chat answers.
   - [x] Retrieve policy chunks for emergency priority, pedestrian safety, and
     blocked-intersection guidance without external API calls.
-  - [ ] Replace local keyword scoring with pgvector-backed embedding search
+  - [x] Replace local keyword scoring with pgvector-backed embedding search
     after database extension and embedding setup are verified.
 - [ ] Add configurable OpenAI model and prompt settings only after API-key setup
   approval and current official OpenAI docs verification.
@@ -483,8 +483,9 @@ source/tests.
     OpenAI client setup.
   - [x] Add a mocked OpenAI Responses/embeddings client boundary that can be
     tested without secrets or live external calls.
-  - [ ] Add an OpenAI client call path only after API-key setup is approved and
-    validated.
+  - [x] Add a guarded OpenAI embedding client call path for pgvector mode.
+  - [ ] Validate the live OpenAI client call path after `OPENAI_API_KEY` and
+    `OPENAI_MONTHLY_BUDGET_USD` are set.
 
 ## Testing Plan
 

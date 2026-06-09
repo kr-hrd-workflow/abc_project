@@ -21,7 +21,18 @@ from app.db.session import SessionLocal, get_session
 from app.domain.schemas import ChatRequest, ChatResponse
 from app.scenarios.fixtures import SAMPLE_INPUT_FIXTURES, fixture_to_payload
 from app.services.chat import answer_question
-from app.services.knowledge import ingest_policy_documents, search_policy_evidence
+from app.services.knowledge import (
+    KnowledgeChunk,
+    ingest_policy_documents,
+    search_policy_evidence,
+    search_policy_evidence_pgvector,
+    sync_policy_embeddings,
+)
+from app.services.openai_clients import (
+    OpenAIEmbeddingGateway,
+    build_openai_client,
+    require_openai_api_key,
+)
 from app.services.persistence import (
     create_chat_log,
     create_recommendation,
@@ -292,13 +303,32 @@ def chat(
     observation = vision_adapter.analyze(scenario_id)
     _status, events = ensure_scenario_snapshot(session, observation)
     event_ids = [event.id for event in events]
-    policy_evidence = search_policy_evidence(
-        request.question,
-        ingest_policy_documents(),
-    )
+    policy_evidence = _retrieve_policy_evidence(request.question, session)
     answer = answer_question(request.question, observation, policy_evidence)
     create_chat_log(session, observation, request.question, answer, event_ids)
     return ChatResponse(answer=answer, referenced_event_ids=event_ids)
+
+
+def _retrieve_policy_evidence(
+    question: str,
+    session: Session,
+) -> list[KnowledgeChunk]:
+    if settings.knowledge_search_mode == "pgvector":
+        embedding_gateway = OpenAIEmbeddingGateway(
+            client=build_openai_client(require_openai_api_key()),
+            model=settings.openai_embedding_model,
+            dimensions=settings.openai_embedding_dimensions,
+        )
+        sync_policy_embeddings(
+            session=session,
+            embedding_gateway=embedding_gateway,
+        )
+        return search_policy_evidence_pgvector(
+            query=question,
+            session=session,
+            embedding_gateway=embedding_gateway,
+        )
+    return search_policy_evidence(question, ingest_policy_documents())
 
 
 @router.post("/api/report")

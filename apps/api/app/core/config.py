@@ -17,6 +17,7 @@ class Settings(BaseSettings):
     openai_embedding_model: str = "text-embedding-3-small"
     openai_embedding_dimensions: int = Field(default=1536, ge=1)
     openai_monthly_budget_usd: float | None = Field(default=None, gt=0)
+    knowledge_search_mode: Literal["keyword", "pgvector"] = "keyword"
 
     model_config = SettingsConfigDict(env_file=".env", env_file_encoding="utf-8", extra="ignore")
 

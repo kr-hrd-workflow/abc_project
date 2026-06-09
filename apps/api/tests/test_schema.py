@@ -142,6 +142,7 @@ def test_settings_accept_env_example_variables(tmp_path) -> None:
                 "OPENAI_EMBEDDING_MODEL=text-embedding-3-small",
                 "OPENAI_EMBEDDING_DIMENSIONS=1536",
                 "OPENAI_MONTHLY_BUDGET_USD=10.00",
+                "KNOWLEDGE_SEARCH_MODE=pgvector",
             ]
         ),
         encoding="utf-8",
@@ -161,6 +162,7 @@ def test_settings_accept_env_example_variables(tmp_path) -> None:
     assert settings.openai_embedding_model == "text-embedding-3-small"
     assert settings.openai_embedding_dimensions == 1536
     assert settings.openai_monthly_budget_usd == 10.0
+    assert settings.knowledge_search_mode == "pgvector"
 
 
 def test_sqlalchemy_metadata_matches_required_tables() -> None:
@@ -230,6 +232,13 @@ def test_sqlalchemy_metadata_matches_required_tables() -> None:
             "period_end",
             "summary",
             "generated_at",
+        },
+        "knowledge_chunks": {
+            "chunk_id",
+            "document_id",
+            "title",
+            "content",
+            "embedding",
         },
     }
 

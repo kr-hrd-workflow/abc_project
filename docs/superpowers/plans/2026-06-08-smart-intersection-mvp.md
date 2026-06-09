@@ -102,9 +102,12 @@ historical implementation recipe; this tracker is the current progress summary.
   `text-embedding-3-small` before any live API use.
 - [x] Next AI/RAG slice: add an `OPENAI_MONTHLY_BUDGET_USD` readiness guard so
   live OpenAI use requires an explicit spend-limit decision.
-- [ ] Remaining AI/RAG gate: approve and verify API-key setup, pgvector database
-  extension, spend-limit decision, live embeddings, and OpenAI client calls
-  before claiming full RAG/AI integration is complete.
+- [x] AI/RAG pgvector gate: enable the PostgreSQL `vector` extension, add the
+  `knowledge_chunks` vector schema, wire guarded pgvector-backed policy
+  retrieval, and verify strict pgvector readiness.
+- [ ] Remaining OpenAI live gate: set and verify `OPENAI_API_KEY`, approve and
+  set `OPENAI_MONTHLY_BUDGET_USD`, then run live embeddings/OpenAI client smoke
+  before claiming full external AI integration is complete.
 
 ## File Structure
 

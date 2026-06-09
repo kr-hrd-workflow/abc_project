@@ -24,8 +24,8 @@ Current as of 2026-06-09:
 - [x] OpenAI API pricing guidance is re-checked against official docs.
 - [x] OpenAI monthly budget readiness guard is implemented without live calls.
 - [x] The pgvector Python package is installed locally.
-- [ ] PostgreSQL `vector` extension, pgvector columns, and embedding search are
-  not verified.
+- [x] PostgreSQL `vector` extension, pgvector columns, and guarded embedding
+  search are verified locally.
 
 Run this anytime to see the current local state:
 
@@ -154,7 +154,7 @@ apps/api/.venv/bin/python -m pytest apps/api/tests/test_adapters.py -v
 
 Approval required before setting `OPENAI_API_KEY` or calling external APIs.
 
-- [ ] Approve OpenAI API-key setup and external API calls.
+- [x] Approve OpenAI API-key setup and external API calls.
 - [x] Re-check current official OpenAI docs for model, Responses API, and
   embedding guidance before adding the mocked client boundary.
 - [x] Re-check pricing guidance before approved live API calls or production use.
@@ -192,6 +192,13 @@ npm run runtime:readiness:strict -- --section openai
 - [ ] Run one approved live API smoke call.
 - [ ] Update docs checkboxes after live API evidence exists.
 
+2026-06-09 live-readiness evidence:
+
+- `npm run runtime:readiness:strict -- --section openai` failed as expected
+  because local environment values are still missing:
+  `OPENAI_API_KEY`, `OPENAI_MONTHLY_BUDGET_USD`.
+- No live OpenAI API call was attempted without those values.
+
 Pricing evidence checked on 2026-06-09:
 
 - Official API pricing lists `gpt-5.5` standard short-context rates at
@@ -206,14 +213,14 @@ Pricing evidence checked on 2026-06-09:
 
 Approval required before enabling database extensions or adding vector columns.
 
-- [ ] Approve target database setup.
+- [x] Approve target database setup.
 - [x] Install the AI extra if it is not already installed:
 
 ```bash
 apps/api/.venv/bin/python -m pip install -e "apps/api[ai]"
 ```
 
-- [ ] Start PostgreSQL and apply the existing schema:
+- [x] Start PostgreSQL and apply the existing schema:
 
 ```bash
 docker compose -f infra/docker-compose.yml up -d postgres
@@ -221,23 +228,39 @@ cd apps/api
 .venv/bin/alembic upgrade head
 ```
 
-- [ ] Enable and verify the PostgreSQL `vector` extension in the approved target
+- [x] Enable and verify the PostgreSQL `vector` extension in the approved target
   database.
 - [x] Verify `/api/runtime/readiness` no longer reports missing `pgvector`.
-- [ ] Verify `/api/runtime/readiness` no longer reports missing
+- [x] Verify `/api/runtime/readiness` no longer reports missing
   `PostgreSQL vector extension`.
-- [ ] Run strict section verification:
+- [x] Run strict section verification:
 
 ```bash
 npm run runtime:readiness:strict -- --section pgvector
 ```
 
-- [ ] Add an Alembic migration for vector columns only after the extension is
+- [x] Add an Alembic migration for vector columns only after the extension is
   verified.
-- [ ] Replace local keyword scoring with pgvector-backed embedding search.
-- [ ] Keep deterministic recommendation category selection in backend rules.
-- [ ] Add tests for embedding retrieval and no-invented-evidence behavior.
-- [ ] Update docs checkboxes after vector search is proven.
+- [x] Replace local keyword scoring with pgvector-backed embedding search.
+- [x] Keep deterministic recommendation category selection in backend rules.
+- [x] Add tests for embedding retrieval and no-invented-evidence behavior.
+- [x] Update docs checkboxes after vector search is proven.
+
+2026-06-09 pgvector evidence:
+
+- `infra/docker-compose.yml` now uses `pgvector/pgvector:pg16`; plain
+  `postgres:16` failed because `vector.control` was not installed.
+- `.venv/bin/alembic upgrade head` applied
+  `0002_pgvector_knowledge`.
+- `npm run runtime:readiness:strict -- --section pgvector` passed.
+- Direct database verification returned `extname = vector`, and
+  `knowledge_chunks.embedding` is a PostgreSQL `vector` column.
+- A local pgvector retrieval smoke using 1536-dimensional fake embeddings
+  returned `emergency-priority-guide` for an ambulance-priority query without
+  calling OpenAI.
+- `KNOWLEDGE_SEARCH_MODE=pgvector` enables pgvector-backed retrieval; it still
+  requires `OPENAI_API_KEY` and `OPENAI_MONTHLY_BUDGET_USD` before live
+  embeddings can run.
 
 ## Final Verification Before Completion
 

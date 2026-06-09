@@ -32,22 +32,23 @@
 - OpenAI Responses/embeddings 클라이언트 경계와 목업 테스트
 - 공식 OpenAI API 가격 문서 재확인
 - live API 호출 전 월 예산 설정을 확인하는 readiness guard
+- `pgvector/pgvector:pg16` 기반 PostgreSQL `vector` 확장 검증
+- `knowledge_chunks` 벡터 컬럼 마이그레이션과 pgvector 검색 경로
+- `KNOWLEDGE_SEARCH_MODE=pgvector`로 켤 수 있는 임베딩 검색 모드
 - `AGENTS.md`에 팀원/에이전트 작업 규칙 정리
 
 ### 아직 끝나지 않은 범위
 
 아래 항목은 문서의 체크박스에도 아직 미완료로 남아 있습니다.
 
-- PostgreSQL `vector` 확장과 pgvector 컬럼/검색
 - OpenAI API 키 설정 후 실제 OpenAI 클라이언트 호출
-- 실제 임베딩 검색과 RAG 연결
+- 실제 OpenAI 임베딩 호출을 사용하는 live RAG 스모크 검증
 
 현재 로컬 런타임 준비 상태 기준으로 YOLO/OpenCV 비전 섹션과
-SUMO/TraCI 시뮬레이션 섹션은 준비됐고, `openai`와 `pgvector` Python
-패키지도 설치됐습니다. 아직 남은 것은 `OPENAI_API_KEY`,
-`OPENAI_MONTHLY_BUDGET_USD`, PostgreSQL `vector` 확장입니다. 단,
-`/api/runtime/readiness`는 데이터베이스가 연결될 경우 `pg_extension`에서
-`vector` 확장 활성화 여부를 직접 조회합니다.
+SUMO/TraCI 시뮬레이션 섹션, pgvector 섹션은 준비됐고, `openai`와
+`pgvector` Python 패키지도 설치됐습니다. 아직 남은 것은
+`OPENAI_API_KEY`와 `OPENAI_MONTHLY_BUDGET_USD`입니다. 실제 OpenAI 호출은
+두 값이 설정된 뒤에만 실행해야 합니다.
 
 ## 처음 시작할 때 읽을 문서
 
@@ -78,6 +79,10 @@ docker compose -f infra/docker-compose.yml up -d postgres
 cd apps/api
 .venv/bin/alembic upgrade head
 ```
+
+`infra/docker-compose.yml`은 `pgvector/pgvector:pg16` 이미지를 사용합니다.
+기존 plain `postgres:16` 이미지는 `vector` 확장을 제공하지 않으므로
+pgvector 게이트 검증에 사용할 수 없습니다.
 
 ## 검증 명령
 
@@ -209,20 +214,24 @@ GET  /api/analysis-jobs/{job_id}
     테스트되어 있고, 실제 API 호출은 아직 하지 않았습니다.
   - 2026-06-09 기준 공식 OpenAI API 가격 문서에서 `gpt-5.5`와
     `text-embedding-3-small` 가격을 확인했습니다.
+  - PostgreSQL `vector` 확장, `knowledge_chunks.embedding` 벡터 컬럼,
+    `npm run runtime:readiness:strict -- --section pgvector`는 검증됐습니다.
+  - 1536차원 fake embedding으로 로컬 pgvector 검색 스모크를 실행했고,
+    ambulance priority 질의에서 `emergency-priority-guide`가 반환됐습니다.
+  - 로컬 기본값은 `KNOWLEDGE_SEARCH_MODE=keyword`입니다. 실제 임베딩 검색을
+    켜려면 `.env`에서 `KNOWLEDGE_SEARCH_MODE=pgvector`로 바꾸고 OpenAI 키와
+    월 예산 값을 설정해야 합니다.
   - `OPENAI_MONTHLY_BUDGET_USD`가 없으면 live OpenAI gate가 준비 완료로
     표시되지 않습니다.
   - `/api/runtime/readiness` 기준 남은 OpenAI 게이트는
     `OPENAI_API_KEY`와 `OPENAI_MONTHLY_BUDGET_USD`입니다.
-  - `/api/runtime/readiness` 기준 남은 pgvector 게이트는 PostgreSQL
-    `vector` 확장입니다.
 - 해야 할 일:
-  - OpenAI API 키 설정 승인 및 검증
+  - OpenAI API 키 설정 및 검증
   - 실제 호출 전 월 예산/사용량 제한 결정
   - 승인된 live API smoke call 실행
-  - PostgreSQL `vector` 확장과 pgvector 컬럼 마이그레이션
-  - 로컬 키워드 검색을 임베딩 검색으로 교체
-  - `/api/runtime/readiness`로 `OPENAI_API_KEY`와 PostgreSQL `vector`
-    확장 활성화 상태 재확인
+  - `KNOWLEDGE_SEARCH_MODE=pgvector` 상태에서 실제 임베딩 검색 스모크 실행
+  - `/api/runtime/readiness`로 `OPENAI_API_KEY`와
+    `OPENAI_MONTHLY_BUDGET_USD` 활성화 상태 재확인
 
 ## 안전 경계
 

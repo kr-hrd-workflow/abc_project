@@ -358,6 +358,51 @@ def test_chat_includes_policy_evidence_when_question_requests_policy(
     assert payload["referenced_event_ids"]
 
 
+def test_chat_uses_pgvector_policy_search_when_configured(
+    client: TestClient,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    calls: dict[str, object] = {}
+
+    monkeypatch.setattr("app.api.routes.settings.knowledge_search_mode", "pgvector")
+    monkeypatch.setattr(
+        "app.api.routes.require_openai_api_key",
+        lambda: "sk-test",
+    )
+    monkeypatch.setattr(
+        "app.api.routes.build_openai_client",
+        lambda _api_key: object(),
+    )
+
+    def fake_sync_policy_embeddings(**kwargs: object) -> None:
+        calls["synced_with_model"] = kwargs["embedding_gateway"].model
+
+    def fake_search_policy_evidence_pgvector(**kwargs: object) -> list[object]:
+        calls["searched_query"] = kwargs["query"]
+        return []
+
+    monkeypatch.setattr(
+        "app.api.routes.sync_policy_embeddings",
+        fake_sync_policy_embeddings,
+    )
+    monkeypatch.setattr(
+        "app.api.routes.search_policy_evidence_pgvector",
+        fake_search_policy_evidence_pgvector,
+    )
+
+    response = client.post(
+        "/api/chat",
+        json={"question": "Emergency status?"},
+    )
+
+    assert response.status_code == 200
+    assert calls == {
+        "synced_with_model": "text-embedding-3-small",
+        "searched_query": "Emergency status?",
+    }
+    assert "Policy evidence:" not in response.json()["answer"]
+
+
 def test_report_returns_summary_for_intersection(client: TestClient) -> None:
     response = client.post("/api/report")
 
