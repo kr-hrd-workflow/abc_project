@@ -82,6 +82,14 @@ Karpathy-guidelines rules:
 - Define verifiable success criteria for non-trivial code work and validate the result before claiming completion.
 - If `karpathy-guidelines` and another applicable skill both trigger, apply both. Use Superpowers process skills for workflow discipline and `karpathy-guidelines` for coding judgment.
 
+Find-skills rules:
+- Use `find-skills` when the user asks how to do something that may be supported by an installable skill, asks whether a skill/tool/workflow exists, asks to find a skill for a domain, or expresses interest in extending agent capabilities.
+- When `find-skills` triggers, first clarify the user's domain and task, then check known/popular skill sources before recommending niche options.
+- Prefer reputable, widely used skills. Before recommending a skill, verify quality signals such as install count, source reputation, and repository credibility when feasible.
+- Present skill options with the skill name, purpose, source, install command, and link when available.
+- Ask before installing or updating skills. Installing, updating, or removing skills is an external environment change and requires explicit user approval.
+- If no relevant skill exists, say so directly and offer to help with the task using general capabilities or suggest creating a custom skill.
+
 Do not weaken plugin or skill behavior with local preferences for brevity, minimum retrieval, fewer tool loops, or avoiding process.
 
 # Agent Identity And Delegation

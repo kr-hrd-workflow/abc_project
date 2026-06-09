@@ -1,6 +1,7 @@
 # Project Skill Index
 
-Use this file as the quick project lookup for newly installed design, taste, image, and output skills.
+Use this file as the quick project lookup for installed project skills: design,
+frontend, backend, testing, handoff, computer vision, image, and output skills.
 
 Project behavior still starts from `AGENTS.md`: use applicable skills/plugins first, keep changes scoped, validate before claiming completion, and use Superpowers plus `karpathy-guidelines` when their trigger rules apply.
 
@@ -9,35 +10,61 @@ Project behavior still starts from `AGENTS.md`: use applicable skills/plugins fi
 Ask Codex for the skill by name in your task prompt:
 
 ```text
-Use `impeccable` and `design-taste-frontend` to redesign the dashboard.
+Use `impeccable` as lead and `design-taste-frontend` as support to redesign the dashboard.
 ```
 
 ```text
-Use `brandkit` and `high-end-visual-design` to create a premium brand direction.
+Use `ui-ux-pro-max` as lead and `minimalist-ui` as support to review the dashboard design system.
 ```
 
 ```text
-Use `image-to-code` to generate section references first, then implement the page.
+Use `brandkit` as lead and `high-end-visual-design` as support to create a premium brand direction.
+```
+
+```text
+Use `next-best-practices` and `fastapi` to review the dashboard/API boundary.
+```
+
+```text
+Use `webapp-testing` to run a local browser smoke test for the dashboard.
 ```
 
 ## Core Design Skills
 
-- [x] `emil-design-eng` - Use for UI polish, component craft, animation judgment, and design-engineering review.
-- [x] `impeccable` - Use for production-grade frontend design, redesign, UX audit, polish, theming, motion, accessibility, and responsive UI work.
+- [x] `impeccable` - Use to shape, critique, redesign, polish, and harden the interface.
+- [x] `ui-ux-pro-max` - Use for structured UI/UX and design-system recommendations: accessibility, layout, typography, color, interaction patterns, responsive behavior, and component quality.
+
+## Core Implementation Skills
+
+- [x] `next-best-practices` - Use when writing or reviewing Next.js code: App Router file conventions, RSC boundaries, async APIs, route handlers, metadata, error handling, image/font optimization, and bundling.
+- [x] `fastapi` - Use when writing or reviewing FastAPI APIs, Pydantic models, route behavior, validation, and backend conventions.
+- [x] `handoff` - Use when preparing a compact continuation note for another agent or future session. Keep sensitive values out of handoff docs.
+
+## Runtime And QA Skills
+
+- [x] `webapp-testing` - Use for local web application testing with Playwright, server lifecycle management, screenshots, browser logs, and rendered-DOM verification.
+- [x] `computer-vision-opencv` - Use for OpenCV, image/video processing, YOLO-style object detection, bounding box normalization, and vision pipeline performance work.
 
 ## Recommended Frontend Workflow
 
-Use this default stack for UI work:
+Use one lead skill and one support skill. Do not stack every design skill at once.
+
+Rule of thumb:
+
+- `impeccable` shapes and critiques the interface. Make it the lead for product screens, dashboards, redesigns, UX states, responsive behavior, and implementation polish.
+- `ui-ux-pro-max` gives structured design-system recommendations. Make it the lead for accessibility, layout systems, typography, color systems, reusable components, and UX quality checks.
+- Taste skills push the aesthetic direction. Use one Taste skill as support when the visual language matters, such as `minimalist-ui`, `industrial-brutalist-ui`, `design-taste-frontend`, `gpt-taste`, `brandkit`, or `image-to-code`.
+
+Default pairing:
 
 ```text
-impeccable + one taste direction + emil-design-eng polish
+lead: impeccable or ui-ux-pro-max
+support: one Taste skill
 ```
 
-- `impeccable` is the broad frontend design command system. Use it for real UI work: product screens, dashboards, redesigns, UX states, accessibility, responsiveness, implementation quality, and live polish.
-- Taste skills are visual-direction variants. Pick one or two that match the desired style, such as `minimalist-ui`, `industrial-brutalist-ui`, `design-taste-frontend`, `gpt-taste`, `brandkit`, or `image-to-code`.
-- `emil-design-eng` is the fine-detail polish layer. Use it near the end for interaction feel, animation judgment, component polish, active states, popovers, and whether the interface feels right.
+Pick `impeccable` + one Taste skill for actual interface shaping. Pick `ui-ux-pro-max` + one Taste skill for design-system guidance. Use a Taste skill as lead only when the main request is aesthetic direction, brand mood, or visual exploration.
 
-Avoid invoking the whole Taste Skill collection at once. Too many taste skills can conflict and make the output overdesigned.
+Avoid invoking the whole Taste Skill collection at once. Too many design skills can conflict and make the output overdesigned.
 
 ## Taste Skill Collection
 
@@ -64,10 +91,18 @@ Avoid invoking the whole Taste Skill collection at once. Too many taste skills c
 - Mobile concepting: `imagegen-frontend-mobile` + `gpt-taste`
 - Minimal product UI: `minimalist-ui` + `impeccable`
 - Brutalist dashboard or editorial UI: `industrial-brutalist-ui` + `design-taste-frontend`
+- Design-system review: `ui-ux-pro-max` + `impeccable`
+- UI audit with aesthetic direction: `impeccable` + `design-taste-frontend`
 - Google Stitch system prompt: `stitch-design-taste` + `full-output-enforcement`
+- Next.js dashboard implementation: `next-best-practices` + `impeccable`
+- Full API/UI boundary review: `next-best-practices` + `fastapi`
+- Local dashboard smoke test: `webapp-testing` + `next-best-practices`
+- Vision adapter work: `computer-vision-opencv` + `fastapi`
+- Session handoff: `handoff` + `karpathy-guidelines`
 
 ## Notes
 
 - The listed taste/design skills are installed as user skills, so call them by their exact names in prompts.
+- The listed implementation, testing, handoff, and vision skills are installed as user skills, so call them by their exact names in prompts.
 - This file is an index for humans and agents; it does not replace skill installation or the project rules in `AGENTS.md`.
 - For normal repository work, keep using Superpowers for workflow discipline and `karpathy-guidelines` for coding judgment when they apply.
