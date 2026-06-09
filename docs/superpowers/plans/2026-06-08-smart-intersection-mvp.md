@@ -98,8 +98,10 @@ historical implementation recipe; this tracker is the current progress summary.
   and the next files to work from.
 - [x] Next AI/RAG slice: install the API `ai` extra and add a mocked OpenAI
   Responses/embeddings client boundary without API keys or live external calls.
+- [x] Next AI/RAG slice: verify official API pricing for `gpt-5.5` and
+  `text-embedding-3-small` before any live API use.
 - [ ] Remaining AI/RAG gate: approve and verify API-key setup, pgvector database
-  extension, pricing/usage review, live embeddings, and OpenAI client calls
+  extension, spend-limit decision, live embeddings, and OpenAI client calls
   before claiming full RAG/AI integration is complete.
 
 ## File Structure

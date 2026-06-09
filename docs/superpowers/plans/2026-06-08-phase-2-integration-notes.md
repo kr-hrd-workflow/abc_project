@@ -344,12 +344,14 @@ OpenAI API key or pgvector runtime:
   `OPENAI_EMBEDDING_DIMENSIONS`
 - official OpenAI docs were checked on 2026-06-09 for `gpt-5.5`,
   Responses API guidance, and embedding-model constraints before adding config
+- official OpenAI API pricing was checked on 2026-06-09 for `gpt-5.5` and
+  `text-embedding-3-small` before any live API calls
 - `apps/api/app/services/openai_clients.py` adds a mocked/tested
   Responses/embeddings boundary for future live wiring
 
 This does not store API keys, call external AI services, enable the PostgreSQL
 `vector` extension, or perform live embedding search. Those remain gated by
-API-key approval and target database setup.
+API-key approval, spend-limit decisions, and target database setup.
 
 ## Implemented Slice: Runtime Gate Readiness
 

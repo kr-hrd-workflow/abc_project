@@ -471,6 +471,8 @@ source/tests.
   approval and current official OpenAI docs verification.
   - [x] Verify official docs for `gpt-5.5` and Responses API guidance on
     2026-06-09 via `developers.openai.com`.
+  - [x] Verify official API pricing for `gpt-5.5` and
+    `text-embedding-3-small` on 2026-06-09 before live API use.
   - [x] Add `OPENAI_MODEL`, `OPENAI_EMBEDDING_MODEL`, and
     `OPENAI_EMBEDDING_DIMENSIONS` runtime configuration.
   - [x] Add `/api/runtime/readiness` checks for OpenAI client package and

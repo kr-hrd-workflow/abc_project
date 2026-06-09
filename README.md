@@ -30,6 +30,7 @@
   검증
 - `apps/api[ai]`로 OpenAI/pgvector Python 패키지 설치
 - OpenAI Responses/embeddings 클라이언트 경계와 목업 테스트
+- 공식 OpenAI API 가격 문서 재확인
 - `AGENTS.md`에 팀원/에이전트 작업 규칙 정리
 
 ### 아직 끝나지 않은 범위
@@ -205,13 +206,15 @@ GET  /api/analysis-jobs/{job_id}
     준비됐습니다.
   - `OpenAITextGateway`와 `OpenAIEmbeddingGateway`는 목업 클라이언트로
     테스트되어 있고, 실제 API 호출은 아직 하지 않았습니다.
+  - 2026-06-09 기준 공식 OpenAI API 가격 문서에서 `gpt-5.5`와
+    `text-embedding-3-small` 가격을 확인했습니다.
   - `/api/runtime/readiness` 기준 남은 OpenAI 게이트는
     `OPENAI_API_KEY`입니다.
   - `/api/runtime/readiness` 기준 남은 pgvector 게이트는 PostgreSQL
     `vector` 확장입니다.
 - 해야 할 일:
   - OpenAI API 키 설정 승인 및 검증
-  - 실제 호출 전에 공식 OpenAI 문서로 가격/사용량 조건 재확인
+  - 실제 호출 전 월 예산/사용량 제한 결정
   - 승인된 live API smoke call 실행
   - PostgreSQL `vector` 확장과 pgvector 컬럼 마이그레이션
   - 로컬 키워드 검색을 임베딩 검색으로 교체

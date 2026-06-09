@@ -21,6 +21,7 @@ Current as of 2026-06-09:
   `source = "sumo_traci"`.
 - [x] OpenAI client boundary is mocked and tested without secrets or live calls.
 - [ ] Live OpenAI client calls are not verified.
+- [x] OpenAI API pricing guidance is re-checked against official docs.
 - [x] The pgvector Python package is installed locally.
 - [ ] PostgreSQL `vector` extension, pgvector columns, and embedding search are
   not verified.
@@ -155,7 +156,7 @@ Approval required before setting `OPENAI_API_KEY` or calling external APIs.
 - [ ] Approve OpenAI API-key setup and external API calls.
 - [x] Re-check current official OpenAI docs for model, Responses API, and
   embedding guidance before adding the mocked client boundary.
-- [ ] Re-check pricing guidance before approved live API calls or production use.
+- [x] Re-check pricing guidance before approved live API calls or production use.
 - [x] Install the AI extra:
 
 ```bash
@@ -185,6 +186,16 @@ npm run runtime:readiness:strict -- --section openai
   provided scenario and policy evidence.
 - [ ] Run one approved live API smoke call.
 - [ ] Update docs checkboxes after live API evidence exists.
+
+Pricing evidence checked on 2026-06-09:
+
+- Official API pricing lists `gpt-5.5` standard short-context rates at
+  $5.00 input, $0.50 cached input, and $30.00 output per 1M tokens.
+- Official API pricing lists `text-embedding-3-small` at $0.02 per 1M input
+  tokens.
+- Official pricing guidance says API usage is billed separately from ChatGPT
+  subscriptions, and spending should be monitored through the usage dashboard
+  or billing settings before live usage.
 
 ## Gate 4: pgvector And Embedding Search
 
