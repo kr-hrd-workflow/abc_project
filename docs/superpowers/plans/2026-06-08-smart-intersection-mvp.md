@@ -27,6 +27,58 @@ Key approved decisions:
 - Do not add OpenAI, pgvector, real YOLO, real SUMO, or Unity in Phase 1 without a separate approval.
 - Before visual dashboard implementation, create and approve a dashboard concept because the Build Web Apps skill requires this unless the user opts out.
 
+## Current Execution Tracker
+
+Current as of 2026-06-09. The detailed task steps below are retained as the
+historical implementation recipe; this tracker is the current progress summary.
+
+- [x] Task 1, repository scaffold and local service files: implemented.
+- [x] Task 2, backend domain models and database schema: implemented.
+- [x] Task 3, scenario data and replaceable adapters: implemented.
+- [x] Task 4, recommendation, report, chat, persistence, and API flow:
+  implemented.
+- [x] Task 5, frontend visual concept gate: completed and recorded in
+  `docs/design/dashboard-concept-notes.md` plus
+  `docs/design/assets/dashboard-concept-approved.png`.
+- [x] Task 6, frontend data types and API client: implemented.
+- [x] Task 7, dashboard UI implementation plan and execution: implemented in
+  `apps/web`.
+- [x] Task 8 automated validation baseline: fresh checks passed with
+  `apps/api/.venv/bin/python -m pytest apps/api/tests -v`,
+  `npm --workspace apps/web run test`, and `npm run build:web`.
+- [x] Task 8 live browser smoke and visual-fidelity comparison: Browser check at
+  `http://localhost:3000` on 2026-06-09 verified page identity, rendered
+  dashboard content, no console errors/warnings, language toggle, chat, report,
+  simulation action, and visible safety copy.
+- [x] Task 9, Phase 2 readiness notes: created and updated with implemented
+  fixture ingestion plus YOLO adapter seam status.
+- [x] Next build slice: implement a `SumoTraciTrafficSimulationAdapter` seam
+  behind `TrafficSimulationAdapter` while preserving `SimulationComparison`.
+- [x] Next unblocked build slice: add sample upload handling and analysis
+  job status, still using fixture-backed analysis until real OpenCV/YOLO
+  runtime setup is separately approved.
+- [x] Next build slice: add optional OpenCV/YOLO runtime configuration and an
+  `OpenCVYoloFrameAnalyzer` that can normalize real YOLO box output behind the
+  existing upload adapter boundary.
+- [ ] Remaining vision runtime gate: install/verify OpenCV, Ultralytics, model
+  weights, and a live sample inference run before claiming fixture replacement
+  is complete.
+- [x] Next build slice: add optional SUMO/TraCI runtime configuration and a
+  `TraciSumoSimulationRunner` that can collect real TraCI metrics behind the
+  existing simulation adapter boundary.
+- [ ] Remaining SUMO runtime gate: install/verify SUMO binaries, TraCI/sumolib,
+  network config, and a live simulation run before claiming fixture replacement
+  is complete.
+- [x] Phase 3 local evidence slice: add policy/operation-guide ingestion,
+  local policy evidence retrieval for chat, and configurable OpenAI
+  model/embedding settings after checking official OpenAI docs.
+- [x] Next build slice: add `/api/runtime/readiness` so remaining OpenCV/YOLO,
+  SUMO/TraCI, OpenAI, and pgvector setup gates are observable without installing
+  runtimes, calling external APIs, or returning secrets.
+- [ ] Remaining AI/RAG gate: approve and verify API-key setup, pgvector database
+  extension, live embeddings, and OpenAI client calls before claiming full
+  RAG/AI integration is complete.
+
 ## File Structure
 
 Create or modify these files:
@@ -112,7 +164,7 @@ docs/superpowers/plans/2026-06-08-dashboard-ui-implementation.md
 - Create: `apps/web/app/page.tsx`
 - Create: `apps/web/app/globals.css`
 
-- [ ] **Step 1: Create root Node workspace metadata**
+- [x] **Step 1: Create root Node workspace metadata**
 
 Create `package.json`:
 
@@ -129,7 +181,7 @@ Create `package.json`:
 }
 ```
 
-- [ ] **Step 2: Create local environment example**
+- [x] **Step 2: Create local environment example**
 
 Create `.env.example`:
 
@@ -140,7 +192,7 @@ API_PORT=8000
 NEXT_PUBLIC_API_BASE_URL=http://127.0.0.1:8000
 ```
 
-- [ ] **Step 3: Create PostgreSQL Docker Compose service**
+- [x] **Step 3: Create PostgreSQL Docker Compose service**
 
 Create `infra/docker-compose.yml`:
 
@@ -167,7 +219,7 @@ volumes:
   smart_intersection_pgdata:
 ```
 
-- [ ] **Step 4: Create FastAPI package metadata**
+- [x] **Step 4: Create FastAPI package metadata**
 
 Create `apps/api/pyproject.toml`:
 
@@ -198,7 +250,7 @@ testpaths = ["tests"]
 pythonpath = ["."]
 ```
 
-- [ ] **Step 5: Create minimal FastAPI health endpoint**
+- [x] **Step 5: Create minimal FastAPI health endpoint**
 
 Create package marker files:
 
@@ -232,7 +284,7 @@ def health() -> dict[str, str]:
     return {"status": "ok"}
 ```
 
-- [ ] **Step 6: Write backend health test**
+- [x] **Step 6: Write backend health test**
 
 Create `apps/api/tests/test_health.py`:
 
@@ -250,7 +302,7 @@ def test_health_returns_ok() -> None:
     assert response.json() == {"status": "ok"}
 ```
 
-- [ ] **Step 7: Create minimal Next.js app metadata**
+- [x] **Step 7: Create minimal Next.js app metadata**
 
 Create `apps/web/package.json`:
 
@@ -311,7 +363,7 @@ Create `apps/web/tsconfig.json`:
 }
 ```
 
-- [ ] **Step 8: Create minimal Next.js page**
+- [x] **Step 8: Create minimal Next.js page**
 
 Create `apps/web/app/layout.tsx`:
 
@@ -365,7 +417,7 @@ body {
 }
 ```
 
-- [ ] **Step 9: Install dependencies**
+- [x] **Step 9: Install dependencies**
 
 Run:
 
@@ -377,7 +429,7 @@ apps/api/.venv/bin/python -m pip install -e "apps/api[dev]"
 
 Expected: npm creates `package-lock.json`; pip installs FastAPI test dependencies.
 
-- [ ] **Step 10: Run initial verification**
+- [x] **Step 10: Run initial verification**
 
 Run:
 
@@ -388,7 +440,7 @@ npm run build:web
 
 Expected: backend health test passes; Next.js build completes.
 
-- [ ] **Step 11: Commit scaffold**
+- [x] **Step 11: Commit scaffold**
 
 ```bash
 git add package.json package-lock.json .env.example infra/docker-compose.yml apps/api apps/web
@@ -407,7 +459,7 @@ git commit -m "chore: scaffold smart intersection app"
 - Create: `apps/api/alembic/env.py`
 - Create: `apps/api/alembic/versions/0001_initial_schema.py`
 
-- [ ] **Step 1: Write domain enums**
+- [x] **Step 1: Write domain enums**
 
 Create `apps/api/app/domain/enums.py`:
 
@@ -444,7 +496,7 @@ class RecommendationAction(StrEnum):
     MAINTAIN_CYCLE = "maintain_cycle"
 ```
 
-- [ ] **Step 2: Write Pydantic schemas**
+- [x] **Step 2: Write Pydantic schemas**
 
 Create `apps/api/app/domain/schemas.py`:
 
@@ -551,7 +603,7 @@ class ReportRead(BaseModel):
     generated_at: datetime
 ```
 
-- [ ] **Step 3: Write database config and session**
+- [x] **Step 3: Write database config and session**
 
 Create `apps/api/app/core/config.py`:
 
@@ -592,7 +644,7 @@ def get_session() -> Generator[Session, None, None]:
         yield session
 ```
 
-- [ ] **Step 4: Write SQLAlchemy models**
+- [x] **Step 4: Write SQLAlchemy models**
 
 Create `apps/api/app/db/models.py` with the tables from the spec:
 
@@ -698,7 +750,7 @@ class Report(Base):
     generated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
 ```
 
-- [ ] **Step 5: Write Alembic configuration**
+- [x] **Step 5: Write Alembic configuration**
 
 Create `apps/api/alembic.ini`:
 
@@ -792,7 +844,7 @@ else:
     run_migrations_online()
 ```
 
-- [ ] **Step 6: Write initial migration**
+- [x] **Step 6: Write initial migration**
 
 Create `apps/api/alembic/versions/0001_initial_schema.py`:
 
@@ -908,7 +960,7 @@ cd apps/api
 
 Expected: all seven tables are created in PostgreSQL.
 
-- [ ] **Step 7: Commit backend schema**
+- [x] **Step 7: Commit backend schema**
 
 ```bash
 git add apps/api/app/core apps/api/app/db apps/api/app/domain apps/api/alembic.ini apps/api/alembic
@@ -923,7 +975,7 @@ git commit -m "feat: add backend domain schema"
 - Create: `apps/api/app/adapters/simulation.py`
 - Create: `apps/api/tests/test_adapters.py`
 
-- [ ] **Step 1: Write seeded scenarios**
+- [x] **Step 1: Write seeded scenarios**
 
 Create `apps/api/app/scenarios/data.py`:
 
@@ -1017,7 +1069,7 @@ SCENARIOS = {
 }
 ```
 
-- [ ] **Step 2: Write vision adapter protocol and mock**
+- [x] **Step 2: Write vision adapter protocol and mock**
 
 Create `apps/api/app/adapters/vision.py`:
 
@@ -1040,7 +1092,7 @@ class ScenarioVisionAnalysisAdapter:
         return SCENARIOS[scenario_id]
 ```
 
-- [ ] **Step 3: Write simulation adapter protocol and mock**
+- [x] **Step 3: Write simulation adapter protocol and mock**
 
 Create `apps/api/app/adapters/simulation.py`:
 
@@ -1061,7 +1113,7 @@ class ScenarioTrafficSimulationAdapter:
         return SIMULATION_COMPARISON
 ```
 
-- [ ] **Step 4: Write adapter tests**
+- [x] **Step 4: Write adapter tests**
 
 Create `apps/api/tests/test_adapters.py`:
 
@@ -1095,7 +1147,7 @@ def test_simulation_adapter_returns_sumo_shaped_comparison() -> None:
     assert comparison.improvement["total_delay_percent"] == 18.0
 ```
 
-- [ ] **Step 5: Run adapter tests**
+- [x] **Step 5: Run adapter tests**
 
 Run:
 
@@ -1105,7 +1157,7 @@ apps/api/.venv/bin/python -m pytest apps/api/tests/test_adapters.py -v
 
 Expected: both adapter tests pass.
 
-- [ ] **Step 6: Commit adapters**
+- [x] **Step 6: Commit adapters**
 
 ```bash
 git add apps/api/app/scenarios apps/api/app/adapters apps/api/tests/test_adapters.py
@@ -1124,7 +1176,7 @@ git commit -m "feat: add scenario adapters"
 - Create: `apps/api/tests/test_recommendations.py`
 - Create: `apps/api/tests/test_api_flow.py`
 
-- [ ] **Step 1: Write recommendation service**
+- [x] **Step 1: Write recommendation service**
 
 Create `apps/api/app/services/recommendations.py`:
 
@@ -1175,7 +1227,7 @@ def recommend_signal_action(observation: VisionObservation) -> tuple[Recommendat
     )
 ```
 
-- [ ] **Step 2: Write report and chat services**
+- [x] **Step 2: Write report and chat services**
 
 Create `apps/api/app/services/reports.py`:
 
@@ -1223,7 +1275,7 @@ def answer_question(question: str, observation: VisionObservation) -> str:
     )
 ```
 
-- [ ] **Step 3: Write persistence service**
+- [x] **Step 3: Write persistence service**
 
 Create `apps/api/app/services/persistence.py`:
 
@@ -1514,7 +1566,7 @@ def report_to_payload(report: models.Report) -> dict[str, object]:
     }
 ```
 
-- [ ] **Step 4: Write recommendation tests**
+- [x] **Step 4: Write recommendation tests**
 
 Create `apps/api/tests/test_recommendations.py`:
 
@@ -1556,7 +1608,7 @@ def test_normal_flow_keeps_default_cycle() -> None:
     assert evidence["reason"] == "normal_flow"
 ```
 
-- [ ] **Step 5: Write API routes**
+- [x] **Step 5: Write API routes**
 
 Create `apps/api/app/api/routes.py`:
 
@@ -1682,7 +1734,7 @@ def health() -> dict[str, str]:
     return {"status": "ok"}
 ```
 
-- [ ] **Step 6: Write API flow tests**
+- [x] **Step 6: Write API flow tests**
 
 Create `apps/api/tests/test_api_flow.py`:
 
@@ -1774,7 +1826,7 @@ def test_report_summarizes_current_scenario(client: TestClient) -> None:
     assert payload["intersection_id"] == "INT-0001"
 ```
 
-- [ ] **Step 7: Run backend service tests**
+- [x] **Step 7: Run backend service tests**
 
 Run:
 
@@ -1784,7 +1836,7 @@ apps/api/.venv/bin/python -m pytest apps/api/tests -v
 
 Expected: health, adapter, recommendation, and API flow tests pass.
 
-- [ ] **Step 8: Commit backend API flow**
+- [x] **Step 8: Commit backend API flow**
 
 ```bash
 git add apps/api/app/api apps/api/app/services apps/api/app/main.py apps/api/tests
@@ -1797,7 +1849,7 @@ git commit -m "feat: add scenario-backed API flow"
 - Create: `docs/design/dashboard-concept-notes.md`
 - Create: `docs/design/assets/dashboard-concept-approved.png`
 
-- [ ] **Step 1: Use Build Web Apps frontend-app-builder and imagegen skills**
+- [x] **Step 1: Use Build Web Apps frontend-app-builder and imagegen skills**
 
 Before implementing the dashboard UI, generate a full dashboard concept image. The concept must show:
 
@@ -1815,11 +1867,11 @@ recommendation and simulation-only safety boundary
 
 The approved visual direction is a glassy translucent panel UI with an Apple-style premium feel, without Apple branding or copied proprietary assets. Keep it calm, operational, and readable; avoid neon cyberpunk styling.
 
-- [ ] **Step 2: Ask user to approve visual direction**
+- [x] **Step 2: Ask user to approve visual direction**
 
 Show the concept to the user and ask for approval. Do not implement dashboard UI before approval.
 
-- [ ] **Step 3: Record approved visual direction**
+- [x] **Step 3: Record approved visual direction**
 
 After approval, save the approved image as `docs/design/assets/dashboard-concept-approved.png`.
 
@@ -1853,7 +1905,7 @@ Implementation constraints:
 - Preserve the approved Phase 1 API contracts.
 ```
 
-- [ ] **Step 4: Commit approved concept notes**
+- [x] **Step 4: Commit approved concept notes**
 
 ```bash
 git add docs/design/dashboard-concept-notes.md docs/design/assets/dashboard-concept-approved.png
@@ -1866,7 +1918,7 @@ git commit -m "docs: record dashboard visual direction"
 - Create: `apps/web/lib/types.ts`
 - Create: `apps/web/lib/api.ts`
 
-- [ ] **Step 1: Write frontend API types**
+- [x] **Step 1: Write frontend API types**
 
 Create `apps/web/lib/types.ts`:
 
@@ -1949,7 +2001,7 @@ export type Report = {
 };
 ```
 
-- [ ] **Step 2: Write frontend API client**
+- [x] **Step 2: Write frontend API client**
 
 Create `apps/web/lib/api.ts`:
 
@@ -2003,7 +2055,7 @@ export async function generateReport(): Promise<Report> {
 }
 ```
 
-- [ ] **Step 3: Run frontend type check through build**
+- [x] **Step 3: Run frontend type check through build**
 
 Run:
 
@@ -2013,7 +2065,7 @@ npm run build:web
 
 Expected: TypeScript build succeeds.
 
-- [ ] **Step 4: Commit frontend client**
+- [x] **Step 4: Commit frontend client**
 
 ```bash
 git add apps/web/lib
@@ -2035,7 +2087,7 @@ git commit -m "feat: add dashboard API client"
 - Modify through the Task 7 sub-plan: `apps/web/app/page.tsx`
 - Modify through the Task 7 sub-plan: `apps/web/app/globals.css`
 
-- [ ] **Step 1: Create the dashboard UI implementation plan after concept approval**
+- [x] **Step 1: Create the dashboard UI implementation plan after concept approval**
 
 After Task 5 is complete, create `docs/superpowers/plans/2026-06-08-dashboard-ui-implementation.md`. That plan must be based on `docs/design/dashboard-concept-notes.md` and must include exact code for:
 
@@ -2099,11 +2151,11 @@ run simulation action submits to /api/simulate-signal
 the safety boundary remains visible after every action
 ```
 
-- [ ] **Step 2: Execute the dashboard UI implementation plan**
+- [x] **Step 2: Execute the dashboard UI implementation plan**
 
 Use `superpowers:subagent-driven-development` or `superpowers:executing-plans` to execute `docs/superpowers/plans/2026-06-08-dashboard-ui-implementation.md` before starting Task 8.
 
-- [ ] **Step 3: Commit dashboard UI implementation**
+- [x] **Step 3: Commit dashboard UI implementation**
 
 ```bash
 git add docs/superpowers/plans/2026-06-08-dashboard-ui-implementation.md apps/web
@@ -2117,7 +2169,7 @@ Run this task only after Task 7 has produced and executed the dashboard UI imple
 **Files:**
 - Modify only if smoke test reveals a concrete bug in already-owned Phase 1 files.
 
-- [ ] **Step 1: Start PostgreSQL**
+- [x] **Step 1: Start PostgreSQL**
 
 Run:
 
@@ -2127,7 +2179,7 @@ docker compose -f infra/docker-compose.yml up -d postgres
 
 Expected: PostgreSQL container becomes healthy.
 
-- [ ] **Step 2: Run backend tests**
+- [x] **Step 2: Run backend tests**
 
 Run:
 
@@ -2137,7 +2189,7 @@ apps/api/.venv/bin/python -m pytest apps/api/tests -v
 
 Expected: all backend tests pass.
 
-- [ ] **Step 3: Run frontend build**
+- [x] **Step 3: Run frontend build**
 
 Run:
 
@@ -2147,7 +2199,7 @@ npm run build:web
 
 Expected: frontend build succeeds.
 
-- [ ] **Step 4: Start API**
+- [x] **Step 4: Start API**
 
 Run:
 
@@ -2158,7 +2210,7 @@ cd apps/api
 
 Expected: API starts and `/health` returns `{"status":"ok"}`.
 
-- [ ] **Step 5: Start web app**
+- [x] **Step 5: Start web app**
 
 Run in another shell:
 
@@ -2168,7 +2220,7 @@ npm --workspace apps/web run dev
 
 Expected: Next.js starts on `http://localhost:3000`.
 
-- [ ] **Step 6: Browser smoke test**
+- [x] **Step 6: Browser smoke test**
 
 Use the Browser plugin to open `http://localhost:3000`.
 
@@ -2185,7 +2237,7 @@ safety boundary text is visible
 no copy implies real traffic signal control
 ```
 
-- [ ] **Step 7: Commit smoke-test fixes**
+- [x] **Step 7: Commit smoke-test fixes**
 
 If smoke testing required code changes:
 
@@ -2201,7 +2253,7 @@ If no changes were required, do not create an empty commit.
 **Files:**
 - Create: `docs/superpowers/plans/2026-06-08-phase-2-integration-notes.md`
 
-- [ ] **Step 1: Record adapter replacement path**
+- [x] **Step 1: Record adapter replacement path**
 
 Create `docs/superpowers/plans/2026-06-08-phase-2-integration-notes.md`:
 
@@ -2244,7 +2296,7 @@ Do not change dashboard API response shapes during Phase 2 unless real YOLO or S
 Do not add OpenAI, pgvector, or RAG until Phase 1 data contracts are stable and the user approves API-key setup plus current model and pricing verification.
 ```
 
-- [ ] **Step 2: Commit Phase 2 notes**
+- [x] **Step 2: Commit Phase 2 notes**
 
 ```bash
 git add docs/superpowers/plans/2026-06-08-phase-2-integration-notes.md

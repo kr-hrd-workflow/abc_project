@@ -111,6 +111,7 @@ export function DashboardShell({
         <DigitalTwin
           status={status}
           events={events}
+          simulation={simulation}
           locale={locale}
           onRunSimulation={onRunSimulation}
         />

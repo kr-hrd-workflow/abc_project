@@ -69,7 +69,7 @@ const recommendation: Recommendation = {
 };
 
 const simulation: SimulationComparison = {
-  source: "scenario_mock",
+  source: "sumo_traci",
   baseline: {
     average_wait_seconds: 72,
     total_delay_seconds: 128.4,
@@ -133,6 +133,14 @@ describe("DashboardShell", () => {
 
     expect(screen.getByText("실제 신호 제어 없음")).toBeTruthy();
     expect(screen.getByText(/교체형 시뮬레이션 뷰/)).toBeTruthy();
+  });
+
+  test("renders the replaceable SUMO simulation viewport boundary", () => {
+    renderDashboard();
+
+    expect(screen.getByText("SUMO/TraCI Renderer")).toBeTruthy();
+    expect(screen.getByText("sumo_traci")).toBeTruthy();
+    expect(screen.getByText("Delay -18%")).toBeTruthy();
   });
 
   test("switches visible labels between Korean and English", async () => {

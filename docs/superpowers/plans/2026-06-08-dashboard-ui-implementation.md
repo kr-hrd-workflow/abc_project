@@ -18,6 +18,30 @@
 - API client: `apps/web/lib/api.ts`
 - API types: `apps/web/lib/types.ts`
 
+## Current Execution Tracker
+
+Current as of 2026-06-09. The task steps below remain useful as the historical
+implementation recipe; this tracker is the current status.
+
+- [x] Add lightweight Korean/English dictionary and language toggle.
+- [x] Add `DashboardShell` and child dashboard components.
+- [x] Keep `DigitalTwin` as a replaceable simulation viewport boundary that
+  receives data through props and does not call backend APIs directly.
+- [x] Extract the center renderer into `SimulationViewport`, with SUMO/TraCI
+  source and delay telemetry supplied by normalized dashboard props.
+- [x] Connect `apps/web/app/page.tsx` to the Phase 1 API client for initial
+  data, chat, reports, recommendations, and simulation refresh.
+- [x] Implement the approved restrained glassy dashboard CSS.
+- [x] Cover dashboard interaction and API-client behavior with Vitest tests.
+- [x] Validate frontend with `npm --workspace apps/web run test` and
+  `npm run build:web`.
+- [x] Rerun a fresh live browser smoke and compare the latest screenshot against
+  `docs/design/assets/dashboard-concept-approved.png`. Evidence: Browser check
+  at `http://localhost:3000` on 2026-06-09 verified page identity, rendered
+  dashboard content, no console errors/warnings, language toggle, chat, report,
+  simulation action, and visible safety copy. The live viewport remains a
+  code-native replaceable renderer, not a photo-realistic simulation.
+
 ## File Structure
 
 Create:
@@ -77,7 +101,7 @@ Rules:
 - Create: `apps/web/lib/i18n.ts`
 - Create: `apps/web/components/LanguageToggle.tsx`
 
-- [ ] **Step 1: Write `apps/web/lib/i18n.ts`**
+- [x] **Step 1: Write `apps/web/lib/i18n.ts`**
 
 ```ts
 export type Locale = "ko" | "en";
@@ -148,7 +172,7 @@ export function formatDirection(direction: string | null, locale: Locale): strin
 }
 ```
 
-- [ ] **Step 2: Write `apps/web/components/LanguageToggle.tsx`**
+- [x] **Step 2: Write `apps/web/components/LanguageToggle.tsx`**
 
 ```tsx
 import type { Locale } from "@/lib/i18n";
@@ -188,7 +212,7 @@ export function LanguageToggle({ locale, onChange }: LanguageToggleProps) {
 - Create: `apps/web/components/MetricsPanel.tsx`
 - Create: `apps/web/components/ChatReportPanel.tsx`
 
-- [ ] **Step 1: Write `DashboardShell` with the required props contract**
+- [x] **Step 1: Write `DashboardShell` with the required props contract**
 
 Use this exact exported type:
 
@@ -211,7 +235,7 @@ export type DashboardShellProps = {
 
 `DashboardShell` also owns local `locale` state and passes it to child components.
 
-- [ ] **Step 2: Implement child component responsibilities**
+- [x] **Step 2: Implement child component responsibilities**
 
 `DigitalTwin.tsx`:
 
@@ -251,7 +275,7 @@ export type DashboardShellProps = {
 **Files:**
 - Modify: `apps/web/app/page.tsx`
 
-- [ ] **Step 1: Convert the page to a client-side dashboard container**
+- [x] **Step 1: Convert the page to a client-side dashboard container**
 
 Use `"use client";`.
 
@@ -277,7 +301,7 @@ generateReport()
 **Files:**
 - Modify: `apps/web/app/globals.css`
 
-- [ ] **Step 1: Replace the scaffold CSS with the approved design tokens**
+- [x] **Step 1: Replace the scaffold CSS with the approved design tokens**
 
 CSS must include:
 
@@ -297,7 +321,7 @@ CSS must include:
 **Files:**
 - Modify only if validation finds a concrete bug.
 
-- [ ] **Step 1: Run frontend tests**
+- [x] **Step 1: Run frontend tests**
 
 ```bash
 npm --workspace apps/web run test
@@ -305,7 +329,7 @@ npm --workspace apps/web run test
 
 Expected: all tests pass.
 
-- [ ] **Step 2: Run frontend build**
+- [x] **Step 2: Run frontend build**
 
 ```bash
 npm run build:web
@@ -313,7 +337,7 @@ npm run build:web
 
 Expected: Next.js compiles and typechecks.
 
-- [ ] **Step 3: Run local browser smoke after API and web are started**
+- [x] **Step 3: Run local browser smoke after API and web are started**
 
 Start API:
 
@@ -347,7 +371,7 @@ safety boundary remains visible after every action
 no copy implies real traffic signal control
 ```
 
-- [ ] **Step 4: Visual fidelity check**
+- [x] **Step 4: Visual fidelity check**
 
 Use `view_image` on:
 
@@ -366,7 +390,7 @@ Compare at least:
 - chat/report panel position
 - color restraint without neon
 
-- [ ] **Step 5: Commit dashboard UI implementation**
+- [x] **Step 5: Commit dashboard UI implementation**
 
 ```bash
 git add docs/superpowers/plans/2026-06-08-dashboard-ui-implementation.md apps/web

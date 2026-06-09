@@ -1,16 +1,27 @@
-from fastapi import APIRouter, Depends, HTTPException
+from pathlib import Path
+from tempfile import NamedTemporaryFile
+from uuid import uuid4
+
+from fastapi import APIRouter, Depends, HTTPException, Request
 from sqlalchemy.orm import Session
 
-from app.adapters.simulation import ScenarioTrafficSimulationAdapter
+from app.adapters.simulation import (
+    FixtureSumoSimulationRunner,
+    SumoTraciTrafficSimulationAdapter,
+    TraciSumoSimulationRunner,
+)
 from app.adapters.vision import (
     FixtureYoloFrameAnalyzer,
+    OpenCVYoloFrameAnalyzer,
     OpenCVYoloVisionAnalysisAdapter,
     ScenarioVisionAnalysisAdapter,
 )
+from app.core.config import settings
 from app.db.session import get_session
 from app.domain.schemas import ChatRequest, ChatResponse
 from app.scenarios.fixtures import SAMPLE_INPUT_FIXTURES, fixture_to_payload
 from app.services.chat import answer_question
+from app.services.knowledge import ingest_policy_documents, search_policy_evidence
 from app.services.persistence import (
     create_chat_log,
     create_recommendation,
@@ -25,13 +36,44 @@ from app.services.persistence import (
 )
 from app.services.recommendations import recommend_signal_action
 from app.services.reports import generate_scenario_report
+from app.services.runtime_readiness import get_runtime_readiness
 
 router = APIRouter()
 vision_adapter = ScenarioVisionAnalysisAdapter()
-fixture_vision_adapter = OpenCVYoloVisionAnalysisAdapter(
-    detector=FixtureYoloFrameAnalyzer()
+upload_vision_adapter = OpenCVYoloVisionAnalysisAdapter(
+    detector=(
+        OpenCVYoloFrameAnalyzer(
+            model_path=settings.yolo_model_path,
+            confidence_threshold=settings.yolo_confidence_threshold,
+        )
+        if settings.vision_analysis_mode == "opencv_yolo"
+        else FixtureYoloFrameAnalyzer()
+    )
 )
-simulation_adapter = ScenarioTrafficSimulationAdapter()
+simulation_adapter = SumoTraciTrafficSimulationAdapter(
+    runner=(
+        TraciSumoSimulationRunner(
+            sumo_binary=settings.sumo_binary,
+            sumo_config_path=settings.sumo_config_path,
+            step_count=settings.sumo_step_count,
+        )
+        if settings.sumo_simulation_mode == "sumo_traci"
+        else FixtureSumoSimulationRunner()
+    ),
+    source=(
+        "sumo_traci"
+        if settings.sumo_simulation_mode == "sumo_traci"
+        else "sumo_traci_fixture"
+    ),
+)
+ANALYSIS_JOBS: dict[str, dict[str, object]] = {}
+SUPPORTED_UPLOAD_MEDIA: dict[str, tuple[str, str]] = {
+    "image/jpeg": ("image", "emergency"),
+    "image/png": ("image", "emergency"),
+    "image/webp": ("image", "emergency"),
+    "video/mp4": ("video", "blocked"),
+    "video/quicktime": ("video", "blocked"),
+}
 
 
 @router.get("/api/fixtures")
@@ -51,7 +93,7 @@ def ingest_fixture(
     if fixture is None:
         raise HTTPException(status_code=404, detail="Fixture not found")
 
-    observation = fixture_vision_adapter.analyze(fixture["scenario_id"])
+    observation = upload_vision_adapter.analyze(fixture["scenario_id"])
     status, events = ensure_scenario_snapshot(session, observation)
 
     return {
@@ -61,6 +103,100 @@ def ingest_fixture(
         "status_id": status.id,
         "event_ids": [event.id for event in events],
     }
+
+
+@router.post("/api/uploads/analyze")
+async def upload_sample_for_analysis(
+    request: Request,
+    filename: str | None = None,
+    session: Session = Depends(get_session),
+) -> dict[str, object]:
+    media_type = request.headers.get("content-type", "").split(";")[0].lower()
+    media_plan = SUPPORTED_UPLOAD_MEDIA.get(media_type)
+    if media_plan is None:
+        raise HTTPException(
+            status_code=415,
+            detail="Unsupported upload media type",
+        )
+
+    sample_bytes = await request.body()
+    if not sample_bytes:
+        raise HTTPException(status_code=400, detail="Uploaded file is empty")
+
+    media_kind, fixture_scenario_id = media_plan
+    observation, scenario_id = _analyze_uploaded_sample(
+        sample_bytes=sample_bytes,
+        filename=filename,
+        media_type=media_type,
+        fixture_scenario_id=fixture_scenario_id,
+    )
+    status, events = ensure_scenario_snapshot(session, observation)
+    job_id = f"job-{uuid4().hex}"
+    job = {
+        "job_id": job_id,
+        "status": "completed",
+        "filename": filename or "uploaded-sample",
+        "media_type": media_type,
+        "media_kind": media_kind,
+        "scenario_id": scenario_id,
+        "observation_source": observation.source,
+        "status_id": status.id,
+        "event_ids": [event.id for event in events],
+        "size_bytes": len(sample_bytes),
+    }
+    ANALYSIS_JOBS[job_id] = job
+
+    return {
+        "job_id": job_id,
+        "analysis_status": "completed",
+        "job": job,
+        "observation": observation.model_dump(mode="json"),
+        "status_id": status.id,
+        "event_ids": [event.id for event in events],
+    }
+
+
+@router.get("/api/analysis-jobs/{job_id}")
+def get_analysis_job(job_id: str) -> dict[str, object]:
+    job = ANALYSIS_JOBS.get(job_id)
+    if job is None:
+        raise HTTPException(status_code=404, detail="Analysis job not found")
+    return job
+
+
+@router.get("/api/runtime/readiness")
+def get_runtime_readiness_status() -> dict[str, object]:
+    return get_runtime_readiness(settings)
+
+
+def _analyze_uploaded_sample(
+    sample_bytes: bytes,
+    filename: str | None,
+    media_type: str,
+    fixture_scenario_id: str,
+) -> tuple[object, str]:
+    if settings.vision_analysis_mode != "opencv_yolo":
+        return upload_vision_adapter.analyze(fixture_scenario_id), fixture_scenario_id
+
+    with NamedTemporaryFile(
+        suffix=_upload_suffix(filename, media_type),
+    ) as sample_file:
+        sample_file.write(sample_bytes)
+        sample_file.flush()
+        return upload_vision_adapter.analyze(sample_file.name), "uploaded"
+
+
+def _upload_suffix(filename: str | None, media_type: str) -> str:
+    suffix = Path(filename or "").suffix
+    if suffix:
+        return suffix
+    if media_type.startswith("image/"):
+        return ".jpg"
+    if media_type == "video/quicktime":
+        return ".mov"
+    if media_type.startswith("video/"):
+        return ".mp4"
+    return ".bin"
 
 
 @router.get("/api/intersection/status")
@@ -145,7 +281,11 @@ def chat(
     observation = vision_adapter.analyze(scenario_id)
     _status, events = ensure_scenario_snapshot(session, observation)
     event_ids = [event.id for event in events]
-    answer = answer_question(request.question, observation)
+    policy_evidence = search_policy_evidence(
+        request.question,
+        ingest_policy_documents(),
+    )
+    answer = answer_question(request.question, observation, policy_evidence)
     create_chat_log(session, observation, request.question, answer, event_ids)
     return ChatResponse(answer=answer, referenced_event_ids=event_ids)
 

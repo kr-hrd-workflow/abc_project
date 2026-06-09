@@ -98,6 +98,18 @@ If role or authority is ambiguous, default to the narrower worker role and ask/r
 
 Only the primary agent may create separate worker agents when a task can be split into independent research, review, testing, or narrowly scoped implementation work. Use worker agents for parallel speed only after the primary agent has split the task into independent scopes.
 
+The primary agent should proactively consider worker agents; the user does not need to explicitly request them. When a task has independent slices, significant uncertainty, multiple files or subsystems, failing tests in separate areas, or a need for review/validation, the primary agent should decide whether worker agents would improve speed, focus, or quality.
+
+Default toward using at least one worker when:
+- there are two or more clearly independent workstreams
+- one agent can research while another implements
+- one agent can implement while another reviews or validates
+- the task touches multiple modules with low overlap
+- the task is large enough that isolated context would reduce confusion
+- the user asks for thoroughness, completion, review, hardening, cleanup, or evidence
+
+Do not wait for the user to say "use workers" when the above conditions are met. If the primary agent decides not to use workers for a non-trivial task, it should have a concrete reason, such as tight coupling, shared file ownership, small scope, missing decomposition, or conflict risk.
+
 Prefer worker agents for:
 - codebase research or file discovery
 - independent test-failure triage
@@ -137,7 +149,48 @@ The primary agent may take over a worker's assigned scope only when:
 - the task becomes urgent for safety, data-loss, security, or external-side-effect reasons
 - the primary agent first cancels or closes the worker, or clearly narrows the worker's scope to avoid duplicate work
 
-If a worker is slow, the default action is to wait or request a status update, not to duplicate the worker's work. Do not race workers against the primary agent on the same files or same problem.
+If a worker is slow, the default action is to wait, not to duplicate the worker's work. Do not race workers against the primary agent on the same files or same problem.
+
+Status checks must be non-blocking and infrequent. A worker that is actively working may not be able to answer immediately, and lack of an immediate status reply is not evidence of failure, blockage, or completion. The primary agent should request status only when:
+- the worker has exceeded the expected status point or a reasonable task-specific wait interval
+- integration depends on knowing whether the worker is blocked
+- the user asks for current status
+- the worker may be stuck because of missing context, tool failure, or unavailable resources
+
+When sending a status request, ask for the next natural checkpoint rather than interrupting the worker. Do not repeatedly ping a worker that has not had enough time to make progress. If no status arrives, continue waiting or work on non-overlapping coordination tasks unless a takeover condition is met.
+
+Before asking a worker for status, prefer passive observation when available. The primary agent may inspect:
+- live agent list or mailbox updates
+- final answers or queued messages from workers
+- agreed shared artifacts such as `plan.md`, task logs, review notes, or output files
+- filesystem changes, git diff, generated artifacts, logs, or test outputs within the worker's assigned scope
+- process state or tool output that is externally visible and relevant
+
+Passive observation has limits. The primary agent cannot see a worker's private reasoning, partial thoughts, or exact progress inside an active turn unless the worker reports it or writes an agreed artifact. Do not infer that a worker is stuck, idle, or done merely because no new external signal is visible.
+
+If ongoing progress visibility is important, include a checkpoint artifact in the worker prompt before dispatching, such as a short task log or checklist update at natural milestones. Do not require constant progress writes for small tasks; the overhead can be worse than waiting for the final report.
+
+The primary agent must reject premature or evidence-free worker completion. A worker report is not sufficient just because it says `DONE`. Before accepting a worker's result, the primary agent must check that the worker provided concrete evidence appropriate to the task:
+- files, modules, docs, logs, tests, or outputs inspected
+- changes made, or an explicit statement that no changes were needed
+- validation run, or a clear reason validation was not possible
+- remaining risks, assumptions, or uncertainty
+- confirmation that the assigned scope, not the overall user task, is what was completed
+
+For non-trivial worker tasks, an immediate or very fast `DONE` without concrete evidence should be treated as `DONE_WITH_CONCERNS` or `NEEDS_CONTEXT`, not accepted as complete. Elapsed time alone is not the standard; evidence is the standard.
+
+After a context handoff, resume, compaction, or agent restart, the primary agent must re-establish live worker state before relying on worker or reviewer results. Distinguish:
+- historical results completed before the handoff
+- live workers currently running
+- new workers or reviewers spawned after the handoff
+
+Do not describe a post-handoff status check, mailbox check, or thread-state inspection as a fresh review. A review counts only when a reviewer was actually assigned review scope, had enough context to inspect the work, returned findings or approval, and provided evidence for that verdict.
+
+When a fresh code-quality or spec-compliance review is required after handoff, the primary agent must either:
+- wait for an already-running reviewer that was assigned that exact review scope, or
+- spawn a new reviewer with the exact scope and wait for its result.
+
+The primary agent must not claim review completion based only on elapsed time, old worker completion, old reviewer completion from before the handoff, or its own quick live-agent check. If a previous result is reused, label it as previous/historical and state whether a fresh review was or was not performed.
 
 Worker agents must:
 - identify themselves as workers for the dispatched scope
@@ -147,6 +200,7 @@ Worker agents must:
 - avoid reverting, overwriting, or restructuring changes they did not make
 - avoid unrelated refactors and speculative improvements
 - avoid claiming the overall task is complete
+- avoid reporting `DONE` until they have satisfied the completion evidence gate for their assigned scope
 - report before editing outside their assigned ownership
 - avoid pushes, deployments, account changes, destructive actions, purchases, trades, or external messages unless the user explicitly approved that action
 - commit only when the user has explicitly approved commits for the current task or the primary agent has been given commit authority for the active implementation plan; otherwise leave changes uncommitted and report what changed
@@ -193,8 +247,22 @@ Return:
 - What you inspected
 - What you changed, if anything
 - Tests or checks run
+- Evidence that the assigned scope is complete
 - Remaining risks, conflicts, or open questions
 - Status: DONE, DONE_WITH_CONCERNS, NEEDS_CONTEXT, or BLOCKED
+```
+
+For reviewer workers, use this stricter return contract:
+
+```md
+Reviewer Return:
+- Review type: spec-compliance, code-quality, regression-risk, security-risk, or final-readiness
+- Scope reviewed: files/modules/requirements inspected
+- Evidence inspected: diffs, files, tests, logs, screenshots, docs, or prior worker reports
+- Findings: ordered by severity, or "No findings"
+- Required fixes before approval, if any
+- Verdict: APPROVED, APPROVED_WITH_CONCERNS, CHANGES_REQUESTED, NEEDS_CONTEXT, or BLOCKED
+- Freshness: state whether this review was performed after the latest handoff/resume, or whether it relies on historical results
 ```
 
 When dispatching a worker for a long task, the primary agent should include an expected status point or completion signal in the prompt. Example:
@@ -203,6 +271,8 @@ When dispatching a worker for a long task, the primary agent should include an e
 Progress:
 - If blocked, report `BLOCKED` with the reason.
 - If you need missing context, report `NEEDS_CONTEXT` with the smallest specific question.
+- If you receive a status request while actively working, answer at the next safe checkpoint; do not stop mid-step just to produce a low-quality status.
+- Do not report `DONE` without concrete evidence: inspected files/docs/logs, changes made or not needed, validation run or why not run, and remaining risks.
 - Otherwise continue until the scoped task is done; the primary agent will wait rather than duplicate this scope.
 ```
 

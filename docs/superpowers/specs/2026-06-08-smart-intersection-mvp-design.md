@@ -363,80 +363,102 @@ The AI layer must not:
 
 OpenAI model names, pricing, and availability must be verified against current official OpenAI docs before implementation or deployment. The code should use environment configuration for model selection rather than hardcoding a planning-document model slug.
 
-## Next Build Steps
+## Build Status Checklist
 
-Build in this order:
+Current as of 2026-06-09 after reading the Superpowers docs and current
+source/tests.
 
-1. Create repository structure.
-   - `apps/web` for Next.js.
-   - `apps/api` for FastAPI.
-   - `packages/shared` only if shared TypeScript schemas become useful; do not create it prematurely.
-   - `infra/docker-compose.yml` for PostgreSQL and local services.
+### Phase 1 MVP
 
-2. Define backend domain schemas.
-   - Pydantic models for intersection status, traffic events, recommendations, simulation runs, chat logs, and reports.
-   - SQLAlchemy 2.x models for PostgreSQL.
-   - Alembic migrations for schema changes.
+- [x] Create repository structure for `apps/web`, `apps/api`, and
+  `infra/docker-compose.yml`; `packages/shared` remains intentionally absent.
+- [x] Define backend domain schemas, SQLAlchemy models, and Alembic migration.
+- [x] Add PostgreSQL local development setup and `.env.example` defaults.
+- [x] Implement seeded scenario data for emergency, pedestrian, normal, and
+  blocked-intersection flows.
+- [x] Implement replaceable `VisionAnalysisAdapter` and
+  `TrafficSimulationAdapter` interfaces with scenario-backed adapters.
+- [x] Implement backend services and APIs for scenario load, status, events,
+  analyze, recommend, simulate, chat, and report.
+- [x] Implement the bilingual dashboard shell, digital twin boundary, event
+  timeline, recommendation panel, metrics panel, chat/report panel, and safety
+  copy.
+- [x] Connect the dashboard to backend API calls for initial load, chat, report,
+  recommendation refresh, and simulation refresh.
+- [x] Validate Phase 1 with fresh automated checks:
+  `apps/api/.venv/bin/python -m pytest apps/api/tests -v`,
+  `npm --workspace apps/web run test`, and `npm run build:web`.
+- [x] Run a fresh live browser smoke and visual-fidelity screenshot comparison.
+  Evidence: Browser check at `http://localhost:3000` on 2026-06-09 verified
+  page identity, nonblank dashboard content, no console errors/warnings,
+  language toggle, chat, report, simulation action, and visible safety copy.
 
-3. Add PostgreSQL local development setup.
-   - Docker Compose service for PostgreSQL.
-   - `.env.example` with non-secret defaults.
-   - Backend config that reads `DATABASE_URL`.
+### Phase 2 Integration
 
-4. Implement seeded scenario data.
-   - One high-congestion emergency-vehicle scenario.
-   - One pedestrian-waiting scenario.
-   - One normal-flow scenario.
-   - Store enough data to drive the dashboard, recommendation panel, simulation comparison, chat answers, and report generation.
+- [x] Plan the adapter replacement path while preserving dashboard API
+  contracts.
+- [x] Add fixture-only image/video ingestion endpoints:
+  `GET /api/fixtures` and `POST /api/fixtures/{fixture_id}/ingest`.
+- [x] Add `OpenCVYoloVisionAnalysisAdapter` as the current YOLO/OpenCV adapter
+  seam, backed by fixture analysis rather than a real runtime.
+- [x] Add contract tests for fixture ingestion and the YOLO-shaped
+  `VisionObservation` output.
+- [x] Add sample upload handling and analysis job status.
+- [ ] Add real OpenCV/YOLO dependency, model/runtime configuration, and
+  inference after separate approval for dependency/runtime work.
+  - [x] Add optional API `vision` dependencies for OpenCV and Ultralytics.
+  - [x] Add `VISION_ANALYSIS_MODE`, `YOLO_MODEL_PATH`, and
+    `YOLO_CONFIDENCE_THRESHOLD` runtime configuration.
+  - [x] Add `OpenCVYoloFrameAnalyzer` and tests that map YOLO box output into
+    the existing `VisionObservation` contract.
+  - [x] Add `/api/runtime/readiness` checks for OpenCV, Ultralytics, and model
+    file availability without importing the optional runtime.
+  - [ ] Install and verify real OpenCV/Ultralytics/model weights in the target
+    runtime before marking real inference complete.
+- [x] Implement `SumoTraciTrafficSimulationAdapter` behind the existing
+  `TrafficSimulationAdapter` interface. This is the recommended next build
+  slice.
+- [x] Add contract tests that compare SUMO output against the existing
+  `SimulationComparison` schema.
+- [ ] Replace fixture-backed SUMO metrics with real SUMO/TraCI execution after
+  dependency/runtime setup.
+  - [x] Add optional API `simulation` dependencies for TraCI and sumolib.
+  - [x] Add `SUMO_SIMULATION_MODE`, `SUMO_BINARY`, `SUMO_CONFIG_PATH`, and
+    `SUMO_STEP_COUNT` runtime configuration.
+  - [x] Add `TraciSumoSimulationRunner` and tests that collect wait, delay,
+    throughput, emergency clearance, and recommended-plan metrics from a TraCI
+    module.
+  - [x] Add `/api/runtime/readiness` checks for TraCI, sumolib, SUMO binaries,
+    netconvert, and configured SUMO network file availability.
+  - [ ] Install and verify the SUMO binary/network config in the target runtime
+    before marking real SUMO execution complete.
+- [x] Replace the center simulation viewport renderer while preserving
+  surrounding dashboard props and API payload shapes.
 
-5. Implement adapter interfaces.
-   - `VisionAnalysisAdapter` with a scenario/mock implementation.
-   - `TrafficSimulationAdapter` with a scenario/mock implementation.
-   - Keep method signatures compatible with future YOLO and SUMO replacements.
+### Phase 3 AI/RAG
 
-6. Implement backend services and APIs.
-   - Scenario load endpoint.
-   - Status endpoint.
-   - Events endpoint.
-   - Analyze endpoint using the vision adapter.
-   - Recommend endpoint using deterministic rules.
-   - Simulate endpoint using the simulation adapter.
-   - Report endpoint from stored data.
-   - Chat endpoint using deterministic summaries from stored data in Phase 1.
-
-7. Implement frontend dashboard shell.
-   - Operations-first layout.
-   - Central digital twin.
-   - Event timeline.
-   - Recommendation / AI Agent panel.
-   - Metrics/simulation comparison.
-   - Chat/report panel.
-   - Korean/English language selector.
-   - Clear safety boundary copy: recommendation and simulation only.
-
-8. Connect frontend to backend APIs.
-   - Load default scenario.
-   - Display persisted status/events.
-   - Trigger recommendation and simulation comparison.
-   - Generate report.
-   - Ask predefined or free-text questions.
-
-9. Validate Phase 1.
-   - Backend tests for rules and adapters.
-   - API smoke tests for core endpoints.
-   - Frontend build/typecheck.
-   - Browser smoke test of the main dashboard flow.
-
-10. Plan Phase 2 integration.
-    - Replace `VisionAnalysisAdapter` with OpenCV/YOLO implementation.
-    - Replace `TrafficSimulationAdapter` with SUMO/TraCI implementation.
-    - Keep API and frontend contracts stable unless real data proves a contract gap.
-
-11. Plan Phase 3 AI/RAG integration.
-    - Add pgvector only after event/report data contracts settle.
-    - Add policy document ingestion.
-    - Add RAG-backed evidence retrieval.
-    - Add configurable OpenAI model and prompt settings.
+- [ ] Add pgvector only after event/report contracts settle.
+  - [x] Add optional API `ai` dependencies for `openai` and `pgvector`.
+  - [x] Add `/api/runtime/readiness` checks for the pgvector Python module and
+    target-database vector extension verification status.
+  - [ ] Enable PostgreSQL `vector` extension and vector columns after target
+    database setup is approved and verified.
+- [x] Add policy and operation-guide document ingestion.
+- [x] Add local RAG-style policy evidence retrieval for chat answers.
+  - [x] Retrieve policy chunks for emergency priority, pedestrian safety, and
+    blocked-intersection guidance without external API calls.
+  - [ ] Replace local keyword scoring with pgvector-backed embedding search
+    after database extension and embedding setup are verified.
+- [ ] Add configurable OpenAI model and prompt settings only after API-key setup
+  approval and current official OpenAI docs verification.
+  - [x] Verify official docs for `gpt-5.5` and Responses API guidance on
+    2026-06-09 via `developers.openai.com`.
+  - [x] Add `OPENAI_MODEL`, `OPENAI_EMBEDDING_MODEL`, and
+    `OPENAI_EMBEDDING_DIMENSIONS` runtime configuration.
+  - [x] Add `/api/runtime/readiness` checks for OpenAI client package and
+    API-key presence without returning secret values.
+  - [ ] Add an OpenAI client call path only after API-key setup is approved and
+    validated.
 
 ## Testing Plan
 

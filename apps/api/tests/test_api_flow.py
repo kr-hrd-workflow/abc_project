@@ -148,6 +148,93 @@ def test_ingest_fixture_rejects_unknown_fixture(client: TestClient) -> None:
     assert response.json()["detail"] == "Fixture not found"
 
 
+def test_upload_sample_image_creates_completed_analysis_job(
+    client: TestClient,
+) -> None:
+    response = client.post(
+        "/api/uploads/analyze?filename=intersection-frame.jpg",
+        content=b"fake image bytes",
+        headers={"content-type": "image/jpeg"},
+    )
+
+    assert response.status_code == 200
+    payload = response.json()
+    assert payload["analysis_status"] == "completed"
+    assert payload["job"]["status"] == "completed"
+    assert payload["job"]["filename"] == "intersection-frame.jpg"
+    assert payload["job"]["media_type"] == "image/jpeg"
+    assert payload["job"]["scenario_id"] == "emergency"
+    assert payload["observation"]["source"] == "opencv_yolo"
+    assert payload["event_ids"]
+
+    status_response = client.get(f"/api/analysis-jobs/{payload['job_id']}")
+
+    assert status_response.status_code == 200
+    status_payload = status_response.json()
+    assert status_payload["job_id"] == payload["job_id"]
+    assert status_payload["status"] == "completed"
+    assert status_payload["observation_source"] == "opencv_yolo"
+
+
+def test_upload_sample_video_uses_blocked_fixture_path(client: TestClient) -> None:
+    response = client.post(
+        "/api/uploads/analyze?filename=blocked-crossing.mp4",
+        content=b"fake video bytes",
+        headers={"content-type": "video/mp4"},
+    )
+
+    assert response.status_code == 200
+    payload = response.json()
+    assert payload["job"]["media_kind"] == "video"
+    assert payload["job"]["scenario_id"] == "blocked"
+    assert payload["observation"]["intersection_blocked"] is True
+
+
+def test_upload_sample_rejects_unsupported_media_type(client: TestClient) -> None:
+    response = client.post(
+        "/api/uploads/analyze?filename=notes.txt",
+        content=b"not traffic media",
+        headers={"content-type": "text/plain"},
+    )
+
+    assert response.status_code == 415
+    assert response.json()["detail"] == "Unsupported upload media type"
+
+
+def test_runtime_readiness_endpoint_reports_gates_without_secrets(
+    client: TestClient,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    def fake_runtime_readiness(_settings) -> dict[str, object]:
+        return {
+            "openai": {
+                "ready": False,
+                "missing": ["OPENAI_API_KEY"],
+                "checks": [
+                    {
+                        "name": "OPENAI_API_KEY",
+                        "available": True,
+                        "detail": "presence only",
+                    }
+                ],
+            },
+            "vision": {"ready": True, "missing": [], "checks": []},
+            "simulation": {"ready": True, "missing": [], "checks": []},
+            "pgvector": {"ready": False, "missing": [], "checks": []},
+        }
+
+    monkeypatch.setattr(
+        "app.api.routes.get_runtime_readiness",
+        fake_runtime_readiness,
+    )
+
+    response = client.get("/api/runtime/readiness")
+
+    assert response.status_code == 200
+    assert response.json()["openai"]["checks"][0]["detail"] == "presence only"
+    assert "sk-test-secret" not in response.text
+
+
 def test_recommend_signal_returns_emergency_priority_with_safety_boundary(
     client: TestClient,
 ) -> None:
@@ -172,12 +259,14 @@ def test_simulate_signal_returns_scenario_comparison(client: TestClient) -> None
 
     assert response.status_code == 200
     payload = response.json()
+    assert payload["source"] == "sumo_traci_fixture"
     assert payload["baseline"]["total_delay_seconds"] == 128.4
     assert payload["recommended"]["total_delay_seconds"] == 105.3
 
     with TestingSessionLocal() as session:
         simulation_run = session.scalar(select(models.SimulationRun))
         assert simulation_run is not None
+        assert simulation_run.source == "sumo_traci_fixture"
         assert simulation_run.baseline_metrics_json["total_delay_seconds"] == 128.4
 
 
@@ -214,6 +303,21 @@ def test_emergency_chat_answer_includes_safety_boundary(client: TestClient) -> N
 
     assert response.status_code == 200
     assert "does not control real traffic signals" in response.json()["answer"]
+
+
+def test_chat_includes_policy_evidence_when_question_requests_policy(
+    client: TestClient,
+) -> None:
+    response = client.post(
+        "/api/chat",
+        json={"question": "What policy evidence supports emergency priority?"},
+    )
+
+    assert response.status_code == 200
+    payload = response.json()
+    assert "Policy evidence:" in payload["answer"]
+    assert "Emergency Vehicle Priority Guideline" in payload["answer"]
+    assert payload["referenced_event_ids"]
 
 
 def test_report_returns_summary_for_intersection(client: TestClient) -> None:

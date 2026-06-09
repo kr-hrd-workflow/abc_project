@@ -718,6 +718,42 @@ button {
   background-size: 58px 58px, 58px 58px, auto;
 }
 
+.renderer-status {
+  position: absolute;
+  z-index: 12;
+  top: 14px;
+  left: 14px;
+  display: grid;
+  grid-template-columns: auto auto auto;
+  gap: 8px;
+  align-items: center;
+  max-width: calc(100% - 28px);
+  padding: 8px 10px;
+  border: 1px solid rgba(112, 236, 199, 0.26);
+  border-radius: 8px;
+  color: #ebfff8;
+  background: rgba(12, 31, 41, 0.72);
+  box-shadow: 0 12px 28px rgba(0, 0, 0, 0.18);
+  backdrop-filter: blur(14px);
+}
+
+.renderer-status strong,
+.renderer-status span {
+  white-space: nowrap;
+}
+
+.renderer-status strong {
+  font-size: 12px;
+}
+
+.renderer-status span {
+  border-left: 1px solid rgba(255, 255, 255, 0.18);
+  padding-left: 8px;
+  color: rgba(231, 255, 249, 0.84);
+  font-size: 11px;
+  font-weight: 750;
+}
+
 .city-block {
   position: absolute;
   z-index: 0;
@@ -1772,6 +1808,16 @@ button {
 
   .simulation-viewport {
     min-height: 440px;
+  }
+
+  .renderer-status {
+    grid-template-columns: 1fr;
+    gap: 4px;
+  }
+
+  .renderer-status span {
+    border-left: 0;
+    padding-left: 0;
   }
 
   .metrics-table-head {

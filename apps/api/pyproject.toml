@@ -18,6 +18,18 @@ dev = [
   "pytest>=8.3.2",
   "pytest-asyncio>=0.24.0"
 ]
+vision = [
+  "opencv-python-headless>=4.13.0.92",
+  "ultralytics>=8.4.62"
+]
+simulation = [
+  "sumolib>=1.27.0",
+  "traci>=1.27.0"
+]
+ai = [
+  "openai>=2.41.0",
+  "pgvector>=0.4.2"
+]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]

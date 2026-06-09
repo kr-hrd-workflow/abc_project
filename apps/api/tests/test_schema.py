@@ -131,6 +131,16 @@ def test_settings_accept_env_example_variables(tmp_path) -> None:
                 "API_HOST=127.0.0.1",
                 "API_PORT=8000",
                 "NEXT_PUBLIC_API_BASE_URL=http://127.0.0.1:8000",
+                "VISION_ANALYSIS_MODE=opencv_yolo",
+                "YOLO_MODEL_PATH=models/yolov8n.pt",
+                "YOLO_CONFIDENCE_THRESHOLD=0.4",
+                "SUMO_SIMULATION_MODE=sumo_traci",
+                "SUMO_BINARY=sumo",
+                "SUMO_CONFIG_PATH=networks/intersection.sumocfg",
+                "SUMO_STEP_COUNT=120",
+                "OPENAI_MODEL=gpt-5.5",
+                "OPENAI_EMBEDDING_MODEL=text-embedding-3-small",
+                "OPENAI_EMBEDDING_DIMENSIONS=1536",
             ]
         ),
         encoding="utf-8",
@@ -139,6 +149,16 @@ def test_settings_accept_env_example_variables(tmp_path) -> None:
     settings = Settings(_env_file=env_file)
 
     assert settings.database_url == "postgresql+psycopg://user:password@localhost:5432/db"
+    assert settings.vision_analysis_mode == "opencv_yolo"
+    assert settings.yolo_model_path == "models/yolov8n.pt"
+    assert settings.yolo_confidence_threshold == 0.4
+    assert settings.sumo_simulation_mode == "sumo_traci"
+    assert settings.sumo_binary == "sumo"
+    assert settings.sumo_config_path == "networks/intersection.sumocfg"
+    assert settings.sumo_step_count == 120
+    assert settings.openai_model == "gpt-5.5"
+    assert settings.openai_embedding_model == "text-embedding-3-small"
+    assert settings.openai_embedding_dimensions == 1536
 
 
 def test_sqlalchemy_metadata_matches_required_tables() -> None:
