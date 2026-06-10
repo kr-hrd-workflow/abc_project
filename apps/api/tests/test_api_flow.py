@@ -106,18 +106,24 @@ def test_events_endpoint_collapses_existing_duplicate_seeded_events(
     }
 
 
-def test_list_fixtures_exposes_image_and_video_inputs(client: TestClient) -> None:
+def test_list_fixtures_exposes_image_video_and_unity_virtual_cctv_inputs(client: TestClient) -> None:
     response = client.get("/api/fixtures")
 
     assert response.status_code == 200
     fixtures = response.json()
     assert {
-        (fixture["fixture_id"], fixture["media_type"], fixture["scenario_id"])
+        (fixture["fixture_id"], fixture["media_type"], fixture["scenario_id"], fixture["source"])
         for fixture in fixtures
     } == {
-        ("emergency-east-frame", "image", "emergency"),
-        ("blocked-intersection-clip", "video", "blocked"),
+        ("emergency-east-frame", "image", "emergency", "sample_frame"),
+        ("blocked-intersection-clip", "video", "blocked", "sample_clip"),
+        ("unity-virtual-cctv-east", "virtual_cctv", "emergency", "unity_virtual_cctv"),
     }
+    unity_fixture = next(
+        fixture for fixture in fixtures if fixture["fixture_id"] == "unity-virtual-cctv-east"
+    )
+    assert unity_fixture["renderer"] == "unity_presentation_fallback"
+    assert "SUMO/TraCI" in unity_fixture["safety_note"]
 
 
 def test_ingest_fixture_returns_observation_and_persists_snapshot(

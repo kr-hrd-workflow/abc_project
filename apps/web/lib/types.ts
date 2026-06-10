@@ -125,9 +125,12 @@ export type Report = {
 export type AnalysisFixture = {
   fixture_id: string;
   scenario_id: ScenarioId;
-  media_type: "image" | "video";
+  media_type: "image" | "video" | "virtual_cctv";
   filename: string;
   description: string;
+  source: string;
+  renderer: string;
+  safety_note: string;
 };
 
 export type FixtureIngestResult = AnalysisFixture & {

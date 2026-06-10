@@ -48,7 +48,10 @@ export function DigitalTwin({
         </div>
         <div className="viewport-controls">
           <span className="viewport-mode">
-            {locale === "ko" ? "운영 뷰" : "Operations view"}
+            {locale === "ko" ? "Unity 가상 CCTV" : "Unity virtual CCTV"}
+          </span>
+          <span className="viewport-mode">
+            {locale === "ko" ? "SUMO 검증" : "SUMO validation"}
           </span>
           <span className="viewport-mode">{status.signal_phase}</span>
           <button

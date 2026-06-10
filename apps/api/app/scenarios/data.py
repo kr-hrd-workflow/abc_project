@@ -80,6 +80,7 @@ SIMULATION_COMPARISON = SimulationComparison(
     ),
     improvement={
         "total_delay_percent": 18.0,
+        "throughput_percent": 4.2,
         "average_wait_delta_seconds": -12,
         "emergency_clearance_delta_seconds": -21,
     },

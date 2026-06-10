@@ -9612,3 +9612,80 @@ body {
     justify-self: start;
   }
 }
+
+/* Unity / virtual CCTV presentation surface for PDF-required simulator demo. */
+.launch-dashboard[data-layout="operations-cockpit"] .unity-cctv-surface {
+  position: absolute;
+  left: clamp(14px, 2.4vw, 26px);
+  right: auto;
+  bottom: clamp(92px, 10vw, 126px);
+  z-index: 8;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 72px;
+  gap: 12px;
+  width: min(360px, calc(100% - 28px));
+  border: 1px solid rgba(98, 189, 177, 0.3);
+  border-radius: 18px;
+  padding: 12px;
+  background:
+    linear-gradient(135deg, rgba(98, 189, 177, 0.16), transparent 56%),
+    rgba(7, 10, 12, 0.82);
+  color: rgba(245, 250, 248, 0.92);
+  backdrop-filter: blur(14px);
+}
+
+.launch-dashboard[data-layout="operations-cockpit"] .unity-cctv-surface div:first-child {
+  display: grid;
+  gap: 3px;
+}
+
+.launch-dashboard[data-layout="operations-cockpit"] .unity-cctv-surface span {
+  color: var(--launch-teal);
+  font-size: 0.68rem;
+  font-weight: 900;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.launch-dashboard[data-layout="operations-cockpit"] .unity-cctv-surface strong {
+  font-size: 0.92rem;
+  letter-spacing: -0.01em;
+}
+
+.launch-dashboard[data-layout="operations-cockpit"] .unity-cctv-surface small {
+  color: rgba(232, 242, 238, 0.66);
+  line-height: 1.35;
+}
+
+.launch-dashboard[data-layout="operations-cockpit"] .cctv-frame-lines {
+  position: relative;
+  min-height: 58px;
+  overflow: hidden;
+  border: 1px solid rgba(98, 189, 177, 0.24);
+  border-radius: 12px;
+  background:
+    radial-gradient(circle at 72% 34%, rgba(244, 193, 93, 0.2), transparent 22%),
+    linear-gradient(90deg, rgba(98, 189, 177, 0.1), rgba(255, 255, 255, 0.025));
+}
+
+.launch-dashboard[data-layout="operations-cockpit"] .cctv-frame-lines i {
+  position: absolute;
+  left: 10%;
+  right: 10%;
+  height: 1px;
+  background: rgba(98, 189, 177, 0.42);
+}
+
+.launch-dashboard[data-layout="operations-cockpit"] .cctv-frame-lines i:nth-child(1) { top: 24%; }
+.launch-dashboard[data-layout="operations-cockpit"] .cctv-frame-lines i:nth-child(2) { top: 50%; }
+.launch-dashboard[data-layout="operations-cockpit"] .cctv-frame-lines i:nth-child(3) { top: 76%; }
+
+@media (max-width: 860px) {
+  .launch-dashboard[data-layout="operations-cockpit"] .unity-cctv-surface {
+    position: relative;
+    left: auto;
+    bottom: auto;
+    margin: 12px;
+    width: auto;
+  }
+}

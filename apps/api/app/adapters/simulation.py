@@ -205,8 +205,17 @@ def _build_improvement(
             1,
         )
 
+    throughput_percent = 0.0
+    if baseline.throughput > 0:
+        throughput_percent = round(
+            ((recommended.throughput - baseline.throughput) / baseline.throughput)
+            * 100,
+            1,
+        )
+
     return {
         "total_delay_percent": total_delay_percent,
+        "throughput_percent": throughput_percent,
         "average_wait_delta_seconds": (
             recommended.average_wait_seconds - baseline.average_wait_seconds
         ),

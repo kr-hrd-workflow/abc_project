@@ -209,6 +209,7 @@ def test_sumo_traci_adapter_returns_simulation_comparison_contract() -> None:
     assert comparison.recommended.throughput == 1185
     assert comparison.recommended.emergency_vehicle_clearance_seconds == 31
     assert comparison.improvement["total_delay_percent"] == 20.0
+    assert comparison.improvement["throughput_percent"] == 7.7
     assert comparison.improvement["average_wait_delta_seconds"] == -18
     assert comparison.improvement["emergency_clearance_delta_seconds"] == -19
 

@@ -49,9 +49,28 @@ export function SimulationViewport({
         locale={locale}
       />
       <div className="playback-badge">
-        <strong>{locale === "ko" ? "실사형 재생" : "Visual playback"}</strong>
-        <span>{locale === "ko" ? "SUMO 준비 레이어" : "SUMO-ready layer"}</span>
+        <strong>{locale === "ko" ? "가상 CCTV 재생" : "Virtual CCTV playback"}</strong>
+        <span>{locale === "ko" ? "Unity 발표용 폴백" : "Unity presentation fallback"}</span>
       </div>
+      <section
+        className="unity-cctv-surface"
+        aria-label={locale === "ko" ? "Unity 가상 CCTV 시뮬레이터" : "Unity virtual CCTV simulator"}
+      >
+        <div>
+          <span>{locale === "ko" ? "Unity Simulator" : "Unity Simulator"}</span>
+          <strong>{locale === "ko" ? "가상 CCTV 발표 화면" : "Virtual CCTV presentation feed"}</strong>
+          <small>
+            {locale === "ko"
+              ? "실제 CCTV·신호 제어 없음 / SUMO 지표 기반"
+              : "No real CCTV or signal control / SUMO-derived metrics"}
+          </small>
+        </div>
+        <div className="cctv-frame-lines" aria-hidden="true">
+          <i />
+          <i />
+          <i />
+        </div>
+      </section>
       <div className="renderer-status" aria-label="Simulation renderer status">
         <strong>SUMO/TraCI Renderer</strong>
         <span>{simulation.source}</span>

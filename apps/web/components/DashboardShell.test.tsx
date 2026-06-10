@@ -14,6 +14,7 @@ import type {
   IntersectionStatus,
   Recommendation,
   Report,
+  ScenarioId,
   SimulationComparison,
   TrafficEvent
 } from "../lib/types";
@@ -115,14 +116,30 @@ const fixtures: AnalysisFixture[] = [
     scenario_id: "emergency",
     media_type: "image",
     filename: "emergency-east-frame.jpg",
-    description: "Sample frame with an emergency vehicle approaching from the east."
+    description: "Sample frame with an emergency vehicle approaching from the east.",
+    source: "sample_frame",
+    renderer: "opencv_yolo_fixture",
+    safety_note: "Sample analysis only. No real CCTV stream or traffic signal control."
   },
   {
     fixture_id: "blocked-intersection-clip",
     scenario_id: "blocked",
     media_type: "video",
     filename: "blocked-intersection-clip.mp4",
-    description: "Sample clip representing a blocked four-way intersection."
+    description: "Sample clip representing a blocked four-way intersection.",
+    source: "sample_clip",
+    renderer: "opencv_yolo_fixture",
+    safety_note: "Sample analysis only. No real CCTV stream or traffic signal control."
+  },
+  {
+    fixture_id: "unity-virtual-cctv-east",
+    scenario_id: "emergency",
+    media_type: "virtual_cctv",
+    filename: "unity-virtual-cctv-east.mp4",
+    description: "Unity-style virtual CCTV presentation feed for the east emergency approach scenario.",
+    source: "unity_virtual_cctv",
+    renderer: "unity_presentation_fallback",
+    safety_note: "Unity is used for presentation visualization only; SUMO/TraCI remains the traffic validation engine."
   }
 ];
 
@@ -153,7 +170,7 @@ afterEach(() => {
   vi.unstubAllGlobals();
 });
 
-function dashboardProps(overrides = {}) {
+function dashboardProps(overrides: Partial<Parameters<typeof DashboardShell>[0]> = {}) {
   return {
     status,
     events,
@@ -165,7 +182,7 @@ function dashboardProps(overrides = {}) {
     onGenerateReport: vi.fn(),
     onRefreshRecommendation: vi.fn(),
     onRunSimulation: vi.fn(),
-    selectedScenarioId: "emergency",
+    selectedScenarioId: "emergency" as ScenarioId,
     scenarioOptions: SCENARIO_OPTIONS,
     scenarioLoading: false,
     onScenarioChange: vi.fn(),
@@ -206,14 +223,14 @@ describe("DashboardShell", () => {
     renderDashboard();
 
     expect(screen.getAllByText("실제 신호 제어 없음").length).toBeGreaterThanOrEqual(1);
-    expect(screen.getByText(/교체형 시뮬레이션 뷰/)).toBeTruthy();
+    expect(screen.getByText("Unity 가상 CCTV + SUMO 검증 뷰")).toBeTruthy();
   });
 
   test("lets the operator switch between AI automatic and admin manual operation modes", async () => {
     renderDashboard();
 
-    const aiButton = screen.getByRole("button", { name: "AI 자동 운영" });
-    const manualButton = screen.getByRole("button", { name: "관리자 직접 운영" });
+    const aiButton = screen.getByRole("button", { name: "AI 권고 자동 준비" });
+    const manualButton = screen.getByRole("button", { name: "관리자 직접 검토" });
 
     expect(aiButton.getAttribute("aria-pressed")).toBe("true");
     expect(screen.getByText("AI가 시뮬레이션 권고를 자동으로 준비합니다.")).toBeTruthy();
@@ -232,7 +249,7 @@ describe("DashboardShell", () => {
     expect(screen.getByText("신뢰도 92%")).toBeTruthy();
     expect(screen.getByText("다음 권고 emergency_priority")).toBeTruthy();
 
-    await userEvent.click(screen.getByRole("button", { name: "관리자 직접 운영" }));
+    await userEvent.click(screen.getByRole("button", { name: "관리자 직접 검토" }));
 
     expect(screen.getByText("승인 보류")).toBeTruthy();
     expect(screen.getByText("관리자 검토 필요")).toBeTruthy();
@@ -243,8 +260,8 @@ describe("DashboardShell", () => {
     const { container } = renderDashboard();
 
     const toggle = screen.getByRole("group", { name: "운영 모드" });
-    const aiButton = screen.getByRole("button", { name: "AI 자동 운영" });
-    const manualButton = screen.getByRole("button", { name: "관리자 직접 운영" });
+    const aiButton = screen.getByRole("button", { name: "AI 권고 자동 준비" });
+    const manualButton = screen.getByRole("button", { name: "관리자 직접 검토" });
     const stateCards = screen.getByLabelText("운영 모드 상태");
 
     expect(toggle.getAttribute("data-mode")).toBe("ai");
@@ -314,7 +331,11 @@ describe("DashboardShell", () => {
 
     expect(screen.getByLabelText("SUMO 집계 텔레메트리")).toBeTruthy();
     expect(screen.getByLabelText("SUMO 스타일 교통 재생")).toBeTruthy();
-    expect(screen.getByText("실사형 재생")).toBeTruthy();
+    expect(screen.getByLabelText("Unity 가상 CCTV 시뮬레이터")).toBeTruthy();
+    expect(screen.getByText("가상 CCTV 재생")).toBeTruthy();
+    expect(screen.getByText("Unity 발표용 폴백")).toBeTruthy();
+    expect(screen.getByText("가상 CCTV 발표 화면")).toBeTruthy();
+    expect(screen.getByText("실제 CCTV·신호 제어 없음 / SUMO 지표 기반")).toBeTruthy();
     expect(screen.getByText("주기 22s")).toBeTruthy();
     expect(screen.getByText("대기 72s -> 59s")).toBeTruthy();
     expect(screen.getByText("처리량 +13%")).toBeTruthy();
@@ -331,8 +352,8 @@ describe("DashboardShell", () => {
 
     expect(screen.getByText("Incident Brief Spine")).toBeTruthy();
     expect(screen.getAllByText("No real signal control").length).toBeGreaterThanOrEqual(1);
-    expect(screen.getByText("AI Automatic")).toBeTruthy();
-    expect(screen.getByText("Admin Manual")).toBeTruthy();
+    expect(screen.getByText("AI recommendation prep")).toBeTruthy();
+    expect(screen.getByText("Admin review")).toBeTruthy();
     expect(screen.getByRole("link", { name: "Alert" })).toBeTruthy();
     expect(screen.getByRole("link", { name: "Reports" })).toBeTruthy();
     expect(screen.getByRole("link", { name: "Scenarios" })).toBeTruthy();
@@ -409,7 +430,7 @@ describe("DashboardShell", () => {
 
   test("clears analysis intake status when the parent resets scenario data", async () => {
     function StatefulDashboard() {
-      const [selectedScenarioId, setSelectedScenarioId] = useState("emergency");
+      const [selectedScenarioId, setSelectedScenarioId] = useState<ScenarioId>("emergency");
       const [fixtureIngest, setFixtureIngest] = useState<FixtureIngestResult | null>(null);
       const [analysisJob, setAnalysisJob] = useState<AnalysisJob | null>(null);
 
@@ -630,7 +651,7 @@ describe("DashboardShell", () => {
     const onRunSimulation = vi.fn().mockResolvedValue(undefined);
     renderDashboard({ onRunSimulation });
 
-    await userEvent.click(screen.getByRole("button", { name: "시뮬레이션 실행" }));
+    await userEvent.click(screen.getByRole("button", { name: "SUMO 시뮬레이션 갱신" }));
 
     expect(onRunSimulation).toHaveBeenCalledTimes(1);
     expect(await screen.findByText("시뮬레이션 갱신 완료")).toBeTruthy();
