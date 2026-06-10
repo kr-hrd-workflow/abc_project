@@ -141,14 +141,14 @@ export default function Page() {
       }
 
       const stages = gsap.utils.toArray<HTMLElement>(".assembly-stage");
-      const layers = gsap.utils.toArray<HTMLElement>(".assembly-layer");
+      const layers = gsap.utils.toArray<HTMLElement>(".assembly-piece");
 
       stages.forEach((stage, index) => {
         gsap.fromTo(
           stage,
           {
-            autoAlpha: index === 0 ? 1 : 0.34,
-            scale: 0.9,
+            autoAlpha: index === 0 ? 1 : 0,
+            scale: 0.96,
             y: 64,
           },
           {
@@ -158,21 +158,21 @@ export default function Page() {
             ease: "none",
             scrollTrigger: {
               trigger: stage,
-              start: "top 82%",
-              end: "bottom 42%",
+              start: "top 70%",
+              end: "center center",
               scrub: true,
             },
           }
         );
 
         gsap.to(stage, {
-          autoAlpha: 0.22,
-          scale: 0.94,
+          autoAlpha: 0,
+          scale: 1.02,
           ease: "none",
           scrollTrigger: {
             trigger: stage,
-            start: "bottom 40%",
-            end: "bottom 8%",
+            start: "center center",
+            end: "bottom 24%",
             scrub: true,
           },
         });
@@ -192,7 +192,7 @@ export default function Page() {
               scrollTrigger: {
                 trigger: stage,
                 start: "top 72%",
-                end: "bottom 42%",
+                end: "center center",
                 scrub: true,
               },
             }
@@ -314,17 +314,40 @@ export default function Page() {
       >
         <div className="assembly-pin">
           <div className="assembly-copy">
-            <h2 id="signal-assembly-title">{t.assemblyTitle}</h2>
-            <p>{t.assemblyCopy}</p>
-            <span>{t.heroCaption}</span>
+            <h2 id="signal-assembly-title" className="sr-only">
+              {t.assemblyTitle}
+            </h2>
           </div>
-          <div className="assembly-visual" aria-hidden="true">
+          <div
+            className="assembly-object-field"
+            data-assembly-object="persistent-centered"
+            aria-hidden="true"
+          >
             <div className="assembly-aerial" />
-            <span className="assembly-layer layer-pressure" data-assembly-layer="pressure" />
-            <span className="assembly-layer layer-current" data-assembly-layer="current-route" />
-            <span className="assembly-layer layer-candidate" data-assembly-layer="candidate-route" />
-            <span className="assembly-layer layer-evidence" data-assembly-layer="evidence" />
-            <div className="assembly-brief">
+            <span
+              className="assembly-layer assembly-piece layer-pressure"
+              data-assembly-layer="pressure"
+              data-assembly-piece="pressure"
+              data-piece-persists="true"
+            />
+            <span
+              className="assembly-layer assembly-piece layer-current"
+              data-assembly-layer="current-route"
+              data-assembly-piece="current-route"
+              data-piece-persists="true"
+            />
+            <span
+              className="assembly-layer assembly-piece layer-candidate"
+              data-assembly-layer="candidate-route"
+              data-assembly-piece="candidate-route"
+              data-piece-persists="true"
+            />
+            <div
+              className="assembly-layer assembly-piece layer-evidence assembly-brief"
+              data-assembly-layer="evidence"
+              data-assembly-piece="evidence"
+              data-piece-persists="true"
+            >
               <span>Operator brief</span>
               <strong>Reviewable evidence package</strong>
               <small>{t.heroCaption}</small>
@@ -335,6 +358,7 @@ export default function Page() {
         <div
           className="assembly-stage-stack"
           data-gsap-scrolltrigger="true"
+          data-reference-build-note="watchmaker-persistent-parts"
           data-motion-scenes={MOTION_SCENES}
           data-remotion-sequence="SignalAssemblyReel"
           data-remotion-fps={REMOTION_FPS}
@@ -346,10 +370,13 @@ export default function Page() {
               key={title}
               className={`assembly-stage assembly-stage-${index + 1}`}
               data-assembly-stage={index}
+              data-stage-side={index % 2 === 0 ? "left" : "right"}
             >
-              <span>{`0${index + 1}`}</span>
-              <strong>{title}</strong>
-              <p>{copy}</p>
+              <div className="assembly-stage-copy">
+                <span>{`0${index + 1}`}</span>
+                <strong>{title}</strong>
+                <p>{copy}</p>
+              </div>
             </article>
           ))}
         </div>

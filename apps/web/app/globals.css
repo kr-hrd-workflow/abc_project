@@ -7250,7 +7250,7 @@ body {
 
 .hero-boundary,
 .assembly-copy span,
-.assembly-stage > span,
+.assembly-stage-copy > span,
 .decision-chapter > span,
 .signal-overview-rail span,
 .assembly-brief span,
@@ -7389,29 +7389,35 @@ body {
 }
 
 .signal-assembly-section {
-  display: grid;
-  grid-template-columns: minmax(520px, 1.08fr) minmax(340px, 0.68fr);
-  gap: clamp(28px, 5vw, 82px);
-  align-items: start;
-  min-height: 360dvh;
+  position: relative;
+  min-height: 430dvh;
+  padding: 0;
+  overflow: clip;
   background:
+    radial-gradient(circle at 50% 46%, rgba(116, 245, 212, 0.09), transparent 30rem),
     radial-gradient(circle at 70% 8%, rgba(255, 176, 92, 0.08), transparent 28rem),
-    linear-gradient(180deg, rgba(7, 16, 22, 0.4), #04070a 86%);
+    linear-gradient(180deg, rgba(7, 16, 22, 0.34), #04070a 72%);
 }
 
 .assembly-pin {
+  position: sticky;
   top: 0;
+  z-index: 1;
   display: grid;
-  grid-template-rows: auto minmax(320px, 0.9fr);
-  gap: clamp(16px, 3vw, 30px);
-  min-height: 100dvh;
-  padding: clamp(14px, 2vw, 24px) 0;
+  place-items: center;
+  height: 100dvh;
+  padding: clamp(22px, 5dvh, 44px) clamp(22px, 5vw, 76px);
 }
 
 .assembly-copy {
+  position: absolute;
+  top: clamp(96px, 12dvh, 148px);
+  left: clamp(24px, 5vw, 78px);
+  z-index: 3;
   display: grid;
-  gap: 14px;
-  max-width: 760px;
+  gap: 12px;
+  width: min(360px, 28vw);
+  opacity: 0.82;
 }
 
 .assembly-copy h2 {
@@ -7424,11 +7430,11 @@ body {
 }
 
 .assembly-copy p {
-  max-width: 62ch;
+  max-width: 34ch;
   margin: 0;
   color: var(--launch-muted);
-  font-size: clamp(1rem, 1.3vw, 1.2rem);
-  line-height: 1.6;
+  font-size: clamp(0.9rem, 1vw, 1rem);
+  line-height: 1.55;
 }
 
 .assembly-copy span {
@@ -7438,14 +7444,41 @@ body {
   color: rgba(244, 255, 249, 0.82);
 }
 
-.assembly-visual {
+.assembly-object-field {
   position: relative;
-  min-height: clamp(320px, 34vw, 480px);
-  border: 1px solid var(--launch-line);
-  border-radius: var(--launch-radius);
-  overflow: hidden;
-  background: rgba(5, 12, 18, 0.78);
-  box-shadow: var(--launch-shadow);
+  width: min(52vw, 610px, calc(100dvh - 126px));
+  max-width: calc(100vw - 96px);
+  aspect-ratio: 1;
+  margin-top: clamp(8px, 3dvh, 34px);
+  border-radius: 50%;
+  isolation: isolate;
+}
+
+.assembly-object-field::before,
+.assembly-object-field::after {
+  content: "";
+  position: absolute;
+  border-radius: 50%;
+  pointer-events: none;
+}
+
+.assembly-object-field::before {
+  inset: 2%;
+  z-index: 0;
+  border: 1px solid rgba(149, 232, 216, 0.18);
+  background:
+    radial-gradient(circle at 50% 52%, rgba(116, 245, 212, 0.12), transparent 25%),
+    rgba(4, 10, 14, 0.68);
+  box-shadow:
+    0 0 0 1px rgba(244, 255, 249, 0.04),
+    0 46px 120px rgba(0, 0, 0, 0.46);
+}
+
+.assembly-object-field::after {
+  inset: 12%;
+  z-index: 5;
+  border: 1px solid rgba(255, 176, 92, 0.2);
+  box-shadow: inset 0 0 70px rgba(255, 176, 92, 0.08);
 }
 
 .assembly-aerial,
@@ -7458,14 +7491,17 @@ body {
 }
 
 .assembly-aerial {
-  inset: 0;
+  inset: 4%;
+  z-index: 1;
+  border-radius: 50%;
   background-image:
-    radial-gradient(circle at 52% 52%, rgba(116, 245, 212, 0.13), transparent 18rem),
-    linear-gradient(90deg, rgba(5, 9, 13, 0.7), rgba(5, 9, 13, 0.08), rgba(5, 9, 13, 0.72)),
+    radial-gradient(circle at 52% 52%, rgba(116, 245, 212, 0.13), transparent 15rem),
+    linear-gradient(90deg, rgba(5, 9, 13, 0.48), rgba(5, 9, 13, 0.08), rgba(5, 9, 13, 0.5)),
     url("/landing/intersection-hero-cinematic.png");
   background-position: center;
   background-size: cover;
   filter: contrast(1.08) saturate(1.08);
+  overflow: hidden;
 }
 
 .assembly-aerial::after {
@@ -7480,16 +7516,20 @@ body {
 }
 
 .assembly-layer {
-  z-index: 1;
-  opacity: 0.8;
+  z-index: 2;
+  opacity: 0;
+  visibility: hidden;
 }
 
 .layer-pressure {
-  inset: 8%;
+  inset: 6%;
+  border-radius: 50%;
+  opacity: 0.8;
+  visibility: visible;
   background:
-    radial-gradient(circle at 46% 42%, rgba(255, 176, 92, 0.46), transparent 0 7%, transparent 20%),
-    radial-gradient(circle at 58% 54%, rgba(116, 245, 212, 0.42), transparent 0 6%, transparent 22%),
-    radial-gradient(circle at 38% 62%, rgba(255, 109, 99, 0.32), transparent 0 5%, transparent 18%);
+    radial-gradient(circle at 46% 42%, rgba(255, 176, 92, 0.54), transparent 0 6%, transparent 20%),
+    radial-gradient(circle at 58% 54%, rgba(116, 245, 212, 0.48), transparent 0 5%, transparent 22%),
+    radial-gradient(circle at 38% 62%, rgba(255, 109, 99, 0.34), transparent 0 5%, transparent 18%);
   filter: blur(1px);
   animation: nodeBeat 4.8s var(--launch-ease-in-out) infinite;
 }
@@ -7504,8 +7544,8 @@ body {
 }
 
 .layer-current {
-  top: 40%;
-  width: 78%;
+  top: 41%;
+  width: 76%;
   background: linear-gradient(90deg, transparent, var(--launch-teal), transparent);
   box-shadow: 0 0 34px rgba(116, 245, 212, 0.54);
   transform: rotate(52deg);
@@ -7513,7 +7553,7 @@ body {
 
 .layer-candidate {
   top: 58%;
-  width: 68%;
+  width: 70%;
   background: linear-gradient(90deg, transparent, var(--launch-amber), transparent);
   box-shadow: 0 0 34px rgba(255, 176, 92, 0.48);
   transform: rotate(-18deg);
@@ -7533,10 +7573,10 @@ body {
 }
 
 .layer-evidence {
-  right: clamp(18px, 4vw, 48px);
-  top: clamp(18px, 4vw, 48px);
-  width: min(300px, 42%);
-  min-height: 178px;
+  right: 9%;
+  top: 11%;
+  width: min(280px, 42%);
+  min-height: 168px;
   border: 1px solid rgba(149, 232, 216, 0.28);
   border-radius: var(--launch-radius);
   background:
@@ -7546,12 +7586,12 @@ body {
 }
 
 .layer-evidence::before {
-  content: "PHASE DELTA / -18s";
+  content: "";
   top: 18px;
+  right: 18px;
   left: 18px;
-  color: var(--launch-teal);
-  font-size: 0.72rem;
-  font-weight: 900;
+  height: 1px;
+  background: rgba(149, 232, 216, 0.22);
 }
 
 .layer-evidence::after {
@@ -7572,12 +7612,14 @@ body {
 
 .assembly-brief {
   position: absolute;
-  right: clamp(18px, 4vw, 48px);
-  bottom: clamp(18px, 4vw, 48px);
-  z-index: 2;
+  top: auto;
+  right: 7%;
+  bottom: 9%;
+  z-index: 6;
   display: grid;
   gap: 8px;
-  width: min(420px, calc(100% - 36px));
+  width: min(390px, 48%);
+  min-height: unset;
   border: 1px solid rgba(244, 255, 249, 0.18);
   border-radius: var(--launch-radius);
   padding: clamp(16px, 2.2vw, 24px);
@@ -7596,35 +7638,69 @@ body {
   line-height: 1.42;
 }
 
+.assembly-brief span,
+.assembly-brief strong,
+.assembly-brief small {
+  position: relative;
+  z-index: 1;
+}
+
 .assembly-stage-stack {
-  display: grid;
-  gap: clamp(36px, 8vw, 104px);
-  padding-top: 22dvh;
-  padding-bottom: 42dvh;
+  position: relative;
+  z-index: 2;
+  display: block;
+  margin-top: -100dvh;
+  padding: 0;
 }
 
 .assembly-stage {
-  min-height: clamp(420px, 66dvh, 720px);
+  min-height: 100dvh;
   display: grid;
+  grid-template-columns: minmax(260px, 0.42fr) minmax(320px, 0.58fr);
   align-content: center;
+  align-items: center;
+  gap: clamp(22px, 6vw, 90px);
+  border: 0;
+  padding: 0 clamp(26px, 5.3vw, 84px);
+}
+
+.assembly-stage-copy {
+  display: grid;
   gap: 14px;
-  border-top: 1px solid var(--launch-line);
-  border-bottom: 1px solid rgba(149, 232, 216, 0.11);
-  padding: clamp(24px, 4vw, 46px) 0;
-}
-
-.assembly-stage strong {
+  max-width: 480px;
   color: var(--launch-text);
-  font-size: clamp(2.2rem, 4.2vw, 5rem);
-  line-height: 0.96;
+  text-shadow: 0 18px 42px rgba(0, 0, 0, 0.78);
 }
 
-.assembly-stage p {
+.assembly-stage[data-stage-side="left"] .assembly-stage-copy {
+  grid-column: 1;
+  justify-self: start;
+}
+
+.assembly-stage[data-stage-side="right"] .assembly-stage-copy {
+  grid-column: 2;
+  justify-self: end;
+  max-width: 410px;
+  text-align: right;
+}
+
+.assembly-stage-copy strong {
+  color: var(--launch-text);
+  font-size: clamp(3rem, 6vw, 6.4rem);
+  line-height: 0.88;
+  text-wrap: balance;
+}
+
+.assembly-stage-copy p {
   max-width: 40ch;
   margin: 0;
   color: var(--launch-muted);
   font-size: clamp(1rem, 1.3vw, 1.18rem);
   line-height: 1.55;
+}
+
+.assembly-stage[data-stage-side="right"] .assembly-stage-copy p {
+  margin-left: auto;
 }
 
 .decision-chapters-section {
@@ -8425,6 +8501,13 @@ body {
     animation-iteration-count: 1 !important;
     transition-duration: 0.001ms !important;
   }
+
+  .assembly-piece,
+  .assembly-stage {
+    opacity: 1 !important;
+    transform: none !important;
+    visibility: visible !important;
+  }
 }
 
 @media (max-width: 980px) {
@@ -8454,21 +8537,61 @@ body {
   .signal-assembly-section,
   .assembly-pin,
   .assembly-copy,
+  .assembly-object-field,
   .assembly-stage-stack {
     min-width: 0;
   }
 
   .signal-assembly-section {
     min-height: auto;
+    padding: 86px 16px;
+    overflow: visible;
   }
 
   .assembly-pin {
+    position: relative;
+    height: auto;
     min-height: auto;
+    padding: 0;
+  }
+
+  .assembly-copy {
+    position: relative;
+    top: auto;
+    left: auto;
+    width: min(620px, 100%);
+    margin: 0 auto 26px;
+    opacity: 1;
+    text-align: center;
+  }
+
+  .assembly-object-field {
+    width: min(560px, 100%);
+    max-width: 100%;
+    margin-inline: auto;
   }
 
   .assembly-stage-stack {
-    padding-top: clamp(36px, 8vw, 72px);
-    padding-bottom: 0;
+    margin-top: clamp(34px, 8vw, 76px);
+    padding: 0;
+  }
+
+  .assembly-stage {
+    min-height: auto;
+    grid-template-columns: 1fr;
+    border-top: 1px solid rgba(149, 232, 216, 0.14);
+    padding: clamp(34px, 8vw, 70px) 0;
+  }
+
+  .assembly-stage[data-stage-side="left"] .assembly-stage-copy,
+  .assembly-stage[data-stage-side="right"] .assembly-stage-copy {
+    grid-column: 1;
+    justify-self: stretch;
+    text-align: left;
+  }
+
+  .assembly-stage[data-stage-side="right"] .assembly-stage-copy p {
+    margin-left: 0;
   }
 
   .launch-dashboard .timeline-panel,
@@ -8562,12 +8685,29 @@ body {
     font-size: clamp(2.08rem, 10vw, 3rem);
   }
 
-  .assembly-visual {
-    min-height: 420px;
+  .assembly-object-field {
+    width: min(100%, 430px);
   }
 
   .assembly-stage {
-    min-height: 340px;
+    padding-block: 38px;
+  }
+
+  .assembly-stage-copy strong {
+    font-size: clamp(2.25rem, 13vw, 4rem);
+  }
+
+  .assembly-brief {
+    right: 14px;
+    bottom: 14px;
+    width: calc(100% - 28px);
+  }
+
+  .layer-evidence {
+    top: 8%;
+    right: 8%;
+    width: 46%;
+    min-height: 132px;
   }
 
   .decision-chapter {

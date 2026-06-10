@@ -56,6 +56,14 @@ Replace the current card-like scroll panel feel with a stronger pinned cinematic
 
 This is the core Watchmaker-inspired moment: parts assemble into meaning as the user scrolls.
 
+Watchmaker build-note fidelity constraints:
+
+- The visual field should behave like one persistent viewing area, not a small side panel.
+- Each introduced layer remains visible as later layers arrive, so the intersection accumulates into one complete decision object.
+- Stage copy alternates left and right around the persistent object.
+- Previous copy fades away instead of stacking in the same viewport.
+- The final viewing area keeps the assembled object in place while the handoff copy remains readable.
+
 ### 3. Decision Chapters
 
 Use fewer, larger chapters instead of small repeated cards. The chapters should read as an operations film:
@@ -157,4 +165,3 @@ Visual checks:
 - Backend/API changes.
 - Live signal-control behavior.
 - New dependency installation unless separately approved.
-

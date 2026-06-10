@@ -43,11 +43,27 @@ describe("Landing page", () => {
 
     const assembly = screen.getByTestId("landing-signal-assembly");
     expect(assembly.getAttribute("data-gsap-scrolltrigger")).toBe("true");
+    expect(assembly.getAttribute("data-reference-build-note")).toBe("watchmaker-persistent-parts");
     expect(assembly.getAttribute("data-remotion-sequence")).toBe("SignalAssemblyReel");
     expect(assembly.getAttribute("data-remotion-fps")).toBe("30");
     expect(assembly.getAttribute("data-motion-scenes")).toBe("4");
     expect(container.querySelectorAll("[data-assembly-stage]")).toHaveLength(4);
     expect(container.querySelectorAll("[data-assembly-layer]")).toHaveLength(4);
+    expect(container.querySelector("[data-assembly-object='persistent-centered']")).toBeTruthy();
+    expect(container.querySelectorAll("[data-assembly-piece][data-piece-persists='true']")).toHaveLength(4);
+  });
+
+  test("alternates assembly copy around the persistent visual object", () => {
+    const { container } = render(<Page />);
+
+    const stages = Array.from(container.querySelectorAll("[data-assembly-stage]"));
+
+    expect(stages.map((stage) => stage.getAttribute("data-stage-side"))).toEqual([
+      "left",
+      "right",
+      "left",
+      "right",
+    ]);
   });
 
   test("renders large decision chapters and proof without old card patterns", () => {
