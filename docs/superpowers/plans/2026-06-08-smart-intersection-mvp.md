@@ -120,6 +120,8 @@ historical implementation recipe; this tracker is the current progress summary.
   credits and sets `OPENAI_API_KEY` plus `OPENAI_MONTHLY_BUDGET_USD`.
   - [x] Add `npm run openai:smoke` as the guarded smoke command for the live
     OpenAI Responses and embeddings path.
+  - [x] Enforce `OPENAI_MONTHLY_BUDGET_USD` before pgvector chat creates a live
+    OpenAI embedding client.
   - [ ] Future step: run `npm run openai:smoke` after the key and monthly
     budget are present.
 

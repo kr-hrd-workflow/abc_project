@@ -30,9 +30,12 @@ from app.services.knowledge import (
     sync_policy_embeddings,
 )
 from app.services.openai_clients import (
+    MissingOpenAIAPIKeyError,
+    MissingOpenAIMonthlyBudgetError,
     OpenAIEmbeddingGateway,
     build_openai_client,
     require_openai_api_key,
+    require_openai_monthly_budget,
 )
 from app.services.persistence import (
     create_chat_log,
@@ -329,8 +332,13 @@ def _retrieve_policy_evidence(
     session: Session,
 ) -> list[KnowledgeChunk]:
     if settings.knowledge_search_mode == "pgvector":
+        try:
+            require_openai_monthly_budget(settings.openai_monthly_budget_usd)
+            api_key = require_openai_api_key()
+        except (MissingOpenAIAPIKeyError, MissingOpenAIMonthlyBudgetError) as exc:
+            raise HTTPException(status_code=503, detail=str(exc)) from exc
         embedding_gateway = OpenAIEmbeddingGateway(
-            client=build_openai_client(require_openai_api_key()),
+            client=build_openai_client(api_key),
             model=settings.openai_embedding_model,
             dimensions=settings.openai_embedding_dimensions,
         )

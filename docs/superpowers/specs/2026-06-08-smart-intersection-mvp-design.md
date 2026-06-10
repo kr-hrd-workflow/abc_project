@@ -484,6 +484,8 @@ source/tests.
   - [x] Add a mocked OpenAI Responses/embeddings client boundary that can be
     tested without secrets or live external calls.
   - [x] Add a guarded OpenAI embedding client call path for pgvector mode.
+  - [x] Enforce `OPENAI_MONTHLY_BUDGET_USD` before pgvector chat creates a live
+    OpenAI embedding client.
   - [x] Add a guarded `npm run openai:smoke` command for live Responses and
     embeddings verification after credentials are present.
   - [x] Defer live OpenAI validation until the user buys API credits and sets

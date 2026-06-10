@@ -36,6 +36,8 @@
 - `pgvector/pgvector:pg16` 기반 PostgreSQL `vector` 확장 검증
 - `knowledge_chunks` 벡터 컬럼 마이그레이션과 pgvector 검색 경로
 - `KNOWLEDGE_SEARCH_MODE=pgvector`로 켤 수 있는 임베딩 검색 모드
+- `KNOWLEDGE_SEARCH_MODE=pgvector`에서 OpenAI 월 예산이 없으면 live
+  embedding client를 만들지 않도록 차단하는 guard
 - `npm run openai:smoke`로 실행하는 guarded OpenAI live smoke 명령
 - `AGENTS.md`에 팀원/에이전트 작업 규칙 정리
 
@@ -55,6 +57,8 @@ PostgreSQL `vector` 확장, `knowledge_chunks` 테이블, strict pgvector
 readiness, 로컬 pgvector 검색 스모크가 다시 녹색으로 증명됐습니다.
 `OPENAI_API_KEY`와 `OPENAI_MONTHLY_BUDGET_USD`는 나중에 설정합니다. 실제
 OpenAI 호출은 두 값이 설정된 뒤에만 실행해야 합니다.
+`KNOWLEDGE_SEARCH_MODE=pgvector`도 이제 같은 월 예산 guard를 적용해서
+두 값이 없으면 live OpenAI embedding client를 만들지 않습니다.
 
 ## 처음 시작할 때 읽을 문서
 

@@ -19,6 +19,10 @@ class MissingOpenAIAPIKeyError(RuntimeError):
     pass
 
 
+class MissingOpenAIMonthlyBudgetError(RuntimeError):
+    pass
+
+
 class ResponsesResource(Protocol):
     def create(self, **kwargs: object) -> object:
         pass
@@ -80,6 +84,14 @@ def require_openai_api_key(env: Mapping[str, str] | None = None) -> str:
     if not api_key:
         raise MissingOpenAIAPIKeyError("OPENAI_API_KEY is required for live OpenAI calls")
     return api_key
+
+
+def require_openai_monthly_budget(monthly_budget_usd: float | None) -> float:
+    if monthly_budget_usd is None:
+        raise MissingOpenAIMonthlyBudgetError(
+            "OPENAI_MONTHLY_BUDGET_USD is required for live OpenAI calls"
+        )
+    return monthly_budget_usd
 
 
 def build_openai_client(api_key: str) -> OpenAIClientProtocol:

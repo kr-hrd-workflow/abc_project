@@ -24,6 +24,8 @@ Current as of 2026-06-10 15:10 KST:
   API credits and sets `OPENAI_API_KEY` plus `OPENAI_MONTHLY_BUDGET_USD`.
 - [x] OpenAI API pricing guidance is re-checked against official docs.
 - [x] OpenAI monthly budget readiness guard is implemented without live calls.
+- [x] The pgvector-backed `/api/chat` path also enforces
+  `OPENAI_MONTHLY_BUDGET_USD` before creating a live OpenAI embedding client.
 - [x] The pgvector Python package is installed locally.
 - [x] Current local pgvector readiness is green.
   The local Docker PostgreSQL container is healthy, Alembic is at head,
@@ -47,6 +49,8 @@ Latest local re-check at `2026-06-10 15:10 KST`:
   OpenAI key and budget prerequisites.
 - `npm run openai:smoke` fails before constructing a live client, as intended,
   until both OpenAI gate values are present.
+- `KNOWLEDGE_SEARCH_MODE=pgvector` also refuses to create a live OpenAI
+  embedding client if `OPENAI_MONTHLY_BUDGET_USD` is missing.
 - `docker compose -f infra/docker-compose.yml ps postgres` shows
   `smart-intersection-postgres` healthy on `pgvector/pgvector:pg16`.
 - Direct database verification returns `vector` from `pg_extension`, and a
@@ -220,6 +224,8 @@ npm run runtime:readiness:strict -- --section openai
 npm run openai:smoke
 ```
 
+- [x] Enforce `OPENAI_MONTHLY_BUDGET_USD` before pgvector chat creates a live
+  OpenAI embedding client.
 - [ ] Future step: run one approved live API smoke call.
 - [ ] Future step: update docs checkboxes after live API evidence exists.
 

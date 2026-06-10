@@ -3,9 +3,11 @@ import pytest
 from app.services.knowledge import KnowledgeChunk
 from app.services.openai_clients import (
     MissingOpenAIAPIKeyError,
+    MissingOpenAIMonthlyBudgetError,
     OpenAIEmbeddingGateway,
     OpenAITextGateway,
     require_openai_api_key,
+    require_openai_monthly_budget,
 )
 
 
@@ -117,3 +119,12 @@ def test_require_openai_api_key_rejects_missing_or_blank_values() -> None:
         require_openai_api_key({"OPENAI_API_KEY": "   "})
 
     assert require_openai_api_key({"OPENAI_API_KEY": "sk-test"}) == "sk-test"
+
+
+def test_require_openai_monthly_budget_rejects_missing_value() -> None:
+    with pytest.raises(MissingOpenAIMonthlyBudgetError):
+        require_openai_monthly_budget(None)
+
+
+def test_require_openai_monthly_budget_returns_configured_value() -> None:
+    assert require_openai_monthly_budget(10.0) == 10.0

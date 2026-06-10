@@ -389,6 +389,7 @@ def test_chat_uses_pgvector_policy_search_when_configured(
     calls: dict[str, object] = {}
 
     monkeypatch.setattr("app.api.routes.settings.knowledge_search_mode", "pgvector")
+    monkeypatch.setattr("app.api.routes.settings.openai_monthly_budget_usd", 10.0)
     monkeypatch.setattr(
         "app.api.routes.require_openai_api_key",
         lambda: "sk-test",
@@ -425,6 +426,38 @@ def test_chat_uses_pgvector_policy_search_when_configured(
         "searched_query": "Emergency status?",
     }
     assert "Policy evidence:" not in response.json()["answer"]
+
+
+def test_chat_pgvector_mode_requires_openai_budget_before_client_creation(
+    client: TestClient,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    created_clients: list[str] = []
+
+    monkeypatch.setattr("app.api.routes.settings.knowledge_search_mode", "pgvector")
+    monkeypatch.setattr("app.api.routes.settings.openai_monthly_budget_usd", None)
+    monkeypatch.setattr(
+        "app.api.routes.require_openai_api_key",
+        lambda: "sk-test-secret",
+    )
+
+    def fake_build_openai_client(api_key: str) -> object:
+        created_clients.append(api_key)
+        return object()
+
+    monkeypatch.setattr(
+        "app.api.routes.build_openai_client",
+        fake_build_openai_client,
+    )
+
+    response = client.post(
+        "/api/chat",
+        json={"question": "Emergency status?"},
+    )
+
+    assert response.status_code == 503
+    assert "OPENAI_MONTHLY_BUDGET_USD" in response.json()["detail"]
+    assert created_clients == []
 
 
 def test_report_returns_summary_for_intersection(client: TestClient) -> None:
