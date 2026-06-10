@@ -111,3 +111,25 @@ Evidence: 2026-06-10, Playwright QA at `http://127.0.0.1:3000/dashboard` with ro
 Run one spec-compliance review and one code-quality review on the changed frontend files before finalizing.
 
 Evidence: Spec-compliance review returned `APPROVED_WITH_CONCERNS`; its only concern was pending browser QA, now completed. Code-quality/regression-risk reviewer did not return after passive waits and was not used for the final verdict.
+
+### Follow-up Slice: Analysis Intake And Job Status
+
+**Files:**
+- Modify: `apps/web/lib/types.ts`
+- Modify: `apps/web/lib/api.ts`
+- Create: `apps/web/components/AnalysisIntakePanel.tsx`
+- Modify: `apps/web/components/DashboardShell.tsx`
+- Modify: `apps/web/components/DashboardRoute.tsx`
+- Modify: `apps/web/app/globals.css`
+- Test: `apps/web/lib/api.test.ts`
+- Test: `apps/web/components/DashboardShell.test.tsx`
+- Test: `apps/web/components/DashboardRoute.test.tsx`
+
+- [x] Add typed API client coverage for `GET /api/fixtures`,
+  `POST /api/fixtures/{fixture_id}/ingest`, `POST /api/uploads/analyze`, and
+  `GET /api/analysis-jobs/{job_id}`.
+- [x] Add a compact cockpit panel so operators can start fixture/upload analysis
+  and inspect the latest job state from `/dashboard`.
+- [x] Keep all copy simulation-only and avoid implying real signal control.
+- [x] Verify with `npm --workspace apps/web run test`; evidence on 2026-06-10:
+  5 test files and 41 tests passed.

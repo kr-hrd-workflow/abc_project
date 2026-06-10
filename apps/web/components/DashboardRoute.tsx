@@ -4,21 +4,29 @@ import { useEffect, useState } from "react";
 
 import { DashboardShell } from "./DashboardShell";
 import {
+  analyzeUpload,
   askQuestion,
   generateReport,
+  getAnalysisJob,
   getEvents,
+  getFixtures,
   getIntersectionStatus,
+  ingestFixture,
   recommendSignal,
   simulateSignal
 } from "../lib/api";
 import type {
+  AnalysisFixture,
+  AnalysisJob,
   ChatResponse,
+  FixtureIngestResult,
   IntersectionStatus,
   Recommendation,
   Report,
   ScenarioId,
   SimulationComparison,
-  TrafficEvent
+  TrafficEvent,
+  UploadAnalysisResult
 } from "../lib/types";
 import { SCENARIO_OPTIONS } from "../lib/types";
 
@@ -31,6 +39,9 @@ type DashboardData = {
   simulation: SimulationComparison;
   report: Report;
   chat: ChatResponse | null;
+  fixtures: AnalysisFixture[];
+  latestFixtureIngest: FixtureIngestResult | null;
+  latestAnalysisJob: AnalysisJob | null;
 };
 
 export function DashboardRoute() {
@@ -46,16 +57,27 @@ export function DashboardRoute() {
 
   async function loadDashboard(scenarioId: ScenarioId) {
     try {
-      const [status, events, recommendation, simulation, report] =
+      const [status, events, recommendation, simulation, report, fixtures] =
         await Promise.all([
           getIntersectionStatus(scenarioId),
           getEvents(scenarioId),
           recommendSignal(scenarioId),
           simulateSignal(scenarioId),
-          generateReport(scenarioId)
+          generateReport(scenarioId),
+          getFixtures()
         ]);
 
-      setData({ status, events, recommendation, simulation, report, chat: null });
+      setData({
+        status,
+        events,
+        recommendation,
+        simulation,
+        report,
+        chat: null,
+        fixtures,
+        latestFixtureIngest: null,
+        latestAnalysisJob: null
+      });
       setError(null);
     } catch (loadError) {
       setError(loadError instanceof Error ? loadError.message : "Failed to load dashboard");
@@ -80,6 +102,30 @@ export function DashboardRoute() {
   async function handleRunSimulation() {
     const simulation = await simulateSignal(selectedScenarioId);
     setData((current) => (current ? { ...current, simulation } : current));
+  }
+
+  async function handleIngestFixture(fixtureId: string) {
+    const latestFixtureIngest = await ingestFixture(fixtureId);
+    setData((current) =>
+      current ? { ...current, latestFixtureIngest } : current
+    );
+    return latestFixtureIngest;
+  }
+
+  async function handleAnalyzeUpload(file: File): Promise<UploadAnalysisResult> {
+    const result = await analyzeUpload(file);
+    setData((current) =>
+      current ? { ...current, latestAnalysisJob: result.job } : current
+    );
+    return result;
+  }
+
+  async function handleRefreshAnalysisJob(jobId: string) {
+    const latestAnalysisJob = await getAnalysisJob(jobId);
+    setData((current) =>
+      current ? { ...current, latestAnalysisJob } : current
+    );
+    return latestAnalysisJob;
   }
 
   async function handleScenarioChange(scenarioId: ScenarioId) {
@@ -131,11 +177,17 @@ export function DashboardRoute() {
       simulation={data.simulation}
       report={data.report}
       chat={data.chat}
+      fixtures={data.fixtures}
+      latestFixtureIngest={data.latestFixtureIngest}
+      latestAnalysisJob={data.latestAnalysisJob}
       selectedScenarioId={selectedScenarioId}
       scenarioOptions={SCENARIO_OPTIONS}
       scenarioLoading={scenarioLoading}
       onAskQuestion={handleAskQuestion}
       onGenerateReport={handleGenerateReport}
+      onIngestFixture={handleIngestFixture}
+      onAnalyzeUpload={handleAnalyzeUpload}
+      onRefreshAnalysisJob={handleRefreshAnalysisJob}
       onRefreshRecommendation={handleRefreshRecommendation}
       onRunSimulation={handleRunSimulation}
       onScenarioChange={(scenarioId) => void handleScenarioChange(scenarioId)}

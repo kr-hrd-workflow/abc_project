@@ -15,6 +15,7 @@
 - YOLO 형태의 비전 분석 어댑터 경계
 - SUMO/TraCI 형태의 시뮬레이션 어댑터 경계
 - 이미지/영상 샘플 업로드 및 분석 작업 상태 API
+- 대시보드에서 샘플 분석 인입 및 업로드 job 상태 확인
 - 추천, 시뮬레이션 비교, 채팅 답변, 리포트 생성
 - 한국어/영어 전환이 가능한 대시보드 UI
 - 교체 가능한 중앙 시뮬레이션 뷰포트
@@ -48,9 +49,10 @@
 
 현재 로컬 런타임 준비 상태 기준으로 YOLO/OpenCV 비전 섹션과
 SUMO/TraCI 시뮬레이션 섹션은 fixture/real-runtime readiness가 준비됐고,
-`openai`와 `pgvector` Python 패키지도 설치됐습니다. 다만 2026-06-09
-23:05 KST 재확인 기준으로 Docker daemon이 실행 중이 아니어서 현재
-PostgreSQL/pgvector readiness는 다시 녹색으로 증명되지 않았습니다.
+`openai`와 `pgvector` Python 패키지도 설치됐습니다. 2026-06-10 15:10 KST
+재확인 기준으로 Docker PostgreSQL 컨테이너가 실행 중이고,
+PostgreSQL `vector` 확장, `knowledge_chunks` 테이블, strict pgvector
+readiness, 로컬 pgvector 검색 스모크가 다시 녹색으로 증명됐습니다.
 `OPENAI_API_KEY`와 `OPENAI_MONTHLY_BUDGET_USD`는 나중에 설정합니다. 실제
 OpenAI 호출은 두 값이 설정된 뒤에만 실행해야 합니다.
 
@@ -65,8 +67,8 @@ OpenAI 호출은 두 값이 설정된 뒤에만 실행해야 합니다.
    - 시스템 설계, API 경계, Phase 2/3 확장 방향입니다.
 4. `docs/superpowers/plans/2026-06-08-phase-2-integration-notes.md`
    - YOLO, SUMO, OpenAI, pgvector로 넘어갈 때 지켜야 하는 통합 메모입니다.
-5. `docs/superpowers/plans/2026-06-08-dashboard-ui-implementation.md`
-   - 대시보드 UI 구현 현황과 검증 기록입니다.
+5. `docs/superpowers/plans/2026-06-10-dashboard-cockpit-redesign.md`
+   - 대시보드 cockpit UI 구현 현황과 검증 기록입니다.
 6. `docs/runtime-setup.md`
    - 실제 YOLO/OpenCV, SUMO/TraCI, OpenAI, pgvector 설정을 승인 후 진행할
      때 쓰는 체크리스트입니다.
@@ -114,9 +116,8 @@ Docker/PostgreSQL 상태:
 docker compose -f infra/docker-compose.yml ps
 ```
 
-2026-06-09 23:05 KST 기준 이 명령은 Docker daemon 미실행으로 실패했습니다.
-Docker Desktop을 시작한 뒤 PostgreSQL 컨테이너와 Alembic 마이그레이션을 다시
-확인해야 pgvector runtime을 출시 준비 완료로 주장할 수 있습니다.
+2026-06-10 15:10 KST 기준 Docker Desktop, PostgreSQL 컨테이너, Alembic
+마이그레이션, pgvector extension verification이 녹색으로 재확인됐습니다.
 
 런타임 준비 상태 확인:
 
@@ -232,11 +233,9 @@ GET  /api/analysis-jobs/{job_id}
   - 2026-06-09 기준 공식 OpenAI API 가격 문서에서 `gpt-5.5`와
     `text-embedding-3-small` 가격을 확인했습니다.
   - PostgreSQL `vector` 확장, `knowledge_chunks.embedding` 벡터 컬럼,
-    `npm run runtime:readiness:strict -- --section pgvector`는 이전 로컬
-    설정에서 검증됐습니다. 2026-06-09 23:05 KST 재확인 기준 현재 머신은
-    Docker daemon 미실행으로 pgvector readiness가 다시 녹색으로 증명되지
-    않았습니다.
-  - 1536차원 fake embedding으로 로컬 pgvector 검색 스모크를 실행했고,
+    `npm run runtime:readiness:strict -- --section pgvector`는 2026-06-10
+    15:10 KST 현재 로컬 Docker/PostgreSQL 환경에서 다시 검증됐습니다.
+  - 1536차원 fake embedding으로 로컬 pgvector 검색 스모크를 다시 실행했고,
     ambulance priority 질의에서 `emergency-priority-guide`가 반환됐습니다.
   - 로컬 기본값은 `KNOWLEDGE_SEARCH_MODE=keyword`입니다. 실제 임베딩 검색을
     켜려면 `.env`에서 `KNOWLEDGE_SEARCH_MODE=pgvector`로 바꾸고 OpenAI 키와

@@ -105,6 +105,13 @@ historical implementation recipe; this tracker is the current progress summary.
 - [x] AI/RAG pgvector gate: enable the PostgreSQL `vector` extension, add the
   `knowledge_chunks` vector schema, wire guarded pgvector-backed policy
   retrieval, and verify strict pgvector readiness.
+- [x] Current pgvector runtime re-check: on 2026-06-10, Docker PostgreSQL was
+  healthy, Alembic was at head, `npm run runtime:readiness:strict -- --section
+  pgvector` passed, and local pgvector policy retrieval returned
+  `emergency-priority-guide`.
+- [x] Dashboard intake slice: expose sample fixture ingestion, upload analysis,
+  and latest job status in the `/dashboard` cockpit while keeping the
+  simulation-only boundary explicit.
 - [x] OpenAI live gate is intentionally deferred until the user buys API
   credits and sets `OPENAI_API_KEY` plus `OPENAI_MONTHLY_BUDGET_USD`.
   - [x] Add `npm run openai:smoke` as the guarded smoke command for the live

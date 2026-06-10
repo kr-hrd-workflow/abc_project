@@ -2,11 +2,15 @@
 
 import { cleanup, render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
+import { useState } from "react";
 import { afterEach, describe, expect, test, vi } from "vitest";
 
 import { DashboardShell } from "./DashboardShell";
 import type {
   ChatResponse,
+  AnalysisFixture,
+  AnalysisJob,
+  FixtureIngestResult,
   IntersectionStatus,
   Recommendation,
   Report,
@@ -105,31 +109,79 @@ const chat: ChatResponse = {
   referenced_event_ids: [1]
 };
 
+const fixtures: AnalysisFixture[] = [
+  {
+    fixture_id: "emergency-east-frame",
+    scenario_id: "emergency",
+    media_type: "image",
+    filename: "emergency-east-frame.jpg",
+    description: "Sample frame with an emergency vehicle approaching from the east."
+  },
+  {
+    fixture_id: "blocked-intersection-clip",
+    scenario_id: "blocked",
+    media_type: "video",
+    filename: "blocked-intersection-clip.mp4",
+    description: "Sample clip representing a blocked four-way intersection."
+  }
+];
+
+const latestFixtureIngest: FixtureIngestResult = {
+  ...fixtures[0],
+  analysis_status: "ingested",
+  observation: { source: "opencv_yolo" },
+  status_id: 42,
+  event_ids: [1, 2]
+};
+
+const latestAnalysisJob: AnalysisJob = {
+  job_id: "job-123",
+  status: "completed",
+  filename: "intersection-frame.jpg",
+  media_type: "image/jpeg",
+  media_kind: "image",
+  scenario_id: "emergency",
+  observation_source: "opencv_yolo",
+  status_id: 42,
+  event_ids: [1, 2],
+  size_bytes: 128
+};
+
 afterEach(() => {
   cleanup();
   vi.restoreAllMocks();
   vi.unstubAllGlobals();
 });
 
+function dashboardProps(overrides = {}) {
+  return {
+    status,
+    events,
+    recommendation,
+    simulation,
+    report,
+    chat,
+    onAskQuestion: vi.fn(),
+    onGenerateReport: vi.fn(),
+    onRefreshRecommendation: vi.fn(),
+    onRunSimulation: vi.fn(),
+    selectedScenarioId: "emergency",
+    scenarioOptions: SCENARIO_OPTIONS,
+    scenarioLoading: false,
+    onScenarioChange: vi.fn(),
+    fixtures,
+    latestFixtureIngest: null,
+    latestAnalysisJob: null,
+    onIngestFixture: vi.fn(),
+    onAnalyzeUpload: vi.fn(),
+    onRefreshAnalysisJob: vi.fn(),
+    ...overrides
+  };
+}
+
 function renderDashboard(overrides = {}) {
   return render(
-    <DashboardShell
-      status={status}
-      events={events}
-      recommendation={recommendation}
-      simulation={simulation}
-      report={report}
-      chat={chat}
-      onAskQuestion={vi.fn()}
-      onGenerateReport={vi.fn()}
-      onRefreshRecommendation={vi.fn()}
-      onRunSimulation={vi.fn()}
-      selectedScenarioId="emergency"
-      scenarioOptions={SCENARIO_OPTIONS}
-      scenarioLoading={false}
-      onScenarioChange={vi.fn()}
-      {...overrides}
-    />
+    <DashboardShell {...dashboardProps(overrides)} />
   );
 }
 
@@ -321,6 +373,87 @@ describe("DashboardShell", () => {
     expect(screen.getByRole("link", { name: /시나리오/ }).getAttribute("href")).toBe(
       "#scenario-control"
     );
+  });
+
+  test("renders analysis intake fixtures and latest job status", () => {
+    renderDashboard({
+      latestFixtureIngest,
+      latestAnalysisJob
+    });
+
+    expect(screen.getByText("Analysis Intake")).toBeTruthy();
+    expect(screen.getByText("운영자가 샘플·업로드 분석을 시작하고 job 상태를 확인합니다.")).toBeTruthy();
+    expect(screen.getByRole("button", { name: /emergency-east-frame.jpg/ })).toBeTruthy();
+    expect(screen.getByRole("button", { name: /blocked-intersection-clip.mp4/ })).toBeTruthy();
+    expect(screen.getByText("Fixture ingested")).toBeTruthy();
+    expect(screen.getByText("job-123")).toBeTruthy();
+    expect(screen.getByText("completed")).toBeTruthy();
+    expect(screen.getByText("Simulation-only analysis")).toBeTruthy();
+  });
+
+  test("calls fixture ingestion and job refresh handlers from analysis intake", async () => {
+    const onIngestFixture = vi.fn().mockResolvedValue(latestFixtureIngest);
+    const onRefreshAnalysisJob = vi.fn().mockResolvedValue(latestAnalysisJob);
+    renderDashboard({
+      latestAnalysisJob,
+      onIngestFixture,
+      onRefreshAnalysisJob
+    });
+
+    await userEvent.click(screen.getByRole("button", { name: /emergency-east-frame.jpg/ }));
+    await userEvent.click(screen.getByRole("button", { name: "Job status refresh" }));
+
+    expect(onIngestFixture).toHaveBeenCalledWith("emergency-east-frame");
+    expect(onRefreshAnalysisJob).toHaveBeenCalledWith("job-123");
+  });
+
+  test("clears analysis intake status when the parent resets scenario data", async () => {
+    function StatefulDashboard() {
+      const [selectedScenarioId, setSelectedScenarioId] = useState("emergency");
+      const [fixtureIngest, setFixtureIngest] = useState<FixtureIngestResult | null>(null);
+      const [analysisJob, setAnalysisJob] = useState<AnalysisJob | null>(null);
+
+      return (
+        <DashboardShell
+          {...dashboardProps({
+            selectedScenarioId,
+            latestFixtureIngest: fixtureIngest,
+            latestAnalysisJob: analysisJob,
+            onIngestFixture: async () => {
+              setFixtureIngest(latestFixtureIngest);
+              return latestFixtureIngest;
+            },
+            onAnalyzeUpload: async () => {
+              setAnalysisJob(latestAnalysisJob);
+              return { job: latestAnalysisJob };
+            },
+            onScenarioChange: (scenarioId) => {
+              setSelectedScenarioId(scenarioId);
+              setFixtureIngest(null);
+              setAnalysisJob(null);
+            }
+          })}
+        />
+      );
+    }
+
+    render(<StatefulDashboard />);
+
+    await userEvent.click(screen.getByRole("button", { name: /emergency-east-frame.jpg/ }));
+    await userEvent.upload(
+      screen.getByLabelText("파일 업로드 분석"),
+      new File(["fixture"], "intersection-frame.jpg", { type: "image/jpeg" })
+    );
+
+    expect(await screen.findByText("Fixture ingested")).toBeTruthy();
+    expect(await screen.findByText("job-123")).toBeTruthy();
+
+    await userEvent.click(screen.getByRole("button", { name: /보행자/ }));
+
+    expect(screen.queryByText("Fixture ingested")).toBeNull();
+    expect(screen.queryByText("job-123")).toBeNull();
+    expect(screen.getByText("아직 인입된 샘플이 없습니다.")).toBeTruthy();
+    expect(screen.getByText("No job")).toBeTruthy();
   });
 
   test("keeps recommendation and simulation copy aligned to non-emergency data", () => {

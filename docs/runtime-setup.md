@@ -9,7 +9,7 @@ or chat output. Keep `.env` local.
 
 ## Current Gate Status
 
-Current as of 2026-06-09:
+Current as of 2026-06-10 15:10 KST:
 
 - [x] Real YOLO/OpenCV inference is verified locally with OpenCV
   4.13.0.92, Ultralytics 8.4.62, local ignored
@@ -25,10 +25,11 @@ Current as of 2026-06-09:
 - [x] OpenAI API pricing guidance is re-checked against official docs.
 - [x] OpenAI monthly budget readiness guard is implemented without live calls.
 - [x] The pgvector Python package is installed locally.
-- [ ] Current local pgvector readiness is green.
-  Historical pgvector setup evidence exists below, but the latest local
-  re-check at `2026-06-09 23:05 KST` reports PostgreSQL unavailable because the
-  Docker daemon is not running.
+- [x] Current local pgvector readiness is green.
+  The local Docker PostgreSQL container is healthy, Alembic is at head,
+  `vector` is present in `pg_extension`, `knowledge_chunks` exists, strict
+  pgvector readiness passes, and a local pgvector retrieval smoke returns the
+  expected emergency-priority guide.
 
 Run this anytime to see the current local state:
 
@@ -36,21 +37,20 @@ Run this anytime to see the current local state:
 npm run runtime:readiness
 ```
 
-Latest local re-check at `2026-06-09 23:05 KST`:
+Latest local re-check at `2026-06-10 15:10 KST`:
 
 - `npm run runtime:readiness` reports `openai ready=False` because
   `OPENAI_API_KEY` and `OPENAI_MONTHLY_BUDGET_USD` are missing.
-- `npm run runtime:readiness` reports `pgvector ready=False` because
-  `PostgreSQL vector extension` is missing from the currently reachable target.
+- `npm run runtime:readiness:strict -- --section pgvector` reports
+  `pgvector ready=True mode=database`.
 - `npm run runtime:readiness:strict -- --section openai` fails for the same
   OpenAI key and budget prerequisites.
-- `npm run runtime:readiness:strict -- --section pgvector` fails for
-  `PostgreSQL vector extension`.
 - `npm run openai:smoke` fails before constructing a live client, as intended,
   until both OpenAI gate values are present.
-- `docker compose -f infra/docker-compose.yml ps` fails to connect to
-  `/Users/chanpark/.docker/run/docker.sock`; start Docker Desktop before
-  claiming a current Postgres/pgvector runtime.
+- `docker compose -f infra/docker-compose.yml ps postgres` shows
+  `smart-intersection-postgres` healthy on `pgvector/pgvector:pg16`.
+- Direct database verification returns `vector` from `pg_extension`, and a
+  1536-dimensional local embedding smoke returns `emergency-priority-guide`.
 
 After an approved gate is expected to be complete, use the strict command to
 make missing requirements fail the shell step:
@@ -175,7 +175,8 @@ Approval required before setting `OPENAI_API_KEY` or calling external APIs.
 This gate is deferred as of 2026-06-09; the user will buy OpenAI API credits
 and add the key/budget values later.
 
-- [x] Approve OpenAI API-key setup and external API calls.
+- [x] Approve mocked OpenAI client-boundary setup without live external API
+  calls.
 - [x] Re-check current official OpenAI docs for model, Responses API, and
   embedding guidance before adding the mocked client boundary.
 - [x] Re-check pricing guidance before approved live API calls or production use.
@@ -255,7 +256,7 @@ Approval required before enabling database extensions or adding vector columns.
 apps/api/.venv/bin/python -m pip install -e "apps/api[ai]"
 ```
 
-- [ ] Current local PostgreSQL is running and the existing schema is applied:
+- [x] Current local PostgreSQL is running and the existing schema is applied:
 
 ```bash
 docker compose -f infra/docker-compose.yml up -d postgres
@@ -263,12 +264,12 @@ cd apps/api
 .venv/bin/alembic upgrade head
 ```
 
-- [ ] Enable and verify the PostgreSQL `vector` extension in the approved target
+- [x] Enable and verify the PostgreSQL `vector` extension in the approved target
   database for the current local runtime.
-- [ ] Verify `/api/runtime/readiness` no longer reports missing `pgvector`.
-- [ ] Verify `/api/runtime/readiness` no longer reports missing
+- [x] Verify `/api/runtime/readiness` no longer reports missing `pgvector`.
+- [x] Verify `/api/runtime/readiness` no longer reports missing
   `PostgreSQL vector extension`.
-- [ ] Run strict section verification:
+- [x] Run strict section verification:
 
 ```bash
 npm run runtime:readiness:strict -- --section pgvector
@@ -279,7 +280,7 @@ npm run runtime:readiness:strict -- --section pgvector
 - [x] Replace local keyword scoring with pgvector-backed embedding search.
 - [x] Keep deterministic recommendation category selection in backend rules.
 - [x] Add tests for embedding retrieval and no-invented-evidence behavior.
-- [ ] Update docs checkboxes after current pgvector readiness is proven again.
+- [x] Update docs checkboxes after current pgvector readiness is proven again.
 
 2026-06-09 pgvector evidence:
 
@@ -296,9 +297,11 @@ npm run runtime:readiness:strict -- --section pgvector
 - `KNOWLEDGE_SEARCH_MODE=pgvector` enables pgvector-backed retrieval; it still
   requires `OPENAI_API_KEY` and `OPENAI_MONTHLY_BUDGET_USD` before live
   embeddings can run.
-- Later local re-check at `2026-06-09 23:05 KST` could not reproduce a green
-  pgvector gate because Docker Desktop was not running. Treat the historical
-  bullets above as prior setup evidence, not proof of the current runtime.
+- Current local re-check at `2026-06-10 15:10 KST` reproduced the green
+  pgvector gate with Docker Desktop running, the PostgreSQL container healthy,
+  Alembic at head, `extname = vector`, `knowledge_chunks` present, strict
+  pgvector readiness passing, and a local policy retrieval smoke returning
+  `emergency-priority-guide`.
 
 ## Final Verification Before Completion
 

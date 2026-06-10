@@ -8747,6 +8747,149 @@ body {
   opacity: 1;
 }
 
+.launch-dashboard[data-layout="operations-cockpit"] .analysis-intake-panel {
+  display: grid;
+  gap: 12px;
+  border: 1px solid rgba(184, 200, 194, 0.13);
+  border-radius: var(--launch-radius);
+  padding: 12px;
+  background: rgba(255, 255, 255, 0.035);
+}
+
+.launch-dashboard[data-layout="operations-cockpit"] .analysis-intake-heading,
+.launch-dashboard[data-layout="operations-cockpit"] .analysis-status-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 12px;
+  align-items: start;
+}
+
+.launch-dashboard[data-layout="operations-cockpit"] .analysis-intake-heading span,
+.launch-dashboard[data-layout="operations-cockpit"] .analysis-status-grid span {
+  color: var(--launch-teal);
+  font-size: 0.72rem;
+  font-weight: 900;
+  text-transform: uppercase;
+}
+
+.launch-dashboard[data-layout="operations-cockpit"] .analysis-intake-heading h2 {
+  margin: 2px 0 0;
+  color: var(--launch-text);
+  font-size: 1rem;
+  letter-spacing: 0;
+}
+
+.launch-dashboard[data-layout="operations-cockpit"] .analysis-intake-heading strong {
+  justify-self: end;
+  border: 1px solid rgba(215, 165, 80, 0.44);
+  border-radius: 999px;
+  padding: 6px 9px;
+  color: rgba(255, 222, 163, 0.94);
+  font-size: 0.72rem;
+  background: rgba(215, 165, 80, 0.1);
+}
+
+.launch-dashboard[data-layout="operations-cockpit"] .analysis-intake-panel p,
+.launch-dashboard[data-layout="operations-cockpit"] .analysis-status-grid small,
+.launch-dashboard[data-layout="operations-cockpit"] .analysis-upload-row small {
+  margin: 0;
+  color: rgba(232, 242, 238, 0.68);
+  font-size: 0.78rem;
+  line-height: 1.4;
+}
+
+.launch-dashboard[data-layout="operations-cockpit"] .analysis-fixture-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.launch-dashboard[data-layout="operations-cockpit"] .fixture-ingest-button {
+  display: grid;
+  gap: 5px;
+  min-height: 112px;
+  border: 1px solid rgba(184, 200, 194, 0.13);
+  border-radius: var(--launch-radius);
+  padding: 11px;
+  color: var(--launch-muted);
+  background: rgba(0, 0, 0, 0.16);
+  text-align: left;
+}
+
+.launch-dashboard[data-layout="operations-cockpit"] .fixture-ingest-button span,
+.launch-dashboard[data-layout="operations-cockpit"] .fixture-ingest-button em {
+  color: var(--launch-teal);
+  font-size: 0.7rem;
+  font-style: normal;
+  font-weight: 900;
+}
+
+.launch-dashboard[data-layout="operations-cockpit"] .fixture-ingest-button strong,
+.launch-dashboard[data-layout="operations-cockpit"] .analysis-status-grid strong {
+  color: var(--launch-text);
+  font-size: 0.86rem;
+}
+
+.launch-dashboard[data-layout="operations-cockpit"] .fixture-ingest-button small {
+  color: rgba(232, 242, 238, 0.62);
+  line-height: 1.3;
+}
+
+.launch-dashboard[data-layout="operations-cockpit"] .analysis-upload-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 10px;
+  align-items: center;
+  border: 1px dashed rgba(184, 200, 194, 0.2);
+  border-radius: var(--launch-radius);
+  padding: 10px;
+}
+
+.launch-dashboard[data-layout="operations-cockpit"] .analysis-upload-row label {
+  display: grid;
+  gap: 7px;
+  min-width: 0;
+  color: var(--launch-text);
+  font-size: 0.78rem;
+  font-weight: 900;
+}
+
+.launch-dashboard[data-layout="operations-cockpit"] .analysis-upload-row input {
+  max-width: 100%;
+  color: var(--launch-muted);
+  font-size: 0.78rem;
+}
+
+.launch-dashboard[data-layout="operations-cockpit"] .analysis-status-grid {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.launch-dashboard[data-layout="operations-cockpit"] .analysis-status-grid > div {
+  display: grid;
+  gap: 5px;
+  border: 1px solid rgba(184, 200, 194, 0.13);
+  border-radius: var(--launch-radius);
+  padding: 10px;
+  background: rgba(0, 0, 0, 0.12);
+}
+
+.launch-dashboard[data-layout="operations-cockpit"] .job-refresh-button {
+  justify-self: start;
+  border: 1px solid rgba(184, 200, 194, 0.18);
+  border-radius: var(--launch-radius);
+  padding: 7px 10px;
+  color: var(--launch-text);
+  background: rgba(255, 255, 255, 0.045);
+}
+
+.launch-dashboard[data-layout="operations-cockpit"] .analysis-intake-error {
+  border: 1px solid rgba(255, 111, 111, 0.36);
+  border-radius: var(--launch-radius);
+  padding: 8px 10px;
+  color: rgba(255, 205, 205, 0.95);
+  background: rgba(120, 10, 10, 0.16);
+}
+
 @media (max-width: 1240px) {
   .launch-dashboard[data-layout="operations-cockpit"] .command-row,
   .launch-dashboard[data-layout="operations-cockpit"] .operation-row {
@@ -8813,5 +8956,16 @@ body {
 
   .launch-dashboard[data-layout="operations-cockpit"] .operation-state-card-grid {
     grid-template-columns: 1fr;
+  }
+
+  .launch-dashboard[data-layout="operations-cockpit"] .analysis-fixture-grid,
+  .launch-dashboard[data-layout="operations-cockpit"] .analysis-status-grid,
+  .launch-dashboard[data-layout="operations-cockpit"] .analysis-upload-row,
+  .launch-dashboard[data-layout="operations-cockpit"] .analysis-intake-heading {
+    grid-template-columns: 1fr;
+  }
+
+  .launch-dashboard[data-layout="operations-cockpit"] .analysis-intake-heading strong {
+    justify-self: start;
   }
 }

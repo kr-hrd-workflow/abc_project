@@ -330,8 +330,8 @@ replaceable when real SUMO/TraCI execution is approved.
 
 ## Implemented Phase 3 Slice: Local Policy Evidence Retrieval
 
-The API now has local Phase 3 evidence-retrieval groundwork without requiring an
-OpenAI API key or pgvector runtime:
+The original API Phase 3 evidence-retrieval slice added local groundwork that
+could run without an OpenAI API key or pgvector database runtime:
 
 - `apps/api/app/services/knowledge.py` ingests built-in policy and operation
   guide chunks for emergency priority, pedestrian safety, and blocked
@@ -351,9 +351,12 @@ OpenAI API key or pgvector runtime:
 - `OPENAI_MONTHLY_BUDGET_USD` is now part of OpenAI readiness, so live calls
   require both API-key approval and a project spend-limit decision
 
-This does not store API keys, call external AI services, enable the PostgreSQL
-`vector` extension, or perform live embedding search. Those remain gated by
-API-key approval, spend-limit decisions, and target database setup.
+That original slice did not store API keys, call external AI services, enable
+the PostgreSQL `vector` extension, or perform live embedding search. The later
+approved pgvector database gate now enables `vector`, applies the
+`knowledge_chunks` schema, and verifies local embedding search with deterministic
+test embeddings; live OpenAI calls remain gated by API-key approval and
+spend-limit decisions.
 
 ## Implemented Slice: Runtime Gate Readiness
 
@@ -374,8 +377,11 @@ which optional runtime gates are available before trying live integrations:
 
 The readiness slice itself only made the gates observable. Later local
 verification installed OpenCV/Ultralytics/model weights, SUMO/TraCI, and the
-OpenAI/pgvector Python packages, but it still does not store API keys, call
-external AI services, or enable the PostgreSQL `vector` extension.
+OpenAI/pgvector Python packages. The approved pgvector database gate now enables
+the PostgreSQL `vector` extension, applies the `knowledge_chunks` schema, and was
+re-verified on 2026-06-10 with strict pgvector readiness plus a local policy
+retrieval smoke. It still does not store API keys or call external AI services;
+live OpenAI remains gated by `OPENAI_API_KEY` and `OPENAI_MONTHLY_BUDGET_USD`.
 
 Use `docs/runtime-setup.md` for the step-by-step approval and validation
 checklist before marking any live runtime gate complete.

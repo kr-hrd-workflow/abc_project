@@ -5,17 +5,22 @@ import { useGSAP } from "@gsap/react";
 import gsap from "gsap";
 
 import type {
+  AnalysisFixture,
+  AnalysisJob,
   ChatResponse,
+  FixtureIngestResult,
   IntersectionStatus,
   Recommendation,
   Report,
   ScenarioId,
   ScenarioOption,
   SimulationComparison,
-  TrafficEvent
+  TrafficEvent,
+  UploadAnalysisResult
 } from "../lib/types";
 import type { Locale } from "../lib/i18n";
 import { copy } from "../lib/i18n";
+import { AnalysisIntakePanel } from "./AnalysisIntakePanel";
 import { ChatReportPanel } from "./ChatReportPanel";
 import { DigitalTwin } from "./DigitalTwin";
 import { EventTimeline } from "./EventTimeline";
@@ -30,11 +35,17 @@ export type DashboardShellProps = {
   simulation: SimulationComparison;
   report: Report;
   chat: ChatResponse | null;
+  fixtures: AnalysisFixture[];
+  latestFixtureIngest: FixtureIngestResult | null;
+  latestAnalysisJob: AnalysisJob | null;
   selectedScenarioId: ScenarioId;
   scenarioOptions: ScenarioOption[];
   scenarioLoading: boolean;
   onAskQuestion: (question: string) => Promise<void>;
   onGenerateReport: () => Promise<void>;
+  onIngestFixture: (fixtureId: string) => Promise<FixtureIngestResult>;
+  onAnalyzeUpload: (file: File) => Promise<UploadAnalysisResult>;
+  onRefreshAnalysisJob: (jobId: string) => Promise<AnalysisJob>;
   onRefreshRecommendation: () => Promise<void>;
   onRunSimulation: () => Promise<void>;
   onScenarioChange: (scenarioId: ScenarioId) => void;
@@ -47,11 +58,17 @@ export function DashboardShell({
   simulation,
   report,
   chat,
+  fixtures,
+  latestFixtureIngest,
+  latestAnalysisJob,
   selectedScenarioId,
   scenarioOptions,
   scenarioLoading,
   onAskQuestion,
   onGenerateReport,
+  onIngestFixture,
+  onAnalyzeUpload,
+  onRefreshAnalysisJob,
   onRefreshRecommendation,
   onRunSimulation,
   onScenarioChange
@@ -333,6 +350,16 @@ export function DashboardShell({
           })}
         </div>
       </section>
+
+      <AnalysisIntakePanel
+        fixtures={fixtures}
+        latestFixtureIngest={latestFixtureIngest}
+        latestAnalysisJob={latestAnalysisJob}
+        locale={locale}
+        onIngestFixture={onIngestFixture}
+        onAnalyzeUpload={onAnalyzeUpload}
+        onRefreshAnalysisJob={onRefreshAnalysisJob}
+      />
     </main>
   );
 }

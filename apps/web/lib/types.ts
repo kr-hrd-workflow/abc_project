@@ -112,3 +112,40 @@ export type Report = {
   summary: string;
   generated_at: string;
 };
+
+export type AnalysisFixture = {
+  fixture_id: string;
+  scenario_id: ScenarioId;
+  media_type: "image" | "video";
+  filename: string;
+  description: string;
+};
+
+export type FixtureIngestResult = AnalysisFixture & {
+  analysis_status: "ingested";
+  observation: Record<string, unknown>;
+  status_id: number;
+  event_ids: number[];
+};
+
+export type AnalysisJob = {
+  job_id: string;
+  status: string;
+  filename: string;
+  media_type: string;
+  media_kind: "image" | "video";
+  scenario_id: ScenarioId;
+  observation_source: string;
+  status_id: number;
+  event_ids: number[];
+  size_bytes: number;
+};
+
+export type UploadAnalysisResult = {
+  job_id: string;
+  analysis_status: "completed";
+  job: AnalysisJob;
+  observation: Record<string, unknown>;
+  status_id: number;
+  event_ids: number[];
+};

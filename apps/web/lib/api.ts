@@ -1,11 +1,15 @@
 import type {
+  AnalysisFixture,
+  AnalysisJob,
   ChatResponse,
+  FixtureIngestResult,
   IntersectionStatus,
   Recommendation,
   Report,
   ScenarioId,
   SimulationComparison,
-  TrafficEvent
+  TrafficEvent,
+  UploadAnalysisResult
 } from "./types";
 
 const API_BASE_URL =
@@ -89,4 +93,32 @@ export async function askQuestion(
 
 export async function generateReport(scenarioId?: ScenarioId): Promise<Report> {
   return requestJson<Report>(withScenario("/api/report", scenarioId), { method: "POST" });
+}
+
+export async function getFixtures(): Promise<AnalysisFixture[]> {
+  return requestJson<AnalysisFixture[]>("/api/fixtures");
+}
+
+export async function ingestFixture(fixtureId: string): Promise<FixtureIngestResult> {
+  return requestJson<FixtureIngestResult>(
+    `/api/fixtures/${encodeURIComponent(fixtureId)}/ingest`,
+    { method: "POST" }
+  );
+}
+
+export async function analyzeUpload(file: File): Promise<UploadAnalysisResult> {
+  const filename = encodeURIComponent(file.name || "uploaded-sample");
+  return requestJson<UploadAnalysisResult>(`/api/uploads/analyze?filename=${filename}`, {
+    method: "POST",
+    body: file,
+    headers: {
+      "Content-Type": file.type || "application/octet-stream"
+    }
+  });
+}
+
+export async function getAnalysisJob(jobId: string): Promise<AnalysisJob> {
+  return requestJson<AnalysisJob>(
+    `/api/analysis-jobs/${encodeURIComponent(jobId)}`
+  );
 }

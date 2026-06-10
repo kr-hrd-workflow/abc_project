@@ -1,6 +1,14 @@
 import { afterEach, describe, expect, test, vi } from "vitest";
 
-import { askQuestion, generateReport, recommendSignal } from "./api";
+import {
+  analyzeUpload,
+  askQuestion,
+  generateReport,
+  getAnalysisJob,
+  getFixtures,
+  ingestFixture,
+  recommendSignal
+} from "./api";
 
 afterEach(() => {
   vi.restoreAllMocks();
@@ -100,6 +108,74 @@ describe("dashboard API client", () => {
 
     await expect(generateReport()).rejects.toThrow(
       "Database unavailable. Start PostgreSQL and run migrations."
+    );
+  });
+
+  test("loads sample analysis fixtures", async () => {
+    const fetchMock = vi
+      .spyOn(globalThis, "fetch")
+      .mockReturnValue(mockJsonResponse([{ fixture_id: "emergency-east-frame" }]));
+
+    const fixtures = await getFixtures();
+
+    expect(fixtures).toEqual([{ fixture_id: "emergency-east-frame" }]);
+    expect(fetchMock).toHaveBeenCalledWith(
+      "http://127.0.0.1:8000/api/fixtures",
+      expect.objectContaining({
+        cache: "no-store"
+      })
+    );
+  });
+
+  test("posts fixture ingestion requests", async () => {
+    const fetchMock = vi
+      .spyOn(globalThis, "fetch")
+      .mockReturnValue(mockJsonResponse({ analysis_status: "ingested" }));
+
+    await ingestFixture("emergency-east-frame");
+
+    expect(fetchMock).toHaveBeenCalledWith(
+      "http://127.0.0.1:8000/api/fixtures/emergency-east-frame/ingest",
+      expect.objectContaining({
+        method: "POST",
+        cache: "no-store"
+      })
+    );
+  });
+
+  test("uploads analysis samples with filename and media type", async () => {
+    const file = new File(["sample"], "intersection-frame.jpg", {
+      type: "image/jpeg"
+    });
+    const fetchMock = vi
+      .spyOn(globalThis, "fetch")
+      .mockReturnValue(mockJsonResponse({ job_id: "job-1" }));
+
+    await analyzeUpload(file);
+
+    expect(fetchMock).toHaveBeenCalledWith(
+      "http://127.0.0.1:8000/api/uploads/analyze?filename=intersection-frame.jpg",
+      expect.objectContaining({
+        method: "POST",
+        body: file,
+        headers: expect.objectContaining({ "Content-Type": "image/jpeg" }),
+        cache: "no-store"
+      })
+    );
+  });
+
+  test("loads analysis job status by id", async () => {
+    const fetchMock = vi
+      .spyOn(globalThis, "fetch")
+      .mockReturnValue(mockJsonResponse({ job_id: "job-1", status: "completed" }));
+
+    await getAnalysisJob("job-1");
+
+    expect(fetchMock).toHaveBeenCalledWith(
+      "http://127.0.0.1:8000/api/analysis-jobs/job-1",
+      expect.objectContaining({
+        cache: "no-store"
+      })
     );
   });
 });

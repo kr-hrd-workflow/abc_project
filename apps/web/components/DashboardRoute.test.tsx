@@ -7,8 +7,11 @@ import { DashboardRoute } from "./DashboardRoute";
 
 vi.mock("../lib/api", () => ({
   askQuestion: vi.fn(),
+  analyzeUpload: vi.fn(),
   generateReport: vi.fn().mockRejectedValue(new Error("not used")),
+  getAnalysisJob: vi.fn(),
   getEvents: vi.fn().mockRejectedValue(new Error("not used")),
+  getFixtures: vi.fn().mockRejectedValue(new Error("not used")),
   getIntersectionStatus: vi
     .fn()
     .mockRejectedValue(
@@ -16,6 +19,7 @@ vi.mock("../lib/api", () => ({
         "API request failed: 503 /api/intersection/status: Database unavailable. Start PostgreSQL and run migrations."
       )
     ),
+  ingestFixture: vi.fn(),
   recommendSignal: vi.fn().mockRejectedValue(new Error("not used")),
   simulateSignal: vi.fn().mockRejectedValue(new Error("not used"))
 }));
