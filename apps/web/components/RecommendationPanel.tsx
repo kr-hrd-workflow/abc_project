@@ -51,11 +51,14 @@ export function RecommendationPanel({
           <span>{t.simulationOnly}</span>
           <button
             type="button"
+            className={`motion-icon-button motion-pressable refresh-button${
+              refreshState === "running" ? " running" : ""
+            }`}
             aria-label={t.refreshRecommendation}
             onClick={handleRefreshRecommendation}
             disabled={refreshState === "running"}
           >
-            {refreshState === "running" ? "..." : "i"}
+            <span aria-hidden="true" className="refresh-glyph" />
           </button>
           {refreshState === "running" ? (
             <small role="status">

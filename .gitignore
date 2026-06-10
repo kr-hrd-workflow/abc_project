@@ -45,3 +45,4 @@ models/
 # Local analysis scratch space
 tmp/
 .superpowers/
+output/

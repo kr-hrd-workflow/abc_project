@@ -112,7 +112,11 @@ export function ChatReportPanel({
             disabled={chatState === "submitting"}
             aria-describedby={chatError ? "dashboard-chat-error" : undefined}
           />
-          <button type="submit" disabled={!question.trim() || chatState === "submitting"}>
+          <button
+            type="submit"
+            className="motion-pressable"
+            disabled={!question.trim() || chatState === "submitting"}
+          >
             <span>{chatState === "submitting" ? t.sending : t.send}</span>
             <span aria-hidden="true" className="send-icon" />
           </button>
@@ -133,7 +137,7 @@ export function ChatReportPanel({
         </div>
         <button
           type="button"
-          className="report-button"
+          className="report-button motion-pressable"
           onClick={handleGenerateReport}
           disabled={reportState === "generating"}
         >
@@ -156,7 +160,11 @@ export function ChatReportPanel({
             </div>
           </dl>
         </div>
-        <button type="button" className="download-row" onClick={handleDownloadReport}>
+        <button
+          type="button"
+          className="download-row motion-pressable"
+          onClick={handleDownloadReport}
+        >
           <span aria-hidden="true" className="download-icon" />
           {t.download}
           <span aria-hidden="true" className="chevron" />

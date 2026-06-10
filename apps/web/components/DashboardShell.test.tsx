@@ -134,19 +134,20 @@ function renderDashboard(overrides = {}) {
 }
 
 describe("DashboardShell", () => {
-  test("renders a clear dashboard heading and scenario rail", () => {
+  test("renders the reduced-neon operations cockpit structure", () => {
     const { container } = renderDashboard({ selectedScenarioId: "emergency" });
 
     expect(container.querySelector('[data-theme="launch-cinematic"]')).toBeTruthy();
+    expect(container.querySelector('[data-layout="operations-cockpit"]')).toBeTruthy();
     expect(
       screen.getByRole("heading", { level: 1, name: "스마트 교차로 운영 시스템" })
     ).toBeTruthy();
-    expect(screen.getByLabelText("시나리오 08:42")).toBeTruthy();
-    expect(screen.getByText("긴급차량 우선 통과")).toBeTruthy();
-    expect(screen.getByLabelText("운영 흐름")).toBeTruthy();
-    expect(screen.getByText("감지")).toBeTruthy();
-    expect(screen.getByText("시뮬레이션")).toBeTruthy();
-    expect(screen.getByText("브리핑")).toBeTruthy();
+    expect(screen.getByLabelText("Scenario Rail")).toBeTruthy();
+    expect(screen.getByText("Incident Brief Spine")).toBeTruthy();
+    expect(screen.getByLabelText("Simulation Viewport")).toBeTruthy();
+    expect(screen.getByText("Response Plan")).toBeTruthy();
+    expect(screen.getAllByText("긴급차량 우선 통과").length).toBeGreaterThanOrEqual(1);
+    expect(screen.getByText("Simulation only / No real signal control")).toBeTruthy();
   });
 
   test("renders the approved safety and simulation viewport copy", () => {
@@ -154,6 +155,98 @@ describe("DashboardShell", () => {
 
     expect(screen.getAllByText("실제 신호 제어 없음").length).toBeGreaterThanOrEqual(1);
     expect(screen.getByText(/교체형 시뮬레이션 뷰/)).toBeTruthy();
+  });
+
+  test("lets the operator switch between AI automatic and admin manual operation modes", async () => {
+    renderDashboard();
+
+    const aiButton = screen.getByRole("button", { name: "AI 자동 운영" });
+    const manualButton = screen.getByRole("button", { name: "관리자 직접 운영" });
+
+    expect(aiButton.getAttribute("aria-pressed")).toBe("true");
+    expect(screen.getByText("AI가 시뮬레이션 권고를 자동으로 준비합니다.")).toBeTruthy();
+
+    await userEvent.click(manualButton);
+
+    expect(aiButton.getAttribute("aria-pressed")).toBe("false");
+    expect(manualButton.getAttribute("aria-pressed")).toBe("true");
+    expect(screen.getByText("관리자가 권고안을 검토하고 직접 실행 여부를 판단합니다.")).toBeTruthy();
+  });
+
+  test("shows operational details for automatic and manual modes", async () => {
+    renderDashboard();
+
+    expect(screen.getByText("자동 준비 중")).toBeTruthy();
+    expect(screen.getByText("신뢰도 92%")).toBeTruthy();
+    expect(screen.getByText("다음 권고 emergency_priority")).toBeTruthy();
+
+    await userEvent.click(screen.getByRole("button", { name: "관리자 직접 운영" }));
+
+    expect(screen.getByText("승인 보류")).toBeTruthy();
+    expect(screen.getByText("관리자 검토 필요")).toBeTruthy();
+    expect(screen.getByText("감사 로그 준비")).toBeTruthy();
+  });
+
+  test("exposes natural motion hooks for the operation mode transition", async () => {
+    const { container } = renderDashboard();
+
+    const toggle = screen.getByRole("group", { name: "운영 모드" });
+    const aiButton = screen.getByRole("button", { name: "AI 자동 운영" });
+    const manualButton = screen.getByRole("button", { name: "관리자 직접 운영" });
+    const stateCards = screen.getByLabelText("운영 모드 상태");
+
+    expect(toggle.getAttribute("data-mode")).toBe("ai");
+    expect(toggle.className).toContain("motion-toggle");
+    expect(aiButton.className).toContain("motion-pressable");
+    expect(manualButton.className).toContain("motion-pressable");
+    expect(stateCards.getAttribute("data-mode")).toBe("ai");
+    expect(container.querySelectorAll(".operation-state-card").length).toBe(3);
+
+    await userEvent.click(manualButton);
+
+    expect(toggle.getAttribute("data-mode")).toBe("manual");
+    expect(stateCards.getAttribute("data-mode")).toBe("manual");
+  });
+
+  test("marks high-frequency dashboard actions as responsive pressable surfaces", () => {
+    renderDashboard();
+
+    expect(screen.getByRole("button", { name: "추천 새로고침" }).className).toContain(
+      "motion-icon-button"
+    );
+    expect(screen.getByRole("button", { name: "전송" }).className).toContain(
+      "motion-pressable"
+    );
+    expect(screen.getByRole("button", { name: /리포트 생성/ }).className).toContain(
+      "motion-pressable"
+    );
+    expect(screen.getByRole("button", { name: "다운로드" }).className).toContain(
+      "motion-pressable"
+    );
+    expect(screen.getByRole("link", { name: /알림/ }).className).toContain(
+      "motion-pressable"
+    );
+    expect(screen.getByRole("button", { name: /긴급차량/ }).className).toContain(
+      "motion-pressable"
+    );
+  });
+
+  test("adds dense brief-spine evidence instead of leaving the incident rail empty", () => {
+    renderDashboard();
+
+    expect(screen.getByText("우선순위 큐")).toBeTruthy();
+    expect(screen.getByText("증거 흐름")).toBeTruthy();
+    expect(screen.getByText("CCTV Frame")).toBeTruthy();
+    expect(screen.getByText("SUMO Delta")).toBeTruthy();
+  });
+
+  test("promotes the response plan into a focus-first command stack", () => {
+    renderDashboard();
+
+    expect(screen.getByText("Decision focus")).toBeTruthy();
+    expect(screen.getByText("권고안 검토")).toBeTruthy();
+    expect(screen.getByText("실행 전 승인 필요")).toBeTruthy();
+    expect(screen.getByText("Response stack")).toBeTruthy();
   });
 
   test("renders the replaceable SUMO simulation viewport boundary", () => {
@@ -184,12 +277,10 @@ describe("DashboardShell", () => {
 
     await userEvent.click(screen.getByRole("button", { name: "EN" }));
 
-    expect(screen.getByText("Event Timeline")).toBeTruthy();
+    expect(screen.getByText("Incident Brief Spine")).toBeTruthy();
     expect(screen.getAllByText("No real signal control").length).toBeGreaterThanOrEqual(1);
-    expect(screen.getByLabelText("Operator flow")).toBeTruthy();
-    expect(screen.getByText("Sense")).toBeTruthy();
-    expect(screen.getByText("Simulate")).toBeTruthy();
-    expect(screen.getByText("Brief")).toBeTruthy();
+    expect(screen.getByText("AI Automatic")).toBeTruthy();
+    expect(screen.getByText("Admin Manual")).toBeTruthy();
     expect(screen.getByRole("link", { name: "Alert" })).toBeTruthy();
     expect(screen.getByRole("link", { name: "Reports" })).toBeTruthy();
     expect(screen.getByRole("link", { name: "Scenarios" })).toBeTruthy();

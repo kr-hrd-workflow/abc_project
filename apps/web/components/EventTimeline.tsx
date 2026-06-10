@@ -15,6 +15,9 @@ export function EventTimeline({ events, locale }: EventTimelineProps) {
         new Date(right.occurred_at).getTime() - new Date(left.occurred_at).getTime()
     )
     .slice(0, 5);
+  const criticalCount = events.filter((event) => event.severity === "critical").length;
+  const warningCount = events.filter((event) => event.severity === "warning").length;
+  const latestEvent = recentEvents[0];
 
   return (
     <section id="events" className="panel timeline-panel">
@@ -50,6 +53,38 @@ export function EventTimeline({ events, locale }: EventTimelineProps) {
             />
           </article>
         ))}
+      </div>
+      <div className="brief-spine-dense" aria-label={locale === "ko" ? "현장 증거 요약" : "Field evidence summary"}>
+        <div className="priority-queue-card">
+          <span>{locale === "ko" ? "우선순위 큐" : "Priority queue"}</span>
+          <strong>
+            {locale === "ko"
+              ? `${criticalCount} 긴급 / ${warningCount} 경고`
+              : `${criticalCount} critical / ${warningCount} warning`}
+          </strong>
+          <small>
+            {latestEvent
+              ? latestEvent.recommendation
+              : locale === "ko"
+                ? "대기 중인 이벤트 없음"
+                : "No queued event"}
+          </small>
+        </div>
+        <div className="evidence-trail-card">
+          <span>{locale === "ko" ? "증거 흐름" : "Evidence trail"}</span>
+          <div>
+            <small>CCTV Frame</small>
+            <strong>{latestEvent ? formatTime(latestEvent.occurred_at) : "--:--:--"}</strong>
+          </div>
+          <div>
+            <small>SUMO Delta</small>
+            <strong>{locale === "ko" ? "대기열 비교 준비" : "Queue comparison ready"}</strong>
+          </div>
+          <div>
+            <small>{locale === "ko" ? "운영자 노트" : "Operator note"}</small>
+            <strong>{locale === "ko" ? "인수인계 가능" : "Ready for handoff"}</strong>
+          </div>
+        </div>
       </div>
       <p className="list-footnote">
         {events.length > recentEvents.length
