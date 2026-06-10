@@ -336,6 +336,30 @@ def test_chat_returns_congestion_answer_with_event_references(client: TestClient
         assert chat_log.referenced_event_ids_json == payload["referenced_event_ids"]
 
 
+def test_chat_returns_structured_agent_sections(client: TestClient) -> None:
+    response = client.post(
+        "/api/chat",
+        json={"question": "현재 상황과 추천 근거를 알려줘"},
+    )
+
+    assert response.status_code == 200
+    sections = response.json()["sections"]
+    assert set(sections) == {
+        "current_situation",
+        "recommended_action",
+        "recommendation_rationale",
+        "authority_limit",
+        "simulation_result",
+    }
+    assert "No real traffic signal control" in sections["authority_limit"]
+    assert sections["recommendation_rationale"]
+
+    with TestingSessionLocal() as session:
+        assert session.scalar(select(models.ChatLog)) is not None
+        assert session.scalar(select(models.SignalRecommendation)) is None
+        assert session.scalar(select(models.SimulationRun)) is None
+
+
 def test_emergency_chat_answer_includes_safety_boundary(client: TestClient) -> None:
     response = client.post("/api/chat", json={"question": "Emergency status?"})
 

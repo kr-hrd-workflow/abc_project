@@ -112,6 +112,10 @@ historical implementation recipe; this tracker is the current progress summary.
 - [x] Dashboard intake slice: expose sample fixture ingestion, upload analysis,
   and latest job status in the `/dashboard` cockpit while keeping the
   simulation-only boundary explicit.
+- [x] Agent service orchestration slice: add the local FastAPI
+  `agent_service` layer and structured `/api/chat` sections for current
+  situation, recommended action, rationale, authority limit, and simulation
+  result without enabling live OpenAI calls.
 - [x] OpenAI live gate is intentionally deferred until the user buys API
   credits and sets `OPENAI_API_KEY` plus `OPENAI_MONTHLY_BUDGET_USD`.
   - [x] Add `npm run openai:smoke` as the guarded smoke command for the live

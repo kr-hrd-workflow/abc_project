@@ -93,9 +93,38 @@ export function ChatReportPanel({
           <div className="message-row">
             <span className="agent-avatar" aria-hidden="true" />
             <div className="message-bubble assistant-message">
-              <p className={chat ? "" : "chat-empty"}>
-                {chat?.answer ?? t.chatEmpty}
-              </p>
+              {chat?.sections ? (
+                <div className="agent-sections">
+                  <section>
+                    <h3>{t.agentCurrentSituation}</h3>
+                    <p>{chat.sections.current_situation}</p>
+                  </section>
+                  <section>
+                    <h3>{t.agentRecommendedAction}</h3>
+                    <p>{chat.sections.recommended_action}</p>
+                  </section>
+                  <section>
+                    <h3>{t.agentRecommendationRationale}</h3>
+                    <ul>
+                      {chat.sections.recommendation_rationale.map((item, index) => (
+                        <li key={`${item}-${index}`}>{item}</li>
+                      ))}
+                    </ul>
+                  </section>
+                  <section>
+                    <h3>{t.agentAuthorityLimit}</h3>
+                    <p>{chat.sections.authority_limit}</p>
+                  </section>
+                  <section>
+                    <h3>{t.agentSimulationResult}</h3>
+                    <p>{chat.sections.simulation_result}</p>
+                  </section>
+                </div>
+              ) : (
+                <p className={chat ? "" : "chat-empty"}>
+                  {chat?.answer ?? t.chatEmpty}
+                </p>
+              )}
               <time>08:42</time>
             </div>
           </div>

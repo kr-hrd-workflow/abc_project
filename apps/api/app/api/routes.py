@@ -21,6 +21,7 @@ from app.db.session import SessionLocal, get_session
 from app.domain.schemas import ChatRequest, ChatResponse
 from app.scenarios.fixtures import SAMPLE_INPUT_FIXTURES, fixture_to_payload
 from app.services.chat import answer_question
+from app.services.agent_service import build_agent_sections
 from app.services.knowledge import (
     KnowledgeChunk,
     ingest_policy_documents,
@@ -305,8 +306,22 @@ def chat(
     event_ids = [event.id for event in events]
     policy_evidence = _retrieve_policy_evidence(request.question, session)
     answer = answer_question(request.question, observation, policy_evidence)
+    action, plan, evidence = recommend_signal_action(observation)
+    simulation = simulation_adapter.compare_signal_plan(scenario_id)
+    sections = build_agent_sections(
+        observation=observation,
+        events=events,
+        action=action,
+        plan=plan,
+        evidence=evidence,
+        simulation=simulation,
+    )
     create_chat_log(session, observation, request.question, answer, event_ids)
-    return ChatResponse(answer=answer, referenced_event_ids=event_ids)
+    return ChatResponse(
+        answer=answer,
+        referenced_event_ids=event_ids,
+        sections=sections,
+    )
 
 
 def _retrieve_policy_evidence(

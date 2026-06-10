@@ -99,9 +99,18 @@ export type SimulationMetrics = {
   emergency_vehicle_clearance_seconds: number;
 };
 
+export type AgentResponseSections = {
+  current_situation: string;
+  recommended_action: string;
+  recommendation_rationale: string[];
+  authority_limit: string;
+  simulation_result: string;
+};
+
 export type ChatResponse = {
   answer: string;
   referenced_event_ids: number[];
+  sections?: AgentResponseSections | null;
 };
 
 export type Report = {

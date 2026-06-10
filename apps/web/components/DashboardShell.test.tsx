@@ -520,6 +520,38 @@ describe("DashboardShell", () => {
     expect(screen.queryByLabelText("긴급차량")).toBeNull();
   });
 
+  test("renders structured AI agent sections when the API provides them", async () => {
+    renderDashboard({
+      chat: {
+        answer: "Fallback answer",
+        referenced_event_ids: [1],
+        sections: {
+          current_situation: "현재 상황 내용",
+          recommended_action: "추천 조치 내용",
+          recommendation_rationale: ["근거 A", "근거 B"],
+          authority_limit:
+            "Recommendation and simulation only. No real traffic signal control is performed.",
+          simulation_result: "시뮬레이션 결과 내용"
+        }
+      }
+    });
+
+    expect(screen.getAllByText("현재 상황").length).toBeGreaterThanOrEqual(1);
+    expect(screen.getByText("추천 조치")).toBeTruthy();
+    expect(screen.getAllByText("추천 근거").length).toBeGreaterThanOrEqual(1);
+    expect(screen.getByText("권한 한계")).toBeTruthy();
+    expect(screen.getByText("시뮬레이션 결과")).toBeTruthy();
+    expect(screen.getByText("근거 A")).toBeTruthy();
+
+    await userEvent.click(screen.getByRole("button", { name: "EN" }));
+
+    expect(screen.getAllByText("Current Situation").length).toBeGreaterThanOrEqual(1);
+    expect(screen.getAllByText("Recommended Action").length).toBeGreaterThanOrEqual(1);
+    expect(screen.getByText("Recommendation Rationale")).toBeTruthy();
+    expect(screen.getByText("Authority Limit")).toBeTruthy();
+    expect(screen.getByText("Simulation Result")).toBeTruthy();
+  });
+
   test("submits chat questions through the provided handler", async () => {
     const onAskQuestion = vi.fn().mockResolvedValue(undefined);
     renderDashboard({ onAskQuestion });

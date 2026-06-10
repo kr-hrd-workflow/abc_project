@@ -89,9 +89,18 @@ class ChatRequest(BaseModel):
     question: str = Field(min_length=1)
 
 
+class AgentResponseSections(BaseModel):
+    current_situation: str
+    recommended_action: str
+    recommendation_rationale: list[str]
+    authority_limit: str
+    simulation_result: str
+
+
 class ChatResponse(BaseModel):
     answer: str
     referenced_event_ids: list[int]
+    sections: AgentResponseSections | None = None
 
 
 class ReportRead(BaseModel):
