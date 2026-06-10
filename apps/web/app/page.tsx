@@ -35,32 +35,31 @@ const landingCopy = {
       "Simulation workspace for traffic teams to sense pressure, compare timing, and brief operators before a field change.",
     heroCaption: "Simulation-only. Never controls real signals.",
     proofRail: "Simulation-only. Never controls real signals.",
-    bentoTitle: "A living system, not a static dashboard",
-    bentoCopy:
-      "Every scroll movement mirrors a real operational state: light trails become pressure, route arcs become timing choices, and the final panel becomes the handoff.",
-    bento: [
-      ["Sense", "Read queue pressure, pedestrian demand, and incident load from the same view."],
-      ["Compare", "Keep current timing and recommended timing visible together."],
-      ["Brief", "Turn the scenario into a compact operator handoff."],
-      ["Simulation-only boundary", "Recommendations stay advisory until a human operator reviews them."],
+    overviewTitle: "Raw city pressure becomes a reviewable signal plan",
+    overviewCopy:
+      "The page behaves like a controlled operations film. Scroll does not reveal another card grid; it assembles the street, the candidate routes, and the evidence into one operator handoff.",
+    overview: [
+      ["01", "Street pressure", "Queues, pedestrian demand, and incidents enter as visible pressure."],
+      ["02", "Candidate motion", "Teal current flow and amber alternatives stay in one frame."],
+      ["03", "Human review", "The recommendation resolves as a brief, never a controller command."],
     ],
-    reelTitle: "Scroll the intersection from pressure to handoff",
-    reelCopy:
-      "The page behaves like a controlled operations film. Panels scale in, darken out, and pin long enough for each decision state to be understood.",
-    reel: [
+    assemblyTitle: "Scroll the intersection into an operator brief",
+    assemblyCopy:
+      "Each chapter adds one operational layer until the aerial junction becomes a decision surface: sensed pressure, timing comparison, evidence, then handoff.",
+    assembly: [
       ["Pressure sensed", "Traffic trails brighten as queues and events gather around the junction."],
       ["Timing compared", "Teal current flow and amber candidate routes stay side by side."],
       ["Evidence assembled", "Phase timing, event context, and impact deltas collapse into a brief."],
       ["Dashboard opened", "The operator lands in the working simulation surface with the boundary intact."],
     ],
-    accordionTitle: "The operator flow stays visible",
-    accordionCopy:
-      "The accordion expands the same way an operator drills into a scenario: one focused surface, adjacent context still in view.",
-    accordion: [
-      ["Live sensing", "Queue, demand, and event pressure are visible before any recommendation."],
-      ["Scenario compare", "Current and candidate timing plans stay in the same frame."],
-      ["Recommendation evidence", "Every suggested plan carries the reason it exists."],
-      ["Operator handoff", "The final artifact is a reviewable brief, not a controller command."],
+    chaptersTitle: "The decision stays legible from street to screen",
+    chaptersCopy:
+      "Four large chapters replace feature-card clutter. The story stays simple: sense the condition, compare the route, brief the operator, then open the working dashboard.",
+    chapters: [
+      ["Sense", "Read queue pressure, pedestrian demand, and incident load before any recommendation appears."],
+      ["Compare", "Keep current timing and candidate timing visible together so tradeoffs are reviewable."],
+      ["Brief", "Collapse phase timing, incident context, and expected impact into a concise handoff."],
+      ["Open dashboard", "Move into the simulation workspace with the advisory boundary still visible."],
     ],
     marqueeTitle: "Built for teams who need the street and the screen to agree",
     quote:
@@ -87,32 +86,31 @@ const landingCopy = {
       "교통 운영팀이 현장 변경 전에 압력을 감지하고, 신호 타이밍을 비교하고, 운영자 브리프를 만드는 시뮬레이션 작업 공간입니다.",
     heroCaption: "시뮬레이션 전용. 실제 신호를 제어하지 않습니다.",
     proofRail: "시뮬레이션 전용. 실제 신호를 제어하지 않습니다.",
-    bentoTitle: "정적인 대시보드가 아니라 살아있는 시스템",
-    bentoCopy:
-      "스크롤 움직임은 실제 운영 상태와 연결됩니다. 빛의 궤적은 압력이 되고, 경로 호는 신호 선택지가 되고, 마지막 패널은 인수인계가 됩니다.",
-    bento: [
-      ["Sense", "대기열, 보행 수요, 사고 압력을 같은 화면에서 읽습니다."],
-      ["Compare", "현재 타이밍과 권고 타이밍을 함께 보여줍니다."],
-      ["Brief", "시나리오를 운영자 인수인계 문서로 압축합니다."],
-      ["Simulation-only boundary", "권고안은 운영자가 검토하기 전까지 조언으로 남습니다."],
+    overviewTitle: "도시의 압력이 검토 가능한 신호안으로 조립됩니다",
+    overviewCopy:
+      "이 페이지는 또 다른 카드 그리드를 보여주지 않습니다. 스크롤할수록 도로, 후보 경로, 근거가 하나의 운영자 인수인계로 조립됩니다.",
+    overview: [
+      ["01", "도로 압력", "대기열, 보행 수요, 사고가 눈에 보이는 압력으로 들어옵니다."],
+      ["02", "후보 흐름", "청록색 현재 흐름과 호박색 대안을 한 프레임에 둡니다."],
+      ["03", "사람의 검토", "권고안은 제어 명령이 아니라 브리프로 마무리됩니다."],
     ],
-    reelTitle: "압력에서 인수인계까지 스크롤하세요",
-    reelCopy:
-      "페이지는 제어된 운영 필름처럼 움직입니다. 패널은 커지며 들어오고, 지나가며 어두워지고, 각 판단 상태를 이해할 만큼 오래 고정됩니다.",
-    reel: [
+    assemblyTitle: "교차로를 운영자 브리프로 조립하세요",
+    assemblyCopy:
+      "각 챕터는 하나의 운영 레이어를 더합니다. 감지된 압력, 타이밍 비교, 근거, 인수인계가 하나의 판단 화면으로 이어집니다.",
+    assembly: [
       ["압력 감지", "대기열과 이벤트가 교차로 주변에 모이면 교통 궤적이 밝아집니다."],
       ["타이밍 비교", "청록색 현재 흐름과 호박색 후보 경로를 나란히 비교합니다."],
       ["근거 정리", "신호 단계, 이벤트 맥락, 영향 차이가 브리프로 접힙니다."],
       ["대시보드 열기", "운영자는 경계를 유지한 채 실제 시뮬레이션 화면으로 이동합니다."],
     ],
-    accordionTitle: "운영 흐름은 계속 보여야 합니다",
-    accordionCopy:
-      "아코디언은 운영자가 시나리오를 파고드는 방식처럼 확장됩니다. 하나의 표면에 집중하면서 주변 맥락은 남겨둡니다.",
-    accordion: [
-      ["Live sensing", "권고 전에 대기열, 수요, 이벤트 압력을 먼저 보여줍니다."],
-      ["Scenario compare", "현재 계획과 후보 신호안을 같은 프레임에 둡니다."],
-      ["Recommendation evidence", "모든 권고안에는 그 이유가 함께 붙습니다."],
-      ["Operator handoff", "최종 결과는 제어 명령이 아니라 검토 가능한 브리프입니다."],
+    chaptersTitle: "판단 흐름은 도로에서 화면까지 읽혀야 합니다",
+    chaptersCopy:
+      "작은 기능 카드 대신 네 개의 큰 챕터로 정리합니다. 감지하고, 비교하고, 브리프를 만들고, 작업 대시보드로 이동합니다.",
+    chapters: [
+      ["Sense", "권고 전에 대기열, 보행 수요, 사고 압력을 먼저 읽습니다."],
+      ["Compare", "현재 타이밍과 후보 타이밍을 함께 보여줘 검토 가능하게 만듭니다."],
+      ["Brief", "신호 단계, 사고 맥락, 예상 영향을 짧은 인수인계로 압축합니다."],
+      ["Open dashboard", "시뮬레이션 작업 공간으로 이동해 자문 경계를 유지합니다."],
     ],
     marqueeTitle: "도로와 화면이 같은 말을 해야 하는 팀을 위해",
     quote:
@@ -128,7 +126,6 @@ const landingCopy = {
 
 export default function Page() {
   const [locale, setLocale] = useState<Locale>("en");
-  const [activeAccordion, setActiveAccordion] = useState(0);
   const rootRef = useRef<HTMLElement>(null);
   const t = landingCopy[locale];
 
@@ -143,15 +140,16 @@ export default function Page() {
         return;
       }
 
-      const panels = gsap.utils.toArray<HTMLElement>(".scroll-panel");
+      const stages = gsap.utils.toArray<HTMLElement>(".assembly-stage");
+      const layers = gsap.utils.toArray<HTMLElement>(".assembly-layer");
 
-      panels.forEach((panel, index) => {
+      stages.forEach((stage, index) => {
         gsap.fromTo(
-          panel,
+          stage,
           {
             autoAlpha: index === 0 ? 1 : 0.34,
-            scale: 0.84,
-            y: 72,
+            scale: 0.9,
+            y: 64,
           },
           {
             autoAlpha: 1,
@@ -159,7 +157,7 @@ export default function Page() {
             y: 0,
             ease: "none",
             scrollTrigger: {
-              trigger: panel,
+              trigger: stage,
               start: "top 82%",
               end: "bottom 42%",
               scrub: true,
@@ -167,26 +165,50 @@ export default function Page() {
           }
         );
 
-        gsap.to(panel, {
+        gsap.to(stage, {
           autoAlpha: 0.22,
-          scale: 0.92,
+          scale: 0.94,
           ease: "none",
           scrollTrigger: {
-            trigger: panel,
+            trigger: stage,
             start: "bottom 40%",
             end: "bottom 8%",
             scrub: true,
           },
         });
+
+        const layer = layers[index];
+        if (layer) {
+          gsap.fromTo(
+            layer,
+            {
+              autoAlpha: index === 0 ? 0.7 : 0,
+              scale: 0.94,
+            },
+            {
+              autoAlpha: 1,
+              scale: 1,
+              ease: "none",
+              scrollTrigger: {
+                trigger: stage,
+                start: "top 72%",
+                end: "bottom 42%",
+                scrub: true,
+              },
+            }
+          );
+        }
       });
 
-      ScrollTrigger.create({
-        trigger: ".landing-scroll-reel",
-        start: "top 9%",
-        end: "bottom bottom",
-        pin: ".scroll-pin-copy",
-        pinSpacing: false,
-      });
+      if (window.matchMedia("(min-width: 981px)").matches) {
+        ScrollTrigger.create({
+          trigger: ".signal-assembly-section",
+          start: "top top",
+          end: "bottom bottom",
+          pin: ".assembly-pin",
+          pinSpacing: false,
+        });
+      }
 
       gsap.utils.toArray<HTMLElement>(".motion-scale").forEach((element) => {
         gsap.fromTo(
@@ -241,6 +263,7 @@ export default function Page() {
         <div className="launch-hero-content">
           <h1 id="landing-title">{t.headline}</h1>
           <p>{t.hero}</p>
+          <p className="hero-boundary">{t.heroCaption}</p>
           <div className="launch-hero-actions">
             <Link href="/dashboard" className="launch-primary">
               {t.openDashboard}
@@ -250,31 +273,32 @@ export default function Page() {
             </a>
           </div>
         </div>
+        <div className="hero-signal-system" aria-hidden="true">
+          <span />
+          <span />
+          <span />
+        </div>
       </section>
 
       <section
         id="signal-intelligence"
-        className="launch-section signal-bento-section"
-        data-section="signal-bento"
-        aria-labelledby="signal-bento-title"
+        className="launch-section signal-overview-section"
+        data-section="signal-overview"
+        aria-labelledby="signal-overview-title"
       >
-        <div className="section-copy wide">
-          <h2 id="signal-bento-title">
-            {t.bentoTitle.split(",")[0]}
+        <div className="section-copy wide motion-scale">
+          <h2 id="signal-overview-title">
+            {t.overviewTitle.split(" ").slice(0, -2).join(" ")}
             <span className="inline-traffic-image" aria-hidden="true" />
-            {t.bentoTitle.includes(",") ? `,${t.bentoTitle.split(",").slice(1).join(",")}` : ""}
+            {t.overviewTitle.split(" ").slice(-2).join(" ")}
           </h2>
-          <p>{t.bentoCopy}</p>
+          <p>{t.overviewCopy}</p>
         </div>
 
-        <div
-          className="signal-bento-grid motion-scale"
-          data-grid-flow="dense"
-          data-testid="landing-gapless-bento"
-        >
-          {t.bento.map(([title, copy], index) => (
-            <article key={title} className={`bento-cell bento-cell-${index + 1}`} data-bento-cell>
-              <span aria-hidden="true" />
+        <div className="signal-overview-rail motion-scale">
+          {t.overview.map(([number, title, copy]) => (
+            <article key={title}>
+              <span>{number}</span>
               <strong>{title}</strong>
               <p>{copy}</p>
             </article>
@@ -284,42 +308,48 @@ export default function Page() {
 
       <section
         id="decision-workflow"
-        className="launch-section landing-scroll-reel"
-        data-section="scroll-reel"
-        aria-labelledby="scroll-reel-title"
+        className="launch-section signal-assembly-section"
+        data-section="signal-assembly"
+        aria-labelledby="signal-assembly-title"
       >
-        <div className="scroll-pin-copy">
-          <h2 id="scroll-reel-title">{t.reelTitle}</h2>
-          <p>{t.reelCopy}</p>
-          <Link href="/dashboard" className="launch-text-link strong">
-            {t.openDashboard}
-          </Link>
+        <div className="assembly-pin">
+          <div className="assembly-copy">
+            <h2 id="signal-assembly-title">{t.assemblyTitle}</h2>
+            <p>{t.assemblyCopy}</p>
+            <span>{t.heroCaption}</span>
+          </div>
+          <div className="assembly-visual" aria-hidden="true">
+            <div className="assembly-aerial" />
+            <span className="assembly-layer layer-pressure" data-assembly-layer="pressure" />
+            <span className="assembly-layer layer-current" data-assembly-layer="current-route" />
+            <span className="assembly-layer layer-candidate" data-assembly-layer="candidate-route" />
+            <span className="assembly-layer layer-evidence" data-assembly-layer="evidence" />
+            <div className="assembly-brief">
+              <span>Operator brief</span>
+              <strong>Reviewable evidence package</strong>
+              <small>{t.heroCaption}</small>
+            </div>
+          </div>
         </div>
 
         <div
-          className="scroll-panel-stack"
+          className="assembly-stage-stack"
           data-gsap-scrolltrigger="true"
           data-motion-scenes={MOTION_SCENES}
-          data-remotion-sequence="LandingScrollReel"
+          data-remotion-sequence="SignalAssemblyReel"
           data-remotion-fps={REMOTION_FPS}
           data-duration-frames={REMOTION_DURATION_FRAMES}
-          data-testid="landing-gsap-scroll-reel"
+          data-testid="landing-signal-assembly"
         >
-          {t.reel.map(([title, copy], index) => (
+          {t.assembly.map(([title, copy], index) => (
             <article
               key={title}
-              className={`scroll-panel scroll-panel-${index + 1}`}
-              data-scroll-panel={index}
+              className={`assembly-stage assembly-stage-${index + 1}`}
+              data-assembly-stage={index}
             >
-              <div className="scroll-panel-image" aria-hidden="true">
-                <span className="route-line teal" />
-                <span className="route-line amber" />
-                <span className="route-node" />
-              </div>
-              <div>
-                <strong>{title}</strong>
-                <p>{copy}</p>
-              </div>
+              <span>{`0${index + 1}`}</span>
+              <strong>{title}</strong>
+              <p>{copy}</p>
             </article>
           ))}
         </div>
@@ -327,32 +357,27 @@ export default function Page() {
 
       <section
         id="operator-flow"
-        className="launch-section operator-accordion-section"
-        data-section="operator-accordion"
+        className="launch-section decision-chapters-section"
+        data-section="decision-chapters"
         aria-labelledby="operator-flow-title"
       >
-        <div className="section-copy">
-          <h2 id="operator-flow-title">{t.accordionTitle}</h2>
-          <p>{t.accordionCopy}</p>
+        <div className="section-copy motion-scale">
+          <h2 id="operator-flow-title">{t.chaptersTitle}</h2>
+          <p>{t.chaptersCopy}</p>
         </div>
 
-        <div className="operator-accordion motion-scale">
-          {t.accordion.map(([title, copy], index) => (
-            <button
-              key={title}
-              type="button"
-              className={index === activeAccordion ? "active" : ""}
-              aria-pressed={index === activeAccordion}
-              aria-expanded={index === activeAccordion}
-              onClick={() => setActiveAccordion(index)}
-              onMouseEnter={() => setActiveAccordion(index)}
-            >
-              <span className="accordion-media" aria-hidden="true" />
-              <span className="accordion-copy">
-                <strong>{title}</strong>
-                <small>{copy}</small>
-              </span>
-            </button>
+        <div className="decision-chapter-list motion-scale">
+          {t.chapters.map(([title, copy], index) => (
+            <article key={title} className={`decision-chapter decision-chapter-${index + 1}`}>
+              <span>{`0${index + 1}`}</span>
+              <strong>{title}</strong>
+              <p>{copy}</p>
+              {index === t.chapters.length - 1 ? (
+                <Link href="/dashboard" className="launch-text-link strong">
+                  {t.openDashboard}
+                </Link>
+              ) : null}
+            </article>
           ))}
         </div>
       </section>

@@ -7248,6 +7248,430 @@ body {
   vertical-align: middle;
 }
 
+.hero-boundary,
+.assembly-copy span,
+.assembly-stage > span,
+.decision-chapter > span,
+.signal-overview-rail span,
+.assembly-brief span,
+.assembly-brief small {
+  color: var(--launch-teal);
+  font-size: 0.76rem;
+  font-weight: 900;
+}
+
+.hero-boundary {
+  width: fit-content;
+  border-left: 2px solid rgba(116, 245, 212, 0.64);
+  padding-left: 12px;
+  color: rgba(244, 255, 249, 0.82);
+}
+
+.hero-signal-system {
+  position: absolute;
+  right: clamp(18px, 5vw, 96px);
+  bottom: clamp(24px, 7vw, 108px);
+  z-index: 0;
+  width: min(38vw, 520px);
+  aspect-ratio: 1;
+  pointer-events: none;
+  opacity: 0.86;
+}
+
+.hero-signal-system span {
+  position: absolute;
+  inset: 20%;
+  border: 1px solid rgba(116, 245, 212, 0.28);
+  border-radius: 50%;
+  box-shadow: 0 0 70px rgba(116, 245, 212, 0.14);
+  animation: nodeBeat 5.6s var(--launch-ease-in-out) infinite;
+}
+
+.hero-signal-system span:nth-child(2) {
+  inset: 4%;
+  border-color: rgba(255, 176, 92, 0.22);
+  animation-delay: 0.7s;
+}
+
+.hero-signal-system span:nth-child(3) {
+  inset: 42% 4%;
+  height: 3px;
+  border: 0;
+  border-radius: 999px;
+  background: linear-gradient(90deg, transparent, var(--launch-teal), var(--launch-amber), transparent);
+  transform: rotate(-24deg);
+}
+
+.signal-overview-section {
+  background:
+    radial-gradient(circle at 20% 18%, rgba(116, 245, 212, 0.08), transparent 30rem),
+    linear-gradient(180deg, rgba(5, 9, 13, 0), rgba(9, 18, 23, 0.82));
+}
+
+.signal-overview-rail {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  width: min(1180px, 100%);
+  margin: clamp(44px, 6vw, 82px) auto 0;
+  border-top: 1px solid var(--launch-line);
+  border-bottom: 1px solid var(--launch-line);
+}
+
+.signal-overview-rail article {
+  position: relative;
+  min-height: 300px;
+  display: grid;
+  align-content: end;
+  gap: 12px;
+  border-left: 1px solid rgba(149, 232, 216, 0.15);
+  padding: clamp(22px, 3vw, 40px);
+  overflow: hidden;
+}
+
+.signal-overview-rail article:first-child {
+  border-left: 0;
+}
+
+.signal-overview-rail article::before,
+.decision-chapter::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  background-image:
+    linear-gradient(180deg, transparent 18%, rgba(5, 9, 13, 0.88)),
+    url("/landing/intersection-hero-cinematic.png");
+  background-position: center;
+  background-size: cover;
+  opacity: 0.34;
+  transition:
+    opacity 260ms var(--launch-ease-out),
+    transform 700ms var(--launch-ease-out);
+}
+
+.signal-overview-rail article:nth-child(2)::before,
+.decision-chapter:nth-child(2)::before {
+  background-position: 56% 44%;
+}
+
+.signal-overview-rail article:nth-child(3)::before,
+.decision-chapter:nth-child(3)::before {
+  background-position: 70% 54%;
+}
+
+.signal-overview-rail article:hover::before,
+.decision-chapter:hover::before {
+  opacity: 0.52;
+  transform: scale(1.04);
+}
+
+.signal-overview-rail span,
+.signal-overview-rail strong,
+.signal-overview-rail p,
+.decision-chapter span,
+.decision-chapter strong,
+.decision-chapter p,
+.decision-chapter a {
+  position: relative;
+  z-index: 1;
+}
+
+.signal-overview-rail strong {
+  color: var(--launch-text);
+  font-size: clamp(1.55rem, 2.4vw, 2.8rem);
+  line-height: 1;
+}
+
+.signal-overview-rail p {
+  margin: 0;
+  color: var(--launch-muted);
+  line-height: 1.5;
+}
+
+.signal-assembly-section {
+  display: grid;
+  grid-template-columns: minmax(520px, 1.08fr) minmax(340px, 0.68fr);
+  gap: clamp(28px, 5vw, 82px);
+  align-items: start;
+  min-height: 360dvh;
+  background:
+    radial-gradient(circle at 70% 8%, rgba(255, 176, 92, 0.08), transparent 28rem),
+    linear-gradient(180deg, rgba(7, 16, 22, 0.4), #04070a 86%);
+}
+
+.assembly-pin {
+  top: 0;
+  display: grid;
+  grid-template-rows: auto minmax(320px, 0.9fr);
+  gap: clamp(16px, 3vw, 30px);
+  min-height: 100dvh;
+  padding: clamp(14px, 2vw, 24px) 0;
+}
+
+.assembly-copy {
+  display: grid;
+  gap: 14px;
+  max-width: 760px;
+}
+
+.assembly-copy h2 {
+  margin: 0;
+  color: var(--launch-text);
+  font-size: clamp(2.35rem, 4.2vw, 4.8rem);
+  font-weight: 900;
+  line-height: 0.96;
+  text-wrap: balance;
+}
+
+.assembly-copy p {
+  max-width: 62ch;
+  margin: 0;
+  color: var(--launch-muted);
+  font-size: clamp(1rem, 1.3vw, 1.2rem);
+  line-height: 1.6;
+}
+
+.assembly-copy span {
+  width: fit-content;
+  border-left: 2px solid rgba(255, 176, 92, 0.62);
+  padding-left: 11px;
+  color: rgba(244, 255, 249, 0.82);
+}
+
+.assembly-visual {
+  position: relative;
+  min-height: clamp(320px, 34vw, 480px);
+  border: 1px solid var(--launch-line);
+  border-radius: var(--launch-radius);
+  overflow: hidden;
+  background: rgba(5, 12, 18, 0.78);
+  box-shadow: var(--launch-shadow);
+}
+
+.assembly-aerial,
+.assembly-layer,
+.assembly-layer::before,
+.assembly-layer::after {
+  position: absolute;
+  display: block;
+  pointer-events: none;
+}
+
+.assembly-aerial {
+  inset: 0;
+  background-image:
+    radial-gradient(circle at 52% 52%, rgba(116, 245, 212, 0.13), transparent 18rem),
+    linear-gradient(90deg, rgba(5, 9, 13, 0.7), rgba(5, 9, 13, 0.08), rgba(5, 9, 13, 0.72)),
+    url("/landing/intersection-hero-cinematic.png");
+  background-position: center;
+  background-size: cover;
+  filter: contrast(1.08) saturate(1.08);
+}
+
+.assembly-aerial::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background-image:
+    linear-gradient(rgba(116, 245, 212, 0.06) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(116, 245, 212, 0.045) 1px, transparent 1px);
+  background-size: 64px 64px;
+  mask-image: radial-gradient(circle at 52% 52%, black, transparent 76%);
+}
+
+.assembly-layer {
+  z-index: 1;
+  opacity: 0.8;
+}
+
+.layer-pressure {
+  inset: 8%;
+  background:
+    radial-gradient(circle at 46% 42%, rgba(255, 176, 92, 0.46), transparent 0 7%, transparent 20%),
+    radial-gradient(circle at 58% 54%, rgba(116, 245, 212, 0.42), transparent 0 6%, transparent 22%),
+    radial-gradient(circle at 38% 62%, rgba(255, 109, 99, 0.32), transparent 0 5%, transparent 18%);
+  filter: blur(1px);
+  animation: nodeBeat 4.8s var(--launch-ease-in-out) infinite;
+}
+
+.layer-current,
+.layer-candidate {
+  left: 14%;
+  height: 4px;
+  border-radius: 999px;
+  transform-origin: left center;
+  animation: routePulse 3.6s var(--launch-ease-in-out) infinite;
+}
+
+.layer-current {
+  top: 40%;
+  width: 78%;
+  background: linear-gradient(90deg, transparent, var(--launch-teal), transparent);
+  box-shadow: 0 0 34px rgba(116, 245, 212, 0.54);
+  transform: rotate(52deg);
+}
+
+.layer-candidate {
+  top: 58%;
+  width: 68%;
+  background: linear-gradient(90deg, transparent, var(--launch-amber), transparent);
+  box-shadow: 0 0 34px rgba(255, 176, 92, 0.48);
+  transform: rotate(-18deg);
+  animation-delay: 0.65s;
+}
+
+.layer-current::after,
+.layer-candidate::after {
+  content: "";
+  right: 16%;
+  top: -7px;
+  width: 18px;
+  height: 18px;
+  border: 2px solid rgba(244, 255, 249, 0.86);
+  border-radius: 50%;
+  background: currentColor;
+}
+
+.layer-evidence {
+  right: clamp(18px, 4vw, 48px);
+  top: clamp(18px, 4vw, 48px);
+  width: min(300px, 42%);
+  min-height: 178px;
+  border: 1px solid rgba(149, 232, 216, 0.28);
+  border-radius: var(--launch-radius);
+  background:
+    linear-gradient(135deg, rgba(116, 245, 212, 0.14), transparent 70%),
+    rgba(5, 13, 18, 0.76);
+  backdrop-filter: blur(16px);
+}
+
+.layer-evidence::before {
+  content: "PHASE DELTA / -18s";
+  top: 18px;
+  left: 18px;
+  color: var(--launch-teal);
+  font-size: 0.72rem;
+  font-weight: 900;
+}
+
+.layer-evidence::after {
+  content: "";
+  right: 18px;
+  bottom: 18px;
+  left: 18px;
+  height: 72px;
+  border-top: 1px solid rgba(149, 232, 216, 0.22);
+  border-bottom: 1px solid rgba(149, 232, 216, 0.22);
+  background:
+    linear-gradient(90deg, var(--launch-teal) 0 58%, rgba(116, 245, 212, 0.16) 58%),
+    linear-gradient(90deg, var(--launch-amber) 0 42%, rgba(255, 176, 92, 0.14) 42%);
+  background-size: 100% 12px, 100% 12px;
+  background-position: 0 18px, 0 44px;
+  background-repeat: no-repeat;
+}
+
+.assembly-brief {
+  position: absolute;
+  right: clamp(18px, 4vw, 48px);
+  bottom: clamp(18px, 4vw, 48px);
+  z-index: 2;
+  display: grid;
+  gap: 8px;
+  width: min(420px, calc(100% - 36px));
+  border: 1px solid rgba(244, 255, 249, 0.18);
+  border-radius: var(--launch-radius);
+  padding: clamp(16px, 2.2vw, 24px);
+  background: rgba(4, 10, 14, 0.78);
+  backdrop-filter: blur(18px);
+}
+
+.assembly-brief strong {
+  color: var(--launch-text);
+  font-size: clamp(1.15rem, 2.2vw, 2rem);
+  line-height: 1.08;
+}
+
+.assembly-brief small {
+  color: var(--launch-muted);
+  line-height: 1.42;
+}
+
+.assembly-stage-stack {
+  display: grid;
+  gap: clamp(36px, 8vw, 104px);
+  padding-top: 22dvh;
+  padding-bottom: 42dvh;
+}
+
+.assembly-stage {
+  min-height: clamp(420px, 66dvh, 720px);
+  display: grid;
+  align-content: center;
+  gap: 14px;
+  border-top: 1px solid var(--launch-line);
+  border-bottom: 1px solid rgba(149, 232, 216, 0.11);
+  padding: clamp(24px, 4vw, 46px) 0;
+}
+
+.assembly-stage strong {
+  color: var(--launch-text);
+  font-size: clamp(2.2rem, 4.2vw, 5rem);
+  line-height: 0.96;
+}
+
+.assembly-stage p {
+  max-width: 40ch;
+  margin: 0;
+  color: var(--launch-muted);
+  font-size: clamp(1rem, 1.3vw, 1.18rem);
+  line-height: 1.55;
+}
+
+.decision-chapters-section {
+  display: grid;
+  gap: clamp(38px, 6vw, 84px);
+  background:
+    linear-gradient(180deg, #04070a, rgba(9, 18, 24, 0.86) 62%, #05090d);
+}
+
+.decision-chapter-list {
+  display: grid;
+  width: min(1280px, 100%);
+  margin-inline: auto;
+  border-top: 1px solid var(--launch-line);
+}
+
+.decision-chapter {
+  position: relative;
+  min-height: clamp(280px, 28vw, 420px);
+  display: grid;
+  grid-template-columns: minmax(58px, 0.12fr) minmax(220px, 0.45fr) minmax(260px, 0.43fr);
+  gap: clamp(18px, 4vw, 70px);
+  align-items: end;
+  border-bottom: 1px solid rgba(149, 232, 216, 0.16);
+  padding: clamp(22px, 4vw, 54px);
+  overflow: hidden;
+}
+
+.decision-chapter strong {
+  color: var(--launch-text);
+  font-size: clamp(2.4rem, 6vw, 7rem);
+  line-height: 0.86;
+}
+
+.decision-chapter p {
+  max-width: 44ch;
+  margin: 0;
+  color: var(--launch-muted);
+  font-size: clamp(1rem, 1.3vw, 1.18rem);
+  line-height: 1.56;
+}
+
+.decision-chapter .launch-text-link.strong,
+.launch-text-link.strong {
+  color: var(--launch-teal);
+}
+
 .signal-bento-grid {
   display: grid;
   grid-template-columns: repeat(12, minmax(0, 1fr));
@@ -8019,11 +8443,32 @@ body {
   }
 
   .landing-scroll-reel,
+  .signal-assembly-section,
   .proof-section,
   .launch-dashboard .dashboard-grid,
   .launch-dashboard .chat-report-grid,
   .launch-dashboard .scenario-control {
     grid-template-columns: 1fr;
+  }
+
+  .signal-assembly-section,
+  .assembly-pin,
+  .assembly-copy,
+  .assembly-stage-stack {
+    min-width: 0;
+  }
+
+  .signal-assembly-section {
+    min-height: auto;
+  }
+
+  .assembly-pin {
+    min-height: auto;
+  }
+
+  .assembly-stage-stack {
+    padding-top: clamp(36px, 8vw, 72px);
+    padding-bottom: 0;
   }
 
   .launch-dashboard .timeline-panel,
@@ -8097,9 +8542,41 @@ body {
   }
 
   .signal-bento-grid,
+  .signal-overview-rail,
   .launch-dashboard .dashboard-flow-strip,
   .launch-dashboard .segment-control {
     grid-template-columns: 1fr;
+  }
+
+  .signal-overview-rail article {
+    min-height: 230px;
+    border-top: 1px solid rgba(149, 232, 216, 0.14);
+    border-left: 0;
+  }
+
+  .signal-overview-rail article:first-child {
+    border-top: 0;
+  }
+
+  .assembly-copy h2 {
+    font-size: clamp(2.08rem, 10vw, 3rem);
+  }
+
+  .assembly-visual {
+    min-height: 420px;
+  }
+
+  .assembly-stage {
+    min-height: 340px;
+  }
+
+  .decision-chapter {
+    grid-template-columns: 1fr;
+    min-height: 260px;
+  }
+
+  .decision-chapter strong {
+    font-size: clamp(2.25rem, 14vw, 4.2rem);
   }
 
   .renderer-status,
