@@ -164,6 +164,21 @@ describe("DashboardShell", () => {
     expect(screen.getByText("Delay -18%")).toBeTruthy();
   });
 
+  test("renders aggregate SUMO telemetry without claiming vehicle trajectories", () => {
+    renderDashboard();
+
+    expect(screen.getByLabelText("SUMO 집계 텔레메트리")).toBeTruthy();
+    expect(screen.getByLabelText("SUMO 스타일 교통 재생")).toBeTruthy();
+    expect(screen.getByText("실사형 재생")).toBeTruthy();
+    expect(screen.getByText("주기 22s")).toBeTruthy();
+    expect(screen.getByText("대기 72s -> 59s")).toBeTruthy();
+    expect(screen.getByText("처리량 +13%")).toBeTruthy();
+    expect(screen.getByText("긴급 통과 28s -> 18s")).toBeTruthy();
+    expect(screen.getByText("파생 대기열 압력")).toBeTruthy();
+    expect(screen.getByText("서 16대")).toBeTruthy();
+    expect(screen.getByText("집계 지표 기반")).toBeTruthy();
+  });
+
   test("switches visible labels between Korean and English", async () => {
     renderDashboard();
 
@@ -244,7 +259,40 @@ describe("DashboardShell", () => {
 
     expect(screen.getByText("보행자 횡단 단계 권고")).toBeTruthy();
     expect(screen.getByText("보행자 대기 요청이 감지되었습니다.")).toBeTruthy();
+    expect(screen.getByLabelText("보행자 대기 SUMO 이벤트")).toBeTruthy();
     expect(screen.queryByText("긴급차량이 동쪽에서 접근 중입니다.")).toBeNull();
+    expect(screen.queryByLabelText("긴급차량")).toBeNull();
+  });
+
+  test("renders blocked-intersection SUMO markers from events", () => {
+    renderDashboard({
+      selectedScenarioId: "blocked",
+      status: {
+        ...status,
+        signal_phase: "all_red",
+        pedestrian_request: false,
+        emergency_priority: false
+      },
+      events: [
+        {
+          ...events[0],
+          event_type: "intersection_blocked",
+          severity: "critical",
+          direction: "west",
+          object_count: 4,
+          ai_summary: "Blocked vehicles are holding the west approach."
+        }
+      ],
+      recommendation: {
+        ...recommendation,
+        action: "all_red_clearance",
+        recommended_plan: { all_red: 12 },
+        evidence: { reason: "intersection_blocked", direction: "west" }
+      }
+    });
+
+    expect(screen.getByLabelText("교차로 차단 SUMO 이벤트")).toBeTruthy();
+    expect(screen.getByText("서쪽 접근부 4대")).toBeTruthy();
     expect(screen.queryByLabelText("긴급차량")).toBeNull();
   });
 

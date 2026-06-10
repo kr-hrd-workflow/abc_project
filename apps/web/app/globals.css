@@ -5294,6 +5294,43 @@ main[lang="ko"] .concept-a-hero h1 {
   background-size: 58px 58px, 58px 58px, auto;
 }
 
+.sumo-playback-canvas {
+  position: absolute;
+  inset: 0;
+  z-index: 6;
+  display: block;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+}
+
+.playback-badge {
+  position: absolute;
+  z-index: 12;
+  right: 14px;
+  bottom: 14px;
+  display: grid;
+  gap: 2px;
+  min-width: 138px;
+  border: 1px solid rgba(112, 236, 199, 0.28);
+  border-radius: 8px;
+  padding: 9px 11px;
+  color: #ecfff8;
+  background: rgba(8, 24, 34, 0.76);
+  backdrop-filter: blur(14px);
+}
+
+.playback-badge strong {
+  font-size: 12px;
+  font-weight: 850;
+}
+
+.playback-badge span {
+  color: rgba(223, 246, 239, 0.66);
+  font-size: 10px;
+  font-weight: 750;
+}
+
 .renderer-status {
   position: absolute;
   z-index: 12;
@@ -5328,6 +5365,168 @@ main[lang="ko"] .concept-a-hero h1 {
   color: rgba(231, 255, 249, 0.84);
   font-size: 11px;
   font-weight: 750;
+}
+
+.sumo-telemetry,
+.lane-pressure-panel,
+.sumo-event-marker {
+  position: absolute;
+  z-index: 12;
+  border: 1px solid rgba(112, 236, 199, 0.24);
+  border-radius: 8px;
+  color: #ecfff8;
+  background: rgba(8, 24, 34, 0.76);
+  box-shadow: 0 14px 30px rgba(0, 0, 0, 0.2);
+  backdrop-filter: blur(14px);
+}
+
+.sumo-telemetry {
+  top: 64px;
+  left: 14px;
+  display: grid;
+  gap: 8px;
+  width: min(250px, calc(100% - 28px));
+  padding: 9px;
+}
+
+.sumo-telemetry strong,
+.lane-pressure-panel strong,
+.sumo-event-marker strong {
+  font-size: 12px;
+  font-weight: 850;
+}
+
+.telemetry-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 5px;
+}
+
+.telemetry-grid span {
+  min-height: 27px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 7px;
+  padding: 7px 8px;
+  color: rgba(238, 255, 250, 0.86);
+  background: rgba(255, 255, 255, 0.07);
+  font-size: 11px;
+  font-weight: 800;
+}
+
+.sumo-telemetry em {
+  color: rgba(219, 244, 238, 0.72);
+  font-size: 10px;
+  font-style: normal;
+  font-weight: 800;
+}
+
+.lane-pressure-panel {
+  top: 14px;
+  right: 14px;
+  display: grid;
+  gap: 8px;
+  width: min(206px, calc(100% - 28px));
+  padding: 9px;
+}
+
+.pressure-bars {
+  display: grid;
+  gap: 7px;
+}
+
+.pressure-row {
+  position: relative;
+  display: grid;
+  grid-template-columns: 28px 1fr;
+  gap: 8px;
+  align-items: center;
+  min-height: 24px;
+  overflow: hidden;
+  border-radius: 7px;
+  padding: 4px 8px;
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.pressure-row::before {
+  content: "";
+  position: absolute;
+  inset: 0 auto 0 0;
+  width: var(--pressure);
+  background: rgba(112, 236, 199, 0.22);
+}
+
+.pressure-row.elevated::before {
+  background: rgba(241, 194, 84, 0.24);
+}
+
+.pressure-row.critical::before {
+  background: rgba(255, 88, 88, 0.26);
+}
+
+.pressure-row small,
+.pressure-row b {
+  position: relative;
+  z-index: 1;
+}
+
+.pressure-row small {
+  color: rgba(223, 246, 239, 0.66);
+  font-size: 10px;
+  font-weight: 850;
+}
+
+.pressure-row b {
+  color: rgba(244, 255, 249, 0.9);
+  font-size: 11px;
+}
+
+.sumo-event-marker {
+  display: grid;
+  gap: 2px;
+  min-width: 148px;
+  padding: 9px 11px;
+}
+
+.sumo-event-marker small {
+  color: rgba(236, 255, 249, 0.72);
+  font-size: 10px;
+  font-weight: 750;
+}
+
+.sumo-event-marker.warning {
+  border-color: rgba(241, 194, 84, 0.46);
+  background: rgba(47, 35, 16, 0.78);
+}
+
+.sumo-event-marker.critical {
+  border-color: rgba(255, 88, 88, 0.56);
+  background: rgba(43, 18, 23, 0.82);
+}
+
+.sumo-event-marker.north {
+  top: 26%;
+  left: 42%;
+}
+
+.sumo-event-marker.south {
+  bottom: 26%;
+  left: 42%;
+}
+
+.sumo-event-marker.east {
+  top: 46%;
+  right: 18%;
+}
+
+.sumo-event-marker.west {
+  top: 46%;
+  left: 18%;
+}
+
+.sumo-event-marker.center {
+  left: 50%;
+  bottom: 22%;
+  transform: translateX(-50%);
 }
 
 .city-block {
@@ -7514,17 +7713,17 @@ body {
 }
 
 .launch-dashboard .timeline-panel {
-  grid-column: 1 / 4;
+  grid-column: 1 / 3;
   grid-row: 1;
 }
 
 .launch-dashboard .simulation-panel {
-  grid-column: 4 / 10;
+  grid-column: 3 / 11;
   grid-row: 1;
 }
 
 .launch-dashboard .recommendation-panel {
-  grid-column: 10 / 13;
+  grid-column: 11 / 13;
   grid-row: 1;
 }
 
@@ -7559,16 +7758,39 @@ body {
   min-height: clamp(460px, 48vw, 680px);
   overflow: hidden;
   background:
-    linear-gradient(90deg, rgba(5, 9, 13, 0.68), rgba(5, 9, 13, 0.16), rgba(5, 9, 13, 0.68)),
-    url("/landing/intersection-hero-cinematic.png");
+    radial-gradient(circle at 50% 50%, rgba(116, 245, 212, 0.08), transparent 34%),
+    linear-gradient(90deg, rgba(5, 9, 13, 0.58), rgba(5, 9, 13, 0.12), rgba(5, 9, 13, 0.62)),
+    url("/simulation/realistic-intersection-night.png");
   background-position: center;
   background-size: cover;
+}
+
+.launch-dashboard .simulation-viewport::after {
+  background:
+    radial-gradient(circle at 50% 50%, transparent 0 32%, rgba(5, 9, 13, 0.22) 78%),
+    linear-gradient(90deg, rgba(116, 245, 212, 0.08) 1px, transparent 1px),
+    linear-gradient(0deg, rgba(116, 245, 212, 0.06) 1px, transparent 1px);
+  background-size: auto, 72px 72px, 72px 72px;
+}
+
+.launch-dashboard .city-block,
+.launch-dashboard .tree-field,
+.launch-dashboard .road,
+.launch-dashboard .lane-markers,
+.launch-dashboard .turn-pocket,
+.launch-dashboard .crosswalk,
+.launch-dashboard .vehicle-lane {
+  display: none;
 }
 
 .launch-dashboard .signal,
 .launch-dashboard .direction-badge,
 .launch-dashboard .live-badge,
 .launch-dashboard .renderer-status,
+.launch-dashboard .sumo-telemetry,
+.launch-dashboard .lane-pressure-panel,
+.launch-dashboard .sumo-event-marker,
+.launch-dashboard .playback-badge,
 .launch-dashboard .situation-block,
 .launch-dashboard .recommendation-card,
 .launch-dashboard .report-card,
@@ -7722,9 +7944,19 @@ body {
     grid-template-columns: 1fr;
   }
 
+  .launch-dashboard .timeline-panel,
   .launch-dashboard .simulation-panel,
+  .launch-dashboard .recommendation-panel,
+  .launch-dashboard .metrics-panel,
   .launch-dashboard .chat-report-grid {
-    grid-column: auto;
+    grid-column: 1 / -1;
+    grid-row: auto;
+    min-width: 0;
+  }
+
+  .launch-dashboard .simulation-viewport {
+    width: 100%;
+    min-width: 0;
   }
 
   .scroll-pin-copy {
@@ -7785,6 +8017,27 @@ body {
   .signal-bento-grid,
   .launch-dashboard .dashboard-flow-strip,
   .launch-dashboard .segment-control {
+    grid-template-columns: 1fr;
+  }
+
+  .renderer-status,
+  .sumo-telemetry,
+  .lane-pressure-panel {
+    right: 12px;
+    left: 12px;
+    width: auto;
+    max-width: none;
+  }
+
+  .sumo-telemetry {
+    top: 72px;
+  }
+
+  .lane-pressure-panel {
+    top: 264px;
+  }
+
+  .telemetry-grid {
     grid-template-columns: 1fr;
   }
 
