@@ -9,6 +9,9 @@
     "runtime:readiness:strict": "cd apps/api && .venv/bin/python -m app.cli.runtime_readiness --fail-on-missing",
     "openai:smoke": "cd apps/api && .venv/bin/python -m app.cli.openai_smoke",
     "launch:local": "bash scripts/launch-local.sh",
+    "unreal:precheck": "powershell.exe -NoProfile -ExecutionPolicy Bypass -File scripts/unreal-precheck.ps1",
+    "unreal:open": "powershell.exe -NoProfile -ExecutionPolicy Bypass -File scripts/open-unreal-project.ps1",
+    "unreal:pixel-streaming": "powershell.exe -NoProfile -ExecutionPolicy Bypass -File scripts/start-pixel-streaming.ps1",
     "verify": "npm run test:api && npm run test:web && npm run build:web && git diff --check"
   },
   "workspaces": [

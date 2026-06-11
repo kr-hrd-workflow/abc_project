@@ -1,0 +1,11 @@
+{
+  "FileVersion": 3,
+  "Category": "Simulation",
+  "Description": "Smart Intersection photoreal digital twin shell for Unreal Engine Pixel Streaming.",
+  "Plugins": [
+    {
+      "Name": "PixelStreaming",
+      "Enabled": true
+    }
+  ]
+}
