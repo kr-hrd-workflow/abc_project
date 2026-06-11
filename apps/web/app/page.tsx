@@ -298,7 +298,7 @@ export default function Page() {
         <div className="section-copy wide motion-scale">
           <h2 id="signal-overview-title">
             {t.overviewTitle.split(" ").slice(0, -2).join(" ")}
-            <span className="inline-traffic-image" aria-hidden="true" />
+            <span className="inline-traffic-image" data-section-asset="signal-overview-3d" aria-hidden="true" />
             {t.overviewTitle.split(" ").slice(-2).join(" ")}
           </h2>
           <p>{t.overviewCopy}</p>
@@ -335,7 +335,7 @@ export default function Page() {
             <span className="assembly-depth-ring ring-near" data-assembly-depth-ring="near" />
             <span className="assembly-depth-ring ring-mid" data-assembly-depth-ring="mid" />
             <span className="assembly-depth-ring ring-far" data-assembly-depth-ring="far" />
-            <div className="assembly-aerial" />
+            <div className="assembly-aerial" data-section-asset="signal-assembly-layers" />
             <span
               className="assembly-layer assembly-piece layer-pressure"
               data-assembly-layer="pressure"
@@ -427,7 +427,7 @@ export default function Page() {
         data-section="proof-marquee"
         aria-labelledby="proof-title"
       >
-        <div className="proof-visual motion-scale" aria-hidden="true">
+        <div className="proof-visual motion-scale" data-section-asset="operator-proof-room" aria-hidden="true">
           <span />
           <span />
           <span />
@@ -452,7 +452,7 @@ export default function Page() {
         data-section="final-cta"
         aria-labelledby="landing-action-title"
       >
-        <div className="final-backdrop" aria-hidden="true" />
+        <div className="final-backdrop" data-section-asset="final-cta-city" aria-hidden="true" />
         <div className="final-copy">
           <h2 id="landing-action-title">{t.ctaTitle}</h2>
           <p>{t.ctaCopy}</p>

@@ -56,11 +56,31 @@ The live web search backend returned HTTP 429 during this pass, so the implement
 
 - Avoided adding a heavy runtime 3D dependency for the landing pass.
 - Used CSS 3D instead: faster, easier to test, lower risk for LCP/INP.
-- Kept the existing real aerial image asset as the base so the scene still matches the smart-intersection product.
+- Kept the existing real aerial image asset as the hero base so the opening scene still matches the smart-intersection product.
+- Generated section-specific imagery for non-hero sections so the page no longer repeats the hero image across every visual slot.
 - Added testable DOM markers so the stronger 3D contract does not regress silently:
   - `data-landing-depth-scene="hero-3d"`
   - five `data-depth-plane` elements
   - three `data-assembly-depth-ring` elements
+  - four `data-section-asset` markers
+
+## Generated asset map
+
+The main hero image remains preserved. The following generated assets are section-specific:
+
+```text
+apps/web/public/landing/signal-overview-3d.png
+apps/web/public/landing/signal-assembly-layers.png
+apps/web/public/landing/operator-proof-room.png
+apps/web/public/landing/final-cta-city.png
+```
+
+Prompts used:
+
+1. `signal-overview-3d.png`: oblique 3D city intersection at night with teal sensor-pressure fields and amber candidate timing paths, photoreal Unreal-style digital twin, no text or logos.
+2. `signal-assembly-layers.png`: circular layered 3D intersection model with base road, pressure layer, teal current route, amber alternative route, and floating evidence layer, no text or logos.
+3. `operator-proof-room.png`: realistic traffic operations review room with a digital twin intersection wall display, calm municipal control center mood, no readable text or logos.
+4. `final-cta-city.png`: atmospheric urban intersection transitioning from simulation to reviewed decision, teal route light and amber signal glow, no text or logos.
 
 ## Follow-up ideas
 

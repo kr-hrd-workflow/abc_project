@@ -37,6 +37,10 @@ describe("Landing page", () => {
     expect(container.querySelector('[data-existing-intersection-image="true"]')).toBeTruthy();
     expect(container.querySelector('[data-landing-depth-scene="hero-3d"]')).toBeTruthy();
     expect(container.querySelectorAll('[data-depth-plane]')).toHaveLength(5);
+    expect(container.querySelector('[data-section-asset="signal-overview-3d"]')).toBeTruthy();
+    expect(container.querySelector('[data-section-asset="signal-assembly-layers"]')).toBeTruthy();
+    expect(container.querySelector('[data-section-asset="operator-proof-room"]')).toBeTruthy();
+    expect(container.querySelector('[data-section-asset="final-cta-city"]')).toBeTruthy();
     expect(screen.getAllByText(/Simulation-only. Never controls real signals./i).length).toBeGreaterThanOrEqual(1);
   });
 

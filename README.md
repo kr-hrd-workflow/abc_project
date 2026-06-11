@@ -6,16 +6,20 @@
 
 최신 `main` 기준으로 아래 범위가 구현되어 있습니다.
 
-- `Next.js 15 + React 19 + TypeScript` 기반 웹 대시보드
+- `Next.js 15 + React 19 + TypeScript` 기반 웹 랜딩 페이지와 운영자 대시보드
 - `FastAPI + SQLAlchemy + Alembic` 기반 API
 - Docker Compose 기반 PostgreSQL/pgvector 개발 환경
 - 긴급차량, 보행자 대기, 일반 흐름, 교차로 막힘 시나리오
 - 교차로 상태, 이벤트, 추천, SUMO형 시뮬레이션 비교, 채팅, 리포트 API
 - 이미지/영상/virtual CCTV fixture 목록, fixture ingest, 업로드 분석 job API
 - 한국어/영어 전환 가능한 운영자 cockpit UI
+- landing hero의 CSS-only 3D/isometric roadway scene
+- Signal Assembly 섹션의 GSAP sticky scroll + depth ring scene
 - 실사형 WebGL 스타일 가상 CCTV fallback
 - `NEXT_PUBLIC_SIMULATION_STREAM_URL` 설정 시 Unreal Pixel Streaming/시뮬레이션 iframe mount slot
 - `NEXT_PUBLIC_UNITY_WEBGL_URL` legacy Unity WebGL 호환 alias
+- Unreal renderer scaffold: `renderer/unreal/SmartIntersection/SmartIntersection.uproject`
+- Epic Launcher/Unreal helper scripts: `npm run unreal:precheck`, `npm run unreal:open`, `npm run unreal:pixel-streaming`, `npm run unreal:home`
 - OpenAI live 답변 gateway와 `openai_auto` fallback 모드
 - OpenAI API 키/월 예산 guard 및 secret 미노출 readiness report
 - keyword 기반 로컬 정책 근거 검색과 `KNOWLEDGE_SEARCH_MODE=pgvector` 옵션
@@ -62,6 +66,50 @@ npm run launch:local
 8. API `127.0.0.1:8000`와 web `127.0.0.1:3000` 실행
 
 세부 런칭 체크리스트는 [`docs/launch-runbook.md`](docs/launch-runbook.md)를 참고하세요.
+
+## Unreal / Pixel Streaming 준비 상태
+
+현재 repo에는 Unreal Engine 프로젝트 shell과 Pixel Streaming 연결 스크립트가 들어 있습니다. 단, Unreal Engine Editor 자체는 Epic Games Launcher에서 로그인 후 GUI로 설치해야 합니다.
+
+현재 완료된 것:
+
+- Epic Games Launcher 설치 가능 경로 확인
+- Windows Node.js LTS 설치 및 Pixel Streaming script PATH 보강
+- Unreal project scaffold: `renderer/unreal/SmartIntersection/SmartIntersection.uproject`
+- Dashboard stream slot: `NEXT_PUBLIC_SIMULATION_STREAM_URL=http://127.0.0.1:8888`
+- 집에서 이어서 실행할 one-command script: `npm run unreal:home`
+
+Unreal Engine 5.x 설치 후 실행:
+
+```bash
+npm run unreal:precheck
+npm run unreal:home
+```
+
+`npm run unreal:home`은 Unreal Editor 확인, 프로젝트 열기, Pixel Streaming signalling server 시작 시도를 순서대로 수행합니다.
+
+자세한 절차는 [`docs/unreal-pixel-streaming.md`](docs/unreal-pixel-streaming.md)를 참고하세요.
+
+## 랜딩 페이지 3D 방향
+
+현재 랜딩 페이지는 heavy Three.js runtime을 추가하지 않고 CSS 3D로 3D/digital-twin 느낌을 강화했습니다.
+
+구현된 것:
+
+- hero의 tilted roadway plane
+- teal current route plane과 amber candidate route plane
+- floating operator brief card
+- Signal Assembly의 depth ring 3개
+- reduced-motion을 고려한 subtle drift animation
+- 테스트 contract: `data-landing-depth-scene`, `data-depth-plane`, `data-assembly-depth-ring`
+
+참고 레퍼런스와 디자인 의도는 [`docs/landing-3d-references.md`](docs/landing-3d-references.md)에 정리되어 있습니다.
+
+시각 QA 산출물:
+
+```text
+artifacts/landing-3d.png
+```
 
 ## 수동 실행
 
@@ -203,11 +251,15 @@ apps/api/app/adapters/    Vision and SUMO/TraCI adapter boundaries
 apps/api/app/services/    Chat, recommendation, knowledge, runtime readiness services
 apps/api/alembic/         Database migrations
 apps/api/networks/        SUMO network fixture
-apps/web/                 Next.js frontend
+apps/web/                 Next.js landing page and frontend
+apps/web/app/page.tsx     Cinematic landing page
 apps/web/components/      Dashboard cockpit, digital twin, simulation viewport components
+renderer/unreal/          Unreal Engine renderer scaffold
+artifacts/                Local QA screenshots and generated evidence, not required for runtime
 docs/                     Runtime docs, runbooks, design notes
 infra/docker-compose.yml  PostgreSQL/pgvector dev service
 scripts/launch-local.sh   Local launch helper
+scripts/unreal-*.ps1      Windows Unreal/Pixel Streaming helper scripts
 ```
 
 ## 개발 문서
@@ -217,15 +269,72 @@ scripts/launch-local.sh   Local launch helper
 1. [`AGENTS.md`](AGENTS.md)
    - 프로젝트 작업 규칙, Superpowers/Karpathy 사용, 커밋/푸시 규칙
 2. [`docs/launch-runbook.md`](docs/launch-runbook.md)
-   - 로컬 런칭, OpenAI live mode, Unity WebGL mount, production checklist
-3. [`docs/runtime-setup.md`](docs/runtime-setup.md)
+   - 로컬 런칭, OpenAI live mode, simulation stream mount, production checklist
+3. [`docs/unreal-pixel-streaming.md`](docs/unreal-pixel-streaming.md)
+   - Unreal Engine 5 설치 후 프로젝트 열기와 Pixel Streaming 연결 절차
+4. [`docs/landing-3d-references.md`](docs/landing-3d-references.md)
+   - 랜딩 페이지 3D/digital-twin 레퍼런스와 이미지 방향
+5. [`docs/runtime-setup.md`](docs/runtime-setup.md)
    - YOLO/OpenCV, SUMO/TraCI, OpenAI, pgvector runtime setup
-4. `docs/superpowers/plans/2026-06-08-smart-intersection-mvp.md`
+6. `docs/superpowers/plans/2026-06-08-smart-intersection-mvp.md`
    - 최초 MVP 계획
-5. `docs/superpowers/specs/2026-06-08-smart-intersection-mvp-design.md`
+7. `docs/superpowers/specs/2026-06-08-smart-intersection-mvp-design.md`
    - 시스템 설계와 확장 방향
-6. `docs/superpowers/plans/2026-06-11-launch-grade-unity-openai.md`
+8. `docs/superpowers/plans/2026-06-11-phase-b-vite-react-spa-migration.md`
+   - Next.js에서 Vite React SPA로 전환하는 Phase B 계획
+9. `docs/superpowers/plans/2026-06-11-launch-grade-unity-openai.md`
    - launch-grade Unity/OpenAI polish 계획
+
+## 남은 개발 범위
+
+우선순위 기준으로 아직 더 개발해야 할 부분은 아래와 같습니다.
+
+### 1. Unreal Engine / Pixel Streaming 연결
+
+현재 막힌 지점은 repo 코드가 아니라 Windows GUI 설치입니다.
+
+- Epic Games Launcher에서 Unreal Engine 5.x 설치
+- `npm run unreal:home` 실행
+- Pixel Streaming signalling server가 `http://127.0.0.1:8888`에서 뜨는지 확인
+- dashboard viewport에서 Unreal stream iframe 렌더링 확인
+- Unreal scene에 실제 교차로 mesh, camera, lighting, route overlay actor 추가
+- FastAPI/SUMO state를 Unreal actor transform/material로 반영하는 bridge 설계
+
+### 2. SUMO/TraCI live simulation 강화
+
+- fixture comparison에서 실제 TraCI stepping으로 전환
+- scenario별 route file과 detector output 추가
+- queue length, waiting time, emergency priority를 실제 simulation metrics로 계산
+- API response와 dashboard metric copy를 fixture/live 공통 contract로 고정
+
+### 3. Landing page production polish
+
+- 새 section-specific 이미지의 최종 crop/압축 최적화
+- mobile hero에서 3D layer가 본문 가독성을 가리지 않는지 추가 QA
+- generated image alt/usage 정책 문서화
+- Lighthouse 기준 LCP/INP/CLS 확인
+- 필요 시 hero만 preload하고 나머지 section 이미지는 lazy strategy로 전환
+
+### 4. Phase B frontend migration
+
+- `docs/superpowers/plans/2026-06-11-phase-b-vite-react-spa-migration.md` 기준으로 Vite React SPA 전환
+- 현재 Next.js page/component를 route 단위로 이동
+- Pixel Streaming viewer를 browser-only SPA island로 단순화
+- Cloudflare Pages/static deploy 기준 env와 build pipeline 정리
+
+### 5. RAG / policy knowledge 품질 개선
+
+- 실제 교통 정책 문서 ingest
+- chunk metadata와 citation 표시 개선
+- pgvector 검색 결과를 chat/report UI에 출처별로 표시
+- OpenAI live mode의 budget guard와 smoke test는 유지
+
+### 6. 운영 안정화
+
+- Docker Desktop WSL integration 활성화 확인
+- local launch script의 실패 복구 메시지 개선
+- CI에서 `npm run verify` 고정
+- security/audit advisory는 breaking fix 없이 안전하게 올릴 수 있는 Next/PostCSS 경로가 나오면 별도 처리
 
 ## 다음 확장 포인트
 
@@ -261,11 +370,25 @@ scripts/launch-local.sh   Local launch helper
 
 ## 디자인 방향
 
-대시보드는 차분한 유리 질감의 운영 도구 UI를 지향합니다. 중앙 시뮬레이션 영역은 `apps/web/components/SimulationViewport.tsx`로 분리되어 있으며, 현재는 WebGL-style fallback과 Unity WebGL mount slot을 제공합니다.
+랜딩 페이지는 **cinematic infrastructure + digital twin** 방향입니다. 메인 hero 이미지는 유지하되, 각 섹션에는 별도 생성 이미지를 사용해 같은 이미지를 반복하지 않도록 구성했습니다.
+
+현재 landing image map:
+
+```text
+apps/web/public/landing/intersection-hero-cinematic.png  hero main background, preserved
+apps/web/public/landing/signal-overview-3d.png           signal intelligence overview inline image
+apps/web/public/landing/signal-assembly-layers.png       Signal Assembly layered intersection object
+apps/web/public/landing/operator-proof-room.png          proof / operator validation visual
+apps/web/public/landing/final-cta-city.png               final CTA background
+```
+
+대시보드는 차분한 유리 질감의 운영 도구 UI를 지향합니다. 중앙 시뮬레이션 영역은 `apps/web/components/SimulationViewport.tsx`로 분리되어 있으며, 현재는 WebGL-style fallback, Unreal/hosted stream mount slot, legacy Unity WebGL alias를 제공합니다.
 
 관련 기록:
 
 ```text
+docs/landing-3d-references.md
+docs/unreal-pixel-streaming.md
 docs/design/assets/dashboard-concept-approved.png
 docs/design/dashboard-concept-notes.md
 ```
