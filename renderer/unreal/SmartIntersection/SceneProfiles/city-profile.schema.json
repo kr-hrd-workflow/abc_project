@@ -1,0 +1,101 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "SmartIntersection City Profile",
+  "type": "object",
+  "required": [
+    "id",
+    "display_name",
+    "country_code",
+    "traffic_side",
+    "seed",
+    "intersection",
+    "visual_style",
+    "city_style",
+    "traffic",
+    "lighting",
+    "camera"
+  ],
+  "properties": {
+    "id": {
+      "enum": [
+        "seoul",
+        "new_york",
+        "paris",
+        "london"
+      ]
+    },
+    "display_name": {
+      "type": "string"
+    },
+    "country_code": {
+      "type": "string"
+    },
+    "traffic_side": {
+      "enum": [
+        "left",
+        "right"
+      ]
+    },
+    "seed": {
+      "type": "integer"
+    },
+    "intersection": {
+      "type": "object",
+      "required": [
+        "lane_width_cm",
+        "lanes_per_direction",
+        "crosswalk_width_cm",
+        "stop_line_offset_cm",
+        "median_width_cm"
+      ]
+    },
+    "visual_style": {
+      "type": "object",
+      "required": [
+        "road_markings",
+        "crosswalk",
+        "signals",
+        "signage",
+        "street_furniture",
+        "building_style",
+        "palette",
+        "camera_mood"
+      ]
+    },
+    "city_style": {
+      "type": "object",
+      "required": [
+        "building_density",
+        "building_height_min_cm",
+        "building_height_max_cm",
+        "sidewalk_width_cm",
+        "street_furniture_density"
+      ]
+    },
+    "traffic": {
+      "type": "object",
+      "required": [
+        "vehicle_placeholders",
+        "bus_placeholders",
+        "pedestrian_placeholders",
+        "traffic_light_heads"
+      ]
+    },
+    "lighting": {
+      "type": "object",
+      "required": [
+        "time_of_day",
+        "weather",
+        "exposure_bias"
+      ]
+    },
+    "camera": {
+      "type": "object",
+      "required": [
+        "location_cm",
+        "rotation_deg",
+        "focal_length_mm"
+      ]
+    }
+  }
+}

@@ -13,6 +13,12 @@
     "unreal:open": "powershell.exe -NoProfile -ExecutionPolicy Bypass -File scripts/open-unreal-project.ps1",
     "unreal:pixel-streaming": "powershell.exe -NoProfile -ExecutionPolicy Bypass -File scripts/start-pixel-streaming.ps1",
     "unreal:home": "powershell.exe -NoProfile -ExecutionPolicy Bypass -File scripts/unreal-at-home.ps1",
+    "unreal:generate-city": "powershell.exe -NoProfile -ExecutionPolicy Bypass -File scripts/generate-unreal-city.ps1",
+    "unreal:generate-city:dry-run": "powershell.exe -NoProfile -ExecutionPolicy Bypass -File scripts/generate-unreal-city.ps1 -DryRun",
+    "unreal:generate:seoul": "npm run unreal:generate-city -- -Profile seoul",
+    "unreal:generate:new-york": "npm run unreal:generate-city -- -Profile new_york",
+    "unreal:generate:paris": "npm run unreal:generate-city -- -Profile paris",
+    "unreal:generate:london": "npm run unreal:generate-city -- -Profile london",
     "verify": "npm run test:api && npm run test:web && npm run build:web && git diff --check"
   },
   "workspaces": [

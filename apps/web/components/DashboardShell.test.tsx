@@ -16,10 +16,12 @@ import type {
   Report,
   RuntimeReadiness,
   ScenarioId,
+  CityId,
   SimulationComparison,
   TrafficEvent
 } from "../lib/types";
 import { SCENARIO_OPTIONS } from "../lib/types";
+import { CITY_PROFILES } from "../lib/cities";
 
 const status: IntersectionStatus = {
   intersection_id: "INT-0001",
@@ -133,14 +135,14 @@ const fixtures: AnalysisFixture[] = [
     safety_note: "Sample analysis only. No real CCTV stream or traffic signal control."
   },
   {
-    fixture_id: "unity-virtual-cctv-east",
+    fixture_id: "unreal-virtual-cctv-east",
     scenario_id: "emergency",
     media_type: "virtual_cctv",
-    filename: "unity-virtual-cctv-east.mp4",
-    description: "Unity-style virtual CCTV presentation feed for the east emergency approach scenario.",
-    source: "unity_virtual_cctv",
-    renderer: "unity_presentation_fallback",
-    safety_note: "Unity is used for presentation visualization only; SUMO/TraCI remains the traffic validation engine."
+    filename: "unreal-virtual-cctv-east.mp4",
+    description: "Unreal Pixel Streaming virtual CCTV presentation feed for the east emergency approach scenario.",
+    source: "unreal_pixel_streaming_cctv",
+    renderer: "unreal_pixel_streaming",
+    safety_note: "Unreal is used for presentation visualization only; SUMO/TraCI remains the traffic validation engine."
   }
 ];
 
@@ -204,6 +206,9 @@ function dashboardProps(overrides: Partial<Parameters<typeof DashboardShell>[0]>
     selectedScenarioId: "emergency" as ScenarioId,
     scenarioOptions: SCENARIO_OPTIONS,
     scenarioLoading: false,
+    selectedCityId: "seoul" as CityId,
+    cityProfiles: CITY_PROFILES,
+    onCityChange: vi.fn(),
     onScenarioChange: vi.fn(),
     fixtures,
     latestFixtureIngest: null,
@@ -236,6 +241,31 @@ describe("DashboardShell", () => {
     expect(screen.getByText("Response Plan")).toBeTruthy();
     expect(screen.getAllByText("긴급차량 우선 통과").length).toBeGreaterThanOrEqual(1);
     expect(screen.getByText("Simulation only / No real signal control")).toBeTruthy();
+  });
+
+  test("renders the selected city profile independently from the scenario", () => {
+    renderDashboard({ selectedCityId: "seoul" });
+
+    expect(screen.getByLabelText("도시 선택")).toBeTruthy();
+    expect(screen.getByLabelText("도시 프로필")).toBeTruthy();
+    expect(screen.getByText("강남대로 / 테헤란로")).toBeTruthy();
+    expect(screen.getByText(/INT-SEO-0001/)).toBeTruthy();
+    expect(screen.getByRole("button", { name: /서울/ }).getAttribute("aria-pressed")).toBe("true");
+    expect(screen.getByRole("button", { name: /뉴욕/ })).toBeTruthy();
+    expect(screen.getByRole("button", { name: /파리/ })).toBeTruthy();
+    expect(screen.getByRole("button", { name: /런던/ })).toBeTruthy();
+  });
+
+  test("calls city change without touching the scenario handler", async () => {
+    const onCityChange = vi.fn();
+    const onScenarioChange = vi.fn();
+
+    renderDashboard({ onCityChange, onScenarioChange });
+
+    await userEvent.click(screen.getByRole("button", { name: /뉴욕/ }));
+
+    expect(onCityChange).toHaveBeenCalledWith("new_york");
+    expect(onScenarioChange).not.toHaveBeenCalled();
   });
 
   test("renders the approved safety and simulation viewport copy", () => {
@@ -364,9 +394,9 @@ describe("DashboardShell", () => {
     expect(screen.getByLabelText("SUMO 스타일 교통 재생")).toBeTruthy();
     expect(screen.getByLabelText("시뮬레이션 스트림 뷰어")).toBeTruthy();
     expect(screen.getByText("실사형 가상 CCTV")).toBeTruthy();
-    expect(screen.getByText("WebGL-style fallback")).toBeTruthy();
+    expect(screen.getByText("Digital twin fallback")).toBeTruthy();
     expect(screen.getByText("실사형 가상 CCTV / 디지털 트윈")).toBeTruthy();
-    expect(screen.getByText("NEXT_PUBLIC_SIMULATION_STREAM_URL 설정 시 Unreal Pixel Streaming/시뮬레이션 스트림으로 교체 / NEXT_PUBLIC_UNITY_WEBGL_URL도 호환")).toBeTruthy();
+    expect(screen.getByText("NEXT_PUBLIC_SIMULATION_STREAM_URL로 Unreal Pixel Streaming 플레이어 연결 / legacy stream alias도 임시 호환")).toBeTruthy();
     expect(screen.getByText("주기 22s")).toBeTruthy();
     expect(screen.getByText("대기 72s -> 59s")).toBeTruthy();
     expect(screen.getByText("처리량 +13%")).toBeTruthy();
@@ -376,7 +406,7 @@ describe("DashboardShell", () => {
     expect(screen.getByText("집계 지표 기반")).toBeTruthy();
   });
 
-  test("mounts the generic simulation stream URL before the Unity alias", () => {
+  test("mounts the Unreal simulation stream URL before the legacy alias", () => {
     vi.stubEnv("NEXT_PUBLIC_SIMULATION_STREAM_URL", "https://pixel.example/stream");
     vi.stubEnv("NEXT_PUBLIC_UNITY_WEBGL_URL", "/unity/index.html");
 
@@ -385,17 +415,17 @@ describe("DashboardShell", () => {
 
     expect(streamFrame?.getAttribute("src")).toBe("https://pixel.example/stream");
     expect(streamFrame?.getAttribute("title")).toBe("시뮬레이션 스트림");
-    expect(screen.getByText("Simulation Stream")).toBeTruthy();
+    expect(screen.getByText("Unreal Pixel Streaming")).toBeTruthy();
   });
 
-  test("keeps NEXT_PUBLIC_UNITY_WEBGL_URL as a simulation stream fallback alias", () => {
+  test("keeps NEXT_PUBLIC_UNITY_WEBGL_URL as a legacy stream fallback alias", () => {
     vi.stubEnv("NEXT_PUBLIC_UNITY_WEBGL_URL", "/unity/index.html");
 
     const { container } = renderDashboard();
     const streamFrame = container.querySelector("iframe.simulation-stream-frame");
 
     expect(streamFrame?.getAttribute("src")).toBe("/unity/index.html");
-    expect(screen.getByText("Unity WebGL")).toBeTruthy();
+    expect(screen.getByText("Legacy stream alias")).toBeTruthy();
   });
 
   test("switches visible labels between Korean and English", async () => {

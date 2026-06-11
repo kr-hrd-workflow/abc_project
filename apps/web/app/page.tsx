@@ -32,7 +32,7 @@ const landingCopy = {
     watchMotion: "Watch the motion",
     headline: "Intersections that think before they change",
     hero:
-      "Simulation workspace for traffic teams to sense pressure, compare timing, and preview a Unity-style virtual CCTV surface before a field change.",
+      "Simulation workspace for traffic teams to sense pressure, compare timing, and preview an Unreal Pixel Streaming digital-twin viewport before a field change.",
     heroCaption: "Simulation-only. Never controls real signals.",
     proofRail: "Simulation-only. Never controls real signals.",
     overviewTitle: "Raw city pressure becomes a reviewable signal plan",
@@ -50,7 +50,7 @@ const landingCopy = {
       ["Pressure sensed", "Traffic trails brighten as queues and events gather around the junction."],
       ["Timing compared", "Teal current flow and amber candidate routes stay side by side."],
       ["Evidence assembled", "Phase timing, event context, and impact deltas collapse into a brief."],
-      ["Dashboard opened", "The operator lands in the Unity virtual CCTV + SUMO validation surface with the boundary intact."],
+      ["Dashboard opened", "The operator lands in the Unreal Pixel Streaming + SUMO validation surface with the boundary intact."],
     ],
     chaptersTitle: "The decision stays legible from street to screen",
     chaptersCopy:
@@ -67,7 +67,7 @@ const landingCopy = {
     cities: ["SEOUL", "SEATTLE", "AUSTIN", "TORONTO", "DENVER", "RALEIGH"],
     ctaTitle: "Open the working simulation",
     ctaCopy:
-      "Move from the cinematic landing page into the launch-ready dashboard and inspect the Unity presentation fallback plus SUMO validation metrics.",
+      "Move from the cinematic landing page into the launch-ready dashboard and inspect the Unreal Pixel Streaming player plus SUMO validation metrics.",
     finalSecondary: "Review the system",
     footer: ["Simulation boundary", "Scenario library", "Operator report", "City review"],
   },
@@ -83,7 +83,7 @@ const landingCopy = {
     watchMotion: "움직임 보기",
     headline: "바꾸기 전에 생각하는 교차로",
     hero:
-      "교통 운영팀이 현장 변경 전에 압력을 감지하고, 신호 타이밍을 비교하고, Unity 스타일 가상 CCTV 화면을 미리 보는 시뮬레이션 작업 공간입니다.",
+      "교통 운영팀이 현장 변경 전에 압력을 감지하고, 신호 타이밍을 비교하고, Unreal Pixel Streaming 디지털 트윈 화면을 미리 보는 시뮬레이션 작업 공간입니다.",
     heroCaption: "시뮬레이션 전용. 실제 신호를 제어하지 않습니다.",
     proofRail: "시뮬레이션 전용. 실제 신호를 제어하지 않습니다.",
     overviewTitle: "도시의 압력이 검토 가능한 신호안으로 조립됩니다",
@@ -101,7 +101,7 @@ const landingCopy = {
       ["압력 감지", "대기열과 이벤트가 교차로 주변에 모이면 교통 궤적이 밝아집니다."],
       ["타이밍 비교", "청록색 현재 흐름과 호박색 후보 경로를 나란히 비교합니다."],
       ["근거 정리", "신호 단계, 이벤트 맥락, 영향 차이가 브리프로 접힙니다."],
-      ["대시보드 열기", "운영자는 경계를 유지한 채 Unity 가상 CCTV + SUMO 검증 화면으로 이동합니다."],
+      ["대시보드 열기", "운영자는 경계를 유지한 채 Unreal Pixel Streaming + SUMO 검증 화면으로 이동합니다."],
     ],
     chaptersTitle: "판단 흐름은 도로에서 화면까지 읽혀야 합니다",
     chaptersCopy:
@@ -118,7 +118,7 @@ const landingCopy = {
     cities: ["서울", "시애틀", "오스틴", "토론토", "덴버", "롤리"],
     ctaTitle: "작동 중인 시뮬레이션을 여세요",
     ctaCopy:
-      "시네마틱 랜딩에서 출시 가능한 대시보드로 이동해 Unity 발표용 폴백과 SUMO 검증 지표를 함께 확인하세요.",
+      "시네마틱 랜딩에서 출시 가능한 대시보드로 이동해 Unreal Pixel Streaming 플레이어와 SUMO 검증 지표를 함께 확인하세요.",
     finalSecondary: "시스템 검토",
     footer: ["시뮬레이션 경계", "시나리오 라이브러리", "운영자 리포트", "도시 검토"],
   },

@@ -9817,8 +9817,8 @@ body {
   }
 }
 
-/* Unity / virtual CCTV presentation surface for PDF-required simulator demo. */
-.launch-dashboard:is([data-layout="operations-cockpit"], [data-layout="spatial-command-hybrid"]) .unity-cctv-surface {
+/* Unreal Pixel Streaming / virtual CCTV presentation surface for simulator demo. */
+.launch-dashboard:is([data-layout="operations-cockpit"], [data-layout="spatial-command-hybrid"]) .unreal-cctv-surface {
   position: absolute;
   left: clamp(14px, 2.4vw, 26px);
   right: auto;
@@ -9838,12 +9838,12 @@ body {
   backdrop-filter: blur(14px);
 }
 
-.launch-dashboard:is([data-layout="operations-cockpit"], [data-layout="spatial-command-hybrid"]) .unity-cctv-surface div:first-child {
+.launch-dashboard:is([data-layout="operations-cockpit"], [data-layout="spatial-command-hybrid"]) .unreal-cctv-surface div:first-child {
   display: grid;
   gap: 3px;
 }
 
-.launch-dashboard:is([data-layout="operations-cockpit"], [data-layout="spatial-command-hybrid"]) .unity-cctv-surface span {
+.launch-dashboard:is([data-layout="operations-cockpit"], [data-layout="spatial-command-hybrid"]) .unreal-cctv-surface span {
   color: var(--launch-teal);
   font-size: 0.68rem;
   font-weight: 900;
@@ -9851,12 +9851,12 @@ body {
   text-transform: uppercase;
 }
 
-.launch-dashboard:is([data-layout="operations-cockpit"], [data-layout="spatial-command-hybrid"]) .unity-cctv-surface strong {
+.launch-dashboard:is([data-layout="operations-cockpit"], [data-layout="spatial-command-hybrid"]) .unreal-cctv-surface strong {
   font-size: 0.92rem;
   letter-spacing: -0.01em;
 }
 
-.launch-dashboard:is([data-layout="operations-cockpit"], [data-layout="spatial-command-hybrid"]) .unity-cctv-surface small {
+.launch-dashboard:is([data-layout="operations-cockpit"], [data-layout="spatial-command-hybrid"]) .unreal-cctv-surface small {
   color: rgba(232, 242, 238, 0.66);
   line-height: 1.35;
 }
@@ -9885,7 +9885,7 @@ body {
 .launch-dashboard:is([data-layout="operations-cockpit"], [data-layout="spatial-command-hybrid"]) .cctv-frame-lines i:nth-child(3) { top: 76%; }
 
 @media (max-width: 860px) {
-  .launch-dashboard:is([data-layout="operations-cockpit"], [data-layout="spatial-command-hybrid"]) .unity-cctv-surface {
+  .launch-dashboard:is([data-layout="operations-cockpit"], [data-layout="spatial-command-hybrid"]) .unreal-cctv-surface {
     position: relative;
     left: auto;
     bottom: auto;
@@ -9894,8 +9894,8 @@ body {
   }
 }
 
-/* Launch-grade realistic CCTV and Unity WebGL mount layer. */
-.launch-dashboard:is([data-layout="operations-cockpit"], [data-layout="spatial-command-hybrid"]) .unity-webgl-frame {
+/* Launch-grade realistic CCTV and Unreal Pixel Streaming mount layer. */
+.launch-dashboard:is([data-layout="operations-cockpit"], [data-layout="spatial-command-hybrid"]) .unreal-pixel-streaming-frame {
   position: absolute;
   inset: 0;
   z-index: 5;
@@ -9906,7 +9906,7 @@ body {
 }
 
 .launch-dashboard:is([data-layout="operations-cockpit"], [data-layout="spatial-command-hybrid"]) .cctv-atmosphere,
-.launch-dashboard:is([data-layout="operations-cockpit"], [data-layout="spatial-command-hybrid"]) .unity-depth-field {
+.launch-dashboard:is([data-layout="operations-cockpit"], [data-layout="spatial-command-hybrid"]) .unreal-depth-field {
   position: absolute;
   inset: 0;
   pointer-events: none;
@@ -9917,7 +9917,7 @@ body {
   mix-blend-mode: screen;
 }
 
-.launch-dashboard:is([data-layout="operations-cockpit"], [data-layout="spatial-command-hybrid"]) .unity-depth-field {
+.launch-dashboard:is([data-layout="operations-cockpit"], [data-layout="spatial-command-hybrid"]) .unreal-depth-field {
   z-index: 4;
   perspective: 900px;
 }
@@ -10341,7 +10341,7 @@ body {
     text-align: center;
   }
 
-  .launch-dashboard[data-layout="spatial-command-hybrid"] .unity-cctv-surface,
+  .launch-dashboard[data-layout="spatial-command-hybrid"] .unreal-cctv-surface,
   .launch-dashboard[data-layout="spatial-command-hybrid"] .sumo-telemetry,
   .launch-dashboard[data-layout="spatial-command-hybrid"] .lane-pressure-panel,
   .launch-dashboard[data-layout="spatial-command-hybrid"] .launch-readiness-card {
@@ -10553,5 +10553,78 @@ body {
   .launch-dashboard[data-layout="spatial-command-hybrid"] .command-pressable:active:not(:disabled):not([aria-disabled="true"]) {
     transform: none !important;
     filter: none !important;
+  }
+}
+/* Multi-city Unreal scene controls */
+.launch-dashboard:is([data-layout="operations-cockpit"], [data-layout="spatial-command-hybrid"]) .city-profile-card {
+  display: grid;
+  gap: 4px;
+  min-width: min(360px, 100%);
+  border: 1px solid rgba(98, 189, 177, 0.24);
+  border-radius: 18px;
+  padding: 12px 14px;
+  background:
+    linear-gradient(135deg, rgba(98, 189, 177, 0.11), transparent 62%),
+    rgba(7, 10, 12, 0.72);
+}
+
+.launch-dashboard:is([data-layout="operations-cockpit"], [data-layout="spatial-command-hybrid"]) .city-profile-card span {
+  color: var(--launch-teal);
+  font-size: 0.68rem;
+  font-weight: 900;
+}
+
+.launch-dashboard:is([data-layout="operations-cockpit"], [data-layout="spatial-command-hybrid"]) .city-profile-card strong {
+  color: var(--launch-text);
+  font-size: 0.98rem;
+  font-weight: 950;
+}
+
+.launch-dashboard:is([data-layout="operations-cockpit"], [data-layout="spatial-command-hybrid"]) .city-profile-card small,
+.launch-dashboard:is([data-layout="operations-cockpit"], [data-layout="spatial-command-hybrid"]) .city-profile-card em {
+  color: rgba(232, 242, 238, 0.68);
+  font-size: 0.72rem;
+  font-style: normal;
+  line-height: 1.35;
+}
+
+.launch-dashboard:is([data-layout="operations-cockpit"], [data-layout="spatial-command-hybrid"]) .city-segment-control {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 8px;
+  min-width: min(620px, 100%);
+}
+
+.launch-dashboard:is([data-layout="operations-cockpit"], [data-layout="spatial-command-hybrid"]) .city-segment-control button {
+  display: grid;
+  gap: 4px;
+  min-height: 74px;
+  border: 1px solid rgba(184, 200, 194, 0.14);
+  border-radius: 16px;
+  padding: 10px 12px;
+  color: rgba(245, 250, 248, 0.86);
+  text-align: left;
+  background: rgba(255, 255, 255, 0.026);
+}
+
+.launch-dashboard:is([data-layout="operations-cockpit"], [data-layout="spatial-command-hybrid"]) .city-segment-control button.active {
+  border-color: rgba(98, 189, 177, 0.42);
+  background: rgba(98, 189, 177, 0.12);
+}
+
+.launch-dashboard:is([data-layout="operations-cockpit"], [data-layout="spatial-command-hybrid"]) .city-segment-control button strong {
+  font-size: 0.85rem;
+  font-weight: 950;
+}
+
+.launch-dashboard:is([data-layout="operations-cockpit"], [data-layout="spatial-command-hybrid"]) .city-segment-control button span {
+  color: rgba(232, 242, 238, 0.62);
+  font-size: 0.68rem;
+  line-height: 1.25;
+}
+
+@media (max-width: 920px) {
+  .launch-dashboard:is([data-layout="operations-cockpit"], [data-layout="spatial-command-hybrid"]) .city-segment-control {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 }

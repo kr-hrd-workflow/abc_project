@@ -1,0 +1,71 @@
+{
+  "id": "paris",
+  "display_name": "Paris Boulevard Crossing",
+  "country_code": "FR",
+  "traffic_side": "right",
+  "seed": 20260613,
+  "intersection": {
+    "lane_width_cm": 320,
+    "lanes_per_direction": 2,
+    "crosswalk_width_cm": 500,
+    "stop_line_offset_cm": 700,
+    "median_width_cm": 140
+  },
+  "visual_style": {
+    "road_markings": [
+      "thin white dashed lanes",
+      "solid white stop lines",
+      "subtle buffered bike lane"
+    ],
+    "crosswalk": "white zebra bars on cool gray asphalt",
+    "signals": "compact corner-pole signal heads with pedestrian modules",
+    "signage": "European round/triangular signs on slim dark poles",
+    "street_furniture": [
+      "benches",
+      "bollards",
+      "bike racks",
+      "bus shelter",
+      "cafe awnings",
+      "tree grates"
+    ],
+    "building_style": "Haussmann-inspired 5-7 floor cream stone street walls with wrought-iron balconies and zinc roofs",
+    "palette": [
+      "cool dark gray asphalt",
+      "pale stone sidewalks",
+      "cream limestone facades",
+      "dark green and black furniture"
+    ],
+    "camera_mood": "soft overcast refined boulevard at 50mm"
+  },
+  "city_style": {
+    "building_density": "medium_high",
+    "building_height_min_cm": 1800,
+    "building_height_max_cm": 5200,
+    "sidewalk_width_cm": 560,
+    "street_furniture_density": "medium"
+  },
+  "traffic": {
+    "vehicle_placeholders": 34,
+    "bus_placeholders": 1,
+    "pedestrian_placeholders": 26,
+    "traffic_light_heads": 8
+  },
+  "lighting": {
+    "time_of_day": "soft_overcast",
+    "weather": "dry",
+    "exposure_bias": 0.0
+  },
+  "camera": {
+    "location_cm": [
+      3900,
+      -3100,
+      1150
+    ],
+    "rotation_deg": [
+      -12,
+      0,
+      44
+    ],
+    "focal_length_mm": 50
+  }
+}

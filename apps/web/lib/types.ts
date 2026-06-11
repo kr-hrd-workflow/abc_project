@@ -2,6 +2,23 @@ export type Direction = "north" | "south" | "east" | "west";
 
 export type ScenarioId = "emergency" | "pedestrian" | "normal" | "blocked";
 
+export type CityId = "seoul" | "new_york" | "paris" | "london";
+
+export type CityProfile = {
+  id: CityId;
+  labelKo: string;
+  labelEn: string;
+  intersectionId: string;
+  intersectionNameKo: string;
+  intersectionNameEn: string;
+  districtKo: string;
+  districtEn: string;
+  countryCode: string;
+  timezone: string;
+  mobilityProfileKo: string;
+  mobilityProfileEn: string;
+};
+
 export type ScenarioOption = {
   id: ScenarioId;
   labelKo: string;

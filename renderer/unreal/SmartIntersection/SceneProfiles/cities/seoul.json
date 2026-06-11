@@ -1,0 +1,72 @@
+{
+  "id": "seoul",
+  "display_name": "Seoul Gangnam Arterial",
+  "country_code": "KR",
+  "traffic_side": "right",
+  "seed": 20260611,
+  "intersection": {
+    "lane_width_cm": 360,
+    "lanes_per_direction": 3,
+    "crosswalk_width_cm": 560,
+    "stop_line_offset_cm": 900,
+    "median_width_cm": 180
+  },
+  "visual_style": {
+    "road_markings": [
+      "white dashed lane dividers",
+      "muted red bus-priority lane segments",
+      "large white turn arrows"
+    ],
+    "crosswalk": "wide bright-white zebra crosswalk",
+    "signals": "overhead horizontal signal bars on mast arms",
+    "signage": "Korean primary, English secondary, blue-green overhead boards",
+    "street_furniture": [
+      "glass bus shelter",
+      "subway entrance canopy",
+      "bollards",
+      "bike racks",
+      "smart-city kiosks"
+    ],
+    "building_style": "dense mid/high-rise commercial blocks with glass, tile, and illuminated shop signs",
+    "palette": [
+      "wet charcoal asphalt",
+      "light gray pavers",
+      "blue signage",
+      "green transit signs",
+      "red bus lane",
+      "neon storefront glow"
+    ],
+    "camera_mood": "rainy dusk CCTV with wet asphalt reflections"
+  },
+  "city_style": {
+    "building_density": "high",
+    "building_height_min_cm": 1800,
+    "building_height_max_cm": 9000,
+    "sidewalk_width_cm": 540,
+    "street_furniture_density": "medium"
+  },
+  "traffic": {
+    "vehicle_placeholders": 48,
+    "bus_placeholders": 3,
+    "pedestrian_placeholders": 20,
+    "traffic_light_heads": 12
+  },
+  "lighting": {
+    "time_of_day": "rainy_dusk",
+    "weather": "wet",
+    "exposure_bias": -0.15
+  },
+  "camera": {
+    "location_cm": [
+      4200,
+      -3600,
+      1400
+    ],
+    "rotation_deg": [
+      -18,
+      0,
+      42
+    ],
+    "focal_length_mm": 28
+  }
+}

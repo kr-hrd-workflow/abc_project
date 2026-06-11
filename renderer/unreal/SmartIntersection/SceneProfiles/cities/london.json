@@ -1,0 +1,73 @@
+{
+  "id": "london",
+  "display_name": "London West End Junction",
+  "country_code": "GB",
+  "traffic_side": "left",
+  "seed": 20260614,
+  "intersection": {
+    "lane_width_cm": 320,
+    "lanes_per_direction": 2,
+    "crosswalk_width_cm": 520,
+    "stop_line_offset_cm": 720,
+    "median_width_cm": 90
+  },
+  "visual_style": {
+    "road_markings": [
+      "white dashed and solid lanes",
+      "yellow box junction grid",
+      "zig-zag crossing approaches",
+      "muted red bus lane strip"
+    ],
+    "crosswalk": "signal crossing with tactile paving and optional zebra studs",
+    "signals": "black corner poles with secondary heads and pedestrian button boxes",
+    "signage": "UK round/triangular/rectangular signs plus LOOK LEFT/RIGHT road text",
+    "street_furniture": [
+      "black bollards",
+      "railings",
+      "bus stop pole",
+      "cycle stands",
+      "signal control boxes",
+      "litter bins"
+    ],
+    "building_style": "red/brown brick Georgian-Victorian blocks with stone trim and modern infill",
+    "palette": [
+      "wet dark gray asphalt",
+      "bright white and yellow markings",
+      "muted red bus lane",
+      "black street furniture",
+      "brick red and Portland stone"
+    ],
+    "camera_mood": "overcast after-rain practical metropolitan 28mm"
+  },
+  "city_style": {
+    "building_density": "medium_high",
+    "building_height_min_cm": 1200,
+    "building_height_max_cm": 5600,
+    "sidewalk_width_cm": 500,
+    "street_furniture_density": "high"
+  },
+  "traffic": {
+    "vehicle_placeholders": 38,
+    "bus_placeholders": 4,
+    "pedestrian_placeholders": 30,
+    "traffic_light_heads": 10
+  },
+  "lighting": {
+    "time_of_day": "overcast_after_rain",
+    "weather": "wet",
+    "exposure_bias": -0.05
+  },
+  "camera": {
+    "location_cm": [
+      4300,
+      -2600,
+      1250
+    ],
+    "rotation_deg": [
+      -15,
+      0,
+      48
+    ],
+    "focal_length_mm": 28
+  }
+}

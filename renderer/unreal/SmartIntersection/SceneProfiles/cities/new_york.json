@@ -1,0 +1,72 @@
+{
+  "id": "new_york",
+  "display_name": "New York Midtown Grid",
+  "country_code": "US",
+  "traffic_side": "right",
+  "seed": 20260612,
+  "intersection": {
+    "lane_width_cm": 335,
+    "lanes_per_direction": 3,
+    "crosswalk_width_cm": 520,
+    "stop_line_offset_cm": 760,
+    "median_width_cm": 0
+  },
+  "visual_style": {
+    "road_markings": [
+      "bold white stop bars",
+      "white lane dividers",
+      "green bike-lane panels",
+      "optional red bus lane"
+    ],
+    "crosswalk": "high-visibility ladder crosswalk with curb ramps",
+    "signals": "overhead mast-arm signals plus pedestrian countdown heads",
+    "signage": "green street-name signs, one-way signs, parking regulation clusters",
+    "street_furniture": [
+      "glass bus shelter",
+      "trash cans",
+      "fire hydrant",
+      "bike racks",
+      "bollards"
+    ],
+    "building_style": "brick mid-rises, stone prewar blocks, distant glass towers, storefront bays",
+    "palette": [
+      "worn dark asphalt",
+      "pale concrete sidewalk",
+      "street-sign green",
+      "taxi yellow accents",
+      "signal black/yellow"
+    ],
+    "camera_mood": "overcast street-level 35mm urban canyon"
+  },
+  "city_style": {
+    "building_density": "high",
+    "building_height_min_cm": 1600,
+    "building_height_max_cm": 11000,
+    "sidewalk_width_cm": 480,
+    "street_furniture_density": "high"
+  },
+  "traffic": {
+    "vehicle_placeholders": 54,
+    "bus_placeholders": 2,
+    "pedestrian_placeholders": 32,
+    "traffic_light_heads": 14
+  },
+  "lighting": {
+    "time_of_day": "overcast_day",
+    "weather": "dry",
+    "exposure_bias": 0.05
+  },
+  "camera": {
+    "location_cm": [
+      3600,
+      -4200,
+      1200
+    ],
+    "rotation_deg": [
+      -14,
+      0,
+      38
+    ],
+    "focal_length_mm": 35
+  }
+}

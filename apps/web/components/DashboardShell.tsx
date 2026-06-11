@@ -15,6 +15,8 @@ import type {
   RuntimeReadiness,
   ScenarioId,
   ScenarioOption,
+  CityId,
+  CityProfile,
   SimulationComparison,
   TrafficEvent,
   UploadAnalysisResult
@@ -43,6 +45,9 @@ export type DashboardShellProps = {
   selectedScenarioId: ScenarioId;
   scenarioOptions: ScenarioOption[];
   scenarioLoading: boolean;
+  selectedCityId: CityId;
+  cityProfiles: CityProfile[];
+  onCityChange: (cityId: CityId) => void;
   onAskQuestion: (question: string) => Promise<void>;
   onGenerateReport: () => Promise<void>;
   onIngestFixture: (fixtureId: string) => Promise<FixtureIngestResult>;
@@ -67,6 +72,9 @@ export function DashboardShell({
   selectedScenarioId,
   scenarioOptions,
   scenarioLoading,
+  selectedCityId,
+  cityProfiles,
+  onCityChange,
   onAskQuestion,
   onGenerateReport,
   onIngestFixture,
@@ -83,6 +91,13 @@ export function DashboardShell({
   const selectedScenario = scenarioOptions.find(
     (option) => option.id === selectedScenarioId
   );
+  const selectedCity =
+    cityProfiles.find((city) => city.id === selectedCityId) ?? cityProfiles[0];
+  const cityIntersectionName =
+    locale === "ko" ? selectedCity.intersectionNameKo : selectedCity.intersectionNameEn;
+  const cityDistrict = locale === "ko" ? selectedCity.districtKo : selectedCity.districtEn;
+  const cityMobilityProfile =
+    locale === "ko" ? selectedCity.mobilityProfileKo : selectedCity.mobilityProfileEn;
   const selectedScenarioLabel =
     locale === "ko" ? selectedScenario?.labelKo : selectedScenario?.labelEn;
   const selectedScenarioDescription =
@@ -155,10 +170,14 @@ export function DashboardShell({
               <span>{t.appSubtitle}</span>
             </div>
           </div>
-          <div className="top-meta district-selector">
-            <strong>{t.intersection}</strong>
-            <span>{t.intersectionSub}</span>
-          </div>
+          <section className="city-profile-card" aria-label={locale === "ko" ? "도시 프로필" : "City profile"}>
+            <span>{locale === "ko" ? "선택된 교차로" : "Selected intersection"}</span>
+            <strong>{cityIntersectionName}</strong>
+            <small>
+              {selectedCity.intersectionId} · {cityDistrict} · {selectedCity.timezone}
+            </small>
+            <em>{cityMobilityProfile}</em>
+          </section>
           <div className="incident-token" aria-label="Current incident">
             <span>INC-2025-0516-0007</span>
             <strong>{locale === "ko" ? "Active" : "Active"}</strong>
@@ -199,6 +218,27 @@ export function DashboardShell({
         </div>
 
         <div className="dashboard-scenario-row operation-row motion-enter">
+          <section className="city-segment-control" aria-label={locale === "ko" ? "도시 선택" : "City selection"}>
+            {cityProfiles.map((city) => {
+              const selected = city.id === selectedCityId;
+              const cityLabel = locale === "ko" ? city.labelKo : city.labelEn;
+              const profile = locale === "ko" ? city.mobilityProfileKo : city.mobilityProfileEn;
+
+              return (
+                <button
+                  key={city.id}
+                  type="button"
+                  aria-pressed={selected}
+                  className={`motion-pressable command-pressable${selected ? " active" : ""}`}
+                  disabled={selected}
+                  onClick={() => onCityChange(city.id)}
+                >
+                  <strong>{cityLabel}</strong>
+                  <span>{profile}</span>
+                </button>
+              );
+            })}
+          </section>
           <section className="operation-mode-panel" aria-label={t.operationMode}>
             <div className="operation-copy">
               <strong>{t.operationMode}</strong>

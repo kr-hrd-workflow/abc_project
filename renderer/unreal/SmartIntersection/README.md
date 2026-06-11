@@ -33,6 +33,20 @@ When the Pixel Streaming frontend is running on `http://127.0.0.1`, the dashboar
 6. Save the map as `Content/Maps/SmartIntersection.umap`.
 7. Set it as the default map in Project Settings.
 
+## Procedural city generation
+
+Source-controlled city profiles now define Seoul, New York, Paris, and London intersection blockouts:
+
+```bash
+npm run unreal:generate-city:dry-run
+npm run unreal:generate:seoul
+npm run unreal:generate:new-york
+npm run unreal:generate:paris
+npm run unreal:generate:london
+```
+
+The generator lives at `Content/Python/generate_city_scene.py` and reads JSON profiles from `SceneProfiles/cities/`. See `../../../docs/unreal-procedural-cities.md` for the full workflow.
+
 ## Runtime intent
 
 The first production-quality integration should be read-only:

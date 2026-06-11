@@ -45,19 +45,19 @@ export function SimulationViewport({
   );
   const openaiReady = runtimeReadiness.openai.ready;
   const genericStreamUrl = process.env.NEXT_PUBLIC_SIMULATION_STREAM_URL?.trim();
-  const unityWebglUrl = process.env.NEXT_PUBLIC_UNITY_WEBGL_URL?.trim();
-  const simulationStreamUrl = genericStreamUrl || unityWebglUrl;
+  const legacyStreamUrl = process.env.NEXT_PUBLIC_UNITY_WEBGL_URL?.trim();
+  const simulationStreamUrl = genericStreamUrl || legacyStreamUrl;
   const renderMode = simulationStreamUrl
     ? genericStreamUrl
-      ? "Simulation Stream"
-      : "Unity WebGL"
-    : "WebGL-style fallback";
+      ? "Unreal Pixel Streaming"
+      : "Legacy stream alias"
+    : "Digital twin fallback";
 
   return (
     <div className="simulation-viewport">
       {simulationStreamUrl ? (
         <iframe
-          className="simulation-stream-frame unity-webgl-frame"
+          className="simulation-stream-frame unreal-pixel-streaming-frame"
           src={simulationStreamUrl}
           title={locale === "ko" ? "시뮬레이션 스트림" : "Simulation stream"}
           allow="fullscreen; autoplay; xr-spatial-tracking"
@@ -69,7 +69,7 @@ export function SimulationViewport({
         <span className="rain-sheen" />
         <span className="camera-vignette" />
       </div>
-      <div className="unity-depth-field" aria-hidden="true">
+      <div className="unreal-depth-field" aria-hidden="true">
         <span className="depth-building depth-left" />
         <span className="depth-building depth-right" />
         <span className="streetlight streetlight-a" />
@@ -85,7 +85,7 @@ export function SimulationViewport({
         <span>{renderMode}</span>
       </div>
       <section
-        className="unity-cctv-surface"
+        className="unreal-cctv-surface"
         aria-label={locale === "ko" ? "시뮬레이션 스트림 뷰어" : "Simulation stream viewer"}
       >
         <div>
@@ -93,8 +93,8 @@ export function SimulationViewport({
           <strong>{locale === "ko" ? "실사형 가상 CCTV / 디지털 트윈" : "Photoreal virtual CCTV / digital twin"}</strong>
           <small>
             {locale === "ko"
-              ? "NEXT_PUBLIC_SIMULATION_STREAM_URL 설정 시 Unreal Pixel Streaming/시뮬레이션 스트림으로 교체 / NEXT_PUBLIC_UNITY_WEBGL_URL도 호환"
-              : "Switches to a simulation stream when NEXT_PUBLIC_SIMULATION_STREAM_URL is set; NEXT_PUBLIC_UNITY_WEBGL_URL remains supported"}
+              ? "NEXT_PUBLIC_SIMULATION_STREAM_URL로 Unreal Pixel Streaming 플레이어 연결 / legacy stream alias도 임시 호환"
+              : "Connects to the Unreal Pixel Streaming player from NEXT_PUBLIC_SIMULATION_STREAM_URL; legacy stream alias remains temporarily supported"}
           </small>
         </div>
         <div className="cctv-frame-lines" aria-hidden="true">

@@ -26,11 +26,13 @@ import type {
   Report,
   RuntimeReadiness,
   ScenarioId,
+  CityId,
   SimulationComparison,
   TrafficEvent,
   UploadAnalysisResult
 } from "../lib/types";
 import { SCENARIO_OPTIONS } from "../lib/types";
+import { CITY_PROFILES, DEFAULT_CITY_ID } from "../lib/cities";
 
 const DEFAULT_SCENARIO_ID: ScenarioId = "emergency";
 
@@ -52,6 +54,7 @@ export function DashboardRoute() {
   const [error, setError] = useState<string | null>(null);
   const [selectedScenarioId, setSelectedScenarioId] =
     useState<ScenarioId>(DEFAULT_SCENARIO_ID);
+  const [selectedCityId, setSelectedCityId] = useState<CityId>(DEFAULT_CITY_ID);
   const [scenarioLoading, setScenarioLoading] = useState(false);
 
   useEffect(() => {
@@ -189,6 +192,9 @@ export function DashboardRoute() {
       selectedScenarioId={selectedScenarioId}
       scenarioOptions={SCENARIO_OPTIONS}
       scenarioLoading={scenarioLoading}
+      selectedCityId={selectedCityId}
+      cityProfiles={CITY_PROFILES}
+      onCityChange={setSelectedCityId}
       onAskQuestion={handleAskQuestion}
       onGenerateReport={handleGenerateReport}
       onIngestFixture={handleIngestFixture}
