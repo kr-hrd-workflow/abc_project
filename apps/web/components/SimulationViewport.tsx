@@ -44,17 +44,23 @@ export function SimulationViewport({
     [events, status]
   );
   const openaiReady = runtimeReadiness.openai.ready;
+  const genericStreamUrl = process.env.NEXT_PUBLIC_SIMULATION_STREAM_URL?.trim();
   const unityWebglUrl = process.env.NEXT_PUBLIC_UNITY_WEBGL_URL?.trim();
-  const renderMode = unityWebglUrl ? "Unity WebGL" : "WebGL-style fallback";
+  const simulationStreamUrl = genericStreamUrl || unityWebglUrl;
+  const renderMode = simulationStreamUrl
+    ? genericStreamUrl
+      ? "Simulation Stream"
+      : "Unity WebGL"
+    : "WebGL-style fallback";
 
   return (
     <div className="simulation-viewport">
-      {unityWebglUrl ? (
+      {simulationStreamUrl ? (
         <iframe
-          className="unity-webgl-frame"
-          src={unityWebglUrl}
-          title={locale === "ko" ? "Unity WebGL 교차로 시뮬레이터" : "Unity WebGL intersection simulator"}
-          allow="fullscreen; xr-spatial-tracking"
+          className="simulation-stream-frame unity-webgl-frame"
+          src={simulationStreamUrl}
+          title={locale === "ko" ? "시뮬레이션 스트림" : "Simulation stream"}
+          allow="fullscreen; autoplay; xr-spatial-tracking"
         />
       ) : null}
       <div className="cctv-atmosphere" aria-hidden="true">
@@ -80,15 +86,15 @@ export function SimulationViewport({
       </div>
       <section
         className="unity-cctv-surface"
-        aria-label={locale === "ko" ? "Unity 가상 CCTV 시뮬레이터" : "Unity virtual CCTV simulator"}
+        aria-label={locale === "ko" ? "시뮬레이션 스트림 뷰어" : "Simulation stream viewer"}
       >
         <div>
-          <span>{locale === "ko" ? "Unity-ready Render Slot" : "Unity-ready Render Slot"}</span>
+          <span>{locale === "ko" ? "Unreal-ready Render Slot" : "Unreal-ready Render Slot"}</span>
           <strong>{locale === "ko" ? "실사형 가상 CCTV / 디지털 트윈" : "Photoreal virtual CCTV / digital twin"}</strong>
           <small>
             {locale === "ko"
-              ? "Unity WebGL URL 입력 시 실제 Unity 빌드로 교체 / 현재는 안전한 WebGL 스타일 폴백"
-              : "Switches to a Unity WebGL build when NEXT_PUBLIC_UNITY_WEBGL_URL is set"}
+              ? "NEXT_PUBLIC_SIMULATION_STREAM_URL 설정 시 Unreal Pixel Streaming/시뮬레이션 스트림으로 교체 / NEXT_PUBLIC_UNITY_WEBGL_URL도 호환"
+              : "Switches to a simulation stream when NEXT_PUBLIC_SIMULATION_STREAM_URL is set; NEXT_PUBLIC_UNITY_WEBGL_URL remains supported"}
           </small>
         </div>
         <div className="cctv-frame-lines" aria-hidden="true">

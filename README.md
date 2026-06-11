@@ -14,7 +14,8 @@
 - 이미지/영상/virtual CCTV fixture 목록, fixture ingest, 업로드 분석 job API
 - 한국어/영어 전환 가능한 운영자 cockpit UI
 - 실사형 WebGL 스타일 가상 CCTV fallback
-- `NEXT_PUBLIC_UNITY_WEBGL_URL` 설정 시 Unity WebGL iframe mount slot
+- `NEXT_PUBLIC_SIMULATION_STREAM_URL` 설정 시 Unreal Pixel Streaming/시뮬레이션 iframe mount slot
+- `NEXT_PUBLIC_UNITY_WEBGL_URL` legacy Unity WebGL 호환 alias
 - OpenAI live 답변 gateway와 `openai_auto` fallback 모드
 - OpenAI API 키/월 예산 guard 및 secret 미노출 readiness report
 - keyword 기반 로컬 정책 근거 검색과 `KNOWLEDGE_SEARCH_MODE=pgvector` 옵션
@@ -105,7 +106,8 @@ http://127.0.0.1:3000/dashboard
 - `OPENAI_API_KEY`: live OpenAI 답변 활성화용 secret
 - `OPENAI_MONTHLY_BUDGET_USD`: live OpenAI 호출 전 예산 guard
 - `KNOWLEDGE_SEARCH_MODE`: `keyword` 또는 `pgvector`
-- `NEXT_PUBLIC_UNITY_WEBGL_URL`: Unity WebGL build mount URL
+- `NEXT_PUBLIC_SIMULATION_STREAM_URL`: Unreal Pixel Streaming 또는 hosted simulation stream mount URL
+- `NEXT_PUBLIC_UNITY_WEBGL_URL`: legacy Unity WebGL build mount URL alias
 
 `openai_auto` 동작:
 

@@ -185,6 +185,7 @@ afterEach(() => {
   cleanup();
   vi.restoreAllMocks();
   vi.unstubAllGlobals();
+  vi.unstubAllEnvs();
 });
 
 function dashboardProps(overrides: Partial<Parameters<typeof DashboardShell>[0]> = {}) {
@@ -350,11 +351,11 @@ describe("DashboardShell", () => {
 
     expect(screen.getByLabelText("SUMO 집계 텔레메트리")).toBeTruthy();
     expect(screen.getByLabelText("SUMO 스타일 교통 재생")).toBeTruthy();
-    expect(screen.getByLabelText("Unity 가상 CCTV 시뮬레이터")).toBeTruthy();
+    expect(screen.getByLabelText("시뮬레이션 스트림 뷰어")).toBeTruthy();
     expect(screen.getByText("실사형 가상 CCTV")).toBeTruthy();
     expect(screen.getByText("WebGL-style fallback")).toBeTruthy();
     expect(screen.getByText("실사형 가상 CCTV / 디지털 트윈")).toBeTruthy();
-    expect(screen.getByText("Unity WebGL URL 입력 시 실제 Unity 빌드로 교체 / 현재는 안전한 WebGL 스타일 폴백")).toBeTruthy();
+    expect(screen.getByText("NEXT_PUBLIC_SIMULATION_STREAM_URL 설정 시 Unreal Pixel Streaming/시뮬레이션 스트림으로 교체 / NEXT_PUBLIC_UNITY_WEBGL_URL도 호환")).toBeTruthy();
     expect(screen.getByText("주기 22s")).toBeTruthy();
     expect(screen.getByText("대기 72s -> 59s")).toBeTruthy();
     expect(screen.getByText("처리량 +13%")).toBeTruthy();
@@ -362,6 +363,28 @@ describe("DashboardShell", () => {
     expect(screen.getByText("파생 대기열 압력")).toBeTruthy();
     expect(screen.getByText("서 16대")).toBeTruthy();
     expect(screen.getByText("집계 지표 기반")).toBeTruthy();
+  });
+
+  test("mounts the generic simulation stream URL before the Unity alias", () => {
+    vi.stubEnv("NEXT_PUBLIC_SIMULATION_STREAM_URL", "https://pixel.example/stream");
+    vi.stubEnv("NEXT_PUBLIC_UNITY_WEBGL_URL", "/unity/index.html");
+
+    const { container } = renderDashboard();
+    const streamFrame = container.querySelector("iframe.simulation-stream-frame");
+
+    expect(streamFrame?.getAttribute("src")).toBe("https://pixel.example/stream");
+    expect(streamFrame?.getAttribute("title")).toBe("시뮬레이션 스트림");
+    expect(screen.getByText("Simulation Stream")).toBeTruthy();
+  });
+
+  test("keeps NEXT_PUBLIC_UNITY_WEBGL_URL as a simulation stream fallback alias", () => {
+    vi.stubEnv("NEXT_PUBLIC_UNITY_WEBGL_URL", "/unity/index.html");
+
+    const { container } = renderDashboard();
+    const streamFrame = container.querySelector("iframe.simulation-stream-frame");
+
+    expect(streamFrame?.getAttribute("src")).toBe("/unity/index.html");
+    expect(screen.getByText("Unity WebGL")).toBeTruthy();
   });
 
   test("switches visible labels between Korean and English", async () => {

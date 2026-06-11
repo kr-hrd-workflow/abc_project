@@ -50,7 +50,7 @@ export function DigitalTwin({
         </div>
         <div className="viewport-controls">
           <span className="viewport-mode">
-            {locale === "ko" ? "Unity 가상 CCTV" : "Unity virtual CCTV"}
+            {locale === "ko" ? "Unreal 스트림 준비" : "Unreal stream ready"}
           </span>
           <span className="viewport-mode">
             {locale === "ko" ? "SUMO 검증" : "SUMO validation"}

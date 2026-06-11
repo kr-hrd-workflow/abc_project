@@ -29,17 +29,25 @@ OPENAI_API_KEY=sk-...
 
 No endpoint returns the API key value. Readiness reports presence only.
 
-## 3. Unity WebGL mount
+## 3. Simulation stream mount
 
-The dashboard includes a Unity-ready render slot.
+The dashboard includes an Unreal-ready render slot that can mount Pixel Streaming or any hosted simulator page.
+
+```env
+NEXT_PUBLIC_SIMULATION_STREAM_URL=http://127.0.0.1:8888
+```
+
+When this value is set, the dashboard mounts the stream page in the central CCTV viewport. Without it, the committed WebGL-style fallback renders a realistic virtual CCTV scene using the existing simulation data.
+
+Legacy Unity WebGL exports remain supported through a compatibility alias:
 
 ```env
 NEXT_PUBLIC_UNITY_WEBGL_URL=/unity/index.html
 ```
 
-When this value is set, the dashboard mounts the Unity WebGL page in the central CCTV viewport. Without it, the committed WebGL-style fallback renders a realistic virtual CCTV scene using the existing simulation data.
+`NEXT_PUBLIC_SIMULATION_STREAM_URL` takes priority when both values are set.
 
-Expected Unity export layout if a Unity build is added later:
+Expected Unity export layout if a Unity build is kept for compatibility:
 
 ```text
 apps/web/public/unity/index.html
@@ -56,7 +64,8 @@ Keep the safety copy visible: this is a digital twin and operator decision-suppo
    - `NEXT_PUBLIC_API_BASE_URL`
    - `OPENAI_API_KEY`
    - `OPENAI_MONTHLY_BUDGET_USD`
-   - optional `NEXT_PUBLIC_UNITY_WEBGL_URL`
+   - optional `NEXT_PUBLIC_SIMULATION_STREAM_URL`
+   - optional legacy alias `NEXT_PUBLIC_UNITY_WEBGL_URL`
 2. Run migrations:
    - `cd apps/api && .venv/bin/alembic upgrade head`
 3. Verify readiness:
