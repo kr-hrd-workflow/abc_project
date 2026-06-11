@@ -129,6 +129,45 @@ def spawn_cube(
     return actor
 
 
+def spawn_flat_marking(
+    unreal: Any,
+    name: str,
+    x: float,
+    y: float,
+    z: float,
+    length: float,
+    width: float,
+    mat: Any,
+    yaw: float = 0,
+) -> Any:
+    return spawn_cube(unreal, name, (x, y, z), (length, width, 0.018), mat, rotation=(0, 0, yaw))
+
+
+def look_at_rotation_deg(location: tuple[float, float, float], target: tuple[float, float, float]) -> tuple[float, float, float]:
+    dx = target[0] - location[0]
+    dy = target[1] - location[1]
+    dz = target[2] - location[2]
+    horizontal = math.sqrt(dx * dx + dy * dy)
+    pitch = math.degrees(math.atan2(dz, horizontal))
+    yaw = math.degrees(math.atan2(dy, dx))
+    return (pitch, yaw, 0.0)
+
+
+def cctv_camera_location(city_id: str, fallback: list[float]) -> tuple[float, float, float]:
+    locations = {
+        "seoul": (3000, -2600, 1550),
+        "new_york": (2800, -3000, 1500),
+        "paris": (2600, -2400, 1350),
+        "london": (3100, -2200, 1450),
+    }
+    return locations.get(city_id, tuple(fallback))
+
+
+def cctv_focal_length(city_id: str, fallback: float) -> float:
+    return {"seoul": 32, "new_york": 35, "paris": 40, "london": 32}.get(city_id, fallback)
+
+
+
 def city_palette(city_id: str) -> dict[str, Color]:
     palettes: dict[str, dict[str, Color]] = {
         "seoul": {
@@ -298,26 +337,137 @@ def spawn_signals_and_street_furniture(unreal: Any, profile: dict[str, Any], mat
             spawn_cube(unreal, f"London black railing {i}", (i * 420, -1580, 120), (1.5, 0.06, 0.55), mats["dark"])
 
 
+def spawn_vehicle(
+    unreal: Any,
+    name: str,
+    location: tuple[float, float, float],
+    yaw: float,
+    mats: dict[str, Any],
+    body_mat: Any,
+    accent_mat: Any | None = None,
+    roof_sign: bool = False,
+    emergency: bool = False,
+) -> None:
+    x, y, z = location
+    accent = accent_mat or mats["marking"]
+    spawn_cube(unreal, f"{name} body shell", (x, y, z), (0.74, 1.55, 0.32), body_mat, rotation=(0, 0, yaw))
+    spawn_cube(unreal, f"{name} cabin glass", (x, y, z + 34), (0.54, 0.78, 0.28), mats["glass"], rotation=(0, 0, yaw))
+    spawn_cube(unreal, f"{name} windshield", (x, y + 48, z + 42), (0.44, 0.055, 0.18), mats["glass"], rotation=(0, 0, yaw))
+    spawn_cube(unreal, f"{name} rear window", (x, y - 56, z + 40), (0.42, 0.055, 0.16), mats["glass"], rotation=(0, 0, yaw))
+    for suffix, dx, dy in [("FL", -34, 58), ("FR", 34, 58), ("RL", -34, -58), ("RR", 34, -58)]:
+        spawn_cube(unreal, f"{name} wheel {suffix}", (x + dx, y + dy, z - 26), (0.16, 0.30, 0.20), mats["dark"], rotation=(0, 0, yaw))
+    spawn_cube(unreal, f"{name} headlight bar", (x, y + 83, z + 8), (0.50, 0.035, 0.065), mats["marking"], rotation=(0, 0, yaw))
+    spawn_cube(unreal, f"{name} tail light bar", (x, y - 83, z + 8), (0.45, 0.035, 0.065), accent, rotation=(0, 0, yaw))
+    if roof_sign:
+        spawn_cube(unreal, f"{name} taxi roof sign", (x, y, z + 70), (0.28, 0.22, 0.08), mats["warm"], rotation=(0, 0, yaw))
+    if emergency:
+        spawn_cube(unreal, f"{name} emergency lightbar", (x, y, z + 73), (0.42, 0.12, 0.08), mats["accent"], rotation=(0, 0, yaw))
+
+
+def spawn_bus(unreal: Any, name: str, location: tuple[float, float, float], yaw: float, mats: dict[str, Any], body_mat: Any) -> None:
+    x, y, z = location
+    spawn_cube(unreal, f"{name} long body", (x, y, z), (1.08, 3.35, 0.62), body_mat, rotation=(0, 0, yaw))
+    spawn_cube(unreal, f"{name} black window ribbon", (x, y, z + 44), (0.92, 2.88, 0.22), mats["glass"], rotation=(0, 0, yaw))
+    spawn_cube(unreal, f"{name} destination sign", (x, y + 170, z + 62), (0.66, 0.04, 0.14), mats["marking"], rotation=(0, 0, yaw))
+    for i, dy in enumerate([-126, -42, 42, 126]):
+        spawn_cube(unreal, f"{name} wheel pair {i} left", (x - 54, y + dy, z - 42), (0.18, 0.28, 0.24), mats["dark"], rotation=(0, 0, yaw))
+        spawn_cube(unreal, f"{name} wheel pair {i} right", (x + 54, y + dy, z - 42), (0.18, 0.28, 0.24), mats["dark"], rotation=(0, 0, yaw))
+
+
+def spawn_detail_row(unreal: Any, prefix: str, start_x: float, y: float, count: int, spacing: float, mats: dict[str, Any]) -> None:
+    for i in range(count):
+        x = start_x + i * spacing
+        spawn_cube(unreal, f"{prefix} vertical post {i}", (x, y, 86), (0.07, 0.07, 0.62), mats["dark"])
+        spawn_cube(unreal, f"{prefix} top rail {i}", (x, y, 130), (0.32, 0.045, 0.055), mats["dark"])
+
+
+def spawn_bus_shelter(unreal: Any, label: str, location: tuple[float, float, float], mats: dict[str, Any], yaw: float = 0) -> None:
+    x, y, z = location
+    spawn_cube(unreal, f"{label} shelter glass back", (x, y, z + 72), (2.4, 0.07, 1.25), mats["glass"], rotation=(0, 0, yaw))
+    spawn_cube(unreal, f"{label} shelter roof", (x, y, z + 145), (2.7, 0.55, 0.10), mats["dark"], rotation=(0, 0, yaw))
+    spawn_cube(unreal, f"{label} shelter bench", (x, y + 18, z + 38), (1.4, 0.16, 0.18), mats["sidewalk"], rotation=(0, 0, yaw))
+    spawn_cube(unreal, f"{label} lit ad panel", (x + 108, y - 8, z + 78), (0.36, 0.04, 0.82), mats["warm"], rotation=(0, 0, yaw))
+
+
+def spawn_tactile_paving(unreal: Any, label: str, x: float, y: float, mats: dict[str, Any]) -> None:
+    for ix in range(4):
+        for iy in range(3):
+            spawn_cube(unreal, f"{label} tactile dome {ix}-{iy}", (x + ix * 34, y + iy * 34, 38), (0.09, 0.09, 0.035), mats["accent"])
+
+
+def spawn_city_specific_details(unreal: Any, profile: dict[str, Any], mats: dict[str, Any], road_width: float) -> None:
+    city_id = profile["id"]
+    display = profile["display_name"]
+    # CCTV/traffic-control road annotation bars: intentionally geometric but readable from editor screenshots.
+    if city_id == "seoul":
+        spawn_bus_shelter(unreal, "Seoul glass bus", (-980, 1710, 42), mats)
+        for i in range(5):
+            spawn_cube(unreal, f"Seoul stacked Korean shop sign {i}", (-2360, -1770, 430 + i * 155), (0.56, 0.06, 0.34), mats["warm"] if i % 2 else mats["green"])
+        for i in range(4):
+            spawn_cube(unreal, f"Seoul smart kiosk screen {i}", (-1420 + i * 280, 1450, 122), (0.24, 0.08, 0.88), mats["glass"])
+        spawn_flat_marking(unreal, "Seoul BUS lane word bar 1", -760, road_width / 2 - 160, 42, 2.0, 0.12, mats["marking"], 0)
+        spawn_flat_marking(unreal, "Seoul BUS lane word bar 2", -420, road_width / 2 - 160, 42, 1.4, 0.12, mats["marking"], 90)
+    elif city_id == "new_york":
+        for i in range(5):
+            spawn_cube(unreal, f"NYC parking regulation sign plate {i}", (-1320, -1540, 270 + i * 72), (0.42, 0.035, 0.20), mats["marking"])
+        for i in range(7):
+            spawn_cube(unreal, f"NYC scaffolding upright {i}", (-2520 + i * 180, -1850, 210), (0.055, 0.055, 2.35), mats["dark"])
+            spawn_cube(unreal, f"NYC scaffolding rail {i}", (-2520 + i * 180, -1850, 270), (0.72, 0.04, 0.045), mats["dark"])
+        for y in [-road_width / 2 - 690, road_width / 2 + 690]:
+            spawn_flat_marking(unreal, f"NYC ladder crosswalk rail {y} A", -460, y, 46, 0.10, 6.4, mats["marking"], 0)
+            spawn_flat_marking(unreal, f"NYC ladder crosswalk rail {y} B", 460, y, 46, 0.10, 6.4, mats["marking"], 0)
+        spawn_cube(unreal, "NYC manhole utility plate", (620, -510, 42), (0.54, 0.54, 0.025), mats["dark"])
+    elif city_id == "paris":
+        for i in range(-2, 3):
+            spawn_cube(unreal, f"Paris cafe table {i}", (i * 220, 1510, 58), (0.24, 0.24, 0.08), mats["dark"])
+            spawn_cube(unreal, f"Paris cafe chair left {i}", (i * 220 - 58, 1510, 52), (0.16, 0.14, 0.22), mats["green"])
+            spawn_cube(unreal, f"Paris cafe chair right {i}", (i * 220 + 58, 1510, 52), (0.16, 0.14, 0.22), mats["green"])
+        for i in range(-4, 5):
+            spawn_cube(unreal, f"Paris tree grate {i}", (-1700, i * 520, 34), (0.75, 0.75, 0.025), mats["dark"])
+        for i in range(6):
+            spawn_cube(unreal, f"Paris stone facade pilaster {i}", (-3200 + i * 240, 2530, 660), (0.08, 0.11, 4.2), mats["sidewalk"])
+        spawn_bus_shelter(unreal, "Paris boulevard bus", (1120, -1580, 42), mats, yaw=180)
+    elif city_id == "london":
+        for i in range(-5, 6):
+            spawn_flat_marking(unreal, f"London zig zag north {i}", i * 220, -road_width / 2 - 880, 46, 0.10, 1.7, mats["marking"], 32)
+            spawn_flat_marking(unreal, f"London zig zag south {i}", i * 220, road_width / 2 + 880, 46, 0.10, 1.7, mats["marking"], -32)
+        for x, y in [(-920, -940), (920, -940), (-920, 940), (920, 940)]:
+            spawn_tactile_paving(unreal, f"London crossing {x} {y}", x, y, mats)
+        spawn_cube(unreal, "London Belisha beacon pole", (1340, -1320, 180), (0.10, 0.10, 1.7), mats["dark"])
+        spawn_cube(unreal, "London Belisha amber globe", (1340, -1320, 360), (0.24, 0.24, 0.24), mats["accent"])
+        spawn_cube(unreal, "London signal control cabinet", (-1040, 1320, 96), (0.52, 0.32, 0.82), mats["green"])
+        for y in [-road_width / 2 - 240, road_width / 2 + 240]:
+            spawn_flat_marking(unreal, f"London double yellow curb {y} A", -1200, y, 44, 18.0, 0.055, mats["accent"], 0)
+            spawn_flat_marking(unreal, f"London double yellow curb {y} B", -1200, y + 48, 44, 18.0, 0.055, mats["accent"], 0)
+    spawn_cube(unreal, f"{display} CCTV municipal timestamp plate", (-1540, -1280, 260), (2.0, 0.04, 0.24), mats["dark"])
+    for i in range(7):
+        spawn_cube(unreal, f"{display} CCTV timestamp glyph {i}", (-1620 + i * 45, -1286, 270), (0.13, 0.02, 0.045), mats["marking"])
+
+
 def spawn_traffic(unreal: Any, profile: dict[str, Any], mats: dict[str, Any]) -> None:
     city_id = profile["id"]
-    vehicle_count = min(32, profile["traffic"].get("vehicle_placeholders", 24))
+    vehicle_count = min(28, profile["traffic"].get("vehicle_placeholders", 24))
     traffic_side = profile.get("traffic_side", "right")
     lane_sign = -1 if traffic_side == "left" else 1
     for i in range(vehicle_count):
-        along = -7600 + i * 480
+        along = -6800 + i * 520
         if i % 2 == 0:
-            x, y, rot = lane_sign * 270, along, 0
+            x, y, rot = lane_sign * (250 + (i % 3) * 155), along, 0
         else:
-            x, y, rot = along, -lane_sign * 270, 90
-        mat = mats["warm"] if (city_id == "new_york" and i % 5 == 0) else mats["glass"]
-        spawn_cube(unreal, f"Traffic vehicle placeholder {i}", (x, y, 78), (0.75, 1.55, 0.38), mat, rotation=(0, 0, rot))
+            x, y, rot = along, -lane_sign * (250 + (i % 3) * 155), 90
+        is_taxi = city_id == "new_york" and i % 4 == 0
+        is_service = i in {3, 17}
+        body = mats["warm"] if is_taxi else (mats["accent"] if is_service else mats["facade"] if i % 3 == 0 else mats["glass"])
+        spawn_vehicle(unreal, f"CCTV tracked vehicle {i}", (x, y, 92), rot, mats, body, mats["accent"], roof_sign=is_taxi, emergency=is_service)
     for i in range(profile["traffic"].get("bus_placeholders", 2)):
-        spawn_cube(unreal, f"Transit bus placeholder {i}", (-420 + i * 840, 1020, 110), (1.1, 3.4, 0.65), mats["warm"], rotation=(0, 0, 90))
-    for i in range(min(28, profile["traffic"].get("pedestrian_placeholders", 16))):
-        angle = i * (math.tau / 28)
-        x = math.cos(angle) * 1080
-        y = math.sin(angle) * 1080
-        spawn_cube(unreal, f"Pedestrian silhouette {i}", (x, y, 92), (0.18, 0.18, 0.95), mats["dark"])
+        bus_mat = mats["warm"] if city_id in {"seoul", "london"} else mats["accent"]
+        spawn_bus(unreal, f"City transit bus {i}", (-560 + i * 900, 1040 + i * 180, 128), 90, mats, bus_mat)
+    for i in range(min(24, profile["traffic"].get("pedestrian_placeholders", 16))):
+        angle = i * (math.tau / 24)
+        x = math.cos(angle) * 1140
+        y = math.sin(angle) * 1140
+        spawn_cube(unreal, f"Pedestrian torso silhouette {i}", (x, y, 96), (0.16, 0.16, 0.72), mats["dark"])
+        spawn_cube(unreal, f"Pedestrian head silhouette {i}", (x, y, 148), (0.18, 0.18, 0.18), mats["warm"] if i % 5 == 0 else mats["sidewalk"])
 
 
 def light_component_from_actor(unreal: Any, actor: Any, component_class_name: str, property_names: list[str]) -> Any | None:
@@ -347,20 +497,40 @@ def set_component_property(component: Any | None, name: str, value: Any) -> None
         pass
 
 
+def spawn_cctv_rig(unreal: Any, profile: dict[str, Any], mats: dict[str, Any], cam_loc: tuple[float, float, float]) -> None:
+    city = profile["display_name"]
+    pole_x, pole_y = cam_loc[0] - 135, cam_loc[1] - 95
+    pole_height = max(700, cam_loc[2] - 120)
+    spawn_cube(unreal, f"{city} CCTV pole", (pole_x, pole_y, pole_height / 2), (0.13, 0.13, pole_height / 100), mats["dark"])
+    spawn_cube(unreal, f"{city} CCTV mast arm", (cam_loc[0] - 62, cam_loc[1] - 42, cam_loc[2]), (1.55, 0.075, 0.075), mats["dark"], rotation=(0, 0, 35))
+    spawn_cube(unreal, f"{city} CCTV camera housing", cam_loc, (0.44, 0.25, 0.20), mats["dark"], rotation=(0, 0, 35))
+    spawn_cube(unreal, f"{city} CCTV sun visor", (cam_loc[0], cam_loc[1], cam_loc[2] + 18), (0.56, 0.31, 0.035), mats["dark"], rotation=(0, 0, 35))
+    spawn_cube(unreal, f"{city} CCTV glass lens", (cam_loc[0] - 30, cam_loc[1] + 18, cam_loc[2] - 2), (0.16, 0.035, 0.12), mats["glass"], rotation=(0, 0, 35))
+    spawn_cube(unreal, f"{city} CCTV red status LED", (cam_loc[0] + 18, cam_loc[1] - 11, cam_loc[2] + 12), (0.045, 0.035, 0.045), mats["accent"], rotation=(0, 0, 35))
+    spawn_cube(unreal, f"{city} CCTV foreground bracket silhouette", (cam_loc[0] - 185, cam_loc[1] + 80, cam_loc[2] - 90), (0.08, 1.45, 0.08), mats["dark"], rotation=(0, 0, 35))
+
+
 def spawn_lighting_and_camera(unreal: Any, profile: dict[str, Any]) -> None:
     city_id = profile["id"]
     cam_data = profile["camera"]
-    camera = unreal.EditorLevelLibrary.spawn_actor_from_class(unreal.CineCameraActor, unreal.Vector(*cam_data["location_cm"]))
-    camera.set_actor_label(f"CCTV {profile['display_name']}")
-    camera.set_actor_rotation(unreal.Rotator(*cam_data["rotation_deg"]), False)
-    camera.get_cine_camera_component().current_focal_length = cam_data["focal_length_mm"]
+    mats = make_materials(unreal, city_id)
+    cam_loc = cctv_camera_location(city_id, cam_data["location_cm"])
+    target = tuple(cam_data.get("target_cm", (0, 0, 165)))
+    camera = unreal.EditorLevelLibrary.spawn_actor_from_class(unreal.CineCameraActor, unreal.Vector(*cam_loc))
+    camera.set_actor_label(f"CCTV {profile['display_name']} Traffic Control View")
+    camera.set_actor_rotation(unreal.Rotator(*look_at_rotation_deg(cam_loc, target)), False)
+    cine = camera.get_cine_camera_component()
+    cine.current_focal_length = cctv_focal_length(city_id, cam_data["focal_length_mm"])
+    set_component_property(cine, "current_aperture", 8.0)
+
+    spawn_cctv_rig(unreal, profile, mats, cam_loc)
 
     sun = unreal.EditorLevelLibrary.spawn_actor_from_class(unreal.DirectionalLight, unreal.Vector(-2400, -1800, 7000))
     sun.set_actor_label(f"{profile['display_name']} movable sun / sky key")
     sun_component = light_component_from_actor(unreal, sun, "DirectionalLightComponent", ["directional_light_component"])
     if sun_component:
         sun_component.set_mobility(mobility(unreal))
-        set_component_property(sun_component, "intensity", 8.5 if city_id in {"seoul", "london"} else 7.0)
+        set_component_property(sun_component, "intensity", 9.0 if city_id in {"seoul", "london"} else 7.5)
     else:
         unreal.log_warning("Could not find DirectionalLightComponent on spawned DirectionalLight")
 
@@ -370,10 +540,8 @@ def spawn_lighting_and_camera(unreal: Any, profile: dict[str, Any]) -> None:
         sky_component = light_component_from_actor(unreal, sky, "SkyLightComponent", ["sky_light_component"])
         if sky_component:
             sky_component.set_mobility(mobility(unreal))
-            set_component_property(sky_component, "intensity", 2.8)
+            set_component_property(sky_component, "intensity", 3.0)
 
-    # Practical street/city lights: these make the generated proof readable in screenshots
-    # and give rainy/overcast cities a photoreal-ready night/dusk mood.
     light_positions = [
         (-1800, -1800, 620), (1800, -1800, 620), (-1800, 1800, 620), (1800, 1800, 620),
         (0, -2400, 760), (0, 2400, 760), (-2400, 0, 760), (2400, 0, 760),
@@ -384,13 +552,8 @@ def spawn_lighting_and_camera(unreal: Any, profile: dict[str, Any]) -> None:
         point_component = light_component_from_actor(unreal, point, "PointLightComponent", ["point_light_component"])
         if point_component:
             point_component.set_mobility(mobility(unreal))
-            set_component_property(point_component, "intensity", 2800.0)
-            set_component_property(point_component, "attenuation_radius", 4200.0)
-
-    # Large bright proof card behind the camera target so screenshots do not read as a blank template.
-    mats = make_materials(unreal, city_id)
-    spawn_cube(unreal, f"{profile['display_name']} cinematic proof plinth", (0, 0, -12), (48, 48, 0.04), mats["sidewalk"])
-    spawn_cube(unreal, f"{profile['display_name']} color identity marker", (-1450, -1250, 42), (8.0, 0.22, 0.04), mats["accent"])
+            set_component_property(point_component, "intensity", 2600.0)
+            set_component_property(point_component, "attenuation_radius", 3900.0)
 
 
 def spawn_city(unreal: Any, profile: dict[str, Any]) -> None:
@@ -413,6 +576,7 @@ def spawn_city(unreal: Any, profile: dict[str, Any]) -> None:
     spawn_roads(unreal, profile, mats, road_width)
     spawn_buildings(unreal, profile, mats)
     spawn_signals_and_street_furniture(unreal, profile, mats)
+    spawn_city_specific_details(unreal, profile, mats, road_width)
     spawn_traffic(unreal, profile, mats)
     spawn_lighting_and_camera(unreal, profile)
 
