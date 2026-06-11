@@ -11,6 +11,7 @@ import {
   getEvents,
   getFixtures,
   getIntersectionStatus,
+  getRuntimeReadiness,
   ingestFixture,
   recommendSignal,
   simulateSignal
@@ -23,6 +24,7 @@ import type {
   IntersectionStatus,
   Recommendation,
   Report,
+  RuntimeReadiness,
   ScenarioId,
   SimulationComparison,
   TrafficEvent,
@@ -40,6 +42,7 @@ type DashboardData = {
   report: Report;
   chat: ChatResponse | null;
   fixtures: AnalysisFixture[];
+  runtimeReadiness: RuntimeReadiness;
   latestFixtureIngest: FixtureIngestResult | null;
   latestAnalysisJob: AnalysisJob | null;
 };
@@ -57,14 +60,15 @@ export function DashboardRoute() {
 
   async function loadDashboard(scenarioId: ScenarioId) {
     try {
-      const [status, events, recommendation, simulation, report, fixtures] =
+      const [status, events, recommendation, simulation, report, fixtures, runtimeReadiness] =
         await Promise.all([
           getIntersectionStatus(scenarioId),
           getEvents(scenarioId),
           recommendSignal(scenarioId),
           simulateSignal(scenarioId),
           generateReport(scenarioId),
-          getFixtures()
+          getFixtures(),
+          getRuntimeReadiness()
         ]);
 
       setData({
@@ -75,6 +79,7 @@ export function DashboardRoute() {
         report,
         chat: null,
         fixtures,
+        runtimeReadiness,
         latestFixtureIngest: null,
         latestAnalysisJob: null
       });
@@ -178,6 +183,7 @@ export function DashboardRoute() {
       report={data.report}
       chat={data.chat}
       fixtures={data.fixtures}
+      runtimeReadiness={data.runtimeReadiness}
       latestFixtureIngest={data.latestFixtureIngest}
       latestAnalysisJob={data.latestAnalysisJob}
       selectedScenarioId={selectedScenarioId}

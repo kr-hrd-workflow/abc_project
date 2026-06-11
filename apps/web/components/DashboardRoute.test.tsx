@@ -19,6 +19,7 @@ vi.mock("../lib/api", () => ({
         "API request failed: 503 /api/intersection/status: Database unavailable. Start PostgreSQL and run migrations."
       )
     ),
+  getRuntimeReadiness: vi.fn().mockRejectedValue(new Error("not used")),
   ingestFixture: vi.fn(),
   recommendSignal: vi.fn().mockRejectedValue(new Error("not used")),
   simulateSignal: vi.fn().mockRejectedValue(new Error("not used"))

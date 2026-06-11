@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 
-import type { TrafficEvent, IntersectionStatus, SimulationComparison } from "../lib/types";
+import type { TrafficEvent, IntersectionStatus, RuntimeReadiness, SimulationComparison } from "../lib/types";
 import type { Locale } from "../lib/i18n";
 import { copy } from "../lib/i18n";
 import { SimulationViewport } from "./SimulationViewport";
@@ -11,6 +11,7 @@ type DigitalTwinProps = {
   status: IntersectionStatus;
   events: TrafficEvent[];
   simulation: SimulationComparison;
+  runtimeReadiness: RuntimeReadiness;
   locale: Locale;
   onRunSimulation: () => Promise<void>;
 };
@@ -19,6 +20,7 @@ export function DigitalTwin({
   status,
   events,
   simulation,
+  runtimeReadiness,
   locale,
   onRunSimulation
 }: DigitalTwinProps) {
@@ -75,6 +77,7 @@ export function DigitalTwin({
         status={status}
         events={events}
         simulation={simulation}
+        runtimeReadiness={runtimeReadiness}
         locale={locale}
       />
 

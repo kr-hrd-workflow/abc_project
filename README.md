@@ -19,6 +19,8 @@
 - 추천, 시뮬레이션 비교, 채팅 답변, 리포트 생성
 - 한국어/영어 전환이 가능한 대시보드 UI
 - 교체 가능한 중앙 시뮬레이션 뷰포트
+- 실사형 WebGL 스타일 가상 CCTV 폴백과 Unity WebGL 마운트 슬롯
+- OpenAI 키 입력 시 자동으로 live AI 답변으로 전환되는 `openai_auto` 모드
 - 정책/운영 가이드 문서 기반의 로컬 근거 검색
 - `/api/runtime/readiness` 런타임 준비 상태 점검 API
 - `/api/runtime/readiness`에서 PostgreSQL `vector` 확장 활성화 여부 조회
@@ -78,6 +80,16 @@ OpenAI 호출은 두 값이 설정된 뒤에만 실행해야 합니다.
      때 쓰는 체크리스트입니다.
 
 ## 로컬 실행 준비
+
+가장 빠른 실행 경로:
+
+```bash
+cp .env.example .env.local
+# .env.local에 OPENAI_API_KEY만 입력하면 live AI 답변이 자동 활성화됩니다.
+npm run launch:local
+```
+
+세부 런칭 체크리스트는 `docs/launch-runbook.md`를 보세요.
 
 Python 3.12 이상, Node.js/npm, Docker Desktop이 필요합니다.
 

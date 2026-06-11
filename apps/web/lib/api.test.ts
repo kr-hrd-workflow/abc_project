@@ -6,6 +6,7 @@ import {
   generateReport,
   getAnalysisJob,
   getFixtures,
+  getRuntimeReadiness,
   ingestFixture,
   recommendSignal
 } from "./api";
@@ -173,6 +174,22 @@ describe("dashboard API client", () => {
 
     expect(fetchMock).toHaveBeenCalledWith(
       "http://127.0.0.1:8000/api/analysis-jobs/job-1",
+      expect.objectContaining({
+        cache: "no-store"
+      })
+    );
+  });
+
+  test("loads runtime readiness for launch gates", async () => {
+    const fetchMock = vi
+      .spyOn(globalThis, "fetch")
+      .mockReturnValue(mockJsonResponse({ openai: { ready: false } }));
+
+    const readiness = await getRuntimeReadiness();
+
+    expect(readiness).toEqual({ openai: { ready: false } });
+    expect(fetchMock).toHaveBeenCalledWith(
+      "http://127.0.0.1:8000/api/runtime/readiness",
       expect.objectContaining({
         cache: "no-store"
       })

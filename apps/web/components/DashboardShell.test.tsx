@@ -14,6 +14,7 @@ import type {
   IntersectionStatus,
   Recommendation,
   Report,
+  RuntimeReadiness,
   ScenarioId,
   SimulationComparison,
   TrafficEvent
@@ -164,6 +165,22 @@ const latestAnalysisJob: AnalysisJob = {
   size_bytes: 128
 };
 
+const runtimeReadiness: RuntimeReadiness = {
+  vision: { ready: true, mode: "fixture", missing: [], checks: [] },
+  simulation: { ready: true, mode: "fixture", missing: [], checks: [] },
+  openai: {
+    ready: false,
+    mode: "gpt-5.5",
+    missing: ["OPENAI_API_KEY"],
+    checks: [
+      { name: "python module openai", available: true },
+      { name: "OPENAI_API_KEY", available: false, detail: "presence only" },
+      { name: "OPENAI_MONTHLY_BUDGET_USD", available: true }
+    ]
+  },
+  pgvector: { ready: true, mode: "database", missing: [], checks: [] }
+};
+
 afterEach(() => {
   cleanup();
   vi.restoreAllMocks();
@@ -178,6 +195,7 @@ function dashboardProps(overrides: Partial<Parameters<typeof DashboardShell>[0]>
     simulation,
     report,
     chat,
+    runtimeReadiness,
     onAskQuestion: vi.fn(),
     onGenerateReport: vi.fn(),
     onRefreshRecommendation: vi.fn(),
@@ -223,7 +241,8 @@ describe("DashboardShell", () => {
     renderDashboard();
 
     expect(screen.getAllByText("실제 신호 제어 없음").length).toBeGreaterThanOrEqual(1);
-    expect(screen.getByText("Unity 가상 CCTV + SUMO 검증 뷰")).toBeTruthy();
+    expect(screen.getByText("실사형 가상 CCTV / 디지털 트윈")).toBeTruthy();
+    expect(screen.getByText("OPENAI_API_KEY 대기")).toBeTruthy();
   });
 
   test("lets the operator switch between AI automatic and admin manual operation modes", async () => {
@@ -332,10 +351,10 @@ describe("DashboardShell", () => {
     expect(screen.getByLabelText("SUMO 집계 텔레메트리")).toBeTruthy();
     expect(screen.getByLabelText("SUMO 스타일 교통 재생")).toBeTruthy();
     expect(screen.getByLabelText("Unity 가상 CCTV 시뮬레이터")).toBeTruthy();
-    expect(screen.getByText("가상 CCTV 재생")).toBeTruthy();
-    expect(screen.getByText("Unity 발표용 폴백")).toBeTruthy();
-    expect(screen.getByText("가상 CCTV 발표 화면")).toBeTruthy();
-    expect(screen.getByText("실제 CCTV·신호 제어 없음 / SUMO 지표 기반")).toBeTruthy();
+    expect(screen.getByText("실사형 가상 CCTV")).toBeTruthy();
+    expect(screen.getByText("WebGL-style fallback")).toBeTruthy();
+    expect(screen.getByText("실사형 가상 CCTV / 디지털 트윈")).toBeTruthy();
+    expect(screen.getByText("Unity WebGL URL 입력 시 실제 Unity 빌드로 교체 / 현재는 안전한 WebGL 스타일 폴백")).toBeTruthy();
     expect(screen.getByText("주기 22s")).toBeTruthy();
     expect(screen.getByText("대기 72s -> 59s")).toBeTruthy();
     expect(screen.getByText("처리량 +13%")).toBeTruthy();
@@ -446,7 +465,14 @@ describe("DashboardShell", () => {
             },
             onAnalyzeUpload: async () => {
               setAnalysisJob(latestAnalysisJob);
-              return { job: latestAnalysisJob };
+              return {
+                job_id: latestAnalysisJob.job_id,
+                analysis_status: "completed",
+                job: latestAnalysisJob,
+                observation: { source: latestAnalysisJob.observation_source },
+                status_id: latestAnalysisJob.status_id,
+                event_ids: latestAnalysisJob.event_ids
+              };
             },
             onScenarioChange: (scenarioId) => {
               setSelectedScenarioId(scenarioId);

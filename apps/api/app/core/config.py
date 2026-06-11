@@ -1,7 +1,18 @@
+from pathlib import Path
 from typing import Literal
 
 from pydantic import Field
 from pydantic_settings import BaseSettings, SettingsConfigDict
+
+
+API_DIR = Path(__file__).resolve().parents[2]
+REPO_ROOT = API_DIR.parents[1]
+ENV_FILES = (
+    REPO_ROOT / ".env",
+    REPO_ROOT / ".env.local",
+    API_DIR / ".env",
+    API_DIR / ".env.local",
+)
 
 
 class Settings(BaseSettings):
@@ -14,12 +25,18 @@ class Settings(BaseSettings):
     sumo_config_path: str = "networks/intersection.sumocfg"
     sumo_step_count: int = Field(default=300, ge=1)
     openai_model: str = "gpt-5.5"
+    openai_api_key: str | None = Field(default=None, repr=False)
     openai_embedding_model: str = "text-embedding-3-small"
     openai_embedding_dimensions: int = Field(default=1536, ge=1)
-    openai_monthly_budget_usd: float | None = Field(default=None, gt=0)
+    openai_monthly_budget_usd: float | None = Field(default=10.0, gt=0)
+    openai_answer_mode: Literal["local", "openai_auto", "openai"] = "openai_auto"
     knowledge_search_mode: Literal["keyword", "pgvector"] = "keyword"
 
-    model_config = SettingsConfigDict(env_file=".env", env_file_encoding="utf-8", extra="ignore")
+    model_config = SettingsConfigDict(
+        env_file=ENV_FILES,
+        env_file_encoding="utf-8",
+        extra="ignore",
+    )
 
 
 settings = Settings()

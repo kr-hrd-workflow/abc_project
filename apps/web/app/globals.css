@@ -9689,3 +9689,205 @@ body {
     width: auto;
   }
 }
+
+/* Launch-grade realistic CCTV and Unity WebGL mount layer. */
+.launch-dashboard[data-layout="operations-cockpit"] .unity-webgl-frame {
+  position: absolute;
+  inset: 0;
+  z-index: 5;
+  width: 100%;
+  height: 100%;
+  border: 0;
+  background: #050708;
+}
+
+.launch-dashboard[data-layout="operations-cockpit"] .cctv-atmosphere,
+.launch-dashboard[data-layout="operations-cockpit"] .unity-depth-field {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+
+.launch-dashboard[data-layout="operations-cockpit"] .cctv-atmosphere {
+  z-index: 7;
+  mix-blend-mode: screen;
+}
+
+.launch-dashboard[data-layout="operations-cockpit"] .unity-depth-field {
+  z-index: 4;
+  perspective: 900px;
+}
+
+.launch-dashboard[data-layout="operations-cockpit"] .lens-flare,
+.launch-dashboard[data-layout="operations-cockpit"] .rain-sheen,
+.launch-dashboard[data-layout="operations-cockpit"] .camera-vignette,
+.launch-dashboard[data-layout="operations-cockpit"] .depth-building,
+.launch-dashboard[data-layout="operations-cockpit"] .streetlight {
+  position: absolute;
+  display: block;
+}
+
+.launch-dashboard[data-layout="operations-cockpit"] .flare-main {
+  top: 12%;
+  right: 20%;
+  width: 170px;
+  height: 170px;
+  border-radius: 999px;
+  background: radial-gradient(circle, rgba(255, 231, 168, 0.34), rgba(104, 211, 203, 0.1) 28%, transparent 62%);
+  filter: blur(8px);
+  opacity: 0.72;
+}
+
+.launch-dashboard[data-layout="operations-cockpit"] .flare-side {
+  top: 34%;
+  left: 14%;
+  width: 86px;
+  height: 86px;
+  border-radius: 999px;
+  background: radial-gradient(circle, rgba(111, 190, 255, 0.18), transparent 68%);
+  filter: blur(5px);
+}
+
+.launch-dashboard[data-layout="operations-cockpit"] .rain-sheen {
+  inset: -12%;
+  opacity: 0.34;
+  background-image:
+    linear-gradient(112deg, transparent 0 46%, rgba(238, 252, 255, 0.16) 47%, transparent 48% 100%),
+    linear-gradient(112deg, transparent 0 58%, rgba(238, 252, 255, 0.08) 59%, transparent 60% 100%);
+  background-size: 92px 180px, 136px 220px;
+  animation: cctvRain 2.8s linear infinite;
+}
+
+.launch-dashboard[data-layout="operations-cockpit"] .camera-vignette {
+  inset: 0;
+  background:
+    radial-gradient(circle at 50% 48%, transparent 0 38%, rgba(0, 0, 0, 0.46) 78%, rgba(0, 0, 0, 0.72) 100%),
+    linear-gradient(180deg, rgba(255, 255, 255, 0.05), transparent 14% 86%, rgba(0, 0, 0, 0.16));
+  mix-blend-mode: normal;
+}
+
+.launch-dashboard[data-layout="operations-cockpit"] .depth-building {
+  bottom: 58%;
+  width: clamp(96px, 13vw, 180px);
+  height: clamp(72px, 11vw, 150px);
+  border: 1px solid rgba(227, 239, 232, 0.08);
+  background:
+    linear-gradient(90deg, rgba(255, 255, 255, 0.08) 1px, transparent 1px),
+    linear-gradient(0deg, rgba(255, 255, 255, 0.06) 1px, transparent 1px),
+    linear-gradient(180deg, rgba(21, 32, 36, 0.72), rgba(6, 10, 13, 0.86));
+  background-size: 24px 100%, 100% 22px, auto;
+  filter: blur(0.2px);
+  transform: rotateX(58deg) skewX(-10deg);
+  opacity: 0.9;
+}
+
+.launch-dashboard[data-layout="operations-cockpit"] .depth-left {
+  left: 3%;
+}
+
+.launch-dashboard[data-layout="operations-cockpit"] .depth-right {
+  right: 3%;
+  transform: rotateX(58deg) skewX(10deg);
+}
+
+.launch-dashboard[data-layout="operations-cockpit"] .streetlight {
+  bottom: 39%;
+  width: 3px;
+  height: 110px;
+  border-radius: 999px;
+  background: linear-gradient(180deg, rgba(220, 233, 228, 0.72), rgba(56, 73, 72, 0.1));
+  box-shadow: 0 0 28px rgba(255, 220, 146, 0.28);
+}
+
+.launch-dashboard[data-layout="operations-cockpit"] .streetlight::before {
+  content: "";
+  position: absolute;
+  top: -18px;
+  left: -36px;
+  width: 76px;
+  height: 34px;
+  border-radius: 50%;
+  background: radial-gradient(ellipse, rgba(255, 220, 146, 0.34), transparent 68%);
+  filter: blur(4px);
+}
+
+.launch-dashboard[data-layout="operations-cockpit"] .streetlight-a { left: 30%; }
+.launch-dashboard[data-layout="operations-cockpit"] .streetlight-b { right: 27%; bottom: 42%; }
+
+.launch-dashboard[data-layout="operations-cockpit"] .launch-readiness-card {
+  position: absolute;
+  right: clamp(14px, 2vw, 24px);
+  top: clamp(68px, 8vw, 104px);
+  z-index: 13;
+  display: grid;
+  gap: 4px;
+  width: min(250px, calc(100% - 28px));
+  border: 1px solid rgba(244, 193, 93, 0.28);
+  border-radius: 14px;
+  padding: 11px 12px;
+  color: rgba(245, 250, 248, 0.92);
+  background:
+    linear-gradient(135deg, rgba(244, 193, 93, 0.12), transparent 62%),
+    rgba(7, 10, 12, 0.78);
+  backdrop-filter: blur(14px);
+}
+
+.launch-dashboard[data-layout="operations-cockpit"] .launch-readiness-card.ready {
+  border-color: rgba(98, 189, 177, 0.34);
+  background:
+    linear-gradient(135deg, rgba(98, 189, 177, 0.16), transparent 62%),
+    rgba(7, 10, 12, 0.78);
+}
+
+.launch-dashboard[data-layout="operations-cockpit"] .launch-readiness-card span {
+  color: var(--launch-teal);
+  font-size: 0.68rem;
+  font-weight: 900;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.launch-dashboard[data-layout="operations-cockpit"] .launch-readiness-card strong {
+  font-size: 0.9rem;
+}
+
+.launch-dashboard[data-layout="operations-cockpit"] .launch-readiness-card small {
+  color: rgba(232, 242, 238, 0.66);
+  line-height: 1.35;
+}
+
+.launch-dashboard[data-layout="operations-cockpit"] .simulation-viewport::before {
+  content: "REC 04:18:27  UNITY-CCTV  SIMULATION";
+  position: absolute;
+  left: 18px;
+  right: 18px;
+  top: 18px;
+  z-index: 14;
+  color: rgba(234, 255, 248, 0.52);
+  font-size: 0.68rem;
+  font-weight: 900;
+  letter-spacing: 0.12em;
+  text-shadow: 0 1px 6px rgba(0, 0, 0, 0.8);
+  pointer-events: none;
+}
+
+@keyframes cctvRain {
+  from { transform: translate3d(0, -4%, 0); }
+  to { transform: translate3d(-3%, 8%, 0); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .launch-dashboard[data-layout="operations-cockpit"] .rain-sheen {
+    animation: none;
+  }
+}
+
+@media (max-width: 860px) {
+  .launch-dashboard[data-layout="operations-cockpit"] .launch-readiness-card {
+    position: relative;
+    top: auto;
+    right: auto;
+    margin: 12px;
+    width: auto;
+  }
+}

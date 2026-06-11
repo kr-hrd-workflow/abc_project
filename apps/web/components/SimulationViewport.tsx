@@ -6,6 +6,7 @@ import { useEffect, useMemo, useRef } from "react";
 import type {
   Direction,
   IntersectionStatus,
+  RuntimeReadiness,
   SimulationComparison,
   TrafficEvent
 } from "../lib/types";
@@ -16,6 +17,7 @@ type SimulationViewportProps = {
   status: IntersectionStatus;
   events: TrafficEvent[];
   simulation: SimulationComparison;
+  runtimeReadiness: RuntimeReadiness;
   locale: Locale;
 };
 
@@ -23,6 +25,7 @@ export function SimulationViewport({
   status,
   events,
   simulation,
+  runtimeReadiness,
   locale
 }: SimulationViewportProps) {
   const t = copy[locale];
@@ -40,29 +43,52 @@ export function SimulationViewport({
     () => buildPlaybackVehicles(status, events),
     [events, status]
   );
+  const openaiReady = runtimeReadiness.openai.ready;
+  const unityWebglUrl = process.env.NEXT_PUBLIC_UNITY_WEBGL_URL?.trim();
+  const renderMode = unityWebglUrl ? "Unity WebGL" : "WebGL-style fallback";
 
   return (
     <div className="simulation-viewport">
+      {unityWebglUrl ? (
+        <iframe
+          className="unity-webgl-frame"
+          src={unityWebglUrl}
+          title={locale === "ko" ? "Unity WebGL 교차로 시뮬레이터" : "Unity WebGL intersection simulator"}
+          allow="fullscreen; xr-spatial-tracking"
+        />
+      ) : null}
+      <div className="cctv-atmosphere" aria-hidden="true">
+        <span className="lens-flare flare-main" />
+        <span className="lens-flare flare-side" />
+        <span className="rain-sheen" />
+        <span className="camera-vignette" />
+      </div>
+      <div className="unity-depth-field" aria-hidden="true">
+        <span className="depth-building depth-left" />
+        <span className="depth-building depth-right" />
+        <span className="streetlight streetlight-a" />
+        <span className="streetlight streetlight-b" />
+      </div>
       <SimulationPlaybackCanvas
         activeDirection={activeDirection}
         vehicles={playbackVehicles}
         locale={locale}
       />
       <div className="playback-badge">
-        <strong>{locale === "ko" ? "가상 CCTV 재생" : "Virtual CCTV playback"}</strong>
-        <span>{locale === "ko" ? "Unity 발표용 폴백" : "Unity presentation fallback"}</span>
+        <strong>{locale === "ko" ? "실사형 가상 CCTV" : "Photoreal virtual CCTV"}</strong>
+        <span>{renderMode}</span>
       </div>
       <section
         className="unity-cctv-surface"
         aria-label={locale === "ko" ? "Unity 가상 CCTV 시뮬레이터" : "Unity virtual CCTV simulator"}
       >
         <div>
-          <span>{locale === "ko" ? "Unity Simulator" : "Unity Simulator"}</span>
-          <strong>{locale === "ko" ? "가상 CCTV 발표 화면" : "Virtual CCTV presentation feed"}</strong>
+          <span>{locale === "ko" ? "Unity-ready Render Slot" : "Unity-ready Render Slot"}</span>
+          <strong>{locale === "ko" ? "실사형 가상 CCTV / 디지털 트윈" : "Photoreal virtual CCTV / digital twin"}</strong>
           <small>
             {locale === "ko"
-              ? "실제 CCTV·신호 제어 없음 / SUMO 지표 기반"
-              : "No real CCTV or signal control / SUMO-derived metrics"}
+              ? "Unity WebGL URL 입력 시 실제 Unity 빌드로 교체 / 현재는 안전한 WebGL 스타일 폴백"
+              : "Switches to a Unity WebGL build when NEXT_PUBLIC_UNITY_WEBGL_URL is set"}
           </small>
         </div>
         <div className="cctv-frame-lines" aria-hidden="true">
@@ -70,6 +96,15 @@ export function SimulationViewport({
           <i />
           <i />
         </div>
+      </section>
+      <section className={`launch-readiness-card ${openaiReady ? "ready" : "pending"}`} aria-label="OpenAI launch readiness">
+        <span>{locale === "ko" ? "Launch gate" : "Launch gate"}</span>
+        <strong>{openaiReady ? "OpenAI live ready" : "OPENAI_API_KEY 대기"}</strong>
+        <small>
+          {openaiReady
+            ? (locale === "ko" ? "키 감지됨. live AI 답변 모드 사용 가능" : "Key detected. Live AI answer mode is available")
+            : (locale === "ko" ? "키만 입력하면 live AI 답변으로 전환" : "Enter only OPENAI_API_KEY to enable live AI answers")}
+        </small>
       </section>
       <div className="renderer-status" aria-label="Simulation renderer status">
         <strong>SUMO/TraCI Renderer</strong>

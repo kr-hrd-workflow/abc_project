@@ -1,4 +1,5 @@
 from pathlib import Path
+import os
 from tempfile import NamedTemporaryFile
 from uuid import uuid4
 
@@ -18,7 +19,7 @@ from app.adapters.vision import (
 )
 from app.core.config import settings
 from app.db.session import SessionLocal, get_session
-from app.domain.schemas import ChatRequest, ChatResponse
+from app.domain.schemas import ChatRequest, ChatResponse, VisionObservation
 from app.scenarios.fixtures import SAMPLE_INPUT_FIXTURES, fixture_to_payload
 from app.services.chat import answer_question
 from app.services.agent_service import build_agent_sections
@@ -33,6 +34,7 @@ from app.services.openai_clients import (
     MissingOpenAIAPIKeyError,
     MissingOpenAIMonthlyBudgetError,
     OpenAIEmbeddingGateway,
+    OpenAITextGateway,
     build_openai_client,
     require_openai_api_key,
     require_openai_monthly_budget,
@@ -308,7 +310,7 @@ def chat(
     _status, events = ensure_scenario_snapshot(session, observation)
     event_ids = [event.id for event in events]
     policy_evidence = _retrieve_policy_evidence(request.question, session)
-    answer = answer_question(request.question, observation, policy_evidence)
+    answer = _answer_chat_question(request.question, observation, policy_evidence)
     action, plan, evidence = recommend_signal_action(observation)
     simulation = simulation_adapter.compare_signal_plan(scenario_id)
     sections = build_agent_sections(
@@ -352,6 +354,60 @@ def _retrieve_policy_evidence(
             embedding_gateway=embedding_gateway,
         )
     return search_policy_evidence(question, ingest_policy_documents())
+
+
+def _answer_chat_question(
+    question: str,
+    observation: VisionObservation,
+    policy_evidence: list[KnowledgeChunk],
+) -> str:
+    local_answer = answer_question(question, observation, policy_evidence)
+    if settings.openai_answer_mode == "local":
+        return local_answer
+    if (
+        settings.openai_answer_mode == "openai_auto"
+        and not settings.openai_api_key
+        and not os.environ.get("OPENAI_API_KEY")
+    ):
+        return local_answer
+
+    try:
+        require_openai_monthly_budget(settings.openai_monthly_budget_usd)
+        api_key = _configured_openai_api_key()
+    except (MissingOpenAIAPIKeyError, MissingOpenAIMonthlyBudgetError) as exc:
+        if settings.openai_answer_mode == "openai":
+            raise HTTPException(status_code=503, detail=str(exc)) from exc
+        return local_answer
+
+    gateway = OpenAITextGateway(
+        client=build_openai_client(api_key),
+        model=settings.openai_model,
+    )
+    return gateway.generate_grounded_answer(
+        question=question,
+        scenario_summary=_scenario_summary(observation),
+        policy_evidence=policy_evidence,
+    )
+
+
+def _configured_openai_api_key() -> str:
+    if settings.openai_api_key and settings.openai_api_key.strip():
+        return settings.openai_api_key.strip()
+    return require_openai_api_key()
+
+
+def _scenario_summary(observation: VisionObservation) -> str:
+    queues = observation.queues.model_dump()
+    emergency = observation.emergency_vehicle
+    emergency_direction = emergency.direction.value if emergency.direction else "none"
+    return (
+        f"intersection={observation.intersection_id}; "
+        f"congestion={observation.congestion_level}; "
+        f"queues={queues}; "
+        f"pedestrian_waiting={observation.pedestrian_waiting}; "
+        f"emergency_present={emergency.present}; "
+        f"emergency_direction={emergency_direction}"
+    )
 
 
 @router.post("/api/report")

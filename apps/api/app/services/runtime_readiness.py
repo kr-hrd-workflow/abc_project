@@ -122,7 +122,7 @@ def get_runtime_readiness(
                 ),
                 _check(
                     "OPENAI_API_KEY",
-                    bool(env.get("OPENAI_API_KEY")),
+                    bool(env.get("OPENAI_API_KEY") or settings.openai_api_key),
                     detail="presence only; value is never returned",
                 ),
                 _check(

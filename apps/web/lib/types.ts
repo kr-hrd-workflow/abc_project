@@ -153,6 +153,26 @@ export type AnalysisJob = {
   size_bytes: number;
 };
 
+export type RuntimeCheck = {
+  name: string;
+  available: boolean;
+  detail?: string;
+};
+
+export type RuntimeSection = {
+  ready: boolean;
+  mode: string;
+  missing: string[];
+  checks: RuntimeCheck[];
+};
+
+export type RuntimeReadiness = {
+  vision: RuntimeSection;
+  simulation: RuntimeSection;
+  openai: RuntimeSection;
+  pgvector: RuntimeSection;
+};
+
 export type UploadAnalysisResult = {
   job_id: string;
   analysis_status: "completed";

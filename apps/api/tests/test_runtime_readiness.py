@@ -57,7 +57,6 @@ def test_runtime_readiness_reports_missing_optional_runtime_gates() -> None:
     assert readiness["openai"]["missing"] == [
         "python module openai",
         "OPENAI_API_KEY",
-        "OPENAI_MONTHLY_BUDGET_USD",
     ]
     assert readiness["openai"]["checks"][0]["detail"] == (
         "install the API ai extra before enabling OpenAI client calls"

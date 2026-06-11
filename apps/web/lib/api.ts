@@ -6,6 +6,7 @@ import type {
   IntersectionStatus,
   Recommendation,
   Report,
+  RuntimeReadiness,
   ScenarioId,
   SimulationComparison,
   TrafficEvent,
@@ -115,6 +116,10 @@ export async function analyzeUpload(file: File): Promise<UploadAnalysisResult> {
       "Content-Type": file.type || "application/octet-stream"
     }
   });
+}
+
+export async function getRuntimeReadiness(): Promise<RuntimeReadiness> {
+  return requestJson<RuntimeReadiness>("/api/runtime/readiness");
 }
 
 export async function getAnalysisJob(jobId: string): Promise<AnalysisJob> {

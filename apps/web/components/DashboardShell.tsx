@@ -12,6 +12,7 @@ import type {
   IntersectionStatus,
   Recommendation,
   Report,
+  RuntimeReadiness,
   ScenarioId,
   ScenarioOption,
   SimulationComparison,
@@ -36,6 +37,7 @@ export type DashboardShellProps = {
   report: Report;
   chat: ChatResponse | null;
   fixtures: AnalysisFixture[];
+  runtimeReadiness: RuntimeReadiness;
   latestFixtureIngest: FixtureIngestResult | null;
   latestAnalysisJob: AnalysisJob | null;
   selectedScenarioId: ScenarioId;
@@ -59,6 +61,7 @@ export function DashboardShell({
   report,
   chat,
   fixtures,
+  runtimeReadiness,
   latestFixtureIngest,
   latestAnalysisJob,
   selectedScenarioId,
@@ -274,6 +277,7 @@ export function DashboardShell({
             status={status}
             events={events}
             simulation={simulation}
+            runtimeReadiness={runtimeReadiness}
             locale={locale}
             onRunSimulation={onRunSimulation}
           />
