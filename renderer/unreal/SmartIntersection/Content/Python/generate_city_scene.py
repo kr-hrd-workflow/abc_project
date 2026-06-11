@@ -46,17 +46,16 @@ def load_profile(path: Path) -> dict[str, Any]:
 
 
 def material(unreal: Any, name: str, color: tuple[float, float, float, float]) -> Any:
-    asset_tools = unreal.AssetToolsHelpers.get_asset_tools()
-    package_path = "/Game/Generated/Materials"
-    existing = unreal.EditorAssetLibrary.load_asset(f"{package_path}/{name}")
-    if existing:
-        return existing
-    factory = unreal.MaterialFactoryNew()
-    mat = asset_tools.create_asset(name, package_path, unreal.Material, factory)
-    unreal.MaterialEditingLibrary.set_material_instance_vector_parameter_value(
-        mat, "BaseColor", unreal.LinearColor(*color)
+    """Return a safe built-in material for first-pass procedural proof.
+
+    UE's MaterialEditingLibrary vector-parameter setter expects a material
+    instance, not a base Material. The durable follow-up should create proper
+    material instances; for live proof, use the engine's basic shape material so
+    geometry generation cannot fail on material authoring.
+    """
+    return unreal.EditorAssetLibrary.load_asset(
+        "/Engine/BasicShapes/BasicShapeMaterial.BasicShapeMaterial"
     )
-    return mat
 
 
 def spawn_cube(
@@ -79,7 +78,11 @@ def spawn_cube(
 
 def spawn_city(unreal: Any, profile: dict[str, Any]) -> None:
     random.seed(profile.get("seed", 20260611))
-    unreal.EditorLevelLibrary.new_level(f"/Game/Maps/Generated/{profile['id']}_Intersection")
+    map_asset = f"/Game/Maps/Generated/{profile['id']}_Intersection"
+    if unreal.EditorAssetLibrary.does_asset_exist(map_asset):
+        unreal.EditorAssetLibrary.delete_asset(map_asset)
+    if not unreal.EditorLevelLibrary.new_level(map_asset):
+        raise RuntimeError(f"Failed to create level {map_asset}")
 
     asphalt = material(unreal, "MI_Procedural_Asphalt", (0.025, 0.028, 0.03, 1.0))
     road_marking = material(unreal, "MI_Procedural_RoadMarking", (0.92, 0.95, 0.92, 1.0))
