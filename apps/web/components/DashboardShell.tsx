@@ -182,15 +182,15 @@ export function DashboardShell({
             </div>
           </div>
           <nav className="top-actions" aria-label="Dashboard actions">
-            <a href="#events" className="icon-action alert-action motion-pressable">
+            <a href="#events" className="icon-action alert-action motion-pressable command-pressable">
               <span aria-hidden="true" className="toolbar-icon bell" />
               <span>{t.alerts}</span>
             </a>
-            <a href="#reports" className="icon-action motion-pressable">
+            <a href="#reports" className="icon-action motion-pressable command-pressable">
               <span aria-hidden="true" className="toolbar-icon document" />
               <span>{t.reports}</span>
             </a>
-            <a href="#scenario-control" className="icon-action motion-pressable">
+            <a href="#scenario-control" className="icon-action motion-pressable command-pressable">
               <span aria-hidden="true" className="toolbar-icon gear" />
               <span>{t.scenarios}</span>
             </a>
@@ -216,7 +216,7 @@ export function DashboardShell({
                 type="button"
                 aria-label={t.aiAutomatic}
                 aria-pressed={operationMode === "ai"}
-                className={`motion-pressable${operationMode === "ai" ? " active" : ""}`}
+                className={`motion-pressable command-pressable${operationMode === "ai" ? " active" : ""}`}
                 onClick={() => setOperationMode("ai")}
               >
                 <strong>{t.aiAutomatic}</strong>
@@ -226,7 +226,7 @@ export function DashboardShell({
                 type="button"
                 aria-label={t.adminManual}
                 aria-pressed={operationMode === "manual"}
-                className={`motion-pressable${operationMode === "manual" ? " active" : ""}`}
+                className={`motion-pressable command-pressable${operationMode === "manual" ? " active" : ""}`}
                 onClick={() => setOperationMode("manual")}
               >
                 <strong>{t.adminManual}</strong>
@@ -345,7 +345,7 @@ export function DashboardShell({
               <button
                 key={option.id}
                 type="button"
-                className={`motion-pressable${selected ? " active" : ""}`}
+                className={`motion-pressable command-pressable${selected ? " active" : ""}`}
                 aria-pressed={selected}
                 disabled={scenarioLoading || selected}
                 onClick={() => onScenarioChange(option.id)}

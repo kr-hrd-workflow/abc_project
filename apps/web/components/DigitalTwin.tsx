@@ -58,10 +58,11 @@ export function DigitalTwin({
           <span className="viewport-mode">{status.signal_phase}</span>
           <button
             type="button"
+            className="motion-pressable command-pressable simulation-run-button"
             onClick={handleRunSimulation}
             disabled={simulationState === "running"}
           >
-            {simulationState === "running" ? t.simulationRunning : t.runSimulation}
+            <span>{simulationState === "running" ? t.simulationRunning : t.runSimulation}</span>
           </button>
         </div>
       </div>

@@ -10417,3 +10417,141 @@ body {
     filter: none !important;
   }
 }
+
+/* Emil-style micro-interaction layer: exact, interruptible, and tactile. */
+.launch-dashboard[data-layout="spatial-command-hybrid"] .command-pressable {
+  position: relative;
+  isolation: isolate;
+  overflow: hidden;
+  transform: translateZ(0);
+  transition:
+    transform 145ms var(--command-ease-out),
+    border-color 170ms var(--command-ease-out),
+    background-color 170ms var(--command-ease-out),
+    color 170ms var(--command-ease-out),
+    opacity 150ms var(--command-ease-out),
+    filter 150ms var(--command-ease-out),
+    box-shadow 170ms var(--command-ease-out);
+}
+
+.launch-dashboard[data-layout="spatial-command-hybrid"] .command-pressable::before,
+.launch-dashboard[data-layout="spatial-command-hybrid"] .command-pressable::after {
+  content: "";
+  pointer-events: none;
+  position: absolute;
+  z-index: 0;
+  opacity: 0;
+  transition:
+    opacity 150ms var(--command-ease-out),
+    transform 260ms var(--command-ease-out);
+}
+
+.launch-dashboard[data-layout="spatial-command-hybrid"] .command-pressable::before {
+  inset: 1px;
+  border-radius: inherit;
+  background:
+    radial-gradient(circle at 50% 0%, rgba(143, 245, 210, 0.18), transparent 58%),
+    linear-gradient(180deg, rgba(255, 255, 255, 0.052), transparent 62%);
+}
+
+.launch-dashboard[data-layout="spatial-command-hybrid"] .command-pressable::after {
+  inset: 0;
+  background: linear-gradient(110deg, transparent 0 34%, rgba(245, 255, 251, 0.12) 48%, transparent 62% 100%);
+  transform: translateX(-72%) skewX(-16deg);
+}
+
+.launch-dashboard[data-layout="spatial-command-hybrid"] .command-pressable > * {
+  position: relative;
+  z-index: 1;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .launch-dashboard[data-layout="spatial-command-hybrid"] .command-pressable:not(:disabled):not([aria-disabled="true"]):hover {
+    transform: translateY(-1px) translateZ(0);
+    border-color: rgba(143, 245, 210, 0.34);
+    background-color: rgba(143, 245, 210, 0.065);
+  }
+
+  .launch-dashboard[data-layout="spatial-command-hybrid"] .command-pressable:not(:disabled):not([aria-disabled="true"]):hover::before {
+    opacity: 1;
+  }
+
+  .launch-dashboard[data-layout="spatial-command-hybrid"] .command-pressable:not(:disabled):not([aria-disabled="true"]):hover::after {
+    opacity: 1;
+    transform: translateX(58%) skewX(-16deg);
+  }
+}
+
+.launch-dashboard[data-layout="spatial-command-hybrid"] .command-pressable:active:not(:disabled):not([aria-disabled="true"]) {
+  transform: scale(0.972) translateZ(0);
+  filter: brightness(1.06);
+  transition-duration: 105ms, 130ms, 130ms, 130ms, 105ms, 105ms, 130ms;
+}
+
+.launch-dashboard[data-layout="spatial-command-hybrid"] .operation-toggle .command-pressable:active:not(:disabled):not([aria-disabled="true"]) {
+  transform: scale(0.985) translateZ(0);
+}
+
+.launch-dashboard[data-layout="spatial-command-hybrid"] .command-pressable:focus-visible {
+  outline: 0;
+  border-color: rgba(143, 245, 210, 0.58);
+  box-shadow:
+    0 0 0 1px rgba(143, 245, 210, 0.48),
+    0 0 0 5px rgba(143, 245, 210, 0.14);
+}
+
+.launch-dashboard[data-layout="spatial-command-hybrid"] .command-pressable:disabled,
+.launch-dashboard[data-layout="spatial-command-hybrid"] .command-pressable[aria-disabled="true"] {
+  cursor: not-allowed;
+  opacity: 0.52;
+  filter: saturate(0.7);
+  transform: translateZ(0);
+}
+
+.launch-dashboard[data-layout="spatial-command-hybrid"] .command-pressable.active,
+.launch-dashboard[data-layout="spatial-command-hybrid"] .command-pressable[aria-pressed="true"] {
+  border-color: rgba(143, 245, 210, 0.38);
+  background-color: rgba(143, 245, 210, 0.09);
+}
+
+.launch-dashboard[data-layout="spatial-command-hybrid"] .command-pressable[aria-pressed="true"]:disabled {
+  cursor: default;
+  opacity: 1;
+  filter: none;
+}
+
+.launch-dashboard[data-layout="spatial-command-hybrid"] .motion-icon-button.command-pressable {
+  transform-origin: 50% 50%;
+}
+
+.launch-dashboard[data-layout="spatial-command-hybrid"] .refresh-button.running .refresh-glyph {
+  animation-duration: 620ms;
+  animation-timing-function: linear;
+}
+
+.launch-dashboard[data-layout="spatial-command-hybrid"] .chat-form input:focus-visible {
+  outline: 0;
+  border-color: rgba(143, 245, 210, 0.48);
+  box-shadow:
+    0 0 0 1px rgba(143, 245, 210, 0.3),
+    0 0 0 5px rgba(143, 245, 210, 0.1);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .launch-dashboard[data-layout="spatial-command-hybrid"] .command-pressable,
+  .launch-dashboard[data-layout="spatial-command-hybrid"] .command-pressable::before,
+  .launch-dashboard[data-layout="spatial-command-hybrid"] .command-pressable::after,
+  .launch-dashboard[data-layout="spatial-command-hybrid"] .chat-form input {
+    transition: none !important;
+    animation: none !important;
+  }
+
+  .launch-dashboard[data-layout="spatial-command-hybrid"] .command-pressable::after {
+    display: none;
+  }
+
+  .launch-dashboard[data-layout="spatial-command-hybrid"] .command-pressable:active:not(:disabled):not([aria-disabled="true"]) {
+    transform: none !important;
+    filter: none !important;
+  }
+}

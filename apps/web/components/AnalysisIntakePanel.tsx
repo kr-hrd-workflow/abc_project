@@ -93,7 +93,7 @@ export function AnalysisIntakePanel({
           <button
             key={fixture.fixture_id}
             type="button"
-            className="fixture-ingest-button motion-pressable"
+            className="fixture-ingest-button motion-pressable command-pressable"
             onClick={() => void handleFixtureIngest(fixture.fixture_id)}
             disabled={runningFixtureId !== null || uploading}
           >
@@ -138,12 +138,12 @@ export function AnalysisIntakePanel({
           <small>{analysisJob ? analysisJob.status : copy.jobEmpty}</small>
           <button
             type="button"
-            className="motion-pressable job-refresh-button"
+            className="motion-pressable command-pressable job-refresh-button"
             aria-label="Job status refresh"
             onClick={() => void handleRefreshJob()}
             disabled={!analysisJob || refreshingJob}
           >
-            {refreshingJob ? copy.refreshing : copy.refresh}
+            <span>{refreshingJob ? copy.refreshing : copy.refresh}</span>
           </button>
         </div>
       </div>

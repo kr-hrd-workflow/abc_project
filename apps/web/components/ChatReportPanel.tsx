@@ -143,7 +143,7 @@ export function ChatReportPanel({
           />
           <button
             type="submit"
-            className="motion-pressable"
+            className="motion-pressable command-pressable"
             disabled={!question.trim() || chatState === "submitting"}
           >
             <span>{chatState === "submitting" ? t.sending : t.send}</span>
@@ -166,12 +166,12 @@ export function ChatReportPanel({
         </div>
         <button
           type="button"
-          className="report-button motion-pressable"
+          className="report-button motion-pressable command-pressable"
           onClick={handleGenerateReport}
           disabled={reportState === "generating"}
         >
           <span aria-hidden="true" className="report-icon" />
-          {reportState === "generating" ? t.reportGenerating : t.generateReport}
+          <span>{reportState === "generating" ? t.reportGenerating : t.generateReport}</span>
           <small>Generate Report</small>
         </button>
         {reportError ? (
@@ -191,11 +191,11 @@ export function ChatReportPanel({
         </div>
         <button
           type="button"
-          className="download-row motion-pressable"
+          className="download-row motion-pressable command-pressable"
           onClick={handleDownloadReport}
         >
           <span aria-hidden="true" className="download-icon" />
-          {t.download}
+          <span>{t.download}</span>
           <span aria-hidden="true" className="chevron" />
         </button>
       </div>

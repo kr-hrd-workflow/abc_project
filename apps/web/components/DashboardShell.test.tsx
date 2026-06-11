@@ -297,27 +297,24 @@ describe("DashboardShell", () => {
     expect(stateCards.getAttribute("data-mode")).toBe("manual");
   });
 
-  test("marks high-frequency dashboard actions as responsive pressable surfaces", () => {
+  test("marks high-frequency dashboard actions as responsive command pressable surfaces", () => {
     renderDashboard();
 
-    expect(screen.getByRole("button", { name: "추천 새로고침" }).className).toContain(
-      "motion-icon-button"
-    );
-    expect(screen.getByRole("button", { name: "전송" }).className).toContain(
-      "motion-pressable"
-    );
-    expect(screen.getByRole("button", { name: /리포트 생성/ }).className).toContain(
-      "motion-pressable"
-    );
-    expect(screen.getByRole("button", { name: "다운로드" }).className).toContain(
-      "motion-pressable"
-    );
-    expect(screen.getByRole("link", { name: /알림/ }).className).toContain(
-      "motion-pressable"
-    );
-    expect(screen.getByRole("button", { name: /긴급차량/ }).className).toContain(
-      "motion-pressable"
-    );
+    for (const control of [
+      screen.getByRole("button", { name: "AI 권고 자동 준비" }),
+      screen.getByRole("button", { name: "관리자 직접 검토" }),
+      screen.getByRole("button", { name: "추천 새로고침" }),
+      screen.getByRole("button", { name: "전송" }),
+      screen.getByRole("button", { name: /리포트 생성/ }),
+      screen.getByRole("button", { name: "다운로드" }),
+      screen.getByRole("button", { name: /긴급차량/ }),
+      screen.getByRole("button", { name: "SUMO 시뮬레이션 갱신" }),
+      screen.getByRole("link", { name: /알림/ }),
+      screen.getByRole("link", { name: /리포트/ }),
+      screen.getByRole("link", { name: /시나리오/ })
+    ]) {
+      expect(control.className).toContain("command-pressable");
+    }
   });
 
   test("adds dense brief-spine evidence instead of leaving the incident rail empty", () => {
