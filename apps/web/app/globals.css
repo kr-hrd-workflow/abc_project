@@ -8966,7 +8966,7 @@ body {
 }
 
 /* Launch-ready reduced-neon dashboard cockpit */
-.launch-dashboard[data-layout="operations-cockpit"] {
+.launch-dashboard:is([data-layout="operations-cockpit"], [data-layout="spatial-command-hybrid"]) {
   --launch-bg: #050708;
   --launch-panel: rgba(10, 14, 16, 0.88);
   --launch-line: rgba(184, 200, 194, 0.14);
@@ -8983,18 +8983,18 @@ body {
     #050708;
 }
 
-.launch-dashboard[data-layout="operations-cockpit"]::before {
+.launch-dashboard:is([data-layout="operations-cockpit"], [data-layout="spatial-command-hybrid"])::before {
   opacity: 0.36;
   background-size: 96px 96px;
 }
 
-.launch-dashboard[data-layout="operations-cockpit"] .dashboard-command-bar,
-.launch-dashboard[data-layout="operations-cockpit"] .operation-mode-panel,
-.launch-dashboard[data-layout="operations-cockpit"] .safety-command-banner,
-.launch-dashboard[data-layout="operations-cockpit"] .response-focus-card,
-.launch-dashboard[data-layout="operations-cockpit"] .scenario-rail,
-.launch-dashboard[data-layout="operations-cockpit"] .panel,
-.launch-dashboard[data-layout="operations-cockpit"] .simulation-viewport {
+.launch-dashboard:is([data-layout="operations-cockpit"], [data-layout="spatial-command-hybrid"]) .dashboard-command-bar,
+.launch-dashboard:is([data-layout="operations-cockpit"], [data-layout="spatial-command-hybrid"]) .operation-mode-panel,
+.launch-dashboard:is([data-layout="operations-cockpit"], [data-layout="spatial-command-hybrid"]) .safety-command-banner,
+.launch-dashboard:is([data-layout="operations-cockpit"], [data-layout="spatial-command-hybrid"]) .response-focus-card,
+.launch-dashboard:is([data-layout="operations-cockpit"], [data-layout="spatial-command-hybrid"]) .scenario-rail,
+.launch-dashboard:is([data-layout="operations-cockpit"], [data-layout="spatial-command-hybrid"]) .panel,
+.launch-dashboard:is([data-layout="operations-cockpit"], [data-layout="spatial-command-hybrid"]) .simulation-viewport {
   border-color: var(--launch-line);
   background:
     linear-gradient(180deg, rgba(255, 255, 255, 0.028), transparent),
@@ -9003,12 +9003,12 @@ body {
   backdrop-filter: blur(16px);
 }
 
-.launch-dashboard[data-layout="operations-cockpit"] .dashboard-command-bar {
+.launch-dashboard:is([data-layout="operations-cockpit"], [data-layout="spatial-command-hybrid"]) .dashboard-command-bar {
   gap: 12px;
   padding: 10px;
 }
 
-.launch-dashboard[data-layout="operations-cockpit"] .command-row {
+.launch-dashboard:is([data-layout="operations-cockpit"], [data-layout="spatial-command-hybrid"]) .command-row {
   display: grid;
   grid-template-columns:
     minmax(220px, 1.15fr)
@@ -9026,13 +9026,13 @@ body {
   background: rgba(7, 10, 12, 0.44);
 }
 
-.launch-dashboard[data-layout="operations-cockpit"] .brand-block,
-.launch-dashboard[data-layout="operations-cockpit"] .district-selector,
-.launch-dashboard[data-layout="operations-cockpit"] .incident-token,
-.launch-dashboard[data-layout="operations-cockpit"] .live-clock,
-.launch-dashboard[data-layout="operations-cockpit"] .status-strip,
-.launch-dashboard[data-layout="operations-cockpit"] .top-actions,
-.launch-dashboard[data-layout="operations-cockpit"] .language-toggle {
+.launch-dashboard:is([data-layout="operations-cockpit"], [data-layout="spatial-command-hybrid"]) .brand-block,
+.launch-dashboard:is([data-layout="operations-cockpit"], [data-layout="spatial-command-hybrid"]) .district-selector,
+.launch-dashboard:is([data-layout="operations-cockpit"], [data-layout="spatial-command-hybrid"]) .incident-token,
+.launch-dashboard:is([data-layout="operations-cockpit"], [data-layout="spatial-command-hybrid"]) .live-clock,
+.launch-dashboard:is([data-layout="operations-cockpit"], [data-layout="spatial-command-hybrid"]) .status-strip,
+.launch-dashboard:is([data-layout="operations-cockpit"], [data-layout="spatial-command-hybrid"]) .top-actions,
+.launch-dashboard:is([data-layout="operations-cockpit"], [data-layout="spatial-command-hybrid"]) .language-toggle {
   min-width: 0;
   min-height: 46px;
   border: 0;
@@ -9040,17 +9040,17 @@ body {
   background: rgba(255, 255, 255, 0.018);
 }
 
-.launch-dashboard[data-layout="operations-cockpit"] .brand-block,
-.launch-dashboard[data-layout="operations-cockpit"] .district-selector,
-.launch-dashboard[data-layout="operations-cockpit"] .incident-token,
-.launch-dashboard[data-layout="operations-cockpit"] .live-clock {
+.launch-dashboard:is([data-layout="operations-cockpit"], [data-layout="spatial-command-hybrid"]) .brand-block,
+.launch-dashboard:is([data-layout="operations-cockpit"], [data-layout="spatial-command-hybrid"]) .district-selector,
+.launch-dashboard:is([data-layout="operations-cockpit"], [data-layout="spatial-command-hybrid"]) .incident-token,
+.launch-dashboard:is([data-layout="operations-cockpit"], [data-layout="spatial-command-hybrid"]) .live-clock {
   display: flex;
   align-items: center;
   gap: 10px;
   padding: 8px 12px;
 }
 
-.launch-dashboard[data-layout="operations-cockpit"] .brand-mark {
+.launch-dashboard:is([data-layout="operations-cockpit"], [data-layout="spatial-command-hybrid"]) .brand-mark {
   width: 30px;
   height: 30px;
   border-color: rgba(98, 189, 177, 0.36);
@@ -9061,93 +9061,93 @@ body {
   box-shadow: none;
 }
 
-.launch-dashboard[data-layout="operations-cockpit"] .brand-copy h1 {
+.launch-dashboard:is([data-layout="operations-cockpit"], [data-layout="spatial-command-hybrid"]) .brand-copy h1 {
   font-size: clamp(1rem, 1.25vw, 1.28rem);
   line-height: 1.05;
 }
 
-.launch-dashboard[data-layout="operations-cockpit"] .brand-copy span,
-.launch-dashboard[data-layout="operations-cockpit"] .incident-token,
-.launch-dashboard[data-layout="operations-cockpit"] .live-clock,
-.launch-dashboard[data-layout="operations-cockpit"] .district-selector span {
+.launch-dashboard:is([data-layout="operations-cockpit"], [data-layout="spatial-command-hybrid"]) .brand-copy span,
+.launch-dashboard:is([data-layout="operations-cockpit"], [data-layout="spatial-command-hybrid"]) .incident-token,
+.launch-dashboard:is([data-layout="operations-cockpit"], [data-layout="spatial-command-hybrid"]) .live-clock,
+.launch-dashboard:is([data-layout="operations-cockpit"], [data-layout="spatial-command-hybrid"]) .district-selector span {
   color: var(--launch-muted);
   font-size: 0.78rem;
 }
 
-.launch-dashboard[data-layout="operations-cockpit"] .incident-token {
+.launch-dashboard:is([data-layout="operations-cockpit"], [data-layout="spatial-command-hybrid"]) .incident-token {
   justify-content: space-between;
 }
 
-.launch-dashboard[data-layout="operations-cockpit"] .incident-token span {
+.launch-dashboard:is([data-layout="operations-cockpit"], [data-layout="spatial-command-hybrid"]) .incident-token span {
   color: var(--launch-text);
   font-weight: 850;
 }
 
-.launch-dashboard[data-layout="operations-cockpit"] .incident-token strong,
-.launch-dashboard[data-layout="operations-cockpit"] .live-clock strong {
+.launch-dashboard:is([data-layout="operations-cockpit"], [data-layout="spatial-command-hybrid"]) .incident-token strong,
+.launch-dashboard:is([data-layout="operations-cockpit"], [data-layout="spatial-command-hybrid"]) .live-clock strong {
   color: var(--launch-teal);
 }
 
-.launch-dashboard[data-layout="operations-cockpit"] .status-strip,
-.launch-dashboard[data-layout="operations-cockpit"] .top-actions {
+.launch-dashboard:is([data-layout="operations-cockpit"], [data-layout="spatial-command-hybrid"]) .status-strip,
+.launch-dashboard:is([data-layout="operations-cockpit"], [data-layout="spatial-command-hybrid"]) .top-actions {
   gap: 6px;
   padding: 4px;
 }
 
-.launch-dashboard[data-layout="operations-cockpit"] .status-chip,
-.launch-dashboard[data-layout="operations-cockpit"] .icon-action {
+.launch-dashboard:is([data-layout="operations-cockpit"], [data-layout="spatial-command-hybrid"]) .status-chip,
+.launch-dashboard:is([data-layout="operations-cockpit"], [data-layout="spatial-command-hybrid"]) .icon-action {
   min-height: 36px;
   border: 0;
   background: transparent;
   box-shadow: none;
 }
 
-.launch-dashboard[data-layout="operations-cockpit"] .icon-action:hover {
+.launch-dashboard:is([data-layout="operations-cockpit"], [data-layout="spatial-command-hybrid"]) .icon-action:hover {
   background: rgba(255, 255, 255, 0.055);
 }
 
-.launch-dashboard[data-layout="operations-cockpit"] .operation-row {
+.launch-dashboard:is([data-layout="operations-cockpit"], [data-layout="spatial-command-hybrid"]) .operation-row {
   display: grid;
   grid-template-columns: minmax(420px, 1.25fr) minmax(300px, 0.8fr) minmax(180px, 0.45fr);
   gap: 8px;
   align-items: stretch;
 }
 
-.launch-dashboard[data-layout="operations-cockpit"] .operation-mode-panel,
-.launch-dashboard[data-layout="operations-cockpit"] .safety-command-banner,
-.launch-dashboard[data-layout="operations-cockpit"] .operator-card {
+.launch-dashboard:is([data-layout="operations-cockpit"], [data-layout="spatial-command-hybrid"]) .operation-mode-panel,
+.launch-dashboard:is([data-layout="operations-cockpit"], [data-layout="spatial-command-hybrid"]) .safety-command-banner,
+.launch-dashboard:is([data-layout="operations-cockpit"], [data-layout="spatial-command-hybrid"]) .operator-card {
   padding: 10px 12px;
 }
 
-.launch-dashboard[data-layout="operations-cockpit"] .operation-mode-panel {
+.launch-dashboard:is([data-layout="operations-cockpit"], [data-layout="spatial-command-hybrid"]) .operation-mode-panel {
   display: grid;
   grid-template-columns: minmax(180px, 0.68fr) minmax(260px, 1fr) minmax(230px, 0.82fr);
   gap: 10px;
   align-items: center;
 }
 
-.launch-dashboard[data-layout="operations-cockpit"] .operation-mode-panel > div:first-child,
-.launch-dashboard[data-layout="operations-cockpit"] .safety-command-banner {
+.launch-dashboard:is([data-layout="operations-cockpit"], [data-layout="spatial-command-hybrid"]) .operation-mode-panel > div:first-child,
+.launch-dashboard:is([data-layout="operations-cockpit"], [data-layout="spatial-command-hybrid"]) .safety-command-banner {
   display: grid;
   gap: 4px;
 }
 
-.launch-dashboard[data-layout="operations-cockpit"] .operation-mode-panel strong,
-.launch-dashboard[data-layout="operations-cockpit"] .safety-command-banner strong,
-.launch-dashboard[data-layout="operations-cockpit"] .response-plan-heading span {
+.launch-dashboard:is([data-layout="operations-cockpit"], [data-layout="spatial-command-hybrid"]) .operation-mode-panel strong,
+.launch-dashboard:is([data-layout="operations-cockpit"], [data-layout="spatial-command-hybrid"]) .safety-command-banner strong,
+.launch-dashboard:is([data-layout="operations-cockpit"], [data-layout="spatial-command-hybrid"]) .response-plan-heading span {
   color: var(--launch-text);
   font-weight: 900;
 }
 
-.launch-dashboard[data-layout="operations-cockpit"] .operation-mode-panel span,
-.launch-dashboard[data-layout="operations-cockpit"] .safety-command-banner span,
-.launch-dashboard[data-layout="operations-cockpit"] .response-plan-heading small {
+.launch-dashboard:is([data-layout="operations-cockpit"], [data-layout="spatial-command-hybrid"]) .operation-mode-panel span,
+.launch-dashboard:is([data-layout="operations-cockpit"], [data-layout="spatial-command-hybrid"]) .safety-command-banner span,
+.launch-dashboard:is([data-layout="operations-cockpit"], [data-layout="spatial-command-hybrid"]) .response-plan-heading small {
   color: var(--launch-muted);
   font-size: 0.78rem;
   line-height: 1.36;
 }
 
-.launch-dashboard[data-layout="operations-cockpit"] .operation-toggle {
+.launch-dashboard:is([data-layout="operations-cockpit"], [data-layout="spatial-command-hybrid"]) .operation-toggle {
   position: relative;
   isolation: isolate;
   display: grid;
@@ -9160,7 +9160,7 @@ body {
   background: rgba(255, 255, 255, 0.03);
 }
 
-.launch-dashboard[data-layout="operations-cockpit"] .operation-toggle::before {
+.launch-dashboard:is([data-layout="operations-cockpit"], [data-layout="spatial-command-hybrid"]) .operation-toggle::before {
   content: "";
   position: absolute;
   z-index: 0;
@@ -9176,11 +9176,11 @@ body {
   transition: transform 220ms var(--launch-ease-in-out);
 }
 
-.launch-dashboard[data-layout="operations-cockpit"] .operation-toggle[data-mode="manual"]::before {
+.launch-dashboard:is([data-layout="operations-cockpit"], [data-layout="spatial-command-hybrid"]) .operation-toggle[data-mode="manual"]::before {
   transform: translateX(100%);
 }
 
-.launch-dashboard[data-layout="operations-cockpit"] .operation-toggle button {
+.launch-dashboard:is([data-layout="operations-cockpit"], [data-layout="spatial-command-hybrid"]) .operation-toggle button {
   position: relative;
   z-index: 1;
   min-height: 48px;
@@ -9198,37 +9198,37 @@ body {
     color 180ms var(--launch-ease-out);
 }
 
-.launch-dashboard[data-layout="operations-cockpit"] .operation-toggle button strong,
-.launch-dashboard[data-layout="operations-cockpit"] .operation-toggle button small {
+.launch-dashboard:is([data-layout="operations-cockpit"], [data-layout="spatial-command-hybrid"]) .operation-toggle button strong,
+.launch-dashboard:is([data-layout="operations-cockpit"], [data-layout="spatial-command-hybrid"]) .operation-toggle button small {
   display: block;
 }
 
-.launch-dashboard[data-layout="operations-cockpit"] .operation-toggle button strong {
+.launch-dashboard:is([data-layout="operations-cockpit"], [data-layout="spatial-command-hybrid"]) .operation-toggle button strong {
   color: rgba(238, 244, 241, 0.9);
   font-size: 0.9rem;
 }
 
-.launch-dashboard[data-layout="operations-cockpit"] .operation-toggle button small {
+.launch-dashboard:is([data-layout="operations-cockpit"], [data-layout="spatial-command-hybrid"]) .operation-toggle button small {
   margin-top: 3px;
   color: rgba(218, 228, 224, 0.58);
   font-size: 0.68rem;
   font-weight: 800;
 }
 
-.launch-dashboard[data-layout="operations-cockpit"] .operation-toggle button.active {
+.launch-dashboard:is([data-layout="operations-cockpit"], [data-layout="spatial-command-hybrid"]) .operation-toggle button.active {
   color: var(--launch-text);
 }
 
-.launch-dashboard[data-layout="operations-cockpit"] .operation-toggle button:active {
+.launch-dashboard:is([data-layout="operations-cockpit"], [data-layout="spatial-command-hybrid"]) .operation-toggle button:active {
   transform: scale(0.97);
 }
 
-.launch-dashboard[data-layout="operations-cockpit"] .operation-state-cards {
+.launch-dashboard:is([data-layout="operations-cockpit"], [data-layout="spatial-command-hybrid"]) .operation-state-cards {
   min-width: 0;
   overflow: hidden;
 }
 
-.launch-dashboard[data-layout="operations-cockpit"] .operation-state-card-grid {
+.launch-dashboard:is([data-layout="operations-cockpit"], [data-layout="spatial-command-hybrid"]) .operation-state-card-grid {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 6px;
@@ -9239,14 +9239,14 @@ body {
 }
 
 @starting-style {
-  .launch-dashboard[data-layout="operations-cockpit"] .operation-state-card-grid {
+  .launch-dashboard:is([data-layout="operations-cockpit"], [data-layout="spatial-command-hybrid"]) .operation-state-card-grid {
     opacity: 0;
     filter: blur(2px);
     transform: translateY(5px);
   }
 }
 
-.launch-dashboard[data-layout="operations-cockpit"] .operation-state-card {
+.launch-dashboard:is([data-layout="operations-cockpit"], [data-layout="spatial-command-hybrid"]) .operation-state-card {
   min-width: 0;
   min-height: 44px;
   border: 1px solid rgba(184, 200, 194, 0.11);
@@ -9264,28 +9264,28 @@ body {
     color 180ms var(--launch-ease-out);
 }
 
-.launch-dashboard[data-layout="operations-cockpit"] .operation-state-card.primary {
+.launch-dashboard:is([data-layout="operations-cockpit"], [data-layout="spatial-command-hybrid"]) .operation-state-card.primary {
   color: #f5fffb;
   background: rgba(98, 189, 177, 0.13);
 }
 
-.launch-dashboard[data-layout="operations-cockpit"] .operation-state-cards[data-mode="manual"] .operation-state-card.primary {
+.launch-dashboard:is([data-layout="operations-cockpit"], [data-layout="spatial-command-hybrid"]) .operation-state-cards[data-mode="manual"] .operation-state-card.primary {
   border-color: rgba(215, 165, 80, 0.34);
   background: rgba(215, 165, 80, 0.12);
 }
 
-.launch-dashboard[data-layout="operations-cockpit"] .safety-command-banner {
+.launch-dashboard:is([data-layout="operations-cockpit"], [data-layout="spatial-command-hybrid"]) .safety-command-banner {
   border-color: rgba(207, 98, 91, 0.34);
   background:
     linear-gradient(135deg, rgba(207, 98, 91, 0.12), transparent 58%),
     rgba(15, 9, 9, 0.72);
 }
 
-.launch-dashboard[data-layout="operations-cockpit"] .safety-command-banner strong {
+.launch-dashboard:is([data-layout="operations-cockpit"], [data-layout="spatial-command-hybrid"]) .safety-command-banner strong {
   color: #f0b8b3;
 }
 
-.launch-dashboard[data-layout="operations-cockpit"] .cockpit-grid {
+.launch-dashboard:is([data-layout="operations-cockpit"], [data-layout="spatial-command-hybrid"]) .cockpit-grid {
   display: grid;
   grid-template-columns: minmax(260px, 0.95fr) minmax(520px, 2.05fr) minmax(330px, 1fr);
   grid-template-rows: minmax(690px, auto);
@@ -9294,40 +9294,40 @@ body {
   margin-top: 0;
 }
 
-.launch-dashboard[data-layout="operations-cockpit"] .cockpit-left,
-.launch-dashboard[data-layout="operations-cockpit"] .cockpit-center,
-.launch-dashboard[data-layout="operations-cockpit"] .cockpit-right {
+.launch-dashboard:is([data-layout="operations-cockpit"], [data-layout="spatial-command-hybrid"]) .cockpit-left,
+.launch-dashboard:is([data-layout="operations-cockpit"], [data-layout="spatial-command-hybrid"]) .cockpit-center,
+.launch-dashboard:is([data-layout="operations-cockpit"], [data-layout="spatial-command-hybrid"]) .cockpit-right {
   min-width: 0;
 }
 
-.launch-dashboard[data-layout="operations-cockpit"] .cockpit-left,
-.launch-dashboard[data-layout="operations-cockpit"] .cockpit-right {
+.launch-dashboard:is([data-layout="operations-cockpit"], [data-layout="spatial-command-hybrid"]) .cockpit-left,
+.launch-dashboard:is([data-layout="operations-cockpit"], [data-layout="spatial-command-hybrid"]) .cockpit-right {
   display: grid;
   gap: 12px;
   min-height: 0;
 }
 
-.launch-dashboard[data-layout="operations-cockpit"] .cockpit-left .timeline-panel,
-.launch-dashboard[data-layout="operations-cockpit"] .cockpit-center .simulation-panel,
-.launch-dashboard[data-layout="operations-cockpit"] .cockpit-right > .panel,
-.launch-dashboard[data-layout="operations-cockpit"] .cockpit-right .chat-report-grid {
+.launch-dashboard:is([data-layout="operations-cockpit"], [data-layout="spatial-command-hybrid"]) .cockpit-left .timeline-panel,
+.launch-dashboard:is([data-layout="operations-cockpit"], [data-layout="spatial-command-hybrid"]) .cockpit-center .simulation-panel,
+.launch-dashboard:is([data-layout="operations-cockpit"], [data-layout="spatial-command-hybrid"]) .cockpit-right > .panel,
+.launch-dashboard:is([data-layout="operations-cockpit"], [data-layout="spatial-command-hybrid"]) .cockpit-right .chat-report-grid {
   width: 100%;
   grid-column: auto;
   grid-row: auto;
 }
 
-.launch-dashboard[data-layout="operations-cockpit"] .cockpit-left .timeline-panel,
-.launch-dashboard[data-layout="operations-cockpit"] .cockpit-center .simulation-panel {
+.launch-dashboard:is([data-layout="operations-cockpit"], [data-layout="spatial-command-hybrid"]) .cockpit-left .timeline-panel,
+.launch-dashboard:is([data-layout="operations-cockpit"], [data-layout="spatial-command-hybrid"]) .cockpit-center .simulation-panel {
   height: 100%;
   min-height: 0;
 }
 
-.launch-dashboard[data-layout="operations-cockpit"] .cockpit-right {
+.launch-dashboard:is([data-layout="operations-cockpit"], [data-layout="spatial-command-hybrid"]) .cockpit-right {
   align-content: start;
   grid-template-rows: auto auto auto auto;
 }
 
-.launch-dashboard[data-layout="operations-cockpit"] .response-plan-heading {
+.launch-dashboard:is([data-layout="operations-cockpit"], [data-layout="spatial-command-hybrid"]) .response-plan-heading {
   display: flex;
   align-items: flex-end;
   justify-content: space-between;
@@ -9338,7 +9338,7 @@ body {
   background: rgba(7, 10, 12, 0.7);
 }
 
-.launch-dashboard[data-layout="operations-cockpit"] .response-focus-card {
+.launch-dashboard:is([data-layout="operations-cockpit"], [data-layout="spatial-command-hybrid"]) .response-focus-card {
   display: grid;
   gap: 4px;
   border-color: rgba(98, 189, 177, 0.28);
@@ -9348,35 +9348,35 @@ body {
     rgba(7, 10, 12, 0.74);
 }
 
-.launch-dashboard[data-layout="operations-cockpit"] .response-focus-card span {
+.launch-dashboard:is([data-layout="operations-cockpit"], [data-layout="spatial-command-hybrid"]) .response-focus-card span {
   color: var(--launch-teal);
   font-size: 0.72rem;
   font-weight: 900;
 }
 
-.launch-dashboard[data-layout="operations-cockpit"] .response-focus-card strong {
+.launch-dashboard:is([data-layout="operations-cockpit"], [data-layout="spatial-command-hybrid"]) .response-focus-card strong {
   color: var(--launch-text);
   font-size: 1.05rem;
   font-weight: 950;
 }
 
-.launch-dashboard[data-layout="operations-cockpit"] .response-focus-card small {
+.launch-dashboard:is([data-layout="operations-cockpit"], [data-layout="spatial-command-hybrid"]) .response-focus-card small {
   color: rgba(232, 242, 238, 0.72);
   font-size: 0.75rem;
 }
 
-.launch-dashboard[data-layout="operations-cockpit"] .simulation-panel {
+.launch-dashboard:is([data-layout="operations-cockpit"], [data-layout="spatial-command-hybrid"]) .simulation-panel {
   padding: 0;
   background: rgba(7, 10, 12, 0.86);
 }
 
-.launch-dashboard[data-layout="operations-cockpit"] .simulation-heading {
+.launch-dashboard:is([data-layout="operations-cockpit"], [data-layout="spatial-command-hybrid"]) .simulation-heading {
   min-height: 62px;
   padding: 12px 14px;
   background: rgba(255, 255, 255, 0.025);
 }
 
-.launch-dashboard[data-layout="operations-cockpit"] .simulation-viewport {
+.launch-dashboard:is([data-layout="operations-cockpit"], [data-layout="spatial-command-hybrid"]) .simulation-viewport {
   min-height: 0;
   height: 100%;
   flex: 1;
@@ -9389,7 +9389,7 @@ body {
   background-size: cover;
 }
 
-.launch-dashboard[data-layout="operations-cockpit"] .simulation-viewport::after {
+.launch-dashboard:is([data-layout="operations-cockpit"], [data-layout="spatial-command-hybrid"]) .simulation-viewport::after {
   opacity: 0.62;
   background:
     radial-gradient(circle at 50% 50%, transparent 0 35%, rgba(5, 7, 8, 0.28) 82%),
@@ -9398,74 +9398,74 @@ body {
   background-size: auto, 84px 84px, 84px 84px;
 }
 
-.launch-dashboard[data-layout="operations-cockpit"] .sumo-playback-canvas {
+.launch-dashboard:is([data-layout="operations-cockpit"], [data-layout="spatial-command-hybrid"]) .sumo-playback-canvas {
   opacity: 0.64;
 }
 
-.launch-dashboard[data-layout="operations-cockpit"] .signal.active .green-light,
-.launch-dashboard[data-layout="operations-cockpit"] .emergency-vehicle,
-.launch-dashboard[data-layout="operations-cockpit"] .emergency-vehicle span,
-.launch-dashboard[data-layout="operations-cockpit"] .route-line,
-.launch-dashboard[data-layout="operations-cockpit"] .route-node {
+.launch-dashboard:is([data-layout="operations-cockpit"], [data-layout="spatial-command-hybrid"]) .signal.active .green-light,
+.launch-dashboard:is([data-layout="operations-cockpit"], [data-layout="spatial-command-hybrid"]) .emergency-vehicle,
+.launch-dashboard:is([data-layout="operations-cockpit"], [data-layout="spatial-command-hybrid"]) .emergency-vehicle span,
+.launch-dashboard:is([data-layout="operations-cockpit"], [data-layout="spatial-command-hybrid"]) .route-line,
+.launch-dashboard:is([data-layout="operations-cockpit"], [data-layout="spatial-command-hybrid"]) .route-node {
   box-shadow: none;
 }
 
-.launch-dashboard[data-layout="operations-cockpit"] .renderer-status,
-.launch-dashboard[data-layout="operations-cockpit"] .sumo-telemetry,
-.launch-dashboard[data-layout="operations-cockpit"] .lane-pressure-panel,
-.launch-dashboard[data-layout="operations-cockpit"] .sumo-event-marker,
-.launch-dashboard[data-layout="operations-cockpit"] .playback-badge {
+.launch-dashboard:is([data-layout="operations-cockpit"], [data-layout="spatial-command-hybrid"]) .renderer-status,
+.launch-dashboard:is([data-layout="operations-cockpit"], [data-layout="spatial-command-hybrid"]) .sumo-telemetry,
+.launch-dashboard:is([data-layout="operations-cockpit"], [data-layout="spatial-command-hybrid"]) .lane-pressure-panel,
+.launch-dashboard:is([data-layout="operations-cockpit"], [data-layout="spatial-command-hybrid"]) .sumo-event-marker,
+.launch-dashboard:is([data-layout="operations-cockpit"], [data-layout="spatial-command-hybrid"]) .playback-badge {
   background: rgba(7, 10, 12, 0.76);
   border-color: rgba(184, 200, 194, 0.16);
 }
 
-.launch-dashboard[data-layout="operations-cockpit"] .lane-pressure-panel {
+.launch-dashboard:is([data-layout="operations-cockpit"], [data-layout="spatial-command-hybrid"]) .lane-pressure-panel {
   width: min(192px, calc(100% - 28px));
 }
 
-.launch-dashboard[data-layout="operations-cockpit"] .recommendation-panel,
-.launch-dashboard[data-layout="operations-cockpit"] .metrics-panel,
-.launch-dashboard[data-layout="operations-cockpit"] .chat-report-grid {
+.launch-dashboard:is([data-layout="operations-cockpit"], [data-layout="spatial-command-hybrid"]) .recommendation-panel,
+.launch-dashboard:is([data-layout="operations-cockpit"], [data-layout="spatial-command-hybrid"]) .metrics-panel,
+.launch-dashboard:is([data-layout="operations-cockpit"], [data-layout="spatial-command-hybrid"]) .chat-report-grid {
   min-height: 0;
   padding: 12px;
 }
 
-.launch-dashboard[data-layout="operations-cockpit"] .recommendation-panel {
+.launch-dashboard:is([data-layout="operations-cockpit"], [data-layout="spatial-command-hybrid"]) .recommendation-panel {
   border-color: rgba(98, 189, 177, 0.24);
   background:
     linear-gradient(180deg, rgba(98, 189, 177, 0.06), transparent 56%),
     rgba(7, 10, 12, 0.82);
 }
 
-.launch-dashboard[data-layout="operations-cockpit"] .recommendation-card {
+.launch-dashboard:is([data-layout="operations-cockpit"], [data-layout="spatial-command-hybrid"]) .recommendation-card {
   min-height: 92px;
   border-color: rgba(98, 189, 177, 0.2);
   background: rgba(0, 140, 122, 0.08);
 }
 
-.launch-dashboard[data-layout="operations-cockpit"] .recommendation-card strong {
+.launch-dashboard:is([data-layout="operations-cockpit"], [data-layout="spatial-command-hybrid"]) .recommendation-card strong {
   font-size: clamp(1.1rem, 1.55vw, 1.55rem);
 }
 
-.launch-dashboard[data-layout="operations-cockpit"] .chat-report-grid {
+.launch-dashboard:is([data-layout="operations-cockpit"], [data-layout="spatial-command-hybrid"]) .chat-report-grid {
   display: grid;
   grid-template-columns: 1fr;
   gap: 12px;
 }
 
-.launch-dashboard[data-layout="operations-cockpit"] .chat-report-grid .panel {
+.launch-dashboard:is([data-layout="operations-cockpit"], [data-layout="spatial-command-hybrid"]) .chat-report-grid .panel {
   min-height: 0;
   padding: 12px;
 }
 
-.launch-dashboard[data-layout="operations-cockpit"] .brief-spine-dense {
+.launch-dashboard:is([data-layout="operations-cockpit"], [data-layout="spatial-command-hybrid"]) .brief-spine-dense {
   display: grid;
   gap: 10px;
   margin-top: 14px;
 }
 
-.launch-dashboard[data-layout="operations-cockpit"] .priority-queue-card,
-.launch-dashboard[data-layout="operations-cockpit"] .evidence-trail-card {
+.launch-dashboard:is([data-layout="operations-cockpit"], [data-layout="spatial-command-hybrid"]) .priority-queue-card,
+.launch-dashboard:is([data-layout="operations-cockpit"], [data-layout="spatial-command-hybrid"]) .evidence-trail-card {
   display: grid;
   gap: 8px;
   border: 1px solid rgba(184, 200, 194, 0.13);
@@ -9474,25 +9474,25 @@ body {
   background: rgba(255, 255, 255, 0.026);
 }
 
-.launch-dashboard[data-layout="operations-cockpit"] .priority-queue-card span,
-.launch-dashboard[data-layout="operations-cockpit"] .evidence-trail-card > span {
+.launch-dashboard:is([data-layout="operations-cockpit"], [data-layout="spatial-command-hybrid"]) .priority-queue-card span,
+.launch-dashboard:is([data-layout="operations-cockpit"], [data-layout="spatial-command-hybrid"]) .evidence-trail-card > span {
   color: var(--launch-teal);
   font-size: 0.72rem;
   font-weight: 900;
 }
 
-.launch-dashboard[data-layout="operations-cockpit"] .priority-queue-card strong,
-.launch-dashboard[data-layout="operations-cockpit"] .evidence-trail-card strong {
+.launch-dashboard:is([data-layout="operations-cockpit"], [data-layout="spatial-command-hybrid"]) .priority-queue-card strong,
+.launch-dashboard:is([data-layout="operations-cockpit"], [data-layout="spatial-command-hybrid"]) .evidence-trail-card strong {
   color: rgba(245, 250, 248, 0.92);
   font-size: 0.82rem;
 }
 
-.launch-dashboard[data-layout="operations-cockpit"] .priority-queue-card small {
+.launch-dashboard:is([data-layout="operations-cockpit"], [data-layout="spatial-command-hybrid"]) .priority-queue-card small {
   color: rgba(232, 242, 238, 0.66);
   line-height: 1.35;
 }
 
-.launch-dashboard[data-layout="operations-cockpit"] .evidence-trail-card div {
+.launch-dashboard:is([data-layout="operations-cockpit"], [data-layout="spatial-command-hybrid"]) .evidence-trail-card div {
   display: flex;
   justify-content: space-between;
   gap: 12px;
@@ -9500,17 +9500,17 @@ body {
   padding-top: 8px;
 }
 
-.launch-dashboard[data-layout="operations-cockpit"] .evidence-trail-card small {
+.launch-dashboard:is([data-layout="operations-cockpit"], [data-layout="spatial-command-hybrid"]) .evidence-trail-card small {
   color: rgba(232, 242, 238, 0.58);
   font-weight: 800;
 }
 
-.launch-dashboard[data-layout="operations-cockpit"] .motion-enter,
-.launch-dashboard[data-layout="operations-cockpit"] .event-row,
-.launch-dashboard[data-layout="operations-cockpit"] .recommendation-card,
-.launch-dashboard[data-layout="operations-cockpit"] .scenario-rail .segment-control button,
-.launch-dashboard[data-layout="operations-cockpit"] .icon-action,
-.launch-dashboard[data-layout="operations-cockpit"] .motion-pressable {
+.launch-dashboard:is([data-layout="operations-cockpit"], [data-layout="spatial-command-hybrid"]) .motion-enter,
+.launch-dashboard:is([data-layout="operations-cockpit"], [data-layout="spatial-command-hybrid"]) .event-row,
+.launch-dashboard:is([data-layout="operations-cockpit"], [data-layout="spatial-command-hybrid"]) .recommendation-card,
+.launch-dashboard:is([data-layout="operations-cockpit"], [data-layout="spatial-command-hybrid"]) .scenario-rail .segment-control button,
+.launch-dashboard:is([data-layout="operations-cockpit"], [data-layout="spatial-command-hybrid"]) .icon-action,
+.launch-dashboard:is([data-layout="operations-cockpit"], [data-layout="spatial-command-hybrid"]) .motion-pressable {
   transition:
     transform 180ms var(--launch-ease-out),
     border-color 180ms var(--launch-ease-out),
@@ -9519,30 +9519,30 @@ body {
 }
 
 @media (hover: hover) and (pointer: fine) {
-  .launch-dashboard[data-layout="operations-cockpit"] .event-row:hover,
-  .launch-dashboard[data-layout="operations-cockpit"] .recommendation-card:hover,
-  .launch-dashboard[data-layout="operations-cockpit"] .scenario-rail .segment-control button:hover,
-  .launch-dashboard[data-layout="operations-cockpit"] .icon-action:hover {
+  .launch-dashboard:is([data-layout="operations-cockpit"], [data-layout="spatial-command-hybrid"]) .event-row:hover,
+  .launch-dashboard:is([data-layout="operations-cockpit"], [data-layout="spatial-command-hybrid"]) .recommendation-card:hover,
+  .launch-dashboard:is([data-layout="operations-cockpit"], [data-layout="spatial-command-hybrid"]) .scenario-rail .segment-control button:hover,
+  .launch-dashboard:is([data-layout="operations-cockpit"], [data-layout="spatial-command-hybrid"]) .icon-action:hover {
     transform: translateY(-2px);
   }
 }
 
-.launch-dashboard[data-layout="operations-cockpit"] .heading-copy span,
-.launch-dashboard[data-layout="operations-cockpit"] .panel small,
-.launch-dashboard[data-layout="operations-cockpit"] .event-row p,
-.launch-dashboard[data-layout="operations-cockpit"] .report-card span,
-.launch-dashboard[data-layout="operations-cockpit"] .chat-prompt-label span {
+.launch-dashboard:is([data-layout="operations-cockpit"], [data-layout="spatial-command-hybrid"]) .heading-copy span,
+.launch-dashboard:is([data-layout="operations-cockpit"], [data-layout="spatial-command-hybrid"]) .panel small,
+.launch-dashboard:is([data-layout="operations-cockpit"], [data-layout="spatial-command-hybrid"]) .event-row p,
+.launch-dashboard:is([data-layout="operations-cockpit"], [data-layout="spatial-command-hybrid"]) .report-card span,
+.launch-dashboard:is([data-layout="operations-cockpit"], [data-layout="spatial-command-hybrid"]) .chat-prompt-label span {
   color: rgba(232, 242, 238, 0.68);
 }
 
-.launch-dashboard[data-layout="operations-cockpit"] .scenario-rail {
+.launch-dashboard:is([data-layout="operations-cockpit"], [data-layout="spatial-command-hybrid"]) .scenario-rail {
   display: grid;
   grid-template-columns: minmax(210px, 0.36fr) minmax(0, 1fr);
   gap: 12px;
   padding: 10px;
 }
 
-.launch-dashboard[data-layout="operations-cockpit"] .scenario-rail .segment-control {
+.launch-dashboard:is([data-layout="operations-cockpit"], [data-layout="spatial-command-hybrid"]) .scenario-rail .segment-control {
   display: grid;
   grid-auto-flow: row;
   grid-template-columns: repeat(4, minmax(0, 1fr));
@@ -9552,7 +9552,7 @@ body {
   background: transparent;
 }
 
-.launch-dashboard[data-layout="operations-cockpit"] .scenario-rail .segment-control button {
+.launch-dashboard:is([data-layout="operations-cockpit"], [data-layout="spatial-command-hybrid"]) .scenario-rail .segment-control button {
   display: grid;
   grid-template-columns: auto 1fr;
   gap: 3px 10px;
@@ -9568,33 +9568,33 @@ body {
   text-align: left;
 }
 
-.launch-dashboard[data-layout="operations-cockpit"] .scenario-rail .segment-control button small {
+.launch-dashboard:is([data-layout="operations-cockpit"], [data-layout="spatial-command-hybrid"]) .scenario-rail .segment-control button small {
   grid-row: span 2;
   color: rgba(218, 228, 224, 0.5);
   font-weight: 900;
 }
 
-.launch-dashboard[data-layout="operations-cockpit"] .scenario-rail .segment-control button strong {
+.launch-dashboard:is([data-layout="operations-cockpit"], [data-layout="spatial-command-hybrid"]) .scenario-rail .segment-control button strong {
   color: var(--launch-text);
 }
 
-.launch-dashboard[data-layout="operations-cockpit"] .scenario-rail .segment-control button span {
+.launch-dashboard:is([data-layout="operations-cockpit"], [data-layout="spatial-command-hybrid"]) .scenario-rail .segment-control button span {
   color: var(--launch-muted);
   font-size: 0.72rem;
 }
 
-.launch-dashboard[data-layout="operations-cockpit"] .scenario-rail .segment-control button.active {
+.launch-dashboard:is([data-layout="operations-cockpit"], [data-layout="spatial-command-hybrid"]) .scenario-rail .segment-control button.active {
   border-color: rgba(215, 165, 80, 0.72);
   color: var(--launch-text);
   background: rgba(215, 165, 80, 0.12);
 }
 
-.launch-dashboard[data-layout="operations-cockpit"] .scenario-rail .segment-control button.active:disabled {
+.launch-dashboard:is([data-layout="operations-cockpit"], [data-layout="spatial-command-hybrid"]) .scenario-rail .segment-control button.active:disabled {
   cursor: default;
   opacity: 1;
 }
 
-.launch-dashboard[data-layout="operations-cockpit"] .analysis-intake-panel {
+.launch-dashboard:is([data-layout="operations-cockpit"], [data-layout="spatial-command-hybrid"]) .analysis-intake-panel {
   display: grid;
   gap: 12px;
   border: 1px solid rgba(184, 200, 194, 0.13);
@@ -9603,30 +9603,30 @@ body {
   background: rgba(255, 255, 255, 0.035);
 }
 
-.launch-dashboard[data-layout="operations-cockpit"] .analysis-intake-heading,
-.launch-dashboard[data-layout="operations-cockpit"] .analysis-status-grid {
+.launch-dashboard:is([data-layout="operations-cockpit"], [data-layout="spatial-command-hybrid"]) .analysis-intake-heading,
+.launch-dashboard:is([data-layout="operations-cockpit"], [data-layout="spatial-command-hybrid"]) .analysis-status-grid {
   display: grid;
   grid-template-columns: minmax(0, 1fr) auto;
   gap: 12px;
   align-items: start;
 }
 
-.launch-dashboard[data-layout="operations-cockpit"] .analysis-intake-heading span,
-.launch-dashboard[data-layout="operations-cockpit"] .analysis-status-grid span {
+.launch-dashboard:is([data-layout="operations-cockpit"], [data-layout="spatial-command-hybrid"]) .analysis-intake-heading span,
+.launch-dashboard:is([data-layout="operations-cockpit"], [data-layout="spatial-command-hybrid"]) .analysis-status-grid span {
   color: var(--launch-teal);
   font-size: 0.72rem;
   font-weight: 900;
   text-transform: uppercase;
 }
 
-.launch-dashboard[data-layout="operations-cockpit"] .analysis-intake-heading h2 {
+.launch-dashboard:is([data-layout="operations-cockpit"], [data-layout="spatial-command-hybrid"]) .analysis-intake-heading h2 {
   margin: 2px 0 0;
   color: var(--launch-text);
   font-size: 1rem;
   letter-spacing: 0;
 }
 
-.launch-dashboard[data-layout="operations-cockpit"] .analysis-intake-heading strong {
+.launch-dashboard:is([data-layout="operations-cockpit"], [data-layout="spatial-command-hybrid"]) .analysis-intake-heading strong {
   justify-self: end;
   border: 1px solid rgba(215, 165, 80, 0.44);
   border-radius: 999px;
@@ -9636,22 +9636,22 @@ body {
   background: rgba(215, 165, 80, 0.1);
 }
 
-.launch-dashboard[data-layout="operations-cockpit"] .analysis-intake-panel p,
-.launch-dashboard[data-layout="operations-cockpit"] .analysis-status-grid small,
-.launch-dashboard[data-layout="operations-cockpit"] .analysis-upload-row small {
+.launch-dashboard:is([data-layout="operations-cockpit"], [data-layout="spatial-command-hybrid"]) .analysis-intake-panel p,
+.launch-dashboard:is([data-layout="operations-cockpit"], [data-layout="spatial-command-hybrid"]) .analysis-status-grid small,
+.launch-dashboard:is([data-layout="operations-cockpit"], [data-layout="spatial-command-hybrid"]) .analysis-upload-row small {
   margin: 0;
   color: rgba(232, 242, 238, 0.68);
   font-size: 0.78rem;
   line-height: 1.4;
 }
 
-.launch-dashboard[data-layout="operations-cockpit"] .analysis-fixture-grid {
+.launch-dashboard:is([data-layout="operations-cockpit"], [data-layout="spatial-command-hybrid"]) .analysis-fixture-grid {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 8px;
 }
 
-.launch-dashboard[data-layout="operations-cockpit"] .fixture-ingest-button {
+.launch-dashboard:is([data-layout="operations-cockpit"], [data-layout="spatial-command-hybrid"]) .fixture-ingest-button {
   display: grid;
   gap: 5px;
   min-height: 112px;
@@ -9663,26 +9663,26 @@ body {
   text-align: left;
 }
 
-.launch-dashboard[data-layout="operations-cockpit"] .fixture-ingest-button span,
-.launch-dashboard[data-layout="operations-cockpit"] .fixture-ingest-button em {
+.launch-dashboard:is([data-layout="operations-cockpit"], [data-layout="spatial-command-hybrid"]) .fixture-ingest-button span,
+.launch-dashboard:is([data-layout="operations-cockpit"], [data-layout="spatial-command-hybrid"]) .fixture-ingest-button em {
   color: var(--launch-teal);
   font-size: 0.7rem;
   font-style: normal;
   font-weight: 900;
 }
 
-.launch-dashboard[data-layout="operations-cockpit"] .fixture-ingest-button strong,
-.launch-dashboard[data-layout="operations-cockpit"] .analysis-status-grid strong {
+.launch-dashboard:is([data-layout="operations-cockpit"], [data-layout="spatial-command-hybrid"]) .fixture-ingest-button strong,
+.launch-dashboard:is([data-layout="operations-cockpit"], [data-layout="spatial-command-hybrid"]) .analysis-status-grid strong {
   color: var(--launch-text);
   font-size: 0.86rem;
 }
 
-.launch-dashboard[data-layout="operations-cockpit"] .fixture-ingest-button small {
+.launch-dashboard:is([data-layout="operations-cockpit"], [data-layout="spatial-command-hybrid"]) .fixture-ingest-button small {
   color: rgba(232, 242, 238, 0.62);
   line-height: 1.3;
 }
 
-.launch-dashboard[data-layout="operations-cockpit"] .analysis-upload-row {
+.launch-dashboard:is([data-layout="operations-cockpit"], [data-layout="spatial-command-hybrid"]) .analysis-upload-row {
   display: grid;
   grid-template-columns: minmax(0, 1fr) auto;
   gap: 10px;
@@ -9692,7 +9692,7 @@ body {
   padding: 10px;
 }
 
-.launch-dashboard[data-layout="operations-cockpit"] .analysis-upload-row label {
+.launch-dashboard:is([data-layout="operations-cockpit"], [data-layout="spatial-command-hybrid"]) .analysis-upload-row label {
   display: grid;
   gap: 7px;
   min-width: 0;
@@ -9701,17 +9701,17 @@ body {
   font-weight: 900;
 }
 
-.launch-dashboard[data-layout="operations-cockpit"] .analysis-upload-row input {
+.launch-dashboard:is([data-layout="operations-cockpit"], [data-layout="spatial-command-hybrid"]) .analysis-upload-row input {
   max-width: 100%;
   color: var(--launch-muted);
   font-size: 0.78rem;
 }
 
-.launch-dashboard[data-layout="operations-cockpit"] .analysis-status-grid {
+.launch-dashboard:is([data-layout="operations-cockpit"], [data-layout="spatial-command-hybrid"]) .analysis-status-grid {
   grid-template-columns: repeat(2, minmax(0, 1fr));
 }
 
-.launch-dashboard[data-layout="operations-cockpit"] .analysis-status-grid > div {
+.launch-dashboard:is([data-layout="operations-cockpit"], [data-layout="spatial-command-hybrid"]) .analysis-status-grid > div {
   display: grid;
   gap: 5px;
   border: 1px solid rgba(184, 200, 194, 0.13);
@@ -9720,7 +9720,7 @@ body {
   background: rgba(0, 0, 0, 0.12);
 }
 
-.launch-dashboard[data-layout="operations-cockpit"] .job-refresh-button {
+.launch-dashboard:is([data-layout="operations-cockpit"], [data-layout="spatial-command-hybrid"]) .job-refresh-button {
   justify-self: start;
   border: 1px solid rgba(184, 200, 194, 0.18);
   border-radius: var(--launch-radius);
@@ -9729,7 +9729,7 @@ body {
   background: rgba(255, 255, 255, 0.045);
 }
 
-.launch-dashboard[data-layout="operations-cockpit"] .analysis-intake-error {
+.launch-dashboard:is([data-layout="operations-cockpit"], [data-layout="spatial-command-hybrid"]) .analysis-intake-error {
   border: 1px solid rgba(255, 111, 111, 0.36);
   border-radius: var(--launch-radius);
   padding: 8px 10px;
@@ -9738,87 +9738,87 @@ body {
 }
 
 @media (max-width: 1240px) {
-  .launch-dashboard[data-layout="operations-cockpit"] .command-row,
-  .launch-dashboard[data-layout="operations-cockpit"] .operation-row {
+  .launch-dashboard:is([data-layout="operations-cockpit"], [data-layout="spatial-command-hybrid"]) .command-row,
+  .launch-dashboard:is([data-layout="operations-cockpit"], [data-layout="spatial-command-hybrid"]) .operation-row {
     grid-template-columns: 1fr 1fr;
   }
 
-  .launch-dashboard[data-layout="operations-cockpit"] .operation-mode-panel {
+  .launch-dashboard:is([data-layout="operations-cockpit"], [data-layout="spatial-command-hybrid"]) .operation-mode-panel {
     grid-column: 1 / -1;
   }
 
-  .launch-dashboard[data-layout="operations-cockpit"] .cockpit-grid {
+  .launch-dashboard:is([data-layout="operations-cockpit"], [data-layout="spatial-command-hybrid"]) .cockpit-grid {
     grid-template-columns: minmax(240px, 0.85fr) minmax(420px, 1.55fr);
     grid-template-rows: auto auto;
   }
 
-  .launch-dashboard[data-layout="operations-cockpit"] .cockpit-right {
+  .launch-dashboard:is([data-layout="operations-cockpit"], [data-layout="spatial-command-hybrid"]) .cockpit-right {
     grid-column: 1 / -1;
     grid-template-columns: repeat(3, minmax(0, 1fr));
     grid-template-rows: auto auto;
   }
 
-  .launch-dashboard[data-layout="operations-cockpit"] .cockpit-right .chat-report-grid {
+  .launch-dashboard:is([data-layout="operations-cockpit"], [data-layout="spatial-command-hybrid"]) .cockpit-right .chat-report-grid {
     grid-column: 1 / -1;
   }
 
-  .launch-dashboard[data-layout="operations-cockpit"] .operation-state-card-grid {
+  .launch-dashboard:is([data-layout="operations-cockpit"], [data-layout="spatial-command-hybrid"]) .operation-state-card-grid {
     grid-template-columns: repeat(3, minmax(0, 1fr));
   }
 }
 
 @media (max-width: 860px) {
-  .launch-dashboard[data-layout="operations-cockpit"] .command-row,
-  .launch-dashboard[data-layout="operations-cockpit"] .operation-row,
-  .launch-dashboard[data-layout="operations-cockpit"] .cockpit-grid,
-  .launch-dashboard[data-layout="operations-cockpit"] .cockpit-right,
-  .launch-dashboard[data-layout="operations-cockpit"] .scenario-rail,
-  .launch-dashboard[data-layout="operations-cockpit"] .operation-mode-panel {
+  .launch-dashboard:is([data-layout="operations-cockpit"], [data-layout="spatial-command-hybrid"]) .command-row,
+  .launch-dashboard:is([data-layout="operations-cockpit"], [data-layout="spatial-command-hybrid"]) .operation-row,
+  .launch-dashboard:is([data-layout="operations-cockpit"], [data-layout="spatial-command-hybrid"]) .cockpit-grid,
+  .launch-dashboard:is([data-layout="operations-cockpit"], [data-layout="spatial-command-hybrid"]) .cockpit-right,
+  .launch-dashboard:is([data-layout="operations-cockpit"], [data-layout="spatial-command-hybrid"]) .scenario-rail,
+  .launch-dashboard:is([data-layout="operations-cockpit"], [data-layout="spatial-command-hybrid"]) .operation-mode-panel {
     grid-template-columns: 1fr;
   }
 
-  .launch-dashboard[data-layout="operations-cockpit"] .scenario-rail .segment-control {
+  .launch-dashboard:is([data-layout="operations-cockpit"], [data-layout="spatial-command-hybrid"]) .scenario-rail .segment-control {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 
-  .launch-dashboard[data-layout="operations-cockpit"] .cockpit-grid {
+  .launch-dashboard:is([data-layout="operations-cockpit"], [data-layout="spatial-command-hybrid"]) .cockpit-grid {
     grid-template-rows: auto;
   }
 
-  .launch-dashboard[data-layout="operations-cockpit"] .simulation-viewport {
+  .launch-dashboard:is([data-layout="operations-cockpit"], [data-layout="spatial-command-hybrid"]) .simulation-viewport {
     min-height: 520px;
   }
 
-  .launch-dashboard[data-layout="operations-cockpit"] .cockpit-right {
+  .launch-dashboard:is([data-layout="operations-cockpit"], [data-layout="spatial-command-hybrid"]) .cockpit-right {
     order: 1;
   }
 
-  .launch-dashboard[data-layout="operations-cockpit"] .cockpit-center {
+  .launch-dashboard:is([data-layout="operations-cockpit"], [data-layout="spatial-command-hybrid"]) .cockpit-center {
     order: 2;
   }
 
-  .launch-dashboard[data-layout="operations-cockpit"] .cockpit-left {
+  .launch-dashboard:is([data-layout="operations-cockpit"], [data-layout="spatial-command-hybrid"]) .cockpit-left {
     order: 3;
   }
 
-  .launch-dashboard[data-layout="operations-cockpit"] .operation-state-card-grid {
+  .launch-dashboard:is([data-layout="operations-cockpit"], [data-layout="spatial-command-hybrid"]) .operation-state-card-grid {
     grid-template-columns: 1fr;
   }
 
-  .launch-dashboard[data-layout="operations-cockpit"] .analysis-fixture-grid,
-  .launch-dashboard[data-layout="operations-cockpit"] .analysis-status-grid,
-  .launch-dashboard[data-layout="operations-cockpit"] .analysis-upload-row,
-  .launch-dashboard[data-layout="operations-cockpit"] .analysis-intake-heading {
+  .launch-dashboard:is([data-layout="operations-cockpit"], [data-layout="spatial-command-hybrid"]) .analysis-fixture-grid,
+  .launch-dashboard:is([data-layout="operations-cockpit"], [data-layout="spatial-command-hybrid"]) .analysis-status-grid,
+  .launch-dashboard:is([data-layout="operations-cockpit"], [data-layout="spatial-command-hybrid"]) .analysis-upload-row,
+  .launch-dashboard:is([data-layout="operations-cockpit"], [data-layout="spatial-command-hybrid"]) .analysis-intake-heading {
     grid-template-columns: 1fr;
   }
 
-  .launch-dashboard[data-layout="operations-cockpit"] .analysis-intake-heading strong {
+  .launch-dashboard:is([data-layout="operations-cockpit"], [data-layout="spatial-command-hybrid"]) .analysis-intake-heading strong {
     justify-self: start;
   }
 }
 
 /* Unity / virtual CCTV presentation surface for PDF-required simulator demo. */
-.launch-dashboard[data-layout="operations-cockpit"] .unity-cctv-surface {
+.launch-dashboard:is([data-layout="operations-cockpit"], [data-layout="spatial-command-hybrid"]) .unity-cctv-surface {
   position: absolute;
   left: clamp(14px, 2.4vw, 26px);
   right: auto;
@@ -9838,12 +9838,12 @@ body {
   backdrop-filter: blur(14px);
 }
 
-.launch-dashboard[data-layout="operations-cockpit"] .unity-cctv-surface div:first-child {
+.launch-dashboard:is([data-layout="operations-cockpit"], [data-layout="spatial-command-hybrid"]) .unity-cctv-surface div:first-child {
   display: grid;
   gap: 3px;
 }
 
-.launch-dashboard[data-layout="operations-cockpit"] .unity-cctv-surface span {
+.launch-dashboard:is([data-layout="operations-cockpit"], [data-layout="spatial-command-hybrid"]) .unity-cctv-surface span {
   color: var(--launch-teal);
   font-size: 0.68rem;
   font-weight: 900;
@@ -9851,17 +9851,17 @@ body {
   text-transform: uppercase;
 }
 
-.launch-dashboard[data-layout="operations-cockpit"] .unity-cctv-surface strong {
+.launch-dashboard:is([data-layout="operations-cockpit"], [data-layout="spatial-command-hybrid"]) .unity-cctv-surface strong {
   font-size: 0.92rem;
   letter-spacing: -0.01em;
 }
 
-.launch-dashboard[data-layout="operations-cockpit"] .unity-cctv-surface small {
+.launch-dashboard:is([data-layout="operations-cockpit"], [data-layout="spatial-command-hybrid"]) .unity-cctv-surface small {
   color: rgba(232, 242, 238, 0.66);
   line-height: 1.35;
 }
 
-.launch-dashboard[data-layout="operations-cockpit"] .cctv-frame-lines {
+.launch-dashboard:is([data-layout="operations-cockpit"], [data-layout="spatial-command-hybrid"]) .cctv-frame-lines {
   position: relative;
   min-height: 58px;
   overflow: hidden;
@@ -9872,7 +9872,7 @@ body {
     linear-gradient(90deg, rgba(98, 189, 177, 0.1), rgba(255, 255, 255, 0.025));
 }
 
-.launch-dashboard[data-layout="operations-cockpit"] .cctv-frame-lines i {
+.launch-dashboard:is([data-layout="operations-cockpit"], [data-layout="spatial-command-hybrid"]) .cctv-frame-lines i {
   position: absolute;
   left: 10%;
   right: 10%;
@@ -9880,12 +9880,12 @@ body {
   background: rgba(98, 189, 177, 0.42);
 }
 
-.launch-dashboard[data-layout="operations-cockpit"] .cctv-frame-lines i:nth-child(1) { top: 24%; }
-.launch-dashboard[data-layout="operations-cockpit"] .cctv-frame-lines i:nth-child(2) { top: 50%; }
-.launch-dashboard[data-layout="operations-cockpit"] .cctv-frame-lines i:nth-child(3) { top: 76%; }
+.launch-dashboard:is([data-layout="operations-cockpit"], [data-layout="spatial-command-hybrid"]) .cctv-frame-lines i:nth-child(1) { top: 24%; }
+.launch-dashboard:is([data-layout="operations-cockpit"], [data-layout="spatial-command-hybrid"]) .cctv-frame-lines i:nth-child(2) { top: 50%; }
+.launch-dashboard:is([data-layout="operations-cockpit"], [data-layout="spatial-command-hybrid"]) .cctv-frame-lines i:nth-child(3) { top: 76%; }
 
 @media (max-width: 860px) {
-  .launch-dashboard[data-layout="operations-cockpit"] .unity-cctv-surface {
+  .launch-dashboard:is([data-layout="operations-cockpit"], [data-layout="spatial-command-hybrid"]) .unity-cctv-surface {
     position: relative;
     left: auto;
     bottom: auto;
@@ -9895,7 +9895,7 @@ body {
 }
 
 /* Launch-grade realistic CCTV and Unity WebGL mount layer. */
-.launch-dashboard[data-layout="operations-cockpit"] .unity-webgl-frame {
+.launch-dashboard:is([data-layout="operations-cockpit"], [data-layout="spatial-command-hybrid"]) .unity-webgl-frame {
   position: absolute;
   inset: 0;
   z-index: 5;
@@ -9905,33 +9905,33 @@ body {
   background: #050708;
 }
 
-.launch-dashboard[data-layout="operations-cockpit"] .cctv-atmosphere,
-.launch-dashboard[data-layout="operations-cockpit"] .unity-depth-field {
+.launch-dashboard:is([data-layout="operations-cockpit"], [data-layout="spatial-command-hybrid"]) .cctv-atmosphere,
+.launch-dashboard:is([data-layout="operations-cockpit"], [data-layout="spatial-command-hybrid"]) .unity-depth-field {
   position: absolute;
   inset: 0;
   pointer-events: none;
 }
 
-.launch-dashboard[data-layout="operations-cockpit"] .cctv-atmosphere {
+.launch-dashboard:is([data-layout="operations-cockpit"], [data-layout="spatial-command-hybrid"]) .cctv-atmosphere {
   z-index: 7;
   mix-blend-mode: screen;
 }
 
-.launch-dashboard[data-layout="operations-cockpit"] .unity-depth-field {
+.launch-dashboard:is([data-layout="operations-cockpit"], [data-layout="spatial-command-hybrid"]) .unity-depth-field {
   z-index: 4;
   perspective: 900px;
 }
 
-.launch-dashboard[data-layout="operations-cockpit"] .lens-flare,
-.launch-dashboard[data-layout="operations-cockpit"] .rain-sheen,
-.launch-dashboard[data-layout="operations-cockpit"] .camera-vignette,
-.launch-dashboard[data-layout="operations-cockpit"] .depth-building,
-.launch-dashboard[data-layout="operations-cockpit"] .streetlight {
+.launch-dashboard:is([data-layout="operations-cockpit"], [data-layout="spatial-command-hybrid"]) .lens-flare,
+.launch-dashboard:is([data-layout="operations-cockpit"], [data-layout="spatial-command-hybrid"]) .rain-sheen,
+.launch-dashboard:is([data-layout="operations-cockpit"], [data-layout="spatial-command-hybrid"]) .camera-vignette,
+.launch-dashboard:is([data-layout="operations-cockpit"], [data-layout="spatial-command-hybrid"]) .depth-building,
+.launch-dashboard:is([data-layout="operations-cockpit"], [data-layout="spatial-command-hybrid"]) .streetlight {
   position: absolute;
   display: block;
 }
 
-.launch-dashboard[data-layout="operations-cockpit"] .flare-main {
+.launch-dashboard:is([data-layout="operations-cockpit"], [data-layout="spatial-command-hybrid"]) .flare-main {
   top: 12%;
   right: 20%;
   width: 170px;
@@ -9942,7 +9942,7 @@ body {
   opacity: 0.72;
 }
 
-.launch-dashboard[data-layout="operations-cockpit"] .flare-side {
+.launch-dashboard:is([data-layout="operations-cockpit"], [data-layout="spatial-command-hybrid"]) .flare-side {
   top: 34%;
   left: 14%;
   width: 86px;
@@ -9952,7 +9952,7 @@ body {
   filter: blur(5px);
 }
 
-.launch-dashboard[data-layout="operations-cockpit"] .rain-sheen {
+.launch-dashboard:is([data-layout="operations-cockpit"], [data-layout="spatial-command-hybrid"]) .rain-sheen {
   inset: -12%;
   opacity: 0.34;
   background-image:
@@ -9962,7 +9962,7 @@ body {
   animation: cctvRain 2.8s linear infinite;
 }
 
-.launch-dashboard[data-layout="operations-cockpit"] .camera-vignette {
+.launch-dashboard:is([data-layout="operations-cockpit"], [data-layout="spatial-command-hybrid"]) .camera-vignette {
   inset: 0;
   background:
     radial-gradient(circle at 50% 48%, transparent 0 38%, rgba(0, 0, 0, 0.46) 78%, rgba(0, 0, 0, 0.72) 100%),
@@ -9970,7 +9970,7 @@ body {
   mix-blend-mode: normal;
 }
 
-.launch-dashboard[data-layout="operations-cockpit"] .depth-building {
+.launch-dashboard:is([data-layout="operations-cockpit"], [data-layout="spatial-command-hybrid"]) .depth-building {
   bottom: 58%;
   width: clamp(96px, 13vw, 180px);
   height: clamp(72px, 11vw, 150px);
@@ -9985,16 +9985,16 @@ body {
   opacity: 0.9;
 }
 
-.launch-dashboard[data-layout="operations-cockpit"] .depth-left {
+.launch-dashboard:is([data-layout="operations-cockpit"], [data-layout="spatial-command-hybrid"]) .depth-left {
   left: 3%;
 }
 
-.launch-dashboard[data-layout="operations-cockpit"] .depth-right {
+.launch-dashboard:is([data-layout="operations-cockpit"], [data-layout="spatial-command-hybrid"]) .depth-right {
   right: 3%;
   transform: rotateX(58deg) skewX(10deg);
 }
 
-.launch-dashboard[data-layout="operations-cockpit"] .streetlight {
+.launch-dashboard:is([data-layout="operations-cockpit"], [data-layout="spatial-command-hybrid"]) .streetlight {
   bottom: 39%;
   width: 3px;
   height: 110px;
@@ -10003,7 +10003,7 @@ body {
   box-shadow: 0 0 28px rgba(255, 220, 146, 0.28);
 }
 
-.launch-dashboard[data-layout="operations-cockpit"] .streetlight::before {
+.launch-dashboard:is([data-layout="operations-cockpit"], [data-layout="spatial-command-hybrid"]) .streetlight::before {
   content: "";
   position: absolute;
   top: -18px;
@@ -10015,10 +10015,10 @@ body {
   filter: blur(4px);
 }
 
-.launch-dashboard[data-layout="operations-cockpit"] .streetlight-a { left: 30%; }
-.launch-dashboard[data-layout="operations-cockpit"] .streetlight-b { right: 27%; bottom: 42%; }
+.launch-dashboard:is([data-layout="operations-cockpit"], [data-layout="spatial-command-hybrid"]) .streetlight-a { left: 30%; }
+.launch-dashboard:is([data-layout="operations-cockpit"], [data-layout="spatial-command-hybrid"]) .streetlight-b { right: 27%; bottom: 42%; }
 
-.launch-dashboard[data-layout="operations-cockpit"] .launch-readiness-card {
+.launch-dashboard:is([data-layout="operations-cockpit"], [data-layout="spatial-command-hybrid"]) .launch-readiness-card {
   position: absolute;
   right: clamp(14px, 2vw, 24px);
   top: clamp(68px, 8vw, 104px);
@@ -10036,14 +10036,14 @@ body {
   backdrop-filter: blur(14px);
 }
 
-.launch-dashboard[data-layout="operations-cockpit"] .launch-readiness-card.ready {
+.launch-dashboard:is([data-layout="operations-cockpit"], [data-layout="spatial-command-hybrid"]) .launch-readiness-card.ready {
   border-color: rgba(98, 189, 177, 0.34);
   background:
     linear-gradient(135deg, rgba(98, 189, 177, 0.16), transparent 62%),
     rgba(7, 10, 12, 0.78);
 }
 
-.launch-dashboard[data-layout="operations-cockpit"] .launch-readiness-card span {
+.launch-dashboard:is([data-layout="operations-cockpit"], [data-layout="spatial-command-hybrid"]) .launch-readiness-card span {
   color: var(--launch-teal);
   font-size: 0.68rem;
   font-weight: 900;
@@ -10051,16 +10051,16 @@ body {
   text-transform: uppercase;
 }
 
-.launch-dashboard[data-layout="operations-cockpit"] .launch-readiness-card strong {
+.launch-dashboard:is([data-layout="operations-cockpit"], [data-layout="spatial-command-hybrid"]) .launch-readiness-card strong {
   font-size: 0.9rem;
 }
 
-.launch-dashboard[data-layout="operations-cockpit"] .launch-readiness-card small {
+.launch-dashboard:is([data-layout="operations-cockpit"], [data-layout="spatial-command-hybrid"]) .launch-readiness-card small {
   color: rgba(232, 242, 238, 0.66);
   line-height: 1.35;
 }
 
-.launch-dashboard[data-layout="operations-cockpit"] .simulation-viewport::before {
+.launch-dashboard:is([data-layout="operations-cockpit"], [data-layout="spatial-command-hybrid"]) .simulation-viewport::before {
   content: "REC 04:18:27  UNITY-CCTV  SIMULATION";
   position: absolute;
   left: 18px;
@@ -10081,17 +10081,339 @@ body {
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .launch-dashboard[data-layout="operations-cockpit"] .rain-sheen {
+  .launch-dashboard:is([data-layout="operations-cockpit"], [data-layout="spatial-command-hybrid"]) .rain-sheen {
     animation: none;
   }
 }
 
 @media (max-width: 860px) {
-  .launch-dashboard[data-layout="operations-cockpit"] .launch-readiness-card {
+  .launch-dashboard:is([data-layout="operations-cockpit"], [data-layout="spatial-command-hybrid"]) .launch-readiness-card {
     position: relative;
     top: auto;
     right: auto;
     margin: 12px;
     width: auto;
+  }
+}
+
+/* Accepted B+A hybrid: spatial command surface with operational rails. */
+.launch-dashboard[data-layout="spatial-command-hybrid"] {
+  --command-panel: rgba(5, 15, 22, 0.82);
+  --command-panel-strong: rgba(4, 12, 18, 0.94);
+  --command-line: rgba(143, 245, 210, 0.18);
+  --command-line-strong: rgba(143, 245, 210, 0.34);
+  --command-teal: #8ff5d2;
+  --command-amber: #f0b34f;
+  --command-ease-out: cubic-bezier(0.23, 1, 0.32, 1);
+  --command-ease-in-out: cubic-bezier(0.77, 0, 0.175, 1);
+  min-height: 100dvh;
+  overflow-x: hidden;
+}
+
+.launch-dashboard[data-layout="spatial-command-hybrid"] .cockpit-grid {
+  grid-template-columns: minmax(280px, 0.72fr) minmax(660px, 1.9fr) minmax(330px, 0.86fr);
+  grid-template-rows: minmax(760px, 78dvh);
+  gap: 14px;
+}
+
+.launch-dashboard[data-layout="spatial-command-hybrid"] .cockpit-center {
+  position: relative;
+  display: grid;
+  min-height: 0;
+}
+
+.launch-dashboard[data-layout="spatial-command-hybrid"] .cockpit-center .simulation-panel {
+  border-color: rgba(143, 245, 210, 0.22);
+  background:
+    radial-gradient(circle at 68% 18%, rgba(143, 245, 210, 0.1), transparent 28%),
+    rgba(4, 12, 18, 0.9);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.045);
+}
+
+.launch-dashboard[data-layout="spatial-command-hybrid"] .simulation-heading {
+  min-height: 72px;
+  border-bottom: 1px solid rgba(143, 245, 210, 0.14);
+  background:
+    linear-gradient(90deg, rgba(143, 245, 210, 0.08), transparent 46%),
+    rgba(4, 12, 18, 0.78);
+}
+
+.launch-dashboard[data-layout="spatial-command-hybrid"] .simulation-viewport {
+  min-height: 680px;
+  border: 0;
+}
+
+.launch-dashboard[data-layout="spatial-command-hybrid"] .cockpit-left,
+.launch-dashboard[data-layout="spatial-command-hybrid"] .cockpit-right {
+  align-content: start;
+  grid-auto-rows: min-content;
+}
+
+.launch-dashboard[data-layout="spatial-command-hybrid"] .cockpit-left .timeline-panel,
+.launch-dashboard[data-layout="spatial-command-hybrid"] .cockpit-right > .panel,
+.launch-dashboard[data-layout="spatial-command-hybrid"] .cockpit-right .chat-report-grid,
+.launch-dashboard[data-layout="spatial-command-hybrid"] .response-plan-heading,
+.launch-dashboard[data-layout="spatial-command-hybrid"] .response-focus-card {
+  border-color: rgba(143, 245, 210, 0.14);
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.034), transparent),
+    var(--command-panel);
+}
+
+.launch-dashboard[data-layout="spatial-command-hybrid"] .rail-kicker,
+.launch-dashboard[data-layout="spatial-command-hybrid"] .spatial-command-kicker {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  min-height: 36px;
+  border: 1px solid rgba(143, 245, 210, 0.16);
+  border-radius: var(--launch-radius);
+  padding: 0 11px;
+  color: var(--command-teal);
+  background: rgba(3, 13, 20, 0.66);
+  font-size: 0.72rem;
+  font-weight: 950;
+  letter-spacing: 0.01em;
+}
+
+.launch-dashboard[data-layout="spatial-command-hybrid"] .spatial-command-kicker {
+  position: absolute;
+  z-index: 20;
+  top: 86px;
+  left: 18px;
+  width: min(210px, calc(100% - 36px));
+  background: rgba(3, 13, 20, 0.74);
+  backdrop-filter: blur(10px);
+}
+
+.launch-dashboard[data-layout="spatial-command-hybrid"] .spatial-command-kicker::after,
+.launch-dashboard[data-layout="spatial-command-hybrid"] .rail-kicker::after {
+  content: "B+A";
+  color: rgba(245, 255, 251, 0.62);
+  font-size: 0.66rem;
+  font-weight: 850;
+}
+
+.launch-dashboard[data-layout="spatial-command-hybrid"] .event-row,
+.launch-dashboard[data-layout="spatial-command-hybrid"] .recommendation-card,
+.launch-dashboard[data-layout="spatial-command-hybrid"] .response-focus-card,
+.launch-dashboard[data-layout="spatial-command-hybrid"] .metric-row,
+.launch-dashboard[data-layout="spatial-command-hybrid"] .scenario-rail .segment-control button,
+.launch-dashboard[data-layout="spatial-command-hybrid"] .fixture-ingest-button,
+.launch-dashboard[data-layout="spatial-command-hybrid"] .job-refresh-button,
+.launch-dashboard[data-layout="spatial-command-hybrid"] .icon-action,
+.launch-dashboard[data-layout="spatial-command-hybrid"] .motion-pressable,
+.launch-dashboard[data-layout="spatial-command-hybrid"] button {
+  transform: translateZ(0);
+  transition:
+    transform 170ms var(--command-ease-out),
+    border-color 170ms var(--command-ease-out),
+    background-color 170ms var(--command-ease-out),
+    color 170ms var(--command-ease-out),
+    opacity 170ms var(--command-ease-out),
+    filter 170ms var(--command-ease-out),
+    box-shadow 170ms var(--command-ease-out);
+}
+
+.launch-dashboard[data-layout="spatial-command-hybrid"] .operation-toggle::before {
+  transition: transform 260ms var(--command-ease-in-out);
+}
+
+.launch-dashboard[data-layout="spatial-command-hybrid"] .operation-state-card-grid {
+  transition:
+    transform 240ms var(--command-ease-out),
+    opacity 180ms var(--command-ease-out),
+    filter 180ms var(--command-ease-out);
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .launch-dashboard[data-layout="spatial-command-hybrid"] .event-row:hover,
+  .launch-dashboard[data-layout="spatial-command-hybrid"] .recommendation-card:hover,
+  .launch-dashboard[data-layout="spatial-command-hybrid"] .response-focus-card:hover,
+  .launch-dashboard[data-layout="spatial-command-hybrid"] .scenario-rail .segment-control button:hover,
+  .launch-dashboard[data-layout="spatial-command-hybrid"] .fixture-ingest-button:hover,
+  .launch-dashboard[data-layout="spatial-command-hybrid"] .job-refresh-button:hover,
+  .launch-dashboard[data-layout="spatial-command-hybrid"] .icon-action:hover {
+    transform: translateY(-2px) translateZ(0);
+    border-color: rgba(143, 245, 210, 0.28);
+    background-color: rgba(143, 245, 210, 0.055);
+  }
+}
+
+.launch-dashboard[data-layout="spatial-command-hybrid"] button:active,
+.launch-dashboard[data-layout="spatial-command-hybrid"] .motion-pressable:active,
+.launch-dashboard[data-layout="spatial-command-hybrid"] .icon-action:active,
+.launch-dashboard[data-layout="spatial-command-hybrid"] .scenario-rail .segment-control button:active,
+.launch-dashboard[data-layout="spatial-command-hybrid"] .fixture-ingest-button:active,
+.launch-dashboard[data-layout="spatial-command-hybrid"] .job-refresh-button:active {
+  transform: scale(0.975) translateZ(0);
+  filter: brightness(1.05);
+}
+
+.launch-dashboard[data-layout="spatial-command-hybrid"] .operation-toggle button:active {
+  transform: scale(0.985) translateZ(0);
+}
+
+.launch-dashboard[data-layout="spatial-command-hybrid"] .primary-link:active,
+.launch-dashboard[data-layout="spatial-command-hybrid"] .secondary-link:active {
+  transform: scale(0.975) translateZ(0);
+}
+
+.launch-dashboard[data-layout="spatial-command-hybrid"] .scenario-rail {
+  margin-top: 14px;
+}
+
+@media (max-width: 1440px) {
+  .launch-dashboard[data-layout="spatial-command-hybrid"] .cockpit-grid {
+    grid-template-columns: minmax(260px, 0.8fr) minmax(560px, 1.55fr);
+    grid-template-rows: auto auto;
+  }
+
+  .launch-dashboard[data-layout="spatial-command-hybrid"] .cockpit-right {
+    grid-column: 1 / -1;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  .launch-dashboard[data-layout="spatial-command-hybrid"] .cockpit-right .chat-report-grid {
+    grid-column: 1 / -1;
+  }
+}
+
+@media (max-width: 860px) {
+  .launch-dashboard[data-layout="spatial-command-hybrid"] .cockpit-grid,
+  .launch-dashboard[data-layout="spatial-command-hybrid"] .cockpit-right {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .launch-dashboard[data-layout="spatial-command-hybrid"] .command-row > *,
+  .launch-dashboard[data-layout="spatial-command-hybrid"] .operation-row > *,
+  .launch-dashboard[data-layout="spatial-command-hybrid"] .cockpit-grid > *,
+  .launch-dashboard[data-layout="spatial-command-hybrid"] .cockpit-right > * {
+    min-width: 0;
+  }
+
+  .launch-dashboard[data-layout="spatial-command-hybrid"] .cockpit-center {
+    order: 1;
+  }
+
+  .launch-dashboard[data-layout="spatial-command-hybrid"] .cockpit-right {
+    order: 2;
+  }
+
+  .launch-dashboard[data-layout="spatial-command-hybrid"] .cockpit-left {
+    order: 3;
+  }
+
+  .launch-dashboard[data-layout="spatial-command-hybrid"] .simulation-viewport {
+    min-height: 560px;
+    max-width: 100%;
+    overflow: hidden;
+  }
+
+  .launch-dashboard[data-layout="spatial-command-hybrid"] .simulation-panel {
+    overflow: hidden;
+  }
+
+  .launch-dashboard[data-layout="spatial-command-hybrid"] .simulation-heading,
+  .launch-dashboard[data-layout="spatial-command-hybrid"] .viewport-controls {
+    display: grid !important;
+    grid-template-columns: minmax(0, 1fr);
+    justify-items: stretch;
+    width: 100%;
+    max-width: 100%;
+  }
+
+  .launch-dashboard[data-layout="spatial-command-hybrid"] .simulation-heading > *,
+  .launch-dashboard[data-layout="spatial-command-hybrid"] .viewport-controls > * {
+    min-width: 0;
+    max-width: 100%;
+  }
+
+  .launch-dashboard[data-layout="spatial-command-hybrid"] .viewport-controls {
+    gap: 8px;
+  }
+
+  .launch-dashboard[data-layout="spatial-command-hybrid"] .viewport-mode,
+  .launch-dashboard[data-layout="spatial-command-hybrid"] .viewport-controls button {
+    width: 100%;
+    min-width: 0;
+    white-space: normal;
+    text-align: center;
+  }
+
+  .launch-dashboard[data-layout="spatial-command-hybrid"] .unity-cctv-surface,
+  .launch-dashboard[data-layout="spatial-command-hybrid"] .sumo-telemetry,
+  .launch-dashboard[data-layout="spatial-command-hybrid"] .lane-pressure-panel,
+  .launch-dashboard[data-layout="spatial-command-hybrid"] .launch-readiness-card {
+    max-width: calc(100% - 24px);
+  }
+
+  .launch-dashboard[data-layout="spatial-command-hybrid"] .spatial-command-kicker {
+    position: relative;
+    top: auto;
+    left: auto;
+    width: auto;
+    margin-bottom: 10px;
+  }
+
+  .launch-dashboard[data-layout="spatial-command-hybrid"] .safety-command-banner {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    gap: 6px;
+    align-items: start;
+    max-width: 100%;
+    overflow: hidden;
+  }
+
+  .launch-dashboard[data-layout="spatial-command-hybrid"] .safety-command-banner strong,
+  .launch-dashboard[data-layout="spatial-command-hybrid"] .response-plan-heading small {
+    min-width: 0;
+    max-width: 100%;
+    white-space: normal;
+    overflow-wrap: anywhere;
+  }
+
+  .launch-dashboard[data-layout="spatial-command-hybrid"] .safety-command-banner span {
+    display: none;
+  }
+
+  .launch-dashboard[data-layout="spatial-command-hybrid"] .sumo-telemetry {
+    left: 12px;
+    top: 74px;
+    width: min(232px, calc(100% - 24px));
+  }
+
+  .launch-dashboard[data-layout="spatial-command-hybrid"] .lane-pressure-panel {
+    right: 12px;
+    top: 226px;
+    width: min(180px, calc(100% - 24px));
+  }
+
+  .launch-dashboard[data-layout="spatial-command-hybrid"] .launch-readiness-card {
+    left: 12px;
+    right: 12px;
+    bottom: 112px;
+    width: auto;
+    max-width: none;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .launch-dashboard[data-layout="spatial-command-hybrid"] *,
+  .launch-dashboard[data-layout="spatial-command-hybrid"] *::before,
+  .launch-dashboard[data-layout="spatial-command-hybrid"] *::after {
+    scroll-behavior: auto !important;
+    animation: none !important;
+    transition: none !important;
+  }
+
+  .launch-dashboard[data-layout="spatial-command-hybrid"] button:active,
+  .launch-dashboard[data-layout="spatial-command-hybrid"] .motion-pressable:active,
+  .launch-dashboard[data-layout="spatial-command-hybrid"] .icon-action:active,
+  .launch-dashboard[data-layout="spatial-command-hybrid"] .scenario-rail .segment-control button:active,
+  .launch-dashboard[data-layout="spatial-command-hybrid"] .fixture-ingest-button:active,
+  .launch-dashboard[data-layout="spatial-command-hybrid"] .job-refresh-button:active {
+    transform: none !important;
+    filter: none !important;
   }
 }

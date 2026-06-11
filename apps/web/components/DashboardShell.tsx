@@ -139,7 +139,8 @@ export function DashboardShell({
       ref={shellRef}
       className="dashboard-shell launch-dashboard"
       data-theme="launch-cinematic"
-      data-layout="operations-cockpit"
+      data-layout="spatial-command-hybrid"
+      data-concept="b-plus-a"
     >
       <header className="dashboard-header dashboard-command-bar">
         <div className="dashboard-identity-row command-row motion-enter">
@@ -265,14 +266,16 @@ export function DashboardShell({
       </header>
 
       <div className="dashboard-grid cockpit-grid">
-        <aside className="cockpit-left motion-enter" data-mobile-priority="incidents">
+        <aside className="cockpit-left motion-enter" data-mobile-priority="incidents" aria-label="Operational detail rail">
+          <div className="rail-kicker">Live evidence rail</div>
           <EventTimeline events={events} locale={locale} />
         </aside>
         <section
           className="cockpit-center motion-enter"
-          aria-label="Simulation Viewport"
+          aria-label="Spatial command surface"
           data-mobile-priority="map"
         >
+          <div className="spatial-command-kicker">Spatial command</div>
           <DigitalTwin
             status={status}
             events={events}
@@ -284,9 +287,10 @@ export function DashboardShell({
         </section>
         <aside
           className="cockpit-right motion-enter"
-          aria-label="Response Plan"
+          aria-label="Command decision rail"
           data-mobile-priority="response"
         >
+          <div className="rail-kicker">Operator action stack</div>
           <div className="response-plan-heading">
             <span>Response Plan</span>
             <small>Response stack</small>

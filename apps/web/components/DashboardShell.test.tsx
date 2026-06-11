@@ -222,17 +222,17 @@ function renderDashboard(overrides = {}) {
 }
 
 describe("DashboardShell", () => {
-  test("renders the reduced-neon operations cockpit structure", () => {
+  test("renders the B plus A spatial command cockpit structure", () => {
     const { container } = renderDashboard({ selectedScenarioId: "emergency" });
 
     expect(container.querySelector('[data-theme="launch-cinematic"]')).toBeTruthy();
-    expect(container.querySelector('[data-layout="operations-cockpit"]')).toBeTruthy();
+    expect(container.querySelector('[data-layout="spatial-command-hybrid"]')).toBeTruthy();
     expect(
       screen.getByRole("heading", { level: 1, name: "스마트 교차로 운영 시스템" })
     ).toBeTruthy();
     expect(screen.getByLabelText("Scenario Rail")).toBeTruthy();
     expect(screen.getByText("Incident Brief Spine")).toBeTruthy();
-    expect(screen.getByLabelText("Simulation Viewport")).toBeTruthy();
+    expect(screen.getByLabelText("Spatial command surface")).toBeTruthy();
     expect(screen.getByText("Response Plan")).toBeTruthy();
     expect(screen.getAllByText("긴급차량 우선 통과").length).toBeGreaterThanOrEqual(1);
     expect(screen.getByText("Simulation only / No real signal control")).toBeTruthy();
@@ -336,6 +336,20 @@ describe("DashboardShell", () => {
     expect(screen.getByText("권고안 검토")).toBeTruthy();
     expect(screen.getByText("실행 전 승인 필요")).toBeTruthy();
     expect(screen.getByText("Response stack")).toBeTruthy();
+  });
+
+  test("renders the accepted B plus A spatial command dashboard structure", () => {
+    const { container } = renderDashboard();
+
+    const shell = container.querySelector(".dashboard-shell");
+    expect(shell?.getAttribute("data-layout")).toBe("spatial-command-hybrid");
+    expect(shell?.getAttribute("data-concept")).toBe("b-plus-a");
+    expect(screen.getByLabelText("Spatial command surface")).toBeTruthy();
+    expect(screen.getByLabelText("Operational detail rail")).toBeTruthy();
+    expect(screen.getByLabelText("Command decision rail")).toBeTruthy();
+    expect(screen.getByText("Spatial command")).toBeTruthy();
+    expect(screen.getByText("Live evidence rail")).toBeTruthy();
+    expect(screen.getByText("Operator action stack")).toBeTruthy();
   });
 
   test("renders the replaceable SUMO simulation viewport boundary", () => {
