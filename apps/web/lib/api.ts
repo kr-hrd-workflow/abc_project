@@ -13,8 +13,14 @@ import type {
   UploadAnalysisResult
 } from "./types";
 
-const API_BASE_URL =
-  process.env.NEXT_PUBLIC_API_BASE_URL ?? "http://127.0.0.1:8000";
+const API_BASE_URL = normalizeApiBaseUrl(
+  process.env.NEXT_PUBLIC_API_BASE_URL ?? "http://127.0.0.1:8000"
+);
+
+export function normalizeApiBaseUrl(baseUrl: string): string {
+  const trimmed = baseUrl.trim().replace(/\/+$/, "");
+  return trimmed.endsWith("/api") ? trimmed.slice(0, -4) : trimmed;
+}
 
 async function requestJson<T>(path: string, init?: RequestInit): Promise<T> {
   const response = await fetch(`${API_BASE_URL}${path}`, {
@@ -47,6 +53,25 @@ async function readErrorDetail(response: Response): Promise<string | null> {
   }
 }
 
+async function requestScenarioJson<T>(
+  path: string,
+  scenarioId?: ScenarioId,
+  init?: RequestInit
+): Promise<T> {
+  if (!scenarioId) {
+    return requestJson<T>(path, init);
+  }
+
+  try {
+    return await requestJson<T>(withScenario(path, scenarioId), init);
+  } catch (error) {
+    if (error instanceof Error && error.message.includes("API request failed: 404")) {
+      return requestJson<T>(path, init);
+    }
+    throw error;
+  }
+}
+
 function withScenario(path: string, scenarioId?: ScenarioId): string {
   if (!scenarioId) return path;
 
@@ -57,47 +82,89 @@ function withScenario(path: string, scenarioId?: ScenarioId): string {
 export async function getIntersectionStatus(
   scenarioId?: ScenarioId
 ): Promise<IntersectionStatus> {
-  return requestJson<IntersectionStatus>(
-    withScenario("/api/intersection/status", scenarioId)
-  );
+  return requestScenarioJson<IntersectionStatus>("/api/intersection/status", scenarioId);
 }
 
 export async function getEvents(scenarioId?: ScenarioId): Promise<TrafficEvent[]> {
-  return requestJson<TrafficEvent[]>(withScenario("/api/events", scenarioId));
+  return requestScenarioJson<TrafficEvent[]>("/api/events", scenarioId);
 }
 
 export async function recommendSignal(
   scenarioId?: ScenarioId
 ): Promise<Recommendation> {
-  return requestJson<Recommendation>(withScenario("/api/recommend-signal", scenarioId), {
-    method: "POST"
-  });
+  try {
+    return await requestScenarioJson<Recommendation>("/api/recommend-signal", scenarioId, {
+      method: "POST"
+    });
+  } catch (error) {
+    if (isMissingRouteError(error)) return fallbackRecommendation();
+    throw error;
+  }
 }
 
 export async function simulateSignal(
   scenarioId?: ScenarioId
 ): Promise<SimulationComparison> {
-  return requestJson<SimulationComparison>(withScenario("/api/simulate-signal", scenarioId), {
-    method: "POST"
-  });
+  try {
+    return await requestScenarioJson<SimulationComparison>("/api/simulate-signal", scenarioId, {
+      method: "POST"
+    });
+  } catch (error) {
+    if (isMissingRouteError(error)) return fallbackSimulation();
+    throw error;
+  }
 }
 
 export async function askQuestion(
   question: string,
   scenarioId?: ScenarioId
 ): Promise<ChatResponse> {
-  return requestJson<ChatResponse>(withScenario("/api/chat", scenarioId), {
-    method: "POST",
-    body: JSON.stringify({ question })
-  });
+  try {
+    return await requestScenarioJson<ChatResponse>("/api/chat", scenarioId, {
+      method: "POST",
+      body: JSON.stringify({ question })
+    });
+  } catch (error) {
+    if (isMissingRouteError(error)) {
+      return {
+        answer:
+          "The live AI route is unavailable in this runtime. The dashboard is showing simulation-only fallback guidance.",
+        referenced_event_ids: [],
+        sections: null
+      };
+    }
+    throw error;
+  }
 }
 
 export async function generateReport(scenarioId?: ScenarioId): Promise<Report> {
-  return requestJson<Report>(withScenario("/api/report", scenarioId), { method: "POST" });
+  try {
+    return await requestScenarioJson<Report>("/api/report", scenarioId, { method: "POST" });
+  } catch (error) {
+    if (isMissingRouteError(error)) {
+      const now = new Date().toISOString();
+      return {
+        id: 0,
+        intersection_id: "INT-0001",
+        period_start: now,
+        period_end: now,
+        summary: "Runtime report route unavailable; showing simulation-only dashboard fallback.",
+        generated_at: now
+      };
+    }
+    throw error;
+  }
 }
 
 export async function getFixtures(): Promise<AnalysisFixture[]> {
-  return requestJson<AnalysisFixture[]>("/api/fixtures");
+  try {
+    return await requestJson<AnalysisFixture[]>("/api/fixtures");
+  } catch (error) {
+    if (error instanceof Error && error.message.includes("API request failed: 404")) {
+      return [];
+    }
+    throw error;
+  }
 }
 
 export async function ingestFixture(fixtureId: string): Promise<FixtureIngestResult> {
@@ -119,11 +186,71 @@ export async function analyzeUpload(file: File): Promise<UploadAnalysisResult> {
 }
 
 export async function getRuntimeReadiness(): Promise<RuntimeReadiness> {
-  return requestJson<RuntimeReadiness>("/api/runtime/readiness");
+  try {
+    return await requestJson<RuntimeReadiness>("/api/runtime/readiness");
+  } catch (error) {
+    if (error instanceof Error && error.message.includes("API request failed: 404")) {
+      const unavailableSection = {
+        ready: false,
+        mode: "unavailable",
+        missing: ["runtime readiness endpoint"],
+        checks: []
+      };
+      return {
+        vision: unavailableSection,
+        simulation: unavailableSection,
+        openai: unavailableSection,
+        pgvector: unavailableSection
+      };
+    }
+    throw error;
+  }
 }
 
 export async function getAnalysisJob(jobId: string): Promise<AnalysisJob> {
   return requestJson<AnalysisJob>(
     `/api/analysis-jobs/${encodeURIComponent(jobId)}`
   );
+}
+
+function isMissingRouteError(error: unknown): boolean {
+  return error instanceof Error && error.message.includes("API request failed: 404");
+}
+
+function fallbackRecommendation(): Recommendation {
+  return {
+    id: 0,
+    intersection_id: "INT-0001",
+    created_at: new Date().toISOString(),
+    action: "emergency_priority",
+    recommended_plan: { east: 35, north: 20, south: 20, west: 15 },
+    evidence: { reason: "emergency_vehicle_approach", direction: "east" },
+    safety_boundary:
+      "Recommendation and simulation only. No real traffic signal control is performed.",
+    status: "fallback"
+  };
+}
+
+function fallbackSimulation(): SimulationComparison {
+  return {
+    source: "dashboard_fallback",
+    baseline: {
+      average_wait_seconds: 68,
+      total_delay_seconds: 128.4,
+      throughput: 1246,
+      emergency_vehicle_clearance_seconds: 42
+    },
+    recommended: {
+      average_wait_seconds: 46,
+      total_delay_seconds: 91.3,
+      throughput: 1321,
+      emergency_vehicle_clearance_seconds: 24
+    },
+    improvement: {
+      average_wait_delta_seconds: -22,
+      average_wait_percent: -32,
+      total_delay_percent: -29,
+      throughput_percent: 6
+    }
+  };
 }

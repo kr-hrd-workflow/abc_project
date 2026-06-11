@@ -46,3 +46,10 @@ models/
 tmp/
 .superpowers/
 output/
+
+# Unreal local/generated data
+renderer/unreal/**/DerivedDataCache/
+renderer/unreal/**/Intermediate/
+renderer/unreal/**/Saved/
+renderer/unreal/**/Binaries/
+renderer/unreal/**/.vs/

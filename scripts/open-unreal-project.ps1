@@ -1,3 +1,8 @@
+param(
+  [switch]$PixelStreaming,
+  [switch]$Game
+)
+
 $ErrorActionPreference = 'Stop'
 $RepoRoot = Resolve-Path (Join-Path $PSScriptRoot '..')
 $ProjectPath = Join-Path $RepoRoot 'renderer\unreal\SmartIntersection\SmartIntersection.uproject'
@@ -36,7 +41,20 @@ if (-not (Test-Path $ProjectPath)) {
 $UnrealEditor = Find-UnrealEditor
 if ($UnrealEditor) {
   Write-Output "Opening Unreal project with $UnrealEditor"
-  Start-Process -FilePath $UnrealEditor -ArgumentList @("`"$ProjectPath`"")
+  $arguments = @("`"$ProjectPath`"")
+  if ($Game) {
+    $arguments += '-game'
+    Write-Output 'Unreal runtime mode enabled: -game'
+  }
+  if ($PixelStreaming) {
+    $arguments += @(
+      '-PixelStreamingURL=ws://127.0.0.1:8888',
+      '-RenderOffscreen',
+      '-AudioMixer'
+    )
+    Write-Output 'Pixel Streaming launch flags enabled: -PixelStreamingURL=ws://127.0.0.1:8888 -RenderOffscreen -AudioMixer'
+  }
+  Start-Process -FilePath $UnrealEditor -ArgumentList $arguments
   exit 0
 }
 

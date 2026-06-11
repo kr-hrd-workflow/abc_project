@@ -33,8 +33,27 @@ $ServerRootCandidates = @(
 
 $ServerRoot = $ServerRootCandidates | Where-Object { Test-Path $_ } | Select-Object -First 1
 if (-not $ServerRoot) {
-  Write-Output "Pixel Streaming signalling server folder was not found under $UnrealRoot."
-  Write-Output 'Install/enable the Pixel Streaming plugin or use Epic Pixel Streaming Infrastructure separately.'
+  Write-Output "Bundled Pixel Streaming signalling server folder was not found under $UnrealRoot."
+  Write-Output 'Falling back to EpicGamesExt/PixelStreamingInfrastructure.'
+
+  $RepoRoot = Resolve-Path (Join-Path $PSScriptRoot '..')
+  $InfraRoot = Join-Path $RepoRoot 'tmp\PixelStreamingInfrastructure'
+  if (-not (Test-Path $InfraRoot)) {
+    New-Item -ItemType Directory -Force -Path (Split-Path $InfraRoot -Parent) | Out-Null
+    git clone --depth 1 https://github.com/EpicGamesExt/PixelStreamingInfrastructure.git $InfraRoot
+    if ($LASTEXITCODE -ne 0) {
+      Write-Output 'Failed to clone Epic Pixel Streaming Infrastructure.'
+      exit 4
+    }
+  } else {
+    Write-Output "Using existing Pixel Streaming Infrastructure checkout: $InfraRoot"
+  }
+
+  $ServerRoot = Join-Path $InfraRoot 'SignallingWebServer'
+}
+
+if (-not (Test-Path $ServerRoot)) {
+  Write-Output "Pixel Streaming signalling server folder was not found: $ServerRoot"
   exit 4
 }
 
@@ -42,20 +61,50 @@ Write-Output "Pixel Streaming server folder: $ServerRoot"
 $Scripts = @(
   (Join-Path $ServerRoot 'platform_scripts\cmd\Start_SignallingServer.ps1'),
   (Join-Path $ServerRoot 'Start_SignallingServer.ps1'),
+  (Join-Path $ServerRoot 'platform_scripts\cmd\start.bat'),
   (Join-Path $ServerRoot 'run_local.bat')
 )
 $Script = $Scripts | Where-Object { Test-Path $_ } | Select-Object -First 1
 if (-not $Script) {
-  Write-Output 'No known signalling startup script was found. Inspect the folder above and run the matching Epic script manually.'
+  Write-Output 'No bundled signalling startup script was found. Falling back to EpicGamesExt/PixelStreamingInfrastructure.'
+  $RepoRoot = Resolve-Path (Join-Path $PSScriptRoot '..')
+  $InfraRoot = Join-Path $RepoRoot 'tmp\PixelStreamingInfrastructure'
+  if (-not (Test-Path $InfraRoot)) {
+    New-Item -ItemType Directory -Force -Path (Split-Path $InfraRoot -Parent) | Out-Null
+    git clone --depth 1 https://github.com/EpicGamesExt/PixelStreamingInfrastructure.git $InfraRoot
+    if ($LASTEXITCODE -ne 0) {
+      Write-Output 'Failed to clone Epic Pixel Streaming Infrastructure.'
+      exit 4
+    }
+  } else {
+    Write-Output "Using existing Pixel Streaming Infrastructure checkout: $InfraRoot"
+  }
+  $ServerRoot = Join-Path $InfraRoot 'SignallingWebServer'
+  if (-not (Test-Path $ServerRoot)) {
+    Write-Output "Pixel Streaming Infrastructure SignallingWebServer folder was not found: $ServerRoot"
+    exit 4
+  }
+  Write-Output "Pixel Streaming server folder: $ServerRoot"
+  $Scripts = @(
+    (Join-Path $ServerRoot 'platform_scripts\cmd\start.bat'),
+    (Join-Path $ServerRoot 'platform_scripts\cmd\Start_SignallingServer.ps1'),
+    (Join-Path $ServerRoot 'Start_SignallingServer.ps1'),
+    (Join-Path $ServerRoot 'run_local.bat')
+  )
+  $Script = $Scripts | Where-Object { Test-Path $_ } | Select-Object -First 1
+}
+
+if (-not $Script) {
+  Write-Output 'No known signalling startup script was found after fallback.'
   exit 5
 }
 
 Write-Output "Starting Pixel Streaming signalling server: $Script"
 Set-Location $ServerRoot
 if ($Script.EndsWith('.bat')) {
-  Start-Process -FilePath $Script
+  Start-Process -FilePath $Script -WorkingDirectory $ServerRoot
 } else {
-  Start-Process -FilePath 'powershell.exe' -ArgumentList @('-NoProfile', '-ExecutionPolicy', 'Bypass', '-File', "`"$Script`"")
+  Start-Process -FilePath 'powershell.exe' -WorkingDirectory $ServerRoot -ArgumentList @('-NoProfile', '-ExecutionPolicy', 'Bypass', '-File', "`"$Script`"")
 }
-Write-Output 'Expected dashboard stream URL: http://127.0.0.1:8888'
+Write-Output 'Expected dashboard stream URL: http://127.0.0.1'
 exit 0

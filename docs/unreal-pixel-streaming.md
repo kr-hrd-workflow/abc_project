@@ -7,7 +7,7 @@ This project uses Unreal Engine as a photoreal presentation layer and keeps Fast
 The web dashboard mounts a stream iframe from:
 
 ```env
-NEXT_PUBLIC_SIMULATION_STREAM_URL=http://127.0.0.1:8888
+NEXT_PUBLIC_SIMULATION_STREAM_URL=http://127.0.0.1
 ```
 
 The old Unity variable remains a fallback alias:
@@ -31,9 +31,9 @@ npm run unreal:home
 That command performs the remaining local steps in order:
 
 1. verifies `UnrealEditor.exe` exists,
-2. ensures `.env.local` contains `NEXT_PUBLIC_SIMULATION_STREAM_URL=http://127.0.0.1:8888`,
-3. opens `renderer/unreal/SmartIntersection/SmartIntersection.uproject`,
-4. starts the Pixel Streaming signalling server if the installed UE layout exposes Epic's bundled startup script.
+2. ensures both root `.env.local` and `apps/web/.env.local` contain `NEXT_PUBLIC_SIMULATION_STREAM_URL=http://127.0.0.1`,
+3. starts the Pixel Streaming signalling server,
+4. opens `renderer/unreal/SmartIntersection/SmartIntersection.uproject` in runtime mode with Unreal streamer flags: `-game -PixelStreamingURL=ws://127.0.0.1:8888 -RenderOffscreen -AudioMixer`.
 
 If Unreal is still missing, it stops with the exact blocker and leaves the repo unchanged.
 
@@ -69,11 +69,19 @@ If Unreal is not installed, the command launches Epic Games Launcher.
 npm run unreal:pixel-streaming
 ```
 
-The script discovers the installed Unreal Engine folder and tries to start the bundled Pixel Streaming signalling server. The expected frontend URL is:
+The script discovers the installed Unreal Engine folder and tries to start the bundled Pixel Streaming signalling server. UE 5.7 installations may include the Pixel Streaming plugin but not the old `Resources/WebServers` startup scripts; in that case the script falls back to cloning Epic's `EpicGamesExt/PixelStreamingInfrastructure` into ignored local scratch space at `tmp/PixelStreamingInfrastructure` and starts `SignallingWebServer/platform_scripts/cmd/start.bat`. The expected frontend URL is:
 
 ```text
-http://127.0.0.1:8888
+http://127.0.0.1
 ```
+
+Unreal connects to the streamer WebSocket separately:
+
+```text
+ws://127.0.0.1:8888
+```
+
+If a browser request to `http://127.0.0.1:8888` returns `426 Upgrade Required`, that is expected. Port `8888` is not the dashboard iframe URL.
 
 ### 4. Start the app
 

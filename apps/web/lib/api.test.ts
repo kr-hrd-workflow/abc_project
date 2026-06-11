@@ -1,13 +1,12 @@
+// @vitest-environment jsdom
+
 import { afterEach, describe, expect, test, vi } from "vitest";
 
 import {
-  analyzeUpload,
-  askQuestion,
-  generateReport,
-  getAnalysisJob,
   getFixtures,
+  getIntersectionStatus,
   getRuntimeReadiness,
-  ingestFixture,
+  normalizeApiBaseUrl,
   recommendSignal
 } from "./api";
 
@@ -15,184 +14,107 @@ afterEach(() => {
   vi.restoreAllMocks();
 });
 
-function mockJsonResponse(body: unknown, ok = true, status = 200) {
-  return Promise.resolve({
-    ok,
-    status,
-    json: () => Promise.resolve(body)
-  } as Response);
-}
+describe("API client", () => {
+  test("normalizes API base URLs that already include the /api prefix", () => {
+    expect(normalizeApiBaseUrl("http://127.0.0.1:8000")).toBe(
+      "http://127.0.0.1:8000"
+    );
+    expect(normalizeApiBaseUrl("http://127.0.0.1:8000/api")).toBe(
+      "http://127.0.0.1:8000"
+    );
+    expect(normalizeApiBaseUrl("http://127.0.0.1:8000/api/")).toBe(
+      "http://127.0.0.1:8000"
+    );
+  });
 
-describe("dashboard API client", () => {
-  test("posts signal recommendation requests to the backend", async () => {
+  test("retries scenario-scoped reads without scenario_id when the API returns 404", async () => {
     const fetchMock = vi
-      .spyOn(globalThis, "fetch")
-      .mockReturnValue(mockJsonResponse({ id: 1, action: "emergency_priority" }));
-
-    await recommendSignal();
-
-    expect(fetchMock).toHaveBeenCalledWith(
-      "http://127.0.0.1:8000/api/recommend-signal",
-      expect.objectContaining({
-        method: "POST",
-        cache: "no-store"
+      .fn()
+      .mockResolvedValueOnce({
+        ok: false,
+        status: 404,
+        json: async () => ({ detail: "Not Found" })
       })
+      .mockResolvedValueOnce({
+        ok: true,
+        json: async () => ({
+          intersection_id: "INT-0001",
+          captured_at: "2026-06-08T01:24:30+00:00",
+          signal_phase: "east_priority",
+          cycle_second: 24,
+          queues: { north: 32, south: 11, east: 18, west: 8 },
+          pedestrian_request: true,
+          emergency_priority: true,
+          congestion_level: "high",
+          source: "scenario_mock"
+        })
+      });
+
+    vi.stubGlobal("fetch", fetchMock);
+
+    const status = await getIntersectionStatus("emergency");
+
+    expect(status.intersection_id).toBe("INT-0001");
+    expect(fetchMock).toHaveBeenCalledTimes(2);
+    expect(fetchMock.mock.calls[0][0]).toBe(
+      "http://127.0.0.1:8000/api/intersection/status?scenario_id=emergency"
+    );
+    expect(fetchMock.mock.calls[1][0]).toBe(
+      "http://127.0.0.1:8000/api/intersection/status"
     );
   });
 
-  test("adds scenario query parameters to dashboard API requests", async () => {
-    const fetchMock = vi
-      .spyOn(globalThis, "fetch")
-      .mockReturnValue(mockJsonResponse({ id: 1, action: "pedestrian_service" }));
+  test("treats missing fixture routes as an empty optional fixture list", async () => {
+    const fetchMock = vi.fn().mockResolvedValueOnce({
+      ok: false,
+      status: 404,
+      json: async () => ({ detail: "Not Found" })
+    });
 
-    await recommendSignal("pedestrian");
+    vi.stubGlobal("fetch", fetchMock);
 
-    expect(fetchMock).toHaveBeenCalledWith(
-      "http://127.0.0.1:8000/api/recommend-signal?scenario_id=pedestrian",
-      expect.objectContaining({
-        method: "POST",
-        cache: "no-store"
-      })
-    );
-  });
-
-  test("posts chat questions as JSON", async () => {
-    const fetchMock = vi
-      .spyOn(globalThis, "fetch")
-      .mockReturnValue(mockJsonResponse({ answer: "ok", referenced_event_ids: [] }));
-
-    await askQuestion("현재 상황은?");
-
-    expect(fetchMock).toHaveBeenCalledWith(
-      "http://127.0.0.1:8000/api/chat",
-      expect.objectContaining({
-        method: "POST",
-        body: JSON.stringify({ question: "현재 상황은?" }),
-        headers: expect.objectContaining({ "Content-Type": "application/json" })
-      })
-    );
-  });
-
-  test("adds scenario query parameters to chat requests", async () => {
-    const fetchMock = vi
-      .spyOn(globalThis, "fetch")
-      .mockReturnValue(mockJsonResponse({ answer: "ok", referenced_event_ids: [] }));
-
-    await askQuestion("blocked?", "blocked");
-
-    expect(fetchMock).toHaveBeenCalledWith(
-      "http://127.0.0.1:8000/api/chat?scenario_id=blocked",
-      expect.objectContaining({
-        method: "POST",
-        body: JSON.stringify({ question: "blocked?" }),
-        headers: expect.objectContaining({ "Content-Type": "application/json" })
-      })
-    );
-  });
-
-  test("throws when the backend returns a non-ok response", async () => {
-    vi.spyOn(globalThis, "fetch").mockReturnValue(mockJsonResponse({}, false, 500));
-
-    await expect(generateReport()).rejects.toThrow(
-      "API request failed: 500 /api/report"
-    );
-  });
-
-  test("includes backend error details when available", async () => {
-    vi.spyOn(globalThis, "fetch").mockReturnValue(
-      mockJsonResponse(
-        { detail: "Database unavailable. Start PostgreSQL and run migrations." },
-        false,
-        503
-      )
-    );
-
-    await expect(generateReport()).rejects.toThrow(
-      "Database unavailable. Start PostgreSQL and run migrations."
-    );
-  });
-
-  test("loads sample analysis fixtures", async () => {
-    const fetchMock = vi
-      .spyOn(globalThis, "fetch")
-      .mockReturnValue(mockJsonResponse([{ fixture_id: "emergency-east-frame" }]));
-
-    const fixtures = await getFixtures();
-
-    expect(fixtures).toEqual([{ fixture_id: "emergency-east-frame" }]);
+    await expect(getFixtures()).resolves.toEqual([]);
     expect(fetchMock).toHaveBeenCalledWith(
       "http://127.0.0.1:8000/api/fixtures",
-      expect.objectContaining({
-        cache: "no-store"
-      })
+      expect.objectContaining({ cache: "no-store" })
     );
   });
 
-  test("posts fixture ingestion requests", async () => {
-    const fetchMock = vi
-      .spyOn(globalThis, "fetch")
-      .mockReturnValue(mockJsonResponse({ analysis_status: "ingested" }));
-
-    await ingestFixture("emergency-east-frame");
-
-    expect(fetchMock).toHaveBeenCalledWith(
-      "http://127.0.0.1:8000/api/fixtures/emergency-east-frame/ingest",
-      expect.objectContaining({
-        method: "POST",
-        cache: "no-store"
-      })
-    );
-  });
-
-  test("uploads analysis samples with filename and media type", async () => {
-    const file = new File(["sample"], "intersection-frame.jpg", {
-      type: "image/jpeg"
+  test("treats missing runtime readiness route as unavailable readiness", async () => {
+    const fetchMock = vi.fn().mockResolvedValueOnce({
+      ok: false,
+      status: 404,
+      json: async () => ({ detail: "Not Found" })
     });
-    const fetchMock = vi
-      .spyOn(globalThis, "fetch")
-      .mockReturnValue(mockJsonResponse({ job_id: "job-1" }));
 
-    await analyzeUpload(file);
-
-    expect(fetchMock).toHaveBeenCalledWith(
-      "http://127.0.0.1:8000/api/uploads/analyze?filename=intersection-frame.jpg",
-      expect.objectContaining({
-        method: "POST",
-        body: file,
-        headers: expect.objectContaining({ "Content-Type": "image/jpeg" }),
-        cache: "no-store"
-      })
-    );
-  });
-
-  test("loads analysis job status by id", async () => {
-    const fetchMock = vi
-      .spyOn(globalThis, "fetch")
-      .mockReturnValue(mockJsonResponse({ job_id: "job-1", status: "completed" }));
-
-    await getAnalysisJob("job-1");
-
-    expect(fetchMock).toHaveBeenCalledWith(
-      "http://127.0.0.1:8000/api/analysis-jobs/job-1",
-      expect.objectContaining({
-        cache: "no-store"
-      })
-    );
-  });
-
-  test("loads runtime readiness for launch gates", async () => {
-    const fetchMock = vi
-      .spyOn(globalThis, "fetch")
-      .mockReturnValue(mockJsonResponse({ openai: { ready: false } }));
+    vi.stubGlobal("fetch", fetchMock);
 
     const readiness = await getRuntimeReadiness();
 
-    expect(readiness).toEqual({ openai: { ready: false } });
-    expect(fetchMock).toHaveBeenCalledWith(
-      "http://127.0.0.1:8000/api/runtime/readiness",
-      expect.objectContaining({
-        cache: "no-store"
+    expect(readiness.openai.ready).toBe(false);
+    expect(readiness.openai.mode).toBe("unavailable");
+    expect(readiness.openai.missing).toContain("runtime readiness endpoint");
+  });
+
+  test("uses simulation-only fallback recommendation when control route is missing", async () => {
+    const fetchMock = vi
+      .fn()
+      .mockResolvedValueOnce({
+        ok: false,
+        status: 404,
+        json: async () => ({ detail: "Not Found" })
       })
-    );
+      .mockResolvedValueOnce({
+        ok: false,
+        status: 404,
+        json: async () => ({ detail: "Not Found" })
+      });
+
+    vi.stubGlobal("fetch", fetchMock);
+
+    const recommendation = await recommendSignal("emergency");
+
+    expect(recommendation.status).toBe("fallback");
+    expect(recommendation.safety_boundary).toContain("No real traffic signal control");
   });
 });

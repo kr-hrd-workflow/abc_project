@@ -25,34 +25,40 @@ if ($precheck -ne 0) {
 
 Write-Output ''
 Write-Output '== 2. Ensuring dashboard stream env in .env.local =='
-$envPath = Join-Path $RepoRoot '.env.local'
-if (-not (Test-Path $envPath)) {
-  Copy-Item (Join-Path $RepoRoot '.env.example') $envPath
+$envTargets = @(
+  (Join-Path $RepoRoot '.env.local'),
+  (Join-Path $RepoRoot 'apps\web\.env.local')
+)
+foreach ($envPath in $envTargets) {
+  if (-not (Test-Path $envPath)) {
+    New-Item -ItemType Directory -Force -Path (Split-Path $envPath -Parent) | Out-Null
+    Set-Content -Path $envPath -Value "NEXT_PUBLIC_API_BASE_URL=http://127.0.0.1:8000/api`n" -NoNewline
+  }
+  $envText = Get-Content $envPath -Raw
+  if ($envText -match '(?m)^#?\s*NEXT_PUBLIC_SIMULATION_STREAM_URL=') {
+    $envText = [regex]::Replace($envText, '(?m)^#?\s*NEXT_PUBLIC_SIMULATION_STREAM_URL=.*$', 'NEXT_PUBLIC_SIMULATION_STREAM_URL=http://127.0.0.1')
+  } else {
+    $envText = $envText.TrimEnd() + "`nNEXT_PUBLIC_SIMULATION_STREAM_URL=http://127.0.0.1`n"
+  }
+  Set-Content -Path $envPath -Value $envText -NoNewline
+  Write-Output "ENV_OK=$envPath NEXT_PUBLIC_SIMULATION_STREAM_URL=http://127.0.0.1"
 }
-$envText = Get-Content $envPath -Raw
-if ($envText -match '(?m)^#?\s*NEXT_PUBLIC_SIMULATION_STREAM_URL=') {
-  $envText = [regex]::Replace($envText, '(?m)^#?\s*NEXT_PUBLIC_SIMULATION_STREAM_URL=.*$', 'NEXT_PUBLIC_SIMULATION_STREAM_URL=http://127.0.0.1:8888')
-} else {
-  $envText = $envText.TrimEnd() + "`nNEXT_PUBLIC_SIMULATION_STREAM_URL=http://127.0.0.1:8888`n"
-}
-Set-Content -Path $envPath -Value $envText -NoNewline
-Write-Output 'ENV_OK=NEXT_PUBLIC_SIMULATION_STREAM_URL=http://127.0.0.1:8888'
 
 Write-Output ''
-Write-Output '== 3. Opening Unreal project =='
-powershell.exe -NoProfile -ExecutionPolicy Bypass -File scripts/open-unreal-project.ps1
-$openCode = $LASTEXITCODE
-Write-Output "OPEN_EXIT=$openCode"
-
-Write-Output ''
-Write-Output '== 4. Starting Pixel Streaming signalling server if the installed UE layout exposes it =='
+Write-Output '== 3. Starting Pixel Streaming signalling server =='
 powershell.exe -NoProfile -ExecutionPolicy Bypass -File scripts/start-pixel-streaming.ps1
 $streamCode = $LASTEXITCODE
 Write-Output "PIXEL_STREAMING_EXIT=$streamCode"
 
 Write-Output ''
+Write-Output '== 4. Opening Unreal runtime with Pixel Streaming streamer flags =='
+powershell.exe -NoProfile -ExecutionPolicy Bypass -File scripts/open-unreal-project.ps1 -PixelStreaming -Game
+$openCode = $LASTEXITCODE
+Write-Output "OPEN_EXIT=$openCode"
+
+Write-Output ''
 Write-Output 'Next manual check:'
 Write-Output '  npm run launch:local'
 Write-Output '  open http://127.0.0.1:3000/dashboard'
-Write-Output '  confirm the iframe URL http://127.0.0.1:8888 loads'
+Write-Output '  confirm the iframe URL http://127.0.0.1 loads and the Pixel Streaming player connects after CLICK TO START'
 exit 0

@@ -34,7 +34,7 @@ No endpoint returns the API key value. Readiness reports presence only.
 The dashboard includes an Unreal-ready render slot that can mount Pixel Streaming or any hosted simulator page.
 
 ```env
-NEXT_PUBLIC_SIMULATION_STREAM_URL=http://127.0.0.1:8888
+NEXT_PUBLIC_SIMULATION_STREAM_URL=http://127.0.0.1
 ```
 
 When this value is set, the dashboard mounts the stream page in the central CCTV viewport. Without it, the committed WebGL-style fallback renders a realistic virtual CCTV scene using the existing simulation data.

@@ -13,10 +13,10 @@ This folder is the Unreal Engine side of the abc_project photoreal digital twin.
 The web dashboard is already wired to prefer:
 
 ```env
-NEXT_PUBLIC_SIMULATION_STREAM_URL=http://127.0.0.1:8888
+NEXT_PUBLIC_SIMULATION_STREAM_URL=http://127.0.0.1
 ```
 
-When the Pixel Streaming frontend is running on port 8888, the dashboard viewport can mount it directly.
+When the Pixel Streaming frontend is running on `http://127.0.0.1`, the dashboard viewport can mount it directly. Unreal connects to the streamer WebSocket separately at `ws://127.0.0.1:8888`.
 
 ## First editor steps
 

@@ -76,7 +76,7 @@ npm run launch:local
 - Epic Games Launcher 설치 가능 경로 확인
 - Windows Node.js LTS 설치 및 Pixel Streaming script PATH 보강
 - Unreal project scaffold: `renderer/unreal/SmartIntersection/SmartIntersection.uproject`
-- Dashboard stream slot: `NEXT_PUBLIC_SIMULATION_STREAM_URL=http://127.0.0.1:8888`
+- Dashboard stream slot: `NEXT_PUBLIC_SIMULATION_STREAM_URL=http://127.0.0.1`
 - 집에서 이어서 실행할 one-command script: `npm run unreal:home`
 
 Unreal Engine 5.x 설치 후 실행:
@@ -295,7 +295,7 @@ scripts/unreal-*.ps1      Windows Unreal/Pixel Streaming helper scripts
 
 - Epic Games Launcher에서 Unreal Engine 5.x 설치
 - `npm run unreal:home` 실행
-- Pixel Streaming signalling server가 `http://127.0.0.1:8888`에서 뜨는지 확인
+- Pixel Streaming signalling server가 `http://127.0.0.1`에서 뜨는지 확인
 - dashboard viewport에서 Unreal stream iframe 렌더링 확인
 - Unreal scene에 실제 교차로 mesh, camera, lighting, route overlay actor 추가
 - FastAPI/SUMO state를 Unreal actor transform/material로 반영하는 bridge 설계
