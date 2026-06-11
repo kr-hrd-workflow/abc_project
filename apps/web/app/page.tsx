@@ -273,6 +273,15 @@ export default function Page() {
             </a>
           </div>
         </div>
+        <div className="hero-depth-stage" data-landing-depth-scene="hero-3d" aria-hidden="true">
+          <div className="hero-depth-rig">
+            <span className="depth-plane depth-plane-map" data-depth-plane="map" />
+            <span className="depth-plane depth-plane-grid" data-depth-plane="grid" />
+            <span className="depth-plane depth-plane-current" data-depth-plane="current-flow" />
+            <span className="depth-plane depth-plane-candidate" data-depth-plane="candidate-flow" />
+            <span className="depth-plane depth-plane-brief" data-depth-plane="operator-brief" />
+          </div>
+        </div>
         <div className="hero-signal-system" aria-hidden="true">
           <span />
           <span />
@@ -323,6 +332,9 @@ export default function Page() {
             data-assembly-object="persistent-centered"
             aria-hidden="true"
           >
+            <span className="assembly-depth-ring ring-near" data-assembly-depth-ring="near" />
+            <span className="assembly-depth-ring ring-mid" data-assembly-depth-ring="mid" />
+            <span className="assembly-depth-ring ring-far" data-assembly-depth-ring="far" />
             <div className="assembly-aerial" />
             <span
               className="assembly-layer assembly-piece layer-pressure"

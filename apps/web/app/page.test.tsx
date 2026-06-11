@@ -35,6 +35,8 @@ describe("Landing page", () => {
     expect(container.querySelector('[data-section="proof-marquee"]')).toBeTruthy();
     expect(container.querySelector('[data-section="final-cta"]')).toBeTruthy();
     expect(container.querySelector('[data-existing-intersection-image="true"]')).toBeTruthy();
+    expect(container.querySelector('[data-landing-depth-scene="hero-3d"]')).toBeTruthy();
+    expect(container.querySelectorAll('[data-depth-plane]')).toHaveLength(5);
     expect(screen.getAllByText(/Simulation-only. Never controls real signals./i).length).toBeGreaterThanOrEqual(1);
   });
 
@@ -49,6 +51,7 @@ describe("Landing page", () => {
     expect(assembly.getAttribute("data-motion-scenes")).toBe("4");
     expect(container.querySelectorAll("[data-assembly-stage]")).toHaveLength(4);
     expect(container.querySelectorAll("[data-assembly-layer]")).toHaveLength(4);
+    expect(container.querySelectorAll("[data-assembly-depth-ring]")).toHaveLength(3);
     expect(container.querySelector("[data-assembly-object='persistent-centered']")).toBeTruthy();
     expect(container.querySelectorAll("[data-assembly-piece][data-piece-persists='true']")).toHaveLength(4);
   });
