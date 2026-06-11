@@ -29,6 +29,15 @@ function Find-EpicLauncher {
 }
 
 Write-Output '== Unreal precheck =='
+$NodePath = 'C:\Program Files\nodejs'
+if ((Test-Path $NodePath) -and ($env:Path -notlike "*$NodePath*")) {
+  $env:Path = "$NodePath;$env:Path"
+}
+$node = Get-Command node.exe -ErrorAction SilentlyContinue
+$npm = Get-Command npm.exe -ErrorAction SilentlyContinue
+if (-not $npm) {
+  $npm = Get-Command npm.cmd -ErrorAction SilentlyContinue
+}
 $unreal = Find-UnrealEditor
 $epic = Find-EpicLauncher
 
@@ -42,6 +51,20 @@ if ($epic) {
   Write-Output "EPIC_LAUNCHER_FOUND=$epic"
 } else {
   Write-Output 'EPIC_LAUNCHER_FOUND=false'
+}
+
+if ($node) {
+  Write-Output "WINDOWS_NODE_FOUND=$($node.Source)"
+  node --version
+} else {
+  Write-Output 'WINDOWS_NODE_FOUND=false'
+}
+
+if ($npm) {
+  Write-Output "WINDOWS_NPM_FOUND=$($npm.Source)"
+  & $npm.Source --version
+} else {
+  Write-Output 'WINDOWS_NPM_FOUND=false'
 }
 
 Write-Output '== Recommended next action =='

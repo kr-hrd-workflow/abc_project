@@ -20,6 +20,23 @@ NEXT_PUBLIC_UNITY_WEBGL_URL=/unity/index.html
 
 Run all commands from the repository root.
 
+### At-home one-command continuation
+
+After you sign in to Epic Games Launcher and install Unreal Engine 5.x, run:
+
+```bash
+npm run unreal:home
+```
+
+That command performs the remaining local steps in order:
+
+1. verifies `UnrealEditor.exe` exists,
+2. ensures `.env.local` contains `NEXT_PUBLIC_SIMULATION_STREAM_URL=http://127.0.0.1:8888`,
+3. opens `renderer/unreal/SmartIntersection/SmartIntersection.uproject`,
+4. starts the Pixel Streaming signalling server if the installed UE layout exposes Epic's bundled startup script.
+
+If Unreal is still missing, it stops with the exact blocker and leaves the repo unchanged.
+
 ### 1. Check local Unreal/Epic installation
 
 ```bash

@@ -1,5 +1,10 @@
 $ErrorActionPreference = 'Continue'
 
+$NodePath = 'C:\Program Files\nodejs'
+if ((Test-Path $NodePath) -and ($env:Path -notlike "*$NodePath*")) {
+  $env:Path = "$NodePath;$env:Path"
+}
+
 function Find-UnrealRoot {
   $patterns = @(
     'C:\Program Files\Epic Games\UE_*',

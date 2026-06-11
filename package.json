@@ -12,6 +12,7 @@
     "unreal:precheck": "powershell.exe -NoProfile -ExecutionPolicy Bypass -File scripts/unreal-precheck.ps1",
     "unreal:open": "powershell.exe -NoProfile -ExecutionPolicy Bypass -File scripts/open-unreal-project.ps1",
     "unreal:pixel-streaming": "powershell.exe -NoProfile -ExecutionPolicy Bypass -File scripts/start-pixel-streaming.ps1",
+    "unreal:home": "powershell.exe -NoProfile -ExecutionPolicy Bypass -File scripts/unreal-at-home.ps1",
     "verify": "npm run test:api && npm run test:web && npm run build:web && git diff --check"
   },
   "workspaces": [
