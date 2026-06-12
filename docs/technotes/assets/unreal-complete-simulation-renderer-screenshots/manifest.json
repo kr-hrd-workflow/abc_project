@@ -1,0 +1,45 @@
+{
+  "generated_at": "2026-06-12T10:51:28+0900",
+  "screenshots": [
+    {
+      "city": "seoul",
+      "file": "docs/technotes/assets/unreal-complete-simulation-renderer-screenshots/unreal-seoul-complete-simulation-renderer.png",
+      "bytes": 1685807,
+      "size": [
+        1721,
+        927
+      ],
+      "stddev": 88.77
+    },
+    {
+      "city": "new_york",
+      "file": "docs/technotes/assets/unreal-complete-simulation-renderer-screenshots/unreal-new_york-complete-simulation-renderer.png",
+      "bytes": 1729803,
+      "size": [
+        1721,
+        927
+      ],
+      "stddev": 88.26
+    },
+    {
+      "city": "paris",
+      "file": "docs/technotes/assets/unreal-complete-simulation-renderer-screenshots/unreal-paris-complete-simulation-renderer.png",
+      "bytes": 1582127,
+      "size": [
+        1721,
+        927
+      ],
+      "stddev": 89.61
+    },
+    {
+      "city": "london",
+      "file": "docs/technotes/assets/unreal-complete-simulation-renderer-screenshots/unreal-london-complete-simulation-renderer.png",
+      "bytes": 1820724,
+      "size": [
+        1721,
+        927
+      ],
+      "stddev": 89.12
+    }
+  ]
+}

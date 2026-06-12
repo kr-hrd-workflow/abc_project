@@ -801,6 +801,35 @@ def spawn_lighting_and_camera(unreal: Any, profile: dict[str, Any], assets: dict
             set_component_property(point_component, "attenuation_radius", 3900.0)
 
 
+def spawn_simulation_runtime_controller(unreal: Any, profile: dict[str, Any], mats: dict[str, Any]) -> None:
+    class_path = "/Script/SmartIntersectionRuntime.TrafficSimulationController"
+    controller_class = None
+    try:
+        controller_class = unreal.load_class(None, class_path)
+    except Exception as exc:
+        unreal.log_warning(f"TrafficSimulationController class unavailable; spawning marker fallback: {exc}")
+
+    if controller_class:
+        controller = unreal.EditorLevelLibrary.spawn_actor_from_class(
+            controller_class,
+            unreal.Vector(-1650, 1420, 185),
+        )
+        controller.set_actor_label(f"TrafficSimulationController {profile['id']} simulation runtime")
+        set_editor_property_safe(controller, "city_profile_id", profile["id"])
+        set_editor_property_safe(controller, "b_pixel_stream_connected", False)
+        return
+
+    # Fallback keeps generated maps semantically marked before the native module has been compiled/reloaded.
+    marker = spawn_cube(
+        unreal,
+        f"TrafficSimulationController fallback marker SmartIntersectionRuntime {profile['id']}",
+        (-1650, 1420, 185),
+        (0.72, 0.12, 0.32),
+        mats["accent"],
+    )
+    marker.set_actor_label(f"TrafficSimulationController fallback marker SmartIntersectionRuntime {profile['id']}")
+
+
 def spawn_city(unreal: Any, profile: dict[str, Any]) -> None:
     random.seed(profile.get("seed", 20260611))
     map_asset = f"/Game/Maps/Generated/{profile['id']}_Intersection"
@@ -825,6 +854,7 @@ def spawn_city(unreal: Any, profile: dict[str, Any]) -> None:
     spawn_signals_and_street_furniture(unreal, profile, mats, assets=assets)
     spawn_city_specific_details(unreal, profile, mats, road_width)
     spawn_traffic(unreal, profile, mats, assets=assets)
+    spawn_simulation_runtime_controller(unreal, profile, mats)
     spawn_lighting_and_camera(unreal, profile, assets=assets)
 
     if hasattr(unreal, "EditorLoadingAndSavingUtils"):

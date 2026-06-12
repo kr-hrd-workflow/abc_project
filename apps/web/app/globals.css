@@ -10628,3 +10628,48 @@ body {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 }
+
+
+/* Complete-stage cinematic section imagery: distinct assets beyond the hero frame. */
+.signal-overview-rail article[data-section-asset="street-pressure-cinematic"]::before {
+  background-image: linear-gradient(180deg, transparent 14%, rgba(5, 9, 13, 0.9)), url("/landing/street-pressure-cinematic.png");
+  background-position: 48% 52%;
+}
+
+.signal-overview-rail article[data-section-asset="candidate-motion-cinematic"]::before {
+  background-image: linear-gradient(180deg, transparent 14%, rgba(5, 9, 13, 0.9)), url("/landing/candidate-motion-cinematic.png");
+  background-position: 56% 50%;
+}
+
+.signal-overview-rail article[data-section-asset="human-review-cinematic"]::before {
+  background-image: linear-gradient(180deg, transparent 14%, rgba(5, 9, 13, 0.9)), url("/landing/human-review-cinematic.png");
+  background-position: 64% 48%;
+}
+
+.decision-chapter[data-section-asset="chapter-sense-cinematic"]::before {
+  background-image: linear-gradient(180deg, transparent 20%, rgba(5, 9, 13, 0.9)), url("/landing/chapter-sense-cinematic.png");
+}
+
+.decision-chapter[data-section-asset="chapter-compare-cinematic"]::before {
+  background-image: linear-gradient(180deg, transparent 20%, rgba(5, 9, 13, 0.9)), url("/landing/chapter-compare-cinematic.png");
+}
+
+.decision-chapter[data-section-asset="chapter-brief-cinematic"]::before {
+  background-image: linear-gradient(180deg, transparent 20%, rgba(5, 9, 13, 0.9)), url("/landing/chapter-brief-cinematic.png");
+}
+
+.decision-chapter[data-section-asset="chapter-dashboard-cinematic"]::before {
+  background-image: linear-gradient(180deg, transparent 20%, rgba(5, 9, 13, 0.9)), url("/landing/chapter-dashboard-cinematic.png");
+}
+
+.proof-visual span[data-proof-asset="operator-room-wide"] {
+  background-image: linear-gradient(180deg, rgba(5, 9, 13, 0.08), rgba(5, 9, 13, 0.54)), url("/landing/proof-operator-room-wide.png");
+}
+
+.proof-visual span[data-proof-asset="review-evidence-closeup"] {
+  background-image: linear-gradient(180deg, rgba(5, 9, 13, 0.08), rgba(5, 9, 13, 0.54)), url("/landing/proof-review-evidence-closeup.png");
+}
+
+.proof-visual span[data-proof-asset="city-ops-monitor"] {
+  background-image: linear-gradient(180deg, rgba(5, 9, 13, 0.08), rgba(5, 9, 13, 0.54)), url("/landing/proof-city-ops-monitor.png");
+}

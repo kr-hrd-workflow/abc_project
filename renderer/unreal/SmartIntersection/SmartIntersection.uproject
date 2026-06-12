@@ -1,7 +1,14 @@
 {
   "FileVersion": 3,
   "Category": "Simulation",
-  "Description": "Smart Intersection photoreal digital twin shell for Unreal Engine Pixel Streaming.",
+  "Description": "Smart Intersection photoreal traffic simulation renderer for Unreal Engine Pixel Streaming.",
+  "Modules": [
+    {
+      "Name": "SmartIntersectionRuntime",
+      "Type": "Runtime",
+      "LoadingPhase": "Default"
+    }
+  ],
   "Plugins": [
     {
       "Name": "PixelStreaming",

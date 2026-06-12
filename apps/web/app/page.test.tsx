@@ -89,6 +89,33 @@ describe("Landing page", () => {
     expect(container.textContent).not.toContain("TRUST / PROOF");
   });
 
+  test("uses distinct cinematic assets for internal landing sections", () => {
+    const { container } = render(<Page />);
+
+    expect(
+      Array.from(container.querySelectorAll(".signal-overview-rail article")).map((node) =>
+        node.getAttribute("data-section-asset")
+      )
+    ).toEqual(["street-pressure-cinematic", "candidate-motion-cinematic", "human-review-cinematic"]);
+
+    expect(
+      Array.from(container.querySelectorAll(".decision-chapter")).map((node) =>
+        node.getAttribute("data-section-asset")
+      )
+    ).toEqual([
+      "chapter-sense-cinematic",
+      "chapter-compare-cinematic",
+      "chapter-brief-cinematic",
+      "chapter-dashboard-cinematic",
+    ]);
+
+    expect(
+      Array.from(container.querySelectorAll(".proof-visual span")).map((node) =>
+        node.getAttribute("data-proof-asset")
+      )
+    ).toEqual(["operator-room-wide", "review-evidence-closeup", "city-ops-monitor"]);
+  });
+
   test("switches visible landing copy between English and Korean", async () => {
     render(<Page />);
 

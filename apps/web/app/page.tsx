@@ -18,6 +18,24 @@ if (typeof window !== "undefined" && typeof window.matchMedia === "function") {
 const MOTION_SCENES = 4;
 const REMOTION_FPS = 30;
 const REMOTION_DURATION_FRAMES = 240;
+const overviewAssets = [
+  "street-pressure-cinematic",
+  "candidate-motion-cinematic",
+  "human-review-cinematic",
+] as const;
+const assemblyStageAssets = [
+  "assembly-pressure-sensed",
+  "assembly-timing-compared",
+  "assembly-evidence-assembled",
+  "assembly-dashboard-opened",
+] as const;
+const chapterAssets = [
+  "chapter-sense-cinematic",
+  "chapter-compare-cinematic",
+  "chapter-brief-cinematic",
+  "chapter-dashboard-cinematic",
+] as const;
+const proofAssets = ["operator-room-wide", "review-evidence-closeup", "city-ops-monitor"] as const;
 
 const landingCopy = {
   en: {
@@ -305,8 +323,8 @@ export default function Page() {
         </div>
 
         <div className="signal-overview-rail motion-scale">
-          {t.overview.map(([number, title, copy]) => (
-            <article key={title}>
+          {t.overview.map(([number, title, copy], index) => (
+            <article key={title} data-section-asset={overviewAssets[index]}>
               <span>{number}</span>
               <strong>{title}</strong>
               <p>{copy}</p>
@@ -383,6 +401,7 @@ export default function Page() {
               className={`assembly-stage assembly-stage-${index + 1}`}
               data-assembly-stage={index}
               data-stage-side={index % 2 === 0 ? "left" : "right"}
+              data-stage-asset={assemblyStageAssets[index]}
             >
               <div className="assembly-stage-copy">
                 <span>{`0${index + 1}`}</span>
@@ -407,7 +426,11 @@ export default function Page() {
 
         <div className="decision-chapter-list motion-scale">
           {t.chapters.map(([title, copy], index) => (
-            <article key={title} className={`decision-chapter decision-chapter-${index + 1}`}>
+            <article
+              key={title}
+              className={`decision-chapter decision-chapter-${index + 1}`}
+              data-section-asset={chapterAssets[index]}
+            >
               <span>{`0${index + 1}`}</span>
               <strong>{title}</strong>
               <p>{copy}</p>
@@ -428,9 +451,9 @@ export default function Page() {
         aria-labelledby="proof-title"
       >
         <div className="proof-visual motion-scale" data-section-asset="operator-proof-room" aria-hidden="true">
-          <span />
-          <span />
-          <span />
+          {proofAssets.map((asset) => (
+            <span key={asset} data-proof-asset={asset} />
+          ))}
         </div>
         <div className="proof-copy">
           <p className="side-rail">{t.proofRail}</p>
