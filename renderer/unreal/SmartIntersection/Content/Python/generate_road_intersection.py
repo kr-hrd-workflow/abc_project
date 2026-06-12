@@ -109,11 +109,12 @@ class RoadOnlyRenderer:
             if mat is None:
                 try:
                     mat = asset_tools.create_asset(asset_name, material_dir, unreal.Material, unreal.MaterialFactoryNew())
-                    self._set_material_color(mat, rgba)
-                    unreal.EditorAssetLibrary.save_loaded_asset(mat)
                 except Exception as exc:
                     print(f"ROAD_ONLY_MATERIAL_FALLBACK name={name} error={exc}")
                     mat = None
+            if mat is not None:
+                self._set_material_color(mat, rgba)
+                unreal.EditorAssetLibrary.save_loaded_asset(mat)
             self.materials[name] = mat
 
     def _set_material_color(self, mat, rgba) -> None:
@@ -121,6 +122,7 @@ class RoadOnlyRenderer:
             color = unreal.MaterialEditingLibrary.create_material_expression(mat, unreal.MaterialExpressionConstant3Vector, -420, 0)
             color.constant = unreal.LinearColor(*rgba)
             unreal.MaterialEditingLibrary.connect_material_property(color, "", unreal.MaterialProperty.MP_BASE_COLOR)
+            unreal.MaterialEditingLibrary.connect_material_property(color, "", unreal.MaterialProperty.MP_EMISSIVE_COLOR)
             rough = unreal.MaterialEditingLibrary.create_material_expression(mat, unreal.MaterialExpressionConstant, -420, 220)
             rough.r = 0.78
             unreal.MaterialEditingLibrary.connect_material_property(rough, "", unreal.MaterialProperty.MP_ROUGHNESS)
@@ -205,7 +207,7 @@ class RoadOnlyRenderer:
         if sky_comp:
             sky_comp.set_editor_property("intensity", 2.0)
             sky_comp.set_mobility(unreal.ComponentMobility.MOVABLE)
-        camera = unreal.EditorLevelLibrary.spawn_actor_from_class(unreal.CineCameraActor, unreal.Vector(-1250, -1150, 900), unreal.Rotator(-28, 42, 0))
+        camera = unreal.EditorLevelLibrary.spawn_actor_from_class(unreal.CineCameraActor, unreal.Vector(-1250, -1150, 900), unreal.Rotator(0, -28, 42))
         camera.set_actor_label(f"RoadOnlyRenderer_{self.city}_proof_camera")
         unreal.EditorLevelLibrary.set_level_viewport_camera_info(camera.get_actor_location(), camera.get_actor_rotation())
 

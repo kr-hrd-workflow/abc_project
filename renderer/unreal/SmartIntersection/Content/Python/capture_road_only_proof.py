@@ -28,7 +28,7 @@ def main() -> None:
     except Exception:
         pass
     camera_location = unreal.Vector(-1250, -1150, 900)
-    camera_rotation = unreal.Rotator(-28, 42, 0)
+    camera_rotation = unreal.Rotator(0, -28, 42)
     unreal.EditorLevelLibrary.set_level_viewport_camera_info(camera_location, camera_rotation)
 
     # Trigger a high-res screenshot. UE writes asynchronously, so the caller verifies the file afterward.
