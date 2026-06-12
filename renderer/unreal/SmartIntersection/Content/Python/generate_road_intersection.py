@@ -47,7 +47,12 @@ MATERIAL_COLORS = {
     "photoreal_glass": (0.05, 0.10, 0.13, 1.0),
     "photoreal_sign_plate": (0.88, 0.86, 0.76, 1.0),
     "photoreal_warm_window": (1.0, 0.62, 0.25, 1.0),
+    "photoreal_decal_zebra": (0.92, 0.91, 0.82, 1.0),
+    "photoreal_decal_arrow": (0.92, 0.91, 0.82, 1.0),
+    "photoreal_crack_overlay": (0.035, 0.030, 0.026, 1.0),
+    "photoreal_grime_overlay": (0.05, 0.043, 0.035, 1.0),
 }
+
 
 LONDON_TEXTURE_MATERIALS = {
     "photoreal_asphalt": "/Game/PhotorealRoadKit/Textures/T_london_asphalt_albedo",
@@ -65,7 +70,12 @@ LONDON_TEXTURE_MATERIALS = {
     "photoreal_brick": "/Game/PhotorealRoadKit/Textures/T_london_brick_facade",
     "photoreal_glass": "/Game/PhotorealRoadKit/Textures/T_london_glass_windows",
     "photoreal_sign_plate": "/Game/PhotorealRoadKit/Textures/T_london_regulatory_sign_plate",
+    "photoreal_decal_zebra": "/Game/PhotorealRoadKit/Textures/T_london_zebra_crossing_worn",
+    "photoreal_decal_arrow": "/Game/PhotorealRoadKit/Textures/T_london_lane_arrow_straight_worn",
+    "photoreal_crack_overlay": "/Game/PhotorealRoadKit/Textures/T_london_asphalt_crack_overlay",
+    "photoreal_grime_overlay": "/Game/PhotorealRoadKit/Textures/T_london_grime_overlay",
 }
+
 
 
 class RoadOnlyRenderer:
@@ -340,6 +350,7 @@ class RoadOnlyRenderer:
         if self.city == "london":
             self._build_london_photoreal_fidelity_layer()
             self._build_london_photoreal_scene_layer()
+            self._build_london_photoreal_scene_pass2()
 
         # Lighting/camera proof. Use movable lights so the editor viewport is visible without a baked-lighting pass.
         light = unreal.EditorLevelLibrary.spawn_actor_from_class(unreal.DirectionalLight, unreal.Vector(-800, -900, 1200), unreal.Rotator(-48, -35, 0))
@@ -436,6 +447,32 @@ class RoadOnlyRenderer:
             pp.set_editor_property("b_unbound", True)
         except Exception as exc:
             print(f"PHOTOREAL_SCENE_POSTPROCESS_FALLBACK error={exc}")
+
+
+    def _build_london_photoreal_scene_pass2(self) -> None:
+        mesh_root = "/Game/PhotorealRoadKit/Meshes"
+        # Scene pass 2: denser, camera-readable photoreal dressing with CC0 material seam.
+        # Large decal planes are intentionally in the proof camera frustum so visual acceptance is meaningful.
+        for idx, (x, y, sx, sy) in enumerate([(-520,-315,2.4,.62),(520,315,2.4,.62),(-310,330,1.7,.52),(310,-330,1.7,.52)]):
+            self._cube(f"PhotorealScenePass2_london_worn_zebra_crossing_decal_{idx}", (x, y, 141 + idx), (sx, sy, 0.012), "photoreal_decal_zebra")
+        for idx, (x, y, mat) in enumerate([(-220,-110,"photoreal_decal_arrow"),(260,128,"photoreal_decal_arrow")]):
+            self._cube(f"PhotorealScenePass2_london_directional_lane_arrow_decal_{idx}", (x, y, 146 + idx), (1.2, 0.68, 0.012), mat)
+        for idx, (x, y, sx, sy) in enumerate([(-690, -55, 1.7, .35),(-360, 210, 1.2, .25),(120,-245,1.55,.32),(540,50,1.25,.22),(720,-255,.9,.18)]):
+            self._cube(f"PhotorealScenePass2_london_asphalt_crack_overlay_visible_{idx}", (x, y, 151 + idx), (sx, sy, 0.01), "photoreal_crack_overlay")
+        for idx, (x, y, sx, sy) in enumerate([(-420,-420,1.4,.18),(0,420,1.7,.2),(430,-410,1.1,.16),(-710,390,1.3,.18)]):
+            self._cube(f"PhotorealScenePass2_london_curb_grime_decal_visible_{idx}", (x, y, 153 + idx), (sx, sy, 0.01), "photoreal_grime_overlay")
+        # Vertical detail: lamps, railings, CCTV and signal visors break the toy-block silhouette.
+        for idx, (x, y, rot) in enumerate([(-850,-555,0),(50,-555,0),(850,-555,0),(-650,555,180),(280,555,180),(940,555,180)]):
+            self._mesh_actor(f"PhotorealScenePass2_london_streetlight_proxy_{idx}", f"{mesh_root}/london_streetlight_proxy", (x, y, 108), (1.0, 1.0, 1.0), "photoreal_metal", rotation=(0,0,rot))
+        for idx, (x, y) in enumerate([(-520,-575),(-250,-575),(40,-575),(330,-575),(620,-575),(-520,575),(-250,575),(40,575),(330,575),(620,575)]):
+            self._mesh_actor(f"PhotorealScenePass2_london_pedestrian_railing_{idx}", f"{mesh_root}/london_pedestrian_railing_proxy", (x, y, 107), (1.0, 1.0, 1.0), "photoreal_metal")
+        for idx, (x, y, z) in enumerate([(-820,-430,420),(820,430,420)]):
+            self._mesh_actor(f"PhotorealScenePass2_london_cctv_camera_box_{idx}", f"{mesh_root}/cctv_camera_box", (x, y, z), (1.0, 1.0, 1.0), "photoreal_metal")
+        for idx, (x, y, z) in enumerate([(-820,-430,315),(820,-430,315),(-820,430,315),(820,430,315)]):
+            self._mesh_actor(f"PhotorealScenePass2_london_signal_visor_depth_{idx}", f"{mesh_root}/signal_visor_box", (x, y, z), (1.0, 1.0, 1.0), "signal")
+        # Window highlights: small warm panels improve urban depth without adding vehicles/pedestrians.
+        for idx, (x, y, z) in enumerate([(-880,-790,360),(-520,-790,410),(-160,-790,340),(240,-790,440),(620,-790,380),(-760,790,360),(-360,790,330),(80,790,420),(520,790,390)]):
+            self._cube(f"PhotorealScenePass2_london_warm_window_highlight_{idx}", (x, y, z), (0.48, 0.018, 0.17), "photoreal_warm_window")
 
 
 def main() -> None:

@@ -32,6 +32,11 @@ REQUIRED_SOURCE = [
     "Textures/T_london_brick_normal.jpg",
     "Textures/T_london_glass_windows.png",
     "Textures/T_london_regulatory_sign_plate.png",
+    "Textures/T_london_zebra_crossing_worn.png",
+    "Textures/T_london_lane_arrow_straight_worn.png",
+    "Textures/T_london_lane_arrow_left_worn.png",
+    "Textures/T_london_asphalt_crack_overlay.png",
+    "Textures/T_london_grime_overlay.png",
     "Meshes/curb_beveled_module.obj",
     "Meshes/paint_worn_strip.obj",
     "Meshes/signal_head_uk_black.obj",
@@ -43,6 +48,10 @@ REQUIRED_SOURCE = [
     "Meshes/london_shopfront_module.obj",
     "Meshes/london_window_strip.obj",
     "Meshes/regulatory_sign_plate.obj",
+    "Meshes/london_streetlight_proxy.obj",
+    "Meshes/london_pedestrian_railing_proxy.obj",
+    "Meshes/cctv_camera_box.obj",
+    "Meshes/signal_visor_box.obj",
     "CC0AmbientCG/Road007_1K-JPG_Color.jpg",
     "CC0AmbientCG/Road007_1K-JPG_NormalGL.jpg",
     "CC0AmbientCG/Bricks097_1K-JPG_Color.jpg",
@@ -69,6 +78,10 @@ REQUIRED_GENERATOR_TOKENS = [
     "PhotorealScene_london_color_grade_postprocess",
     "CC0AmbientCG",
     "install_cc0_texture_sources",
+    "PhotorealScenePass2_london_worn_zebra_crossing_decal",
+    "PhotorealScenePass2_london_streetlight_proxy",
+    "PhotorealScenePass2_london_pedestrian_railing",
+    "PhotorealScenePass2_london_cctv_camera_box",
 ]
 
 REQUIRED_MAP_TOKENS = [
@@ -88,6 +101,11 @@ REQUIRED_MAP_TOKENS = [
     b"PhotorealScene_london_brick_shopfront_left_0",
     b"PhotorealScene_london_regulatory_sign_plate_0",
     b"PhotorealScene_london_color_grade_postprocess",
+    b"PhotorealScenePass2_london_worn_zebra_crossing_decal_0",
+    b"PhotorealScenePass2_london_asphalt_crack_overlay_visible_0",
+    b"PhotorealScenePass2_london_streetlight_proxy_0",
+    b"PhotorealScenePass2_london_pedestrian_railing_0",
+    b"PhotorealScenePass2_london_cctv_camera_box_0",
 ]
 
 FORBIDDEN = ["spawn_vehicle", "spawn_pedestrian", "traffic_ai_controller", "drivable_car", "gameplay_mode"]

@@ -127,6 +127,71 @@ def obj_cylinder(path: Path, name: str, radius: float, height: float, segments: 
         f.write("f " + " ".join(str(segments+i+1) for i in reversed(range(segments))) + "\n")
 
 
+def decal_texture(path: Path, kind: str, color=(235, 232, 210)) -> None:
+    size = 1024
+    img = Image.new("RGBA", (size, size), (54, 56, 54, 0))
+    draw = ImageDraw.Draw(img)
+    if kind == "zebra":
+        for i in range(7):
+            y = 100 + i * 118
+            draw.rounded_rectangle((120, y, 904, y + 54), radius=10, fill=(*color, 238))
+    elif kind == "arrow_straight":
+        draw.polygon([(512,110),(650,310),(580,310),(580,820),(444,820),(444,310),(374,310)], fill=(*color,240))
+    elif kind == "arrow_left":
+        draw.polygon([(190,520),(410,300),(410,430),(760,430),(760,590),(410,590),(410,724)], fill=(*color,240))
+    elif kind == "cracks":
+        for _ in range(55):
+            x=random.randint(80,940); y=random.randint(80,940)
+            pts=[]
+            for k in range(random.randint(3,7)):
+                pts.append((x+k*random.randint(15,55), y+random.randint(-45,45)))
+            draw.line(pts, fill=(10,9,8,random.randint(120,220)), width=random.randint(2,5))
+    elif kind == "grime":
+        for _ in range(420):
+            x=random.randint(0,size); y=random.randint(0,size); r=random.randint(3,22)
+            draw.ellipse((x-r,y-r,x+r,y+r), fill=(12,10,8,random.randint(20,75)))
+    # wear through road paint/decal
+    alpha=img.getchannel('A'); ad=ImageDraw.Draw(alpha)
+    for _ in range(120):
+        x=random.randint(0,size); y=random.randint(0,size)
+        ad.line((x,y,x+random.randint(20,170),y+random.randint(-10,10)), fill=0, width=random.randint(1,5))
+    img.putalpha(alpha.filter(ImageFilter.GaussianBlur(radius=0.15)))
+    img.save(path)
+
+
+def obj_lamp_post(path: Path) -> None:
+    # Simple multi-object proxy: pole + horizontal arm + lamp head as cuboids/cylinder-like blocks.
+    with path.open('w', encoding='utf-8') as f:
+        f.write('o london_streetlight_proxy\n')
+        def box(cx,cy,cz,sx,sy,sz):
+            base=len(verts)+1
+            for x in [cx-sx,cx+sx]:
+              for y in [cy-sy,cy+sy]:
+                for z in [cz-sz,cz+sz]: verts.append((x,y,z))
+            faces=[(base,base+1,base+3,base+2),(base+4,base+6,base+7,base+5),(base,base+4,base+5,base+1),(base+2,base+3,base+7,base+6),(base,base+2,base+6,base+4),(base+1,base+5,base+7,base+3)]
+            return faces
+        verts=[]; allfaces=[]
+        allfaces += box(0,0,150,5,5,150)
+        allfaces += box(45,0,295,45,4,4)
+        allfaces += box(92,0,280,20,12,9)
+        for v in verts: f.write('v %.3f %.3f %.3f\n'%v)
+        for face in allfaces: f.write('f '+' '.join(map(str,face))+'\n')
+
+
+def obj_rail_segment(path: Path) -> None:
+    with path.open('w', encoding='utf-8') as f:
+        f.write('o london_pedestrian_railing_proxy\n')
+        verts=[]; faces=[]
+        def add_box(cx,cy,cz,sx,sy,sz):
+            b=len(verts)+1
+            pts=[(cx-sx,cy-sy,cz-sz),(cx-sx,cy-sy,cz+sz),(cx-sx,cy+sy,cz-sz),(cx-sx,cy+sy,cz+sz),(cx+sx,cy-sy,cz-sz),(cx+sx,cy-sy,cz+sz),(cx+sx,cy+sy,cz-sz),(cx+sx,cy+sy,cz+sz)]
+            verts.extend(pts); faces.extend([(b,b+1,b+3,b+2),(b+4,b+6,b+7,b+5),(b,b+4,b+5,b+1),(b+2,b+3,b+7,b+6),(b,b+2,b+6,b+4),(b+1,b+5,b+7,b+3)])
+        for x in [-90,-45,0,45,90]: add_box(x,0,45,3,3,45)
+        add_box(0,0,84,100,3,3); add_box(0,0,42,100,3,3)
+        for v in verts: f.write('v %.3f %.3f %.3f\n'%v)
+        for face in faces: f.write('f '+' '.join(map(str,face))+'\n')
+
+
 def install_cc0_texture_sources() -> None:
     """Prefer committed ambientCG CC0 sources when present.
 
@@ -168,6 +233,11 @@ def main() -> None:
     noise_texture(TEXTURE_DIR / "T_london_brick_facade.png", (117, 65, 48), 32, True)
     noise_texture(TEXTURE_DIR / "T_london_glass_windows.png", (28, 42, 50), 36, True)
     noise_texture(TEXTURE_DIR / "T_london_regulatory_sign_plate.png", (222, 220, 205), 14, False)
+    decal_texture(TEXTURE_DIR / "T_london_zebra_crossing_worn.png", "zebra")
+    decal_texture(TEXTURE_DIR / "T_london_lane_arrow_straight_worn.png", "arrow_straight")
+    decal_texture(TEXTURE_DIR / "T_london_lane_arrow_left_worn.png", "arrow_left")
+    decal_texture(TEXTURE_DIR / "T_london_asphalt_crack_overlay.png", "cracks")
+    decal_texture(TEXTURE_DIR / "T_london_grime_overlay.png", "grime")
     obj_box(MESH_DIR / "curb_beveled_module.obj", "curb_beveled_module", 120, 16, 18, 8)
     obj_box(MESH_DIR / "paint_worn_strip.obj", "paint_worn_strip", 110, 4, 1.3, 0.8)
     obj_box(MESH_DIR / "signal_head_uk_black.obj", "signal_head_uk_black", 16, 7, 22, 2)
@@ -179,6 +249,10 @@ def main() -> None:
     obj_box(MESH_DIR / "london_shopfront_module.obj", "london_shopfront_module", 180, 18, 130, 4)
     obj_box(MESH_DIR / "london_window_strip.obj", "london_window_strip", 150, 3, 35, 1)
     obj_box(MESH_DIR / "regulatory_sign_plate.obj", "regulatory_sign_plate", 28, 2, 38, 1)
+    obj_lamp_post(MESH_DIR / "london_streetlight_proxy.obj")
+    obj_rail_segment(MESH_DIR / "london_pedestrian_railing_proxy.obj")
+    obj_box(MESH_DIR / "cctv_camera_box.obj", "cctv_camera_box", 26, 10, 10, 2)
+    obj_box(MESH_DIR / "signal_visor_box.obj", "signal_visor_box", 18, 10, 5, 1)
     install_cc0_texture_sources()
     MANIFEST.write_text("""# PhotorealRoadKit procedural source assets\n\nProject-owned procedural source assets for the London SmartIntersection photoreal fidelity pass.\n\nThese are project-owned procedural source assets plus committed ambientCG CC0 texture maps for road asphalt and brick facade detail. They replace the pure cube/flat-color blockout with visible asphalt wear, worn markings, curb material variation, signal/pole proxies, utility covers, drains, bollards, tactile paving, and urban scene context.\n""", encoding="utf-8")
     print(f"PHOTOREAL_ROADKIT_SOURCE_WRITTEN {ASSET_ROOT}")
