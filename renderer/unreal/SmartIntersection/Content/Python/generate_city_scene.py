@@ -234,6 +234,7 @@ PHOTOREAL_KIT = {
     "street_light": "street_light_photoreal_proxy",
     "tree": "urban_tree_photoreal_proxy",
     "bollard": "bollard_photoreal_proxy",
+    "wet_decals": "wet_road_cinematic_decals_photoreal_proxy",
 }
 
 
@@ -351,6 +352,29 @@ def spawn_roads(unreal: Any, profile: dict[str, Any], mats: dict[str, Any], road
         spawn_cube(unreal, "New York protected green bike lane", (road_width / 2 - 130, 0, 30), (1.25, 168, 0.02), mats["green"])
     if city_id == "paris":
         spawn_cube(unreal, "Paris subtle green bike buffer", (road_width / 2 - 140, 0, 30), (0.9, 158, 0.02), mats["green"])
+
+
+def spawn_cinematic_road_dressing(unreal: Any, profile: dict[str, Any], assets: dict[str, Any]) -> None:
+    wet = assets.get("wet_decals")
+    if not wet:
+        return
+    city = profile["display_name"]
+    placements = [
+        (0, 0, 38, 1.0, 0),
+        (-920, -820, 39, 0.72, 18),
+        (980, 760, 39, 0.68, -22),
+        (-760, 1040, 40, 0.55, 88),
+        (1160, -920, 40, 0.58, -86),
+    ]
+    for idx, (x, y, z, scale, yaw) in enumerate(placements):
+        spawn_static_mesh_asset(
+            unreal,
+            f"{city} cinematic wet road reflection decal kit {idx}",
+            wet,
+            (x, y, z),
+            (scale, scale, scale),
+            rotation=(0, 0, yaw),
+        )
 
 
 def spawn_buildings(unreal: Any, profile: dict[str, Any], mats: dict[str, Any]) -> None:
@@ -594,6 +618,124 @@ def set_component_property(component: Any | None, name: str, value: Any) -> None
         pass
 
 
+def set_editor_property_safe(obj: Any | None, name: str, value: Any) -> bool:
+    if not obj:
+        return False
+    try:
+        obj.set_editor_property(name, value)
+        return True
+    except Exception:
+        return False
+
+
+def configure_cinematic_camera(unreal: Any, cine: Any, focal_length_mm: float) -> None:
+    if not cine:
+        return
+    try:
+        filmback = cine.get_editor_property("filmback")
+        set_component_property(filmback, "sensor_width", 24.89)
+        set_component_property(filmback, "sensor_height", 14.00)
+        cine.set_editor_property("filmback", filmback)
+    except Exception:
+        pass
+    try:
+        lens = cine.get_editor_property("lens_settings")
+        set_component_property(lens, "min_focal_length", 18.0)
+        set_component_property(lens, "max_focal_length", 135.0)
+        set_component_property(lens, "min_f_stop", 2.8)
+        set_component_property(lens, "max_f_stop", 16.0)
+        cine.set_editor_property("lens_settings", lens)
+    except Exception:
+        pass
+    set_component_property(cine, "current_focal_length", focal_length_mm)
+    set_component_property(cine, "current_aperture", 8.0)
+    try:
+        pp = cine.get_editor_property("post_process_settings")
+        set_component_property(pp, "override_auto_exposure_bias", True)
+        set_component_property(pp, "auto_exposure_bias", 0.35)
+        if hasattr(unreal, "AutoExposureMethod") and hasattr(unreal.AutoExposureMethod, "AEM_MANUAL"):
+            set_component_property(pp, "override_auto_exposure_method", True)
+            # keep editor auto exposure; manual exposure made proof captures too dark
+        set_component_property(pp, "override_auto_exposure_min_brightness", True)
+        set_component_property(pp, "auto_exposure_min_brightness", 1.0)
+        set_component_property(pp, "override_auto_exposure_max_brightness", True)
+        set_component_property(pp, "auto_exposure_max_brightness", 1.0)
+        set_component_property(pp, "override_auto_exposure_min_ev100", True)
+        set_component_property(pp, "auto_exposure_min_ev100", 0.0)
+        set_component_property(pp, "override_auto_exposure_max_ev100", True)
+        set_component_property(pp, "auto_exposure_max_ev100", 0.0)
+        cine.set_editor_property("post_process_settings", pp)
+        set_component_property(cine, "post_process_blend_weight", 1.0)
+    except Exception:
+        pass
+
+
+def spawn_cinematic_post_process(unreal: Any, profile: dict[str, Any]) -> None:
+    if not hasattr(unreal, "PostProcessVolume"):
+        unreal.log_warning("PostProcessVolume unavailable; cinematic post-process skipped")
+        return
+    volume = unreal.EditorLevelLibrary.spawn_actor_from_class(unreal.PostProcessVolume, unreal.Vector(100000, 100000, -10000))
+    volume.set_actor_label(f"{profile['display_name']} cinematic PostProcess film grade")
+    set_editor_property_safe(volume, "enabled", True)
+    set_editor_property_safe(volume, "priority", 10.0)
+    set_editor_property_safe(volume, "blend_radius", 0.0)
+    set_editor_property_safe(volume, "blend_weight", 1.0)
+    if not set_editor_property_safe(volume, "unbound", True):
+        set_editor_property_safe(volume, "infinite_extent_unbound", True)
+    try:
+        settings = volume.get_editor_property("settings")
+        if hasattr(unreal, "AutoExposureMethod") and hasattr(unreal.AutoExposureMethod, "AEM_MANUAL"):
+            set_component_property(settings, "override_auto_exposure_method", True)
+            # keep editor auto exposure; manual exposure made proof captures too dark
+        for name, value in [
+            ("auto_exposure_bias", 0.35),
+            ("auto_exposure_min_brightness", 1.0),
+            ("auto_exposure_max_brightness", 1.0),
+            ("auto_exposure_min_ev100", 0.0),
+            ("auto_exposure_max_ev100", 0.0),
+            ("bloom_intensity", 0.42),
+            ("bloom_threshold", 1.15),
+            ("vignette_intensity", 0.30),
+            ("film_grain_intensity", 0.13),
+            ("film_grain_jitter", 0.55),
+        ]:
+            set_component_property(settings, f"override_{name}", True)
+            set_component_property(settings, name, value)
+        set_component_property(settings, "override_color_saturation", True)
+        set_component_property(settings, "color_saturation", unreal.Vector4(0.93, 0.93, 0.95, 1.0))
+        set_component_property(settings, "override_color_contrast", True)
+        set_component_property(settings, "color_contrast", unreal.Vector4(1.10, 1.10, 1.08, 1.0))
+        volume.set_editor_property("settings", settings)
+    except Exception as exc:
+        unreal.log_warning(f"Could not configure cinematic PostProcess: {exc}")
+
+
+def spawn_cinematic_atmosphere(unreal: Any, profile: dict[str, Any]) -> None:
+    city_id = profile["id"]
+    if hasattr(unreal, "SkyAtmosphere"):
+        try:
+            sky_atmosphere = unreal.EditorLevelLibrary.spawn_actor_from_class(unreal.SkyAtmosphere, unreal.Vector(0, 0, 0))
+            sky_atmosphere.set_actor_label(f"{profile['display_name']} cinematic SkyAtmosphere")
+        except Exception as exc:
+            unreal.log_warning(f"Could not spawn SkyAtmosphere: {exc}")
+    if hasattr(unreal, "ExponentialHeightFog"):
+        try:
+            fog = unreal.EditorLevelLibrary.spawn_actor_from_class(unreal.ExponentialHeightFog, unreal.Vector(0, 0, 0))
+            fog.set_actor_label(f"{profile['display_name']} cinematic ExponentialHeightFog urban haze")
+            fog_component = light_component_from_actor(unreal, fog, "ExponentialHeightFogComponent", ["component", "exponential_height_fog_component"])
+            if fog_component:
+                set_component_property(fog_component, "fog_density", 0.004 if city_id in {"london", "seoul"} else 0.003)
+                set_component_property(fog_component, "fog_height_falloff", 0.25)
+                set_component_property(fog_component, "fog_max_opacity", 0.18)
+                set_component_property(fog_component, "start_distance", 1400.0)
+                set_component_property(fog_component, "fog_inscattering_color", unreal.LinearColor(0.58, 0.64, 0.70, 1.0))
+                set_component_property(fog_component, "volumetric_fog", False)
+                set_component_property(fog_component, "volumetric_fog_scattering_distribution", 0.2)
+                set_component_property(fog_component, "volumetric_fog_extinction_scale", 0.45)
+        except Exception as exc:
+            unreal.log_warning(f"Could not configure ExponentialHeightFog: {exc}")
+
+
 def spawn_cctv_rig(unreal: Any, profile: dict[str, Any], mats: dict[str, Any], cam_loc: tuple[float, float, float], assets: dict[str, Any] | None = None) -> None:
     assets = assets or {}
     city = profile["display_name"]
@@ -620,19 +762,21 @@ def spawn_lighting_and_camera(unreal: Any, profile: dict[str, Any], assets: dict
     camera.set_actor_label(f"CCTV {profile['display_name']} Traffic Control View")
     camera.set_actor_rotation(unreal.Rotator(*look_at_rotation_deg(cam_loc, target)), False)
     cine = camera.get_cine_camera_component()
-    cine.current_focal_length = cctv_focal_length(city_id, cam_data["focal_length_mm"])
-    set_component_property(cine, "current_aperture", 8.0)
+    configure_cinematic_camera(unreal, cine, cctv_focal_length(city_id, cam_data["focal_length_mm"]))
 
     spawn_cctv_rig(unreal, profile, mats, cam_loc, assets=assets)
+    spawn_cinematic_post_process(unreal, profile)
 
     sun = unreal.EditorLevelLibrary.spawn_actor_from_class(unreal.DirectionalLight, unreal.Vector(-2400, -1800, 7000))
     sun.set_actor_label(f"{profile['display_name']} movable sun / sky key")
     sun_component = light_component_from_actor(unreal, sun, "DirectionalLightComponent", ["directional_light_component"])
     if sun_component:
         sun_component.set_mobility(mobility(unreal))
-        set_component_property(sun_component, "intensity", 9.0 if city_id in {"seoul", "london"} else 7.5)
+        set_component_property(sun_component, "intensity", 14.0 if city_id in {"seoul", "london"} else 11.5)
     else:
         unreal.log_warning("Could not find DirectionalLightComponent on spawned DirectionalLight")
+
+    spawn_cinematic_atmosphere(unreal, profile)
 
     if hasattr(unreal, "SkyLight"):
         sky = unreal.EditorLevelLibrary.spawn_actor_from_class(unreal.SkyLight, unreal.Vector(0, 0, 3600))
@@ -640,7 +784,7 @@ def spawn_lighting_and_camera(unreal: Any, profile: dict[str, Any], assets: dict
         sky_component = light_component_from_actor(unreal, sky, "SkyLightComponent", ["sky_light_component"])
         if sky_component:
             sky_component.set_mobility(mobility(unreal))
-            set_component_property(sky_component, "intensity", 3.0)
+            set_component_property(sky_component, "intensity", 4.8)
 
     light_positions = [
         (-1800, -1800, 620), (1800, -1800, 620), (-1800, 1800, 620), (1800, 1800, 620),
@@ -653,7 +797,7 @@ def spawn_lighting_and_camera(unreal: Any, profile: dict[str, Any], assets: dict
         point_component = light_component_from_actor(unreal, point, "PointLightComponent", ["point_light_component"])
         if point_component:
             point_component.set_mobility(mobility(unreal))
-            set_component_property(point_component, "intensity", 2600.0)
+            set_component_property(point_component, "intensity", 3400.0)
             set_component_property(point_component, "attenuation_radius", 3900.0)
 
 
@@ -676,6 +820,7 @@ def spawn_city(unreal: Any, profile: dict[str, Any]) -> None:
     road_width = lanes * lane_width * 2 + profile["intersection"].get("median_width_cm", 0)
 
     spawn_roads(unreal, profile, mats, road_width)
+    spawn_cinematic_road_dressing(unreal, profile, assets)
     spawn_buildings(unreal, profile, mats)
     spawn_signals_and_street_furniture(unreal, profile, mats, assets=assets)
     spawn_city_specific_details(unreal, profile, mats, road_width)

@@ -20,9 +20,13 @@ def clean() -> None:
     bpy.ops.object.delete()
 
 
-def mat(name: str, color: tuple[float, float, float, float], metallic: float = 0.0, roughness: float = 0.45):
+def mat(name: str, color: tuple[float, float, float, float], metallic: float = 0.0, roughness: float = 0.45, alpha_blend: bool = False):
     m = bpy.data.materials.new(name)
     m.use_nodes = True
+    if alpha_blend or color[3] < 1:
+        m.blend_method = "BLEND"
+        m.use_screen_refraction = True
+        m.show_transparent_back = True
     bsdf = m.node_tree.nodes.get("Principled BSDF")
     if bsdf:
         bsdf.inputs["Base Color"].default_value = color
@@ -49,6 +53,9 @@ def init_mats() -> None:
         "stone": mat("warm_city_stone", (0.62, 0.55, 0.45, 1), 0, 0.58),
         "brick": mat("weathered_city_brick", (0.39, 0.12, 0.07, 1), 0, 0.62),
         "leaf": mat("dense_urban_leaf", (0.04, 0.24, 0.10, 1), 0, 0.55),
+        "puddle": mat("cinematic_oil_slick_puddle", (0.005, 0.012, 0.018, 0.62), 0, 0.025, alpha_blend=True),
+        "sheen": mat("thin_wet_road_sheen", (0.018, 0.020, 0.022, 0.40), 0, 0.035, alpha_blend=True),
+        "headlight_pool": mat("warm_headlight_pool_reflection", (1.0, 0.78, 0.36, 0.42), 0, 0.05, alpha_blend=True),
     })
 
 
@@ -167,6 +174,34 @@ def bollard() -> None:
     export("bollard_photoreal_proxy")
 
 
+def wet_road_cinematic_decals() -> None:
+    clean(); init_mats()
+    # Use very thin meshes slightly above the road. Unreal places the whole kit on top of asphalt.
+    for i, (x, y, rx, ry) in enumerate([
+        (-1.25, -2.4, 0.95, 0.28), (0.95, -1.15, 0.55, 0.22), (1.85, 1.95, 0.75, 0.24),
+        (-2.1, 2.35, 0.45, 0.18), (0.15, 2.75, 1.15, 0.30),
+    ]):
+        bpy.ops.mesh.primitive_uv_sphere_add(segments=48, ring_count=12, radius=1, location=(x, y, 0.018))
+        obj = bpy.context.object
+        obj.name = f"irregular_puddle_reflection_{i}"
+        obj.scale = (rx, ry, 0.006)
+        obj.data.materials.append(MAT["puddle"])
+    for i, (x, y, sx, sy) in enumerate([
+        (-1.8, -0.2, 0.10, 4.8), (-0.55, 0.35, 0.08, 5.7), (0.75, -0.10, 0.10, 5.4),
+        (1.85, 0.28, 0.07, 4.2), (0.05, -2.95, 2.9, 0.05),
+    ]):
+        cube(f"subtle_wet_tire_sheen_{i}", (x, y, 0.026), (sx, sy, 0.012), MAT["sheen"])
+    for i, (x, y) in enumerate([(-0.52, -3.05), (0.52, -3.05), (-0.45, 3.05), (0.45, 3.05)]):
+        bpy.ops.mesh.primitive_uv_sphere_add(segments=32, ring_count=8, radius=1, location=(x, y, 0.032))
+        obj = bpy.context.object
+        obj.name = f"soft_headlight_reflection_pool_{i}"
+        obj.scale = (0.32, 0.92, 0.004)
+        obj.data.materials.append(MAT["headlight_pool"])
+    for i, y in enumerate([-2.0, -1.1, -0.2, 0.7, 1.6, 2.5]):
+        cube(f"worn_cinematic_lane_dash_{i}", (0, y, 0.04), (0.16, 0.58, 0.012), MAT["white"])
+    export("wet_road_cinematic_decals_photoreal_proxy")
+
+
 if __name__ == "__main__":
-    for fn in [sedan, city_bus, cctv, traffic_signal, street_light, urban_tree, bollard]:
+    for fn in [sedan, city_bus, cctv, traffic_signal, street_light, urban_tree, bollard, wet_road_cinematic_decals]:
         fn()
