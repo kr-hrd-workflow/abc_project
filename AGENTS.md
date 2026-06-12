@@ -62,6 +62,11 @@ Success means:
 
 Use available skills and plugins as the primary operating layer for this project.
 
+Project-local simulator agent:
+- For Unreal traffic simulator/renderer rebuild work, load `docs/agents/simulator-builder-agent.md` or run `npm run simulator:agent` to produce a focused worker prompt.
+- The simulator agent is grounded in local UE 5.7 doc digests under `docs/technotes/ue57-doc-digest/` and enforces: no landing-page changes, no production proof strips, SUMO/TraCI truth source, FastAPI orchestration, Unreal rendering, Pixel Streaming delivery.
+
+
 When a plugin or skill trigger condition matches, follow that plugin or skill even for simple Q&A, short explanations, one-off command output, reviews, debugging, planning, implementation, verification, or documentation lookup.
 
 Superpowers-specific rules:
