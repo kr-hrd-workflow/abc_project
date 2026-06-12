@@ -52,7 +52,7 @@ def main() -> None:
     sun.set_actor_label(f"RoadOnlyRenderer_{city}_capture_sun_visible_proof")
     sun_comp = sun.get_component_by_class(unreal.DirectionalLightComponent)
     if sun_comp:
-        sun_comp.set_editor_property("intensity", 12.0)
+        sun_comp.set_editor_property("intensity", 1.8)
         try:
             sun_comp.set_mobility(unreal.ComponentMobility.MOVABLE)
         except Exception:
@@ -62,7 +62,7 @@ def main() -> None:
     fill.set_actor_label(f"RoadOnlyRenderer_{city}_capture_fill_visible_proof")
     fill_comp = fill.get_component_by_class(unreal.PointLightComponent)
     if fill_comp:
-        fill_comp.set_editor_property("intensity", 25000.0)
+        fill_comp.set_editor_property("intensity", 850.0)
         fill_comp.set_editor_property("attenuation_radius", 5000.0)
         try:
             fill_comp.set_mobility(unreal.ComponentMobility.MOVABLE)
@@ -71,8 +71,8 @@ def main() -> None:
 
     proof_view = os.environ.get("SMART_INTERSECTION_PROOF_VIEW", "layout")
     if proof_view == "oblique":
-        origin = unreal.Vector(-1150, -980, 680)
-        target = unreal.Vector(0, -80, 90)
+        origin = unreal.Vector(-1650, -1260, 920)
+        target = unreal.Vector(80, 20, 120)
     else:
         # Top-down, near-orthographic proof view. The previous oblique proof left most pixels black
         # and was unreadable after Telegram/mobile compression.
@@ -101,12 +101,12 @@ def main() -> None:
         comp.capture_source = unreal.SceneCaptureSource.SCS_BASE_COLOR
     except Exception:
         try:
-            comp.capture_source = unreal.SceneCaptureSource.SCS_FINAL_COLOR_LDR
+            comp.capture_source = unreal.SceneCaptureSource.SCS_BASE_COLOR
         except Exception:
             pass
     comp.fov_angle = 55.0
     if proof_view == "oblique":
-        comp.fov_angle = 46.0
+        comp.fov_angle = 38.0
     else:
         try:
             comp.projection_type = unreal.CameraProjectionMode.ORTHOGRAPHIC

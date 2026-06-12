@@ -1,6 +1,7 @@
 # RoadOnlyRenderer generator for SmartIntersection.
 # Architecture: SUMO truth source; Python TraCI bridge streams state later; Unreal renders only.
 # Scope: no vehicles, no pedestrians, no gameplay, no UE-side traffic simulation.
+# Asset provenance: project procedural assets plus ambientCG CC0 sources under CC0AmbientCG; source refresh uses install_cc0_texture_sources.
 from __future__ import annotations
 
 import json
@@ -40,6 +41,12 @@ MATERIAL_COLORS = {
     "photoreal_text_look_left": (0.90, 0.88, 0.78, 1.0),
     "photoreal_text_look_right": (0.90, 0.88, 0.78, 1.0),
     "photoreal_text_keep_clear": (0.92, 0.68, 0.07, 1.0),
+    "photoreal_puddle": (0.05, 0.065, 0.07, 1.0),
+    "photoreal_sidewalk": (0.50, 0.48, 0.43, 1.0),
+    "photoreal_brick": (0.45, 0.24, 0.18, 1.0),
+    "photoreal_glass": (0.05, 0.10, 0.13, 1.0),
+    "photoreal_sign_plate": (0.88, 0.86, 0.76, 1.0),
+    "photoreal_warm_window": (1.0, 0.62, 0.25, 1.0),
 }
 
 LONDON_TEXTURE_MATERIALS = {
@@ -53,6 +60,11 @@ LONDON_TEXTURE_MATERIALS = {
     "photoreal_text_look_left": "/Game/PhotorealRoadKit/Textures/T_london_text_look_left",
     "photoreal_text_look_right": "/Game/PhotorealRoadKit/Textures/T_london_text_look_right",
     "photoreal_text_keep_clear": "/Game/PhotorealRoadKit/Textures/T_london_text_keep_clear",
+    "photoreal_puddle": "/Game/PhotorealRoadKit/Textures/T_london_wet_puddle_reflection",
+    "photoreal_sidewalk": "/Game/PhotorealRoadKit/Textures/T_london_sidewalk_stone",
+    "photoreal_brick": "/Game/PhotorealRoadKit/Textures/T_london_brick_facade",
+    "photoreal_glass": "/Game/PhotorealRoadKit/Textures/T_london_glass_windows",
+    "photoreal_sign_plate": "/Game/PhotorealRoadKit/Textures/T_london_regulatory_sign_plate",
 }
 
 
@@ -120,7 +132,7 @@ class RoadOnlyRenderer:
         ]:
             unreal.EditorAssetLibrary.make_directory(dest)
             for file_path in sorted(src.glob("*")):
-                if file_path.suffix.lower() not in {".png", ".obj"}:
+                if file_path.suffix.lower() not in {".png", ".jpg", ".jpeg", ".obj"}:
                     continue
                 task = unreal.AssetImportTask()
                 task.filename = str(file_path)
@@ -184,10 +196,16 @@ class RoadOnlyRenderer:
             color = unreal.MaterialEditingLibrary.create_material_expression(mat, unreal.MaterialExpressionConstant3Vector, -420, 0)
             color.constant = unreal.LinearColor(*rgba)
             unreal.MaterialEditingLibrary.connect_material_property(color, "", unreal.MaterialProperty.MP_BASE_COLOR)
-            unreal.MaterialEditingLibrary.connect_material_property(color, "", unreal.MaterialProperty.MP_EMISSIVE_COLOR)
-            rough = unreal.MaterialEditingLibrary.create_material_expression(mat, unreal.MaterialExpressionConstant, -420, 220)
-            rough.r = 0.78
+            # Photoreal scene captures must be lit, not emissive proof colors.
+            black = unreal.MaterialEditingLibrary.create_material_expression(mat, unreal.MaterialExpressionConstant3Vector, -420, 180)
+            black.constant = unreal.LinearColor(0.0, 0.0, 0.0, 1.0)
+            unreal.MaterialEditingLibrary.connect_material_property(black, "", unreal.MaterialProperty.MP_EMISSIVE_COLOR)
+            rough = unreal.MaterialEditingLibrary.create_material_expression(mat, unreal.MaterialExpressionConstant, -420, 320)
+            rough.r = 0.62
             unreal.MaterialEditingLibrary.connect_material_property(rough, "", unreal.MaterialProperty.MP_ROUGHNESS)
+            spec = unreal.MaterialEditingLibrary.create_material_expression(mat, unreal.MaterialExpressionConstant, -420, 430)
+            spec.r = 0.18
+            unreal.MaterialEditingLibrary.connect_material_property(spec, "", unreal.MaterialProperty.MP_SPECULAR)
             if hasattr(unreal.MaterialEditingLibrary, "recompile_material"):
                 unreal.MaterialEditingLibrary.recompile_material(mat)
         except Exception as exc:
@@ -198,6 +216,12 @@ class RoadOnlyRenderer:
             sample = unreal.MaterialEditingLibrary.create_material_expression(mat, unreal.MaterialExpressionTextureSample, -740, 0)
             sample.texture = texture
             unreal.MaterialEditingLibrary.connect_material_property(sample, "RGB", unreal.MaterialProperty.MP_BASE_COLOR)
+            black = unreal.MaterialEditingLibrary.create_material_expression(mat, unreal.MaterialExpressionConstant3Vector, -740, 180)
+            black.constant = unreal.LinearColor(0.0, 0.0, 0.0, 1.0)
+            unreal.MaterialEditingLibrary.connect_material_property(black, "", unreal.MaterialProperty.MP_EMISSIVE_COLOR)
+            rough = unreal.MaterialEditingLibrary.create_material_expression(mat, unreal.MaterialExpressionConstant, -740, 320)
+            rough.r = 0.56 if "puddle" in mat.get_name().lower() else 0.72
+            unreal.MaterialEditingLibrary.connect_material_property(rough, "", unreal.MaterialProperty.MP_ROUGHNESS)
             if "T_london_text_" in texture.get_name():
                 try:
                     mat.set_editor_property("blend_mode", unreal.BlendMode.BLEND_MASKED)
@@ -315,6 +339,7 @@ class RoadOnlyRenderer:
 
         if self.city == "london":
             self._build_london_photoreal_fidelity_layer()
+            self._build_london_photoreal_scene_layer()
 
         # Lighting/camera proof. Use movable lights so the editor viewport is visible without a baked-lighting pass.
         light = unreal.EditorLevelLibrary.spawn_actor_from_class(unreal.DirectionalLight, unreal.Vector(-800, -900, 1200), unreal.Rotator(-48, -35, 0))
@@ -367,6 +392,50 @@ class RoadOnlyRenderer:
         self._road_text("PhotorealRoadKit_london_road_text_LOOK_RIGHT_visible", "LOOK RIGHT", (515, 335, 124), 54, material_name="photoreal_white_worn")
         self._road_text("PhotorealRoadKit_london_road_text_BUS_LANE_visible", "BUS LANE", (-520, -190, 126), 62, material_name="photoreal_white_worn")
         self._road_text("PhotorealRoadKit_london_road_text_KEEP_CLEAR_visible", "KEEP CLEAR", (0, 0, 126), 58, material_name="photoreal_yellow_worn")
+
+    def _build_london_photoreal_scene_layer(self) -> None:
+        mesh_root = "/Game/PhotorealRoadKit/Meshes"
+        # Scene-quality layer: visible urban depth, wet reflective accents, sidewalk context, street furniture.
+        self._cube("PhotorealScene_london_wet_asphalt_puddle_reflection_foreground_0", (-280, -84, 129), (2.15, 0.42, 0.01), "photoreal_puddle")
+        self._cube("PhotorealScene_london_wet_asphalt_puddle_reflection_foreground_1", (360, 112, 130), (1.55, 0.36, 0.01), "photoreal_puddle")
+        self._cube("PhotorealScene_london_sidewalk_stone_left_context", (0, -615, 102), (18.0, 1.05, 0.04), "photoreal_sidewalk")
+        self._cube("PhotorealScene_london_sidewalk_stone_right_context", (0, 615, 102), (18.0, 1.05, 0.04), "photoreal_sidewalk")
+        self._cube("PhotorealScene_london_median_island_concrete_beveled", (0, 0, 120), (0.72, 1.85, 0.07), "photoreal_curb")
+        # Mid/background London streetscape silhouettes: not gameplay, just renderer context.
+        for idx, x in enumerate([-880, -520, -160, 240, 620, 980]):
+            height = [2.8, 3.5, 2.9, 4.2, 3.2, 3.8][idx]
+            self._mesh_actor(f"PhotorealScene_london_brick_shopfront_left_{idx}", f"{mesh_root}/london_shopfront_module", (x, -760, 110), (1.0, 1.0, height), "photoreal_brick")
+            self._mesh_actor(f"PhotorealScene_london_window_strip_left_{idx}", f"{mesh_root}/london_window_strip", (x, -785, 285 + height * 25), (1.0, 1.0, 1.0), "photoreal_glass")
+        for idx, x in enumerate([-760, -360, 80, 520, 900]):
+            height = [3.1, 2.7, 3.9, 3.4, 2.9][idx]
+            self._mesh_actor(f"PhotorealScene_london_brick_shopfront_right_{idx}", f"{mesh_root}/london_shopfront_module", (x, 760, 110), (1.05, 1.0, height), "photoreal_brick")
+            self._mesh_actor(f"PhotorealScene_london_window_strip_right_{idx}", f"{mesh_root}/london_window_strip", (x, 785, 280 + height * 25), (1.0, 1.0, 1.0), "photoreal_glass")
+        # Street furniture/readability props in camera frustum.
+        for idx, (x, y) in enumerate([(-650, -535), (-250, -535), (220, 535), (680, 535)]):
+            self._mesh_actor(f"PhotorealScene_london_bollard_curb_edge_{idx}", f"{mesh_root}/keep_left_bollard", (x, y, 130), (0.75, 0.75, 0.9), "photoreal_white_worn")
+        for idx, (x, y) in enumerate([(-760, -475), (760, 475)]):
+            self._mesh_actor(f"PhotorealScene_london_regulatory_sign_plate_{idx}", f"{mesh_root}/regulatory_sign_plate", (x, y, 255), (1.1, 1.1, 1.1), "photoreal_sign_plate")
+        # Thin kerb shadow bands and grime patches make the road surface read less flat.
+        for idx, y in enumerate([-505, 505, -340, 340]):
+            self._cube(f"PhotorealScene_london_curb_contact_shadow_grime_{idx}", (0, y, 124 + idx), (16.5, 0.06, 0.01), "photoreal_metal")
+        for idx, (x, y, sx, sy) in enumerate([(-620,-120,1.2,.18),(-120,225,1.6,.16),(520,-45,1.1,.14),(160,-315,1.35,.15)]):
+            self._cube(f"PhotorealScene_london_oil_rubber_grime_patch_{idx}", (x, y, 128+idx), (sx, sy, 0.01), "photoreal_puddle")
+        # Add visible atmospheric/cinematic actors where UE API supports them.
+        try:
+            fog = unreal.EditorLevelLibrary.spawn_actor_from_class(unreal.ExponentialHeightFog, unreal.Vector(0, 0, 230), unreal.Rotator(0, 0, 0))
+            fog.set_actor_label("PhotorealScene_london_soft_morning_fog")
+            comp = fog.get_component_by_class(unreal.ExponentialHeightFogComponent)
+            if comp:
+                comp.set_editor_property("fog_density", 0.006)
+                comp.set_editor_property("fog_height_falloff", 0.25)
+        except Exception as exc:
+            print(f"PHOTOREAL_SCENE_FOG_FALLBACK error={exc}")
+        try:
+            pp = unreal.EditorLevelLibrary.spawn_actor_from_class(unreal.PostProcessVolume, unreal.Vector(0, 0, 260), unreal.Rotator(0, 0, 0))
+            pp.set_actor_label("PhotorealScene_london_color_grade_postprocess")
+            pp.set_editor_property("b_unbound", True)
+        except Exception as exc:
+            print(f"PHOTOREAL_SCENE_POSTPROCESS_FALLBACK error={exc}")
 
 
 def main() -> None:

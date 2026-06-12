@@ -3,6 +3,7 @@ from __future__ import annotations
 
 import math
 import random
+import shutil
 from pathlib import Path
 from PIL import Image, ImageDraw, ImageFilter, ImageFont, ImageOps
 
@@ -10,6 +11,7 @@ ROOT = Path(__file__).resolve().parents[1]
 ASSET_ROOT = ROOT / "renderer" / "unreal" / "SmartIntersection" / "SourceAssets" / "PhotorealRoadKit"
 TEXTURE_DIR = ASSET_ROOT / "Textures"
 MESH_DIR = ASSET_ROOT / "Meshes"
+CC0_DIR = ASSET_ROOT / "CC0AmbientCG"
 MANIFEST = ASSET_ROOT / "photoreal_roadkit_manifest.md"
 
 random.seed(42)
@@ -125,6 +127,28 @@ def obj_cylinder(path: Path, name: str, radius: float, height: float, segments: 
         f.write("f " + " ".join(str(segments+i+1) for i in reversed(range(segments))) + "\n")
 
 
+def install_cc0_texture_sources() -> None:
+    """Prefer committed ambientCG CC0 sources when present.
+
+    They are kept under SourceAssets/PhotorealRoadKit/CC0AmbientCG and copied into the
+    texture import directory after procedural fallback generation.
+    """
+    copies = {
+        "Road007_1K-JPG_Color.jpg": "T_london_asphalt_albedo.jpg",
+        "Road007_1K-JPG_NormalGL.jpg": "T_london_asphalt_normal.jpg",
+        "Road007_1K-JPG_Roughness.jpg": "T_london_asphalt_roughness.jpg",
+        "Bricks097_1K-JPG_Color.jpg": "T_london_brick_facade.jpg",
+        "Bricks097_1K-JPG_NormalGL.jpg": "T_london_brick_normal.jpg",
+    }
+    if not CC0_DIR.exists():
+        return
+    for src_name, dest_name in copies.items():
+        src = CC0_DIR / src_name
+        if src.exists():
+            shutil.copy2(src, TEXTURE_DIR / dest_name)
+
+
+
 def main() -> None:
     TEXTURE_DIR.mkdir(parents=True, exist_ok=True)
     MESH_DIR.mkdir(parents=True, exist_ok=True)
@@ -139,6 +163,11 @@ def main() -> None:
     road_text_texture(TEXTURE_DIR / "T_london_text_look_right.png", "LOOK RIGHT", (238, 235, 210))
     road_text_texture(TEXTURE_DIR / "T_london_text_keep_clear.png", "KEEP CLEAR", (238, 184, 26))
     noise_texture(TEXTURE_DIR / "T_london_drain_grate_metal.png", (44, 45, 45), 18, True)
+    noise_texture(TEXTURE_DIR / "T_london_wet_puddle_reflection.png", (35, 39, 40), 45, True)
+    noise_texture(TEXTURE_DIR / "T_london_sidewalk_stone.png", (128, 124, 112), 26, True)
+    noise_texture(TEXTURE_DIR / "T_london_brick_facade.png", (117, 65, 48), 32, True)
+    noise_texture(TEXTURE_DIR / "T_london_glass_windows.png", (28, 42, 50), 36, True)
+    noise_texture(TEXTURE_DIR / "T_london_regulatory_sign_plate.png", (222, 220, 205), 14, False)
     obj_box(MESH_DIR / "curb_beveled_module.obj", "curb_beveled_module", 120, 16, 18, 8)
     obj_box(MESH_DIR / "paint_worn_strip.obj", "paint_worn_strip", 110, 4, 1.3, 0.8)
     obj_box(MESH_DIR / "signal_head_uk_black.obj", "signal_head_uk_black", 16, 7, 22, 2)
@@ -147,7 +176,11 @@ def main() -> None:
     obj_box(MESH_DIR / "drain_grate_rect.obj", "drain_grate_rect", 36, 14, 2, 1)
     obj_cylinder(MESH_DIR / "keep_left_bollard.obj", "keep_left_bollard", 8, 58, 24)
     obj_box(MESH_DIR / "tactile_paving_tile.obj", "tactile_paving_tile", 60, 40, 3, 2)
-    MANIFEST.write_text("""# PhotorealRoadKit procedural source assets\n\nProject-owned procedural source assets for the London SmartIntersection photoreal fidelity pass.\n\nThese are not licensed scan assets; they are deterministic local procedural textures and OBJ proxy meshes intended to replace the pure cube/flat-color blockout with visible asphalt wear, worn markings, curb material variation, signal/pole proxies, utility covers, drains, bollards, and tactile paving.\n""", encoding="utf-8")
+    obj_box(MESH_DIR / "london_shopfront_module.obj", "london_shopfront_module", 180, 18, 130, 4)
+    obj_box(MESH_DIR / "london_window_strip.obj", "london_window_strip", 150, 3, 35, 1)
+    obj_box(MESH_DIR / "regulatory_sign_plate.obj", "regulatory_sign_plate", 28, 2, 38, 1)
+    install_cc0_texture_sources()
+    MANIFEST.write_text("""# PhotorealRoadKit procedural source assets\n\nProject-owned procedural source assets for the London SmartIntersection photoreal fidelity pass.\n\nThese are project-owned procedural source assets plus committed ambientCG CC0 texture maps for road asphalt and brick facade detail. They replace the pure cube/flat-color blockout with visible asphalt wear, worn markings, curb material variation, signal/pole proxies, utility covers, drains, bollards, tactile paving, and urban scene context.\n""", encoding="utf-8")
     print(f"PHOTOREAL_ROADKIT_SOURCE_WRITTEN {ASSET_ROOT}")
 
 

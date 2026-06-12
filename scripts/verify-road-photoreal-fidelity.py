@@ -13,6 +13,9 @@ LONDON_MAP = UE / "Content" / "Maps" / "Generated" / "london_RoadOnly.umap"
 REQUIRED_SOURCE = [
     "Textures/T_london_asphalt_albedo.png",
     "Textures/T_london_asphalt_normal.png",
+    "Textures/T_london_asphalt_albedo.jpg",
+    "Textures/T_london_asphalt_normal.jpg",
+    "Textures/T_london_asphalt_roughness.jpg",
     "Textures/T_london_curb_concrete.png",
     "Textures/T_london_red_bus_lane_worn.png",
     "Textures/T_london_yellow_thermoplastic_worn.png",
@@ -22,6 +25,13 @@ REQUIRED_SOURCE = [
     "Textures/T_london_text_look_right.png",
     "Textures/T_london_text_keep_clear.png",
     "Textures/T_london_drain_grate_metal.png",
+    "Textures/T_london_wet_puddle_reflection.png",
+    "Textures/T_london_sidewalk_stone.png",
+    "Textures/T_london_brick_facade.png",
+    "Textures/T_london_brick_facade.jpg",
+    "Textures/T_london_brick_normal.jpg",
+    "Textures/T_london_glass_windows.png",
+    "Textures/T_london_regulatory_sign_plate.png",
     "Meshes/curb_beveled_module.obj",
     "Meshes/paint_worn_strip.obj",
     "Meshes/signal_head_uk_black.obj",
@@ -30,6 +40,12 @@ REQUIRED_SOURCE = [
     "Meshes/drain_grate_rect.obj",
     "Meshes/keep_left_bollard.obj",
     "Meshes/tactile_paving_tile.obj",
+    "Meshes/london_shopfront_module.obj",
+    "Meshes/london_window_strip.obj",
+    "Meshes/regulatory_sign_plate.obj",
+    "CC0AmbientCG/Road007_1K-JPG_Color.jpg",
+    "CC0AmbientCG/Road007_1K-JPG_NormalGL.jpg",
+    "CC0AmbientCG/Bricks097_1K-JPG_Color.jpg",
 ]
 
 REQUIRED_GENERATOR_TOKENS = [
@@ -47,6 +63,12 @@ REQUIRED_GENERATOR_TOKENS = [
     "KEEP CLEAR",
     "road_text_BUS_LANE_texture_plane",
     "road_text_LOOK_LEFT_texture_plane",
+    "PhotorealScene_london_wet_asphalt_puddle_reflection",
+    "PhotorealScene_london_brick_shopfront",
+    "PhotorealScene_london_sidewalk_stone",
+    "PhotorealScene_london_color_grade_postprocess",
+    "CC0AmbientCG",
+    "install_cc0_texture_sources",
 ]
 
 REQUIRED_MAP_TOKENS = [
@@ -61,6 +83,11 @@ REQUIRED_MAP_TOKENS = [
     b"PhotorealRoadKit_london_road_text_BUS_LANE_visible",
     b"PhotorealRoadKit_london_road_text_BUS_LANE_texture_plane_visible",
     b"PhotorealRoadKit_london_road_text_KEEP_CLEAR_texture_plane_visible",
+    b"PhotorealScene_london_wet_asphalt_puddle_reflection_foreground_0",
+    b"PhotorealScene_london_sidewalk_stone_left_context",
+    b"PhotorealScene_london_brick_shopfront_left_0",
+    b"PhotorealScene_london_regulatory_sign_plate_0",
+    b"PhotorealScene_london_color_grade_postprocess",
 ]
 
 FORBIDDEN = ["spawn_vehicle", "spawn_pedestrian", "traffic_ai_controller", "drivable_car", "gameplay_mode"]
@@ -89,7 +116,7 @@ def main() -> int:
         path = SOURCE / rel
         if not path.exists():
             fail(f"missing source asset: {rel}")
-        if path.suffix.lower() == ".png":
+        if path.suffix.lower() in {".png", ".jpg", ".jpeg"}:
             check_image(path)
         elif path.stat().st_size < 200:
             fail(f"mesh source too small: {rel}")
