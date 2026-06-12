@@ -1,6 +1,6 @@
 # London photoreal final target
 
-Reference artifact: `artifacts/london-photoreal-final-target.png`
+Reference artifact: `docs/references/assets/london-photoreal-final-target.png`
 
 User acceptance target: implement the Unreal London renderer to follow this visual as closely as possible.
 
@@ -20,3 +20,6 @@ User acceptance target: implement the Unreal London renderer to follow this visu
 ## Known implementation boundary
 
 This repo currently uses legal project-owned procedural assets and ambientCG CC0 material sources. The target image is an AI-generated visual goal. The Unreal implementation should converge toward it with replaceable assets, camera, lighting, materials, and verifier gates, but it is not yet a licensed AAA scanned-asset scene.
+
+
+Latest target-match comparison: `docs/references/assets/unreal-london-final-target-match-comparison.png`
