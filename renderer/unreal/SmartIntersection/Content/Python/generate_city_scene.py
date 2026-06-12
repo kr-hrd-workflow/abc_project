@@ -226,6 +226,87 @@ def make_materials(unreal: Any, city_id: str) -> dict[str, Any]:
     }
 
 
+PHOTOREAL_KIT = {
+    "sedan": "sedan_photoreal_proxy",
+    "bus": "city_bus_photoreal_proxy",
+    "cctv": "cctv_bullet_rig_photoreal_proxy",
+    "signal": "traffic_signal_photoreal_proxy",
+    "street_light": "street_light_photoreal_proxy",
+    "tree": "urban_tree_photoreal_proxy",
+    "bollard": "bollard_photoreal_proxy",
+}
+
+
+def source_assets_dir() -> Path:
+    return Path(__file__).resolve().parents[2] / "SourceAssets" / "PhotorealKit"
+
+
+def photoreal_asset_path(name: str) -> str:
+    return f"/Game/PhotorealKit/{name}.{name}"
+
+
+def import_photoreal_kit(unreal: Any) -> dict[str, Any]:
+    unreal.EditorAssetLibrary.make_directory("/Game/PhotorealKit")
+    imported: dict[str, Any] = {}
+    tasks = []
+    for key, asset_name in PHOTOREAL_KIT.items():
+        asset = unreal.EditorAssetLibrary.load_asset(photoreal_asset_path(asset_name))
+        if asset:
+            imported[key] = asset
+            continue
+        fbx = source_assets_dir() / f"{asset_name}.fbx"
+        if not fbx.exists():
+            unreal.log_warning(f"Missing photoreal source asset {fbx}")
+            continue
+        task = unreal.AssetImportTask()
+        task.filename = str(fbx)
+        task.destination_path = "/Game/PhotorealKit"
+        task.automated = True
+        task.replace_existing = True
+        task.save = True
+        try:
+            options = unreal.FbxImportUI()
+            options.import_mesh = True
+            options.import_materials = True
+            options.import_textures = False
+            options.import_as_skeletal = False
+            if hasattr(options, "static_mesh_import_data") and options.static_mesh_import_data:
+                options.static_mesh_import_data.combine_meshes = True
+            task.options = options
+        except Exception as exc:
+            unreal.log_warning(f"Could not configure FBX import options for {fbx}: {exc}")
+        tasks.append(task)
+    if tasks:
+        unreal.AssetToolsHelpers.get_asset_tools().import_asset_tasks(tasks)
+    for key, asset_name in PHOTOREAL_KIT.items():
+        asset = unreal.EditorAssetLibrary.load_asset(photoreal_asset_path(asset_name))
+        if asset:
+            imported[key] = asset
+        else:
+            unreal.log_warning(f"Photoreal asset failed to load: {asset_name}")
+    return imported
+
+
+def spawn_static_mesh_asset(
+    unreal: Any,
+    name: str,
+    asset: Any | None,
+    location: tuple[float, float, float],
+    scale: tuple[float, float, float],
+    rotation: tuple[float, float, float] = (0, 0, 0),
+) -> Any | None:
+    if not asset:
+        return None
+    actor = unreal.EditorLevelLibrary.spawn_actor_from_class(unreal.StaticMeshActor, unreal.Vector(*location))
+    actor.set_actor_label(name)
+    actor.set_actor_rotation(unreal.Rotator(*rotation), False)
+    actor.set_actor_scale3d(unreal.Vector(*scale))
+    component = actor.static_mesh_component
+    component.set_static_mesh(asset)
+    component.set_mobility(mobility(unreal))
+    return actor
+
+
 def spawn_roads(unreal: Any, profile: dict[str, Any], mats: dict[str, Any], road_width: float) -> None:
     asphalt, marking, sidewalk, accent = mats["asphalt"], mats["marking"], mats["sidewalk"], mats["accent"]
     city_id = profile["id"]
@@ -304,10 +385,13 @@ def spawn_buildings(unreal: Any, profile: dict[str, Any], mats: dict[str, Any]) 
             spawn_cube(unreal, f"NYC metal fire escape silhouette {idx}", (x + sx * 52, y, height * 0.45), (0.08, sy * 0.8, height / 240), mats["dark"])
 
 
-def spawn_signals_and_street_furniture(unreal: Any, profile: dict[str, Any], mats: dict[str, Any]) -> None:
+def spawn_signals_and_street_furniture(unreal: Any, profile: dict[str, Any], mats: dict[str, Any], assets: dict[str, Any] | None = None) -> None:
+    assets = assets or {}
     city_id = profile["id"]
     pole_mat = mats["dark"] if city_id in {"paris", "london"} else mats["accent"]
     for idx, (x, y) in enumerate([(-720, -720), (720, -720), (-720, 720), (720, 720)]):
+        if spawn_static_mesh_asset(unreal, f"Photoreal traffic signal asset {idx}", assets.get("signal"), (x, y, 20), (1, 1, 1), rotation=(0, 0, 0)):
+            continue
         spawn_cube(unreal, f"City signal pole {idx}", (x, y, 190), (0.14, 0.14, 3.8), pole_mat)
         spawn_cube(unreal, f"City signal head {idx}", (x, y, 390), (0.92, 0.16, 0.28), pole_mat)
         spawn_cube(unreal, f"Pedestrian button box {idx}", (x + 34, y, 130), (0.18, 0.10, 0.24), mats["marking"])
@@ -317,11 +401,13 @@ def spawn_signals_and_street_furniture(unreal: Any, profile: dict[str, Any], mat
     # Furniture rows: bollards, trees, shelters, awnings.
     for i in range(-5, 6):
         for y in [-1550, 1550]:
-            spawn_cube(unreal, f"Bollard {i} {y}", (i * 520, y, 70), (0.10, 0.10, 0.55), mats["dark"])
+            if not spawn_static_mesh_asset(unreal, f"Photoreal bollard asset {i} {y}", assets.get("bollard"), (i * 520, y, 14), (1, 1, 1)):
+                spawn_cube(unreal, f"Bollard {i} {y}", (i * 520, y, 70), (0.10, 0.10, 0.55), mats["dark"])
     for i in range(-4, 5):
         for x, y in [(-1700, i * 520), (1700, i * 520)]:
-            spawn_cube(unreal, f"Tree trunk {x} {i}", (x, y, 160), (0.18, 0.18, 1.8), mats["warm"] if city_id == "paris" else mats["dark"])
-            spawn_cube(unreal, f"Tree canopy {x} {i}", (x, y, 390), (0.85, 0.85, 0.85), mats["green"])
+            if not spawn_static_mesh_asset(unreal, f"Photoreal street tree asset {x} {i}", assets.get("tree"), (x, y, 20), (1, 1, 1)):
+                spawn_cube(unreal, f"Tree trunk {x} {i}", (x, y, 160), (0.18, 0.18, 1.8), mats["warm"] if city_id == "paris" else mats["dark"])
+                spawn_cube(unreal, f"Tree canopy {x} {i}", (x, y, 390), (0.85, 0.85, 0.85), mats["green"])
     if city_id == "seoul":
         spawn_cube(unreal, "Seoul subway entrance canopy", (-1450, 1650, 180), (3.4, 1.4, 1.2), mats["glass"])
         spawn_cube(unreal, "Seoul blue-green overhead wayfinding", (0, -1180, 520), (4.8, 0.10, 0.55), mats["green"])
@@ -347,7 +433,16 @@ def spawn_vehicle(
     accent_mat: Any | None = None,
     roof_sign: bool = False,
     emergency: bool = False,
+    assets: dict[str, Any] | None = None,
 ) -> None:
+    if assets and spawn_static_mesh_asset(unreal, f"{name} imported sedan mesh", assets.get("sedan"), location, (1, 1, 1), rotation=(0, 0, yaw)):
+        if roof_sign:
+            x0, y0, z0 = location
+            spawn_cube(unreal, f"{name} taxi roof sign", (x0, y0, z0 + 105), (0.28, 0.22, 0.08), mats["warm"], rotation=(0, 0, yaw))
+        if emergency:
+            x0, y0, z0 = location
+            spawn_cube(unreal, f"{name} emergency lightbar", (x0, y0, z0 + 108), (0.42, 0.12, 0.08), mats["accent"], rotation=(0, 0, yaw))
+        return
     x, y, z = location
     accent = accent_mat or mats["marking"]
     spawn_cube(unreal, f"{name} body shell", (x, y, z), (0.74, 1.55, 0.32), body_mat, rotation=(0, 0, yaw))
@@ -364,7 +459,9 @@ def spawn_vehicle(
         spawn_cube(unreal, f"{name} emergency lightbar", (x, y, z + 73), (0.42, 0.12, 0.08), mats["accent"], rotation=(0, 0, yaw))
 
 
-def spawn_bus(unreal: Any, name: str, location: tuple[float, float, float], yaw: float, mats: dict[str, Any], body_mat: Any) -> None:
+def spawn_bus(unreal: Any, name: str, location: tuple[float, float, float], yaw: float, mats: dict[str, Any], body_mat: Any, assets: dict[str, Any] | None = None) -> None:
+    if assets and spawn_static_mesh_asset(unreal, f"{name} imported bus mesh", assets.get("bus"), location, (1, 1, 1), rotation=(0, 0, yaw)):
+        return
     x, y, z = location
     spawn_cube(unreal, f"{name} long body", (x, y, z), (1.08, 3.35, 0.62), body_mat, rotation=(0, 0, yaw))
     spawn_cube(unreal, f"{name} black window ribbon", (x, y, z + 44), (0.92, 2.88, 0.22), mats["glass"], rotation=(0, 0, yaw))
@@ -444,7 +541,7 @@ def spawn_city_specific_details(unreal: Any, profile: dict[str, Any], mats: dict
         spawn_cube(unreal, f"{display} CCTV timestamp glyph {i}", (-1620 + i * 45, -1286, 270), (0.13, 0.02, 0.045), mats["marking"])
 
 
-def spawn_traffic(unreal: Any, profile: dict[str, Any], mats: dict[str, Any]) -> None:
+def spawn_traffic(unreal: Any, profile: dict[str, Any], mats: dict[str, Any], assets: dict[str, Any] | None = None) -> None:
     city_id = profile["id"]
     vehicle_count = min(28, profile["traffic"].get("vehicle_placeholders", 24))
     traffic_side = profile.get("traffic_side", "right")
@@ -458,10 +555,10 @@ def spawn_traffic(unreal: Any, profile: dict[str, Any], mats: dict[str, Any]) ->
         is_taxi = city_id == "new_york" and i % 4 == 0
         is_service = i in {3, 17}
         body = mats["warm"] if is_taxi else (mats["accent"] if is_service else mats["facade"] if i % 3 == 0 else mats["glass"])
-        spawn_vehicle(unreal, f"CCTV tracked vehicle {i}", (x, y, 92), rot, mats, body, mats["accent"], roof_sign=is_taxi, emergency=is_service)
+        spawn_vehicle(unreal, f"CCTV tracked vehicle {i}", (x, y, 92), rot, mats, body, mats["accent"], roof_sign=is_taxi, emergency=is_service, assets=assets)
     for i in range(profile["traffic"].get("bus_placeholders", 2)):
         bus_mat = mats["warm"] if city_id in {"seoul", "london"} else mats["accent"]
-        spawn_bus(unreal, f"City transit bus {i}", (-560 + i * 900, 1040 + i * 180, 128), 90, mats, bus_mat)
+        spawn_bus(unreal, f"City transit bus {i}", (-560 + i * 900, 1040 + i * 180, 128), 90, mats, bus_mat, assets=assets)
     for i in range(min(24, profile["traffic"].get("pedestrian_placeholders", 16))):
         angle = i * (math.tau / 24)
         x = math.cos(angle) * 1140
@@ -497,8 +594,11 @@ def set_component_property(component: Any | None, name: str, value: Any) -> None
         pass
 
 
-def spawn_cctv_rig(unreal: Any, profile: dict[str, Any], mats: dict[str, Any], cam_loc: tuple[float, float, float]) -> None:
+def spawn_cctv_rig(unreal: Any, profile: dict[str, Any], mats: dict[str, Any], cam_loc: tuple[float, float, float], assets: dict[str, Any] | None = None) -> None:
+    assets = assets or {}
     city = profile["display_name"]
+    if spawn_static_mesh_asset(unreal, f"{city} imported CCTV rig mesh", assets.get("cctv"), (cam_loc[0] - 135, cam_loc[1] - 95, 20), (1, 1, 1), rotation=(0, 0, 35)):
+        return
     pole_x, pole_y = cam_loc[0] - 135, cam_loc[1] - 95
     pole_height = max(700, cam_loc[2] - 120)
     spawn_cube(unreal, f"{city} CCTV pole", (pole_x, pole_y, pole_height / 2), (0.13, 0.13, pole_height / 100), mats["dark"])
@@ -510,7 +610,7 @@ def spawn_cctv_rig(unreal: Any, profile: dict[str, Any], mats: dict[str, Any], c
     spawn_cube(unreal, f"{city} CCTV foreground bracket silhouette", (cam_loc[0] - 185, cam_loc[1] + 80, cam_loc[2] - 90), (0.08, 1.45, 0.08), mats["dark"], rotation=(0, 0, 35))
 
 
-def spawn_lighting_and_camera(unreal: Any, profile: dict[str, Any]) -> None:
+def spawn_lighting_and_camera(unreal: Any, profile: dict[str, Any], assets: dict[str, Any] | None = None) -> None:
     city_id = profile["id"]
     cam_data = profile["camera"]
     mats = make_materials(unreal, city_id)
@@ -523,7 +623,7 @@ def spawn_lighting_and_camera(unreal: Any, profile: dict[str, Any]) -> None:
     cine.current_focal_length = cctv_focal_length(city_id, cam_data["focal_length_mm"])
     set_component_property(cine, "current_aperture", 8.0)
 
-    spawn_cctv_rig(unreal, profile, mats, cam_loc)
+    spawn_cctv_rig(unreal, profile, mats, cam_loc, assets=assets)
 
     sun = unreal.EditorLevelLibrary.spawn_actor_from_class(unreal.DirectionalLight, unreal.Vector(-2400, -1800, 7000))
     sun.set_actor_label(f"{profile['display_name']} movable sun / sky key")
@@ -547,6 +647,7 @@ def spawn_lighting_and_camera(unreal: Any, profile: dict[str, Any]) -> None:
         (0, -2400, 760), (0, 2400, 760), (-2400, 0, 760), (2400, 0, 760),
     ]
     for index, position in enumerate(light_positions):
+        spawn_static_mesh_asset(unreal, f"{profile['display_name']} imported street light mesh {index}", (assets or {}).get("street_light"), (position[0], position[1], 20), (1, 1, 1))
         point = unreal.EditorLevelLibrary.spawn_actor_from_class(unreal.PointLight, unreal.Vector(*position))
         point.set_actor_label(f"{profile['display_name']} street light {index}")
         point_component = light_component_from_actor(unreal, point, "PointLightComponent", ["point_light_component"])
@@ -569,16 +670,17 @@ def spawn_city(unreal: Any, profile: dict[str, Any]) -> None:
         raise RuntimeError(f"Failed to create level {map_asset}")
 
     mats = make_materials(unreal, profile["id"])
+    assets = import_photoreal_kit(unreal)
     lanes = profile["intersection"]["lanes_per_direction"]
     lane_width = profile["intersection"]["lane_width_cm"]
     road_width = lanes * lane_width * 2 + profile["intersection"].get("median_width_cm", 0)
 
     spawn_roads(unreal, profile, mats, road_width)
     spawn_buildings(unreal, profile, mats)
-    spawn_signals_and_street_furniture(unreal, profile, mats)
+    spawn_signals_and_street_furniture(unreal, profile, mats, assets=assets)
     spawn_city_specific_details(unreal, profile, mats, road_width)
-    spawn_traffic(unreal, profile, mats)
-    spawn_lighting_and_camera(unreal, profile)
+    spawn_traffic(unreal, profile, mats, assets=assets)
+    spawn_lighting_and_camera(unreal, profile, assets=assets)
 
     if hasattr(unreal, "EditorLoadingAndSavingUtils"):
         saved = unreal.EditorLoadingAndSavingUtils.save_current_level()
