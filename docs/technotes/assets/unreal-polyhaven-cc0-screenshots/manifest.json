@@ -1,0 +1,45 @@
+{
+  "generated_at": "2026-06-12T12:05:00+0900",
+  "screenshots": [
+    {
+      "city": "seoul",
+      "file": "docs/technotes/assets/unreal-polyhaven-cc0-screenshots/unreal-seoul-polyhaven-cc0.png",
+      "bytes": 1882183,
+      "size": [
+        1721,
+        927
+      ],
+      "stddev": 86.95
+    },
+    {
+      "city": "new_york",
+      "file": "docs/technotes/assets/unreal-polyhaven-cc0-screenshots/unreal-new_york-polyhaven-cc0.png",
+      "bytes": 1962068,
+      "size": [
+        1721,
+        927
+      ],
+      "stddev": 86.31
+    },
+    {
+      "city": "paris",
+      "file": "docs/technotes/assets/unreal-polyhaven-cc0-screenshots/unreal-paris-polyhaven-cc0.png",
+      "bytes": 1821457,
+      "size": [
+        1721,
+        927
+      ],
+      "stddev": 88.44
+    },
+    {
+      "city": "london",
+      "file": "docs/technotes/assets/unreal-polyhaven-cc0-screenshots/unreal-london-polyhaven-cc0.png",
+      "bytes": 2008450,
+      "size": [
+        1721,
+        927
+      ],
+      "stddev": 85.85
+    }
+  ]
+}

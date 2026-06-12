@@ -479,6 +479,97 @@ def spawn_commercial_fidelity_pass(unreal: Any, profile: dict[str, Any], mats: d
         spawn_cube(unreal, f"{display} commercial micro litter pavement fleck {idx}", (x, y, 70), (0.08, 0.035, 0.006), mats["marking"] if idx % 3 else mats["warm"], rotation=(0, 0, (idx * 17) % 180))
 
 
+
+POLYHAVEN_CC0_MODEL_KIT = {
+    "road_barrier": ("concrete_road_barrier", "concrete_road_barrier_1k"),
+    "fire_hydrant": ("fire_hydrant", "fire_hydrant_1k"),
+    "street_lamp": ("street_lamp_01", "street_lamp_01_1k"),
+    "trash_can": ("metal_trash_can", "metal_trash_can_1k"),
+    "manhole_cover": ("water_manhole_cover", "water_manhole_cover_1k"),
+    "street_seating": ("modular_street_seating", "modular_street_seating_1k"),
+}
+
+
+def polyhaven_cc0_source_dir() -> Path:
+    return Path(__file__).resolve().parents[2] / "SourceAssets" / "ExternalLicensedKit" / "PolyHavenCC0"
+
+
+def polyhaven_model_asset_path(asset_id: str, asset_name: str) -> str:
+    return f"/Game/ExternalLicensedKit/PolyHavenCC0/Models/{asset_id}/{asset_name}.{asset_name}"
+
+
+def import_polyhaven_cc0_models(unreal: Any) -> dict[str, Any]:
+    """Import audited Poly Haven CC0 FBX models downloaded into SourceAssets.
+
+    The source manifest lives beside the files and records CC0 source URLs/checksums.
+    """
+    imported: dict[str, Any] = {}
+    tasks = []
+    source_root = polyhaven_cc0_source_dir()
+    for key, (asset_id, asset_name) in POLYHAVEN_CC0_MODEL_KIT.items():
+        package = f"/Game/ExternalLicensedKit/PolyHavenCC0/Models/{asset_id}"
+        unreal.EditorAssetLibrary.make_directory(package)
+        fbx = source_root / "Models" / asset_id / f"{asset_name}.fbx"
+        if not fbx.exists():
+            unreal.log_warning(f"Missing Poly Haven CC0 FBX {fbx}")
+            continue
+        task = unreal.AssetImportTask()
+        task.filename = str(fbx)
+        task.destination_path = package
+        task.automated = True
+        task.replace_existing = True
+        task.save = True
+        try:
+            options = unreal.FbxImportUI()
+            options.import_mesh = True
+            options.import_materials = True
+            options.import_textures = True
+            options.import_as_skeletal = False
+            if hasattr(options, "static_mesh_import_data") and options.static_mesh_import_data:
+                options.static_mesh_import_data.combine_meshes = True
+            task.options = options
+        except Exception as exc:
+            unreal.log_warning(f"Could not configure Poly Haven FBX import options for {fbx}: {exc}")
+        tasks.append(task)
+    if tasks:
+        unreal.AssetToolsHelpers.get_asset_tools().import_asset_tasks(tasks)
+    for key, (asset_id, asset_name) in POLYHAVEN_CC0_MODEL_KIT.items():
+        asset = unreal.EditorAssetLibrary.load_asset(polyhaven_model_asset_path(asset_id, asset_name))
+        if asset:
+            imported[key] = asset
+        else:
+            unreal.log_warning(f"Poly Haven CC0 asset failed to load: {asset_id}/{asset_name}")
+    return imported
+
+
+def spawn_polyhaven_cc0_city_pass(unreal: Any, profile: dict[str, Any], mats: dict[str, Any], polyhaven: dict[str, Any], road_width: float) -> None:
+    """Place real downloaded CC0 city assets into each generated scene."""
+    display = profile["display_name"]
+    # Traffic barriers: add road-work/incident context in camera-visible corners.
+    for idx, (x, y, yaw) in enumerate([(-1440, -1180, 8), (-1000, -1220, 4), (1040, 1260, 184), (1480, 1240, 178)]):
+        if not spawn_static_mesh_asset(unreal, f"{display} PolyHaven CC0 concrete road barrier {idx}", polyhaven.get("road_barrier"), (x, y, 68), (1.0, 1.0, 1.0), rotation=(0, 0, yaw)):
+            spawn_cube(unreal, f"{display} fallback concrete road barrier {idx}", (x, y, 92), (1.4, 0.32, 0.56), mats["sidewalk"], rotation=(0, 0, yaw))
+
+    # Utility/street props: actual downloaded meshes where available.
+    for idx, (x, y, yaw) in enumerate([(-1560, 1340, 12), (1540, -1360, -170), (1320, 1520, 180), (-1320, -1500, 0)]):
+        if not spawn_static_mesh_asset(unreal, f"{display} PolyHaven CC0 street lamp {idx}", polyhaven.get("street_lamp"), (x, y, 44), (1.0, 1.0, 1.0), rotation=(0, 0, yaw)):
+            spawn_cube(unreal, f"{display} fallback licensed street lamp {idx}", (x, y, 260), (0.12, 0.12, 5.2), mats["dark"])
+    for idx, (x, y) in enumerate([(-1240, 1120), (1160, -1160), (1680, 980)]):
+        if not spawn_static_mesh_asset(unreal, f"{display} PolyHaven CC0 fire hydrant {idx}", polyhaven.get("fire_hydrant"), (x, y, 48), (1.0, 1.0, 1.0), rotation=(0, 0, 20 * idx)):
+            spawn_cube(unreal, f"{display} fallback fire hydrant {idx}", (x, y, 96), (0.24, 0.24, 0.88), mats["warm"])
+    for idx, (x, y, yaw) in enumerate([(-1520, 1580, 90), (1480, -1580, -90), (-880, -1680, 0), (880, 1680, 180)]):
+        if not spawn_static_mesh_asset(unreal, f"{display} PolyHaven CC0 modular street seating {idx}", polyhaven.get("street_seating"), (x, y, 46), (1.0, 1.0, 1.0), rotation=(0, 0, yaw)):
+            spawn_cube(unreal, f"{display} fallback street seating {idx}", (x, y, 78), (1.2, 0.36, 0.26), mats["sidewalk"], rotation=(0, 0, yaw))
+    for idx, (x, y) in enumerate([(-1650, -980), (1620, 920), (-420, 1640), (520, -1640)]):
+        if not spawn_static_mesh_asset(unreal, f"{display} PolyHaven CC0 metal trash can {idx}", polyhaven.get("trash_can"), (x, y, 42), (1.0, 1.0, 1.0), rotation=(0, 0, idx * 31)):
+            spawn_cube(unreal, f"{display} fallback metal trash can {idx}", (x, y, 84), (0.32, 0.32, 0.72), mats["dark"])
+
+    # Replace key procedural manholes with downloaded CC0 manhole covers.
+    for idx, (x, y) in enumerate([(-640, -440), (690, 580), (-980, 820), (1120, -780), (240, -1160), (-220, 1110)]):
+        if not spawn_static_mesh_asset(unreal, f"{display} PolyHaven CC0 water manhole cover {idx}", polyhaven.get("manhole_cover"), (x, y, 64), (1.0, 1.0, 1.0), rotation=(0, 0, idx * 23)):
+            spawn_cube(unreal, f"{display} fallback licensed manhole cover {idx}", (x, y, 66), (0.58, 0.58, 0.018), mats["dark"])
+
+
 def spawn_roads(unreal: Any, profile: dict[str, Any], mats: dict[str, Any], road_width: float) -> None:
     asphalt, marking, sidewalk, accent = mats["asphalt"], mats["marking"], mats["sidewalk"], mats["accent"]
     city_id = profile["id"]
@@ -1016,6 +1107,7 @@ def spawn_city(unreal: Any, profile: dict[str, Any]) -> None:
     mats = make_materials(unreal, profile["id"])
     assets = import_photoreal_kit(unreal)
     commercial = import_commercial_photoreal_kit(unreal)
+    polyhaven = import_polyhaven_cc0_models(unreal)
     lanes = profile["intersection"]["lanes_per_direction"]
     lane_width = profile["intersection"]["lane_width_cm"]
     road_width = lanes * lane_width * 2 + profile["intersection"].get("median_width_cm", 0)
@@ -1023,6 +1115,7 @@ def spawn_city(unreal: Any, profile: dict[str, Any]) -> None:
     spawn_roads(unreal, profile, mats, road_width)
     spawn_cinematic_road_dressing(unreal, profile, assets)
     spawn_commercial_fidelity_pass(unreal, profile, mats, commercial, road_width)
+    spawn_polyhaven_cc0_city_pass(unreal, profile, mats, polyhaven, road_width)
     spawn_buildings(unreal, profile, mats)
     spawn_signals_and_street_furniture(unreal, profile, mats, assets=assets)
     spawn_city_specific_details(unreal, profile, mats, road_width)
