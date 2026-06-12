@@ -11,7 +11,8 @@ public class SmartIntersectionRuntime : ModuleRules
             {
                 "Core",
                 "CoreUObject",
-                "Engine"
+                "Engine",
+                "Json"
             }
         );
     }

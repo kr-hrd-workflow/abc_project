@@ -55,6 +55,24 @@ public:
     UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Simulation|Snapshot")
     float LastSnapshotWorldSeconds = 0.0f;
 
+    UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Simulation|Snapshot")
+    FString ActiveSignalGroup = TEXT("unknown");
+
+    UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Simulation|Snapshot")
+    float CycleSecond = 0.0f;
+
+    UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Simulation|Snapshot")
+    TMap<FString, int32> DirectionalQueues;
+
+    UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Simulation|Snapshot")
+    bool bEmergencyVehicleApproaching = false;
+
+    UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Simulation|Snapshot")
+    FString EmergencyVehicleDirection = TEXT("none");
+
+    UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Simulation|Snapshot")
+    bool bLastSnapshotParsed = false;
+
     UFUNCTION(BlueprintCallable, Category = "Simulation|Profile")
     void SetCityProfileId(const FString& InCityProfileId);
 

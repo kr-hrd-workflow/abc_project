@@ -569,33 +569,85 @@ def spawn_polyhaven_cc0_city_pass(unreal: Any, profile: dict[str, Any], mats: di
         if not spawn_static_mesh_asset(unreal, f"{display} PolyHaven CC0 water manhole cover {idx}", polyhaven.get("manhole_cover"), (x, y, 64), (1.0, 1.0, 1.0), rotation=(0, 0, idx * 23)):
             spawn_cube(unreal, f"{display} fallback licensed manhole cover {idx}", (x, y, 66), (0.58, 0.58, 0.018), mats["dark"])
 
-    # Camera-facing proof strip: the wide CCTV proof shot made normal-scale CC0
-    # props look unchanged. Keep this cluster in-world, on the near curb/shoulder,
-    # so screenshots unmistakably show the downloaded licensed assets.
-    foreground_y = -520
-    foreground = [
-        ("road_barrier", "concrete road barrier foreground proof", (-760, foreground_y, 92), (7.0, 7.0, 7.0), 8),
-        ("fire_hydrant", "fire hydrant foreground proof", (-420, foreground_y - 30, 92), (8.0, 8.0, 8.0), -12),
-        ("trash_can", "metal trash can foreground proof", (-90, foreground_y - 5, 92), (7.5, 7.5, 7.5), 18),
-        ("street_seating", "modular street seating foreground proof", (300, foreground_y, 92), (4.8, 4.8, 4.8), 90),
-        ("manhole_cover", "water manhole cover foreground proof", (680, foreground_y + 15, 78), (10.0, 10.0, 10.0), 14),
-        ("street_lamp", "street lamp foreground proof", (1040, foreground_y + 30, 76), (4.0, 4.0, 4.0), 0),
-    ]
-    for key, label, loc, scale, yaw in foreground:
-        if not spawn_static_mesh_asset(unreal, f"{display} PolyHaven CC0 VISIBLE {label}", polyhaven.get(key), loc, scale, rotation=(0, 0, yaw)):
-            spawn_cube(unreal, f"{display} fallback PolyHaven CC0 VISIBLE {label}", loc, (0.8, 0.8, 0.8), mats["warm"], rotation=(0, 0, yaw))
 
-    # Small color-coded curb plinths make the foreground asset strip read at a
-    # glance without pretending the plinths are downloaded assets.
-    for idx, x in enumerate([-760, -420, -90, 300, 680, 1040]):
+
+def spawn_clean_operator_view_layout(unreal: Any, profile: dict[str, Any], mats: dict[str, Any], road_width: float) -> None:
+    """Add a production operator-view layout layer without debug proof props."""
+    display = profile["display_name"]
+    city_id = profile["id"]
+    lane_width = profile["intersection"]["lane_width_cm"]
+    median_width = profile["intersection"].get("median_width_cm", 0)
+    half_road = road_width / 2
+    shoulder = half_road + 210
+
+    # Semantic scene marker: small control-room plaque outside the roadway.
+    spawn_cube(
+        unreal,
+        f"{display} CleanOperatorRenderer production viewport marker",
+        (-1880, 1820, 128),
+        (1.25, 0.07, 0.34),
+        mats["green"],
+        rotation=(0, 0, 42),
+    )
+
+    # Medians and turn pockets establish real traffic geometry instead of a flat cross.
+    if median_width > 0:
+        median_scale = max(0.18, median_width / 100)
+        spawn_cube(unreal, f"{display} CleanOperatorRenderer north median island", (0, 2140, 54), (median_scale, 19.0, 0.18), mats["sidewalk"])
+        spawn_cube(unreal, f"{display} CleanOperatorRenderer south median island", (0, -2140, 54), (median_scale, 19.0, 0.18), mats["sidewalk"])
+        spawn_cube(unreal, f"{display} CleanOperatorRenderer east median island", (2140, 0, 55), (19.0, median_scale, 0.18), mats["sidewalk"])
+        spawn_cube(unreal, f"{display} CleanOperatorRenderer west median island", (-2140, 0, 55), (19.0, median_scale, 0.18), mats["sidewalk"])
+
+    # Directional queue zones mirror the FastAPI/SUMO snapshot fields.
+    queue_specs = [
+        ("north", -lane_width * 0.55, 1700, 0),
+        ("south", lane_width * 0.55, -1700, 180),
+        ("east", 1700, lane_width * 0.55, 90),
+        ("west", -1700, -lane_width * 0.55, -90),
+    ]
+    for direction, x, y, yaw in queue_specs:
         spawn_cube(
             unreal,
-            f"{display} CC0 asset foreground plinth {idx}",
-            (x, foreground_y + 105, 42),
-            (1.65, 0.16, 0.095),
-            mats["warm"] if idx % 2 == 0 else mats["green"],
-            rotation=(0, 0, 0),
+            f"{display} SignalQueueZone {direction} SUMO snapshot lane guide",
+            (x, y, 72),
+            (0.20, 4.2, 0.018) if abs(y) > abs(x) else (4.2, 0.20, 0.018),
+            mats["green"],
+            rotation=(0, 0, yaw),
         )
+        for slot in range(4):
+            offset = slot * 270
+            sx = x
+            sy = y + (offset if direction == "south" else -offset if direction == "north" else 0)
+            if direction == "east":
+                sx = x - offset
+            elif direction == "west":
+                sx = x + offset
+            spawn_cube(
+                unreal,
+                f"{display} CleanOperatorRenderer {direction} vehicle queue slot {slot}",
+                (sx, sy, 76),
+                (0.10, 0.72, 0.022) if direction in {"north", "south"} else (0.72, 0.10, 0.022),
+                mats["marking"],
+                rotation=(0, 0, yaw),
+            )
+
+    # Curb protection and controller cabinets placed to the side, not in front of camera.
+    for idx, (x, y, yaw) in enumerate([
+        (-shoulder, -shoulder, 45), (shoulder, -shoulder, -45),
+        (-shoulder, shoulder, 135), (shoulder, shoulder, -135),
+    ]):
+        spawn_cube(unreal, f"{display} CleanOperatorRenderer rounded curb island {idx}", (x, y, 66), (1.45, 0.62, 0.20), mats["sidewalk"], rotation=(0, 0, yaw))
+        spawn_cube(unreal, f"{display} CleanOperatorRenderer signal controller cabinet {idx}", (x * 0.92, y * 0.92, 126), (0.42, 0.30, 0.82), mats["green"] if idx % 2 else mats["dark"], rotation=(0, 0, yaw))
+
+    # City-specific small-scale context, kept outside the primary driving lanes.
+    if city_id == "seoul":
+        spawn_cube(unreal, f"{display} CleanOperatorRenderer bus priority sensor gantry", (0, -shoulder - 320, 520), (4.8, 0.09, 0.20), mats["green"])
+    elif city_id == "new_york":
+        spawn_cube(unreal, f"{display} CleanOperatorRenderer protected bike buffer bollard line", (shoulder + 120, 0, 78), (0.12, 26.0, 0.12), mats["green"])
+    elif city_id == "paris":
+        spawn_cube(unreal, f"{display} CleanOperatorRenderer boulevard refuge island", (0, shoulder + 120, 68), (5.2, 0.52, 0.18), mats["sidewalk"])
+    elif city_id == "london":
+        spawn_cube(unreal, f"{display} CleanOperatorRenderer yellow box camera calibration bar", (0, 0, 74), (6.8, 0.06, 0.018), mats["accent"], rotation=(0, 0, 45))
 
 
 def spawn_roads(unreal: Any, profile: dict[str, Any], mats: dict[str, Any], road_width: float) -> None:
@@ -749,7 +801,7 @@ def spawn_vehicle(
     emergency: bool = False,
     assets: dict[str, Any] | None = None,
 ) -> None:
-    if assets and spawn_static_mesh_asset(unreal, f"{name} imported sedan mesh", assets.get("sedan"), location, (1, 1, 1), rotation=(0, 0, yaw)):
+    if assets and spawn_static_mesh_asset(unreal, f"{name} imported sedan mesh", assets.get("sedan"), location, (0.42, 0.42, 0.42), rotation=(0, 0, yaw)):
         if roof_sign:
             x0, y0, z0 = location
             spawn_cube(unreal, f"{name} taxi roof sign", (x0, y0, z0 + 105), (0.28, 0.22, 0.08), mats["warm"], rotation=(0, 0, yaw))
@@ -774,7 +826,7 @@ def spawn_vehicle(
 
 
 def spawn_bus(unreal: Any, name: str, location: tuple[float, float, float], yaw: float, mats: dict[str, Any], body_mat: Any, assets: dict[str, Any] | None = None) -> None:
-    if assets and spawn_static_mesh_asset(unreal, f"{name} imported bus mesh", assets.get("bus"), location, (1, 1, 1), rotation=(0, 0, yaw)):
+    if assets and spawn_static_mesh_asset(unreal, f"{name} imported bus mesh", assets.get("bus"), location, (0.48, 0.48, 0.48), rotation=(0, 0, yaw)):
         return
     x, y, z = location
     spawn_cube(unreal, f"{name} long body", (x, y, z), (1.08, 3.35, 0.62), body_mat, rotation=(0, 0, yaw))
@@ -1049,7 +1101,7 @@ def spawn_lighting_and_camera(unreal: Any, profile: dict[str, Any], assets: dict
     cam_loc = cctv_camera_location(city_id, cam_data["location_cm"])
     target = tuple(cam_data.get("target_cm", (0, 0, 165)))
     camera = unreal.EditorLevelLibrary.spawn_actor_from_class(unreal.CineCameraActor, unreal.Vector(*cam_loc))
-    camera.set_actor_label(f"CCTV {profile['display_name']} Traffic Control View")
+    camera.set_actor_label(f"CCTV {profile['display_name']} CleanOperatorRenderer Traffic Control View")
     camera.set_actor_rotation(unreal.Rotator(*look_at_rotation_deg(cam_loc, target)), False)
     cine = camera.get_cine_camera_component()
     configure_cinematic_camera(unreal, cine, cctv_focal_length(city_id, cam_data["focal_length_mm"]))
@@ -1141,6 +1193,7 @@ def spawn_city(unreal: Any, profile: dict[str, Any]) -> None:
     road_width = lanes * lane_width * 2 + profile["intersection"].get("median_width_cm", 0)
 
     spawn_roads(unreal, profile, mats, road_width)
+    spawn_clean_operator_view_layout(unreal, profile, mats, road_width)
     spawn_cinematic_road_dressing(unreal, profile, assets)
     spawn_commercial_fidelity_pass(unreal, profile, mats, commercial, road_width)
     spawn_polyhaven_cc0_city_pass(unreal, profile, mats, polyhaven, road_width)

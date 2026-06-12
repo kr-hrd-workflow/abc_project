@@ -51,9 +51,24 @@ def check_source() -> None:
         if not path.exists():
             fail(f"missing source file: {path}")
     header = (UNREAL / "Source" / "SmartIntersectionRuntime" / "Public" / "TrafficSimulationController.h").read_text()
-    for token in ["ATrafficSimulationController", "ETrafficSimulationPhase", "FTrafficSignalTiming", "ApplySimulationSnapshotJson"]:
+    for token in [
+        "ATrafficSimulationController",
+        "ETrafficSimulationPhase",
+        "FTrafficSignalTiming",
+        "ApplySimulationSnapshotJson",
+        "ActiveSignalGroup",
+        "CycleSecond",
+        "DirectionalQueues",
+        "bEmergencyVehicleApproaching",
+        "EmergencyVehicleDirection",
+        "bLastSnapshotParsed",
+    ]:
         if token not in header:
             fail(f"controller header missing token: {token}")
+    implementation = (UNREAL / "Source" / "SmartIntersectionRuntime" / "Private" / "TrafficSimulationController.cpp").read_text()
+    for token in ["FJsonSerializer::Deserialize", "activeSignalGroup", "signal_phase", "cycleSecond", "cycle_second", "queues", "emergency_vehicle_approach", "emergency_priority"]:
+        if token not in implementation:
+            fail(f"controller implementation missing token: {token}")
     print("SOURCE_CHECK_PASS")
 
 
@@ -80,9 +95,12 @@ def check_maps() -> None:
         data = path.read_bytes()
         if len(data) < 500_000:
             fail(f"map too small: {path} {len(data)}")
-        for token in [b"/Game/PhotorealKit", b"PostProcess", b"Fog"]:
+        for token in [b"/Game/PhotorealKit", b"PostProcess", b"Fog", b"CleanOperatorRenderer", b"SignalQueueZone"]:
             if token not in data:
                 fail(f"map missing token {token!r}: {city}")
+        for token in [b"foreground proof", b"foreground plinth", b"PolyHaven CC0 VISIBLE"]:
+            if token in data:
+                fail(f"map still contains production proof-strip token {token!r}: {city}")
         if b"TrafficSimulationController" not in data and b"SmartIntersectionRuntime" not in data:
             fail(f"map missing runtime controller evidence: {city}")
         token_fragments = [(b"Security" + b"Token"), (b"PixelStreaming." + b"Security" + b"Token")]
