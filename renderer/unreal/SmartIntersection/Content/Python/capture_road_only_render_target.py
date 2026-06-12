@@ -69,10 +69,15 @@ def main() -> None:
         except Exception:
             pass
 
-    # Top-down, near-orthographic proof view. The previous oblique proof left most pixels black
-    # and was unreadable after Telegram/mobile compression.
-    origin = unreal.Vector(0, -80, 2300)
-    target = unreal.Vector(0, 0, 0)
+    proof_view = os.environ.get("SMART_INTERSECTION_PROOF_VIEW", "layout")
+    if proof_view == "oblique":
+        origin = unreal.Vector(-1150, -980, 680)
+        target = unreal.Vector(0, -80, 90)
+    else:
+        # Top-down, near-orthographic proof view. The previous oblique proof left most pixels black
+        # and was unreadable after Telegram/mobile compression.
+        origin = unreal.Vector(0, -80, 2300)
+        target = unreal.Vector(0, 0, 0)
     rotation = look_at_rotation(origin, target)
 
     capture = unreal.EditorLevelLibrary.spawn_actor_from_class(unreal.SceneCapture2D, origin, rotation)
@@ -100,11 +105,14 @@ def main() -> None:
         except Exception:
             pass
     comp.fov_angle = 55.0
-    try:
-        comp.projection_type = unreal.CameraProjectionMode.ORTHOGRAPHIC
-        comp.ortho_width = 1600.0
-    except Exception:
-        pass
+    if proof_view == "oblique":
+        comp.fov_angle = 46.0
+    else:
+        try:
+            comp.projection_type = unreal.CameraProjectionMode.ORTHOGRAPHIC
+            comp.ortho_width = 1600.0
+        except Exception:
+            pass
     comp.capture_scene()
 
     out_dir = str(output_path.parent)

@@ -30,6 +30,29 @@ MATERIAL_COLORS = {
     "signal": (0.02, 0.022, 0.024, 1.0),
     "red_signal": (0.75, 0.02, 0.02, 1.0),
     "green_signal": (0.02, 0.65, 0.16, 1.0),
+    "photoreal_asphalt": (0.21, 0.22, 0.21, 1.0),
+    "photoreal_curb": (0.66, 0.64, 0.57, 1.0),
+    "photoreal_bus_lane": (0.60, 0.08, 0.055, 1.0),
+    "photoreal_yellow_worn": (0.92, 0.68, 0.07, 1.0),
+    "photoreal_white_worn": (0.90, 0.88, 0.78, 1.0),
+    "photoreal_metal": (0.08, 0.08, 0.075, 1.0),
+    "photoreal_text_bus_lane": (0.90, 0.88, 0.78, 1.0),
+    "photoreal_text_look_left": (0.90, 0.88, 0.78, 1.0),
+    "photoreal_text_look_right": (0.90, 0.88, 0.78, 1.0),
+    "photoreal_text_keep_clear": (0.92, 0.68, 0.07, 1.0),
+}
+
+LONDON_TEXTURE_MATERIALS = {
+    "photoreal_asphalt": "/Game/PhotorealRoadKit/Textures/T_london_asphalt_albedo",
+    "photoreal_curb": "/Game/PhotorealRoadKit/Textures/T_london_curb_concrete",
+    "photoreal_bus_lane": "/Game/PhotorealRoadKit/Textures/T_london_red_bus_lane_worn",
+    "photoreal_yellow_worn": "/Game/PhotorealRoadKit/Textures/T_london_yellow_thermoplastic_worn",
+    "photoreal_white_worn": "/Game/PhotorealRoadKit/Textures/T_london_white_road_text_worn",
+    "photoreal_metal": "/Game/PhotorealRoadKit/Textures/T_london_drain_grate_metal",
+    "photoreal_text_bus_lane": "/Game/PhotorealRoadKit/Textures/T_london_text_bus_lane",
+    "photoreal_text_look_left": "/Game/PhotorealRoadKit/Textures/T_london_text_look_left",
+    "photoreal_text_look_right": "/Game/PhotorealRoadKit/Textures/T_london_text_look_right",
+    "photoreal_text_keep_clear": "/Game/PhotorealRoadKit/Textures/T_london_text_keep_clear",
 }
 
 
@@ -76,10 +99,39 @@ class RoadOnlyRenderer:
             print("UNREAL_UNAVAILABLE_MANIFEST_ONLY")
             return
         self._new_level()
+        self._import_photoreal_roadkit()
         self._create_materials()
         self._build_scene()
         self._save_level()
         print(f"ROAD_ONLY_UNREAL_GENERATED city={self.city} package={self.package_path}")
+
+    def _import_photoreal_roadkit(self) -> None:
+        if self.city != "london":
+            return
+        source_root = self.project_root / "SourceAssets" / "PhotorealRoadKit"
+        if not source_root.exists():
+            print(f"PHOTOREAL_ROADKIT_SOURCE_MISSING path={source_root}")
+            return
+        asset_tools = unreal.AssetToolsHelpers.get_asset_tools()
+        tasks = []
+        for src, dest in [
+            (source_root / "Textures", "/Game/PhotorealRoadKit/Textures"),
+            (source_root / "Meshes", "/Game/PhotorealRoadKit/Meshes"),
+        ]:
+            unreal.EditorAssetLibrary.make_directory(dest)
+            for file_path in sorted(src.glob("*")):
+                if file_path.suffix.lower() not in {".png", ".obj"}:
+                    continue
+                task = unreal.AssetImportTask()
+                task.filename = str(file_path)
+                task.destination_path = dest
+                task.automated = True
+                task.replace_existing = True
+                task.save = True
+                tasks.append(task)
+        if tasks:
+            asset_tools.import_asset_tasks(tasks)
+        print(f"PHOTOREAL_ROADKIT_IMPORTED city={self.city} tasks={len(tasks)}")
 
     def _new_level(self) -> None:
         if hasattr(unreal.EditorLevelLibrary, "new_level"):
@@ -119,6 +171,13 @@ class RoadOnlyRenderer:
                 self._set_material_color(mat, rgba)
                 unreal.EditorAssetLibrary.save_loaded_asset(mat)
             self.materials[name] = mat
+        if self.city == "london":
+            for name, texture_path in LONDON_TEXTURE_MATERIALS.items():
+                mat = self.materials.get(name)
+                texture = unreal.EditorAssetLibrary.load_asset(texture_path)
+                if mat is not None and texture is not None:
+                    self._set_material_texture(mat, texture)
+                    unreal.EditorAssetLibrary.save_loaded_asset(mat)
 
     def _set_material_color(self, mat, rgba) -> None:
         try:
@@ -134,6 +193,23 @@ class RoadOnlyRenderer:
         except Exception as exc:
             print(f"ROAD_ONLY_MATERIAL_COLOR_FALLBACK error={exc}")
 
+    def _set_material_texture(self, mat, texture) -> None:
+        try:
+            sample = unreal.MaterialEditingLibrary.create_material_expression(mat, unreal.MaterialExpressionTextureSample, -740, 0)
+            sample.texture = texture
+            unreal.MaterialEditingLibrary.connect_material_property(sample, "RGB", unreal.MaterialProperty.MP_BASE_COLOR)
+            if "T_london_text_" in texture.get_name():
+                try:
+                    mat.set_editor_property("blend_mode", unreal.BlendMode.BLEND_MASKED)
+                    mat.set_editor_property("two_sided", True)
+                    unreal.MaterialEditingLibrary.connect_material_property(sample, "A", unreal.MaterialProperty.MP_OPACITY_MASK)
+                except Exception as mask_exc:
+                    print(f"PHOTOREAL_TEXT_MASK_FALLBACK texture={texture.get_name()} error={mask_exc}")
+            if hasattr(unreal.MaterialEditingLibrary, "recompile_material"):
+                unreal.MaterialEditingLibrary.recompile_material(mat)
+        except Exception as exc:
+            print(f"PHOTOREAL_TEXTURE_MATERIAL_FALLBACK material={mat.get_name()} error={exc}")
+
     def _cube(self, label: str, loc, scale, material_name: str):
         actor = unreal.EditorLevelLibrary.spawn_actor_from_class(
             unreal.StaticMeshActor,
@@ -146,6 +222,43 @@ class RoadOnlyRenderer:
         comp = actor.get_component_by_class(unreal.StaticMeshComponent)
         if comp and mesh:
             comp.set_static_mesh(mesh)
+            mat = self.materials.get(material_name)
+            if mat:
+                comp.set_material(0, mat)
+        return actor
+
+    def _mesh_actor(self, label: str, asset_path: str, loc, scale, material_name: str = "photoreal_metal", rotation=(0, 0, 0)):
+        mesh = unreal.EditorAssetLibrary.load_asset(asset_path)
+        actor = unreal.EditorLevelLibrary.spawn_actor_from_class(
+            unreal.StaticMeshActor,
+            unreal.Vector(float(loc[0]), float(loc[1]), float(loc[2])),
+            unreal.Rotator(float(rotation[0]), float(rotation[1]), float(rotation[2])),
+        )
+        actor.set_actor_label(label)
+        actor.set_actor_scale3d(unreal.Vector(float(scale[0]), float(scale[1]), float(scale[2])))
+        comp = actor.get_component_by_class(unreal.StaticMeshComponent)
+        if comp and mesh:
+            comp.set_static_mesh(mesh)
+            mat = self.materials.get(material_name)
+            if mat:
+                comp.set_material(0, mat)
+        return actor
+
+    def _road_text(self, label: str, text: str, loc, size: float, rotation=(90, 0, 0), material_name: str = "photoreal_white_worn"):
+        actor = unreal.EditorLevelLibrary.spawn_actor_from_class(
+            unreal.TextRenderActor,
+            unreal.Vector(float(loc[0]), float(loc[1]), float(loc[2])),
+            unreal.Rotator(float(rotation[0]), float(rotation[1]), float(rotation[2])),
+        )
+        actor.set_actor_label(label)
+        comp = actor.get_component_by_class(unreal.TextRenderComponent)
+        if comp:
+            comp.set_text(text)
+            comp.set_editor_property("world_size", float(size))
+            try:
+                comp.set_editor_property("horizontal_alignment", unreal.HorizontalTextAligment.EHTA_CENTER)
+            except Exception:
+                pass
             mat = self.materials.get(material_name)
             if mat:
                 comp.set_material(0, mat)
@@ -200,6 +313,9 @@ class RoadOnlyRenderer:
             self._cube(f"RoadOnlyRenderer_{self.city}_signal_pole_placeholder_{idx}", (x, y, 165), (0.06, 0.06, 1.4), "signal")
             self._cube(f"RoadOnlyRenderer_{self.city}_signal_head_red_green_placeholder_{idx}", (x, y, 315), (0.28, 0.07, 0.16), "signal")
 
+        if self.city == "london":
+            self._build_london_photoreal_fidelity_layer()
+
         # Lighting/camera proof. Use movable lights so the editor viewport is visible without a baked-lighting pass.
         light = unreal.EditorLevelLibrary.spawn_actor_from_class(unreal.DirectionalLight, unreal.Vector(-800, -900, 1200), unreal.Rotator(-48, -35, 0))
         light.set_actor_label(f"RoadOnlyRenderer_{self.city}_daylight_controlled_exposure")
@@ -216,6 +332,41 @@ class RoadOnlyRenderer:
         camera = unreal.EditorLevelLibrary.spawn_actor_from_class(unreal.CineCameraActor, unreal.Vector(-1250, -1150, 900), unreal.Rotator(0, -28, 42))
         camera.set_actor_label(f"RoadOnlyRenderer_{self.city}_proof_camera")
         unreal.EditorLevelLibrary.set_level_viewport_camera_info(camera.get_actor_location(), camera.get_actor_rotation())
+
+    def _build_london_photoreal_fidelity_layer(self) -> None:
+        mesh_root = "/Game/PhotorealRoadKit/Meshes"
+        self._cube("PhotorealRoadKit_london_worn_asphalt_surface_texture_visible", (0, 0, 63), (17.6, 4.35, 0.018), "photoreal_asphalt")
+        self._cube("PhotorealRoadKit_london_cross_asphalt_patch_texture_visible", (0, 0, 67), (5.2, 15.2, 0.016), "photoreal_asphalt")
+        self._cube("PhotorealRoadKit_london_red_bus_lane_worn_surface_texture_visible", (0, -190, 72), (16.7, 0.58, 0.014), "photoreal_bus_lane")
+        self._cube("PhotorealRoadKit_london_advanced_cycle_box_green_surface_visible", (-250, -220, 77), (2.15, 1.15, 0.014), "bike_lane")
+        for i in range(-4, 5):
+            self._cube(f"PhotorealRoadKit_london_paint_edge_breakup_yellow_box_a_{i}", (i * 92, i * 58, 83), (0.07, 4.3, 0.014), "photoreal_yellow_worn")
+            self._cube(f"PhotorealRoadKit_london_paint_edge_breakup_yellow_box_b_{i}", (i * 92, -i * 58, 84), (0.07, 4.3, 0.014), "photoreal_yellow_worn")
+        for y in [-470, -440, 440, 470]:
+            self._mesh_actor(f"PhotorealRoadKit_london_double_yellow_curb_line_worn_{y}", f"{mesh_root}/paint_worn_strip", (0, y, 90), (7.4, 1.0, 1.0), "photoreal_yellow_worn")
+        for y in [-525, 525]:
+            for x in [-720, -360, 0, 360, 720]:
+                self._mesh_actor(f"PhotorealRoadKit_london_curb_profile_mesh_{x}_{y}", f"{mesh_root}/curb_beveled_module", (x, y, 92), (1.35, 1.0, 1.0), "photoreal_curb")
+        for idx, (x, y) in enumerate([(-520, -105), (310, 155), (650, -275), (-700, 260), (120, -365)]):
+            self._mesh_actor(f"PhotorealRoadKit_london_utility_cover_mesh_{idx}", f"{mesh_root}/utility_cover_round", (x, y, 98), (1.0, 1.0, 1.0), "photoreal_metal")
+        for idx, (x, y) in enumerate([(-790, -500), (790, 500), (-610, 420)]):
+            self._mesh_actor(f"PhotorealRoadKit_london_drain_grate_mesh_{idx}", f"{mesh_root}/drain_grate_rect", (x, y, 98), (1.0, 1.0, 1.0), "photoreal_metal")
+        for idx, (x, y) in enumerate([(-80, -70), (80, 70)]):
+            self._mesh_actor(f"PhotorealRoadKit_london_keep_left_bollard_mesh_{idx}", f"{mesh_root}/keep_left_bollard", (x, y, 125), (1.0, 1.0, 1.0), "photoreal_white_worn")
+        for idx, (x, y) in enumerate([(-820, -430), (820, -430), (-820, 430), (820, 430)]):
+            self._mesh_actor(f"PhotorealRoadKit_london_signal_pole_mesh_{idx}", f"{mesh_root}/signal_pole_slim", (x, y, 100), (1.0, 1.0, 1.0), "photoreal_metal")
+            self._mesh_actor(f"PhotorealRoadKit_london_uk_black_signal_head_mesh_{idx}", f"{mesh_root}/signal_head_uk_black", (x, y, 295), (1.15, 1.15, 1.15), "signal")
+        for idx, (x, y) in enumerate([(-720, 430), (-600, 430), (-720, -430), (-600, -430)]):
+            self._mesh_actor(f"PhotorealRoadKit_london_tactile_paving_tile_mesh_{idx}", f"{mesh_root}/tactile_paving_tile", (x, y, 100), (1.0, 1.0, 1.0), "tactile")
+        # London road text required by the prompt. Use texture-backed road planes for reliable capture.
+        self._cube("PhotorealRoadKit_london_road_text_BUS_LANE_texture_plane_visible", (-520, -190, 112), (2.2, 0.48, 0.012), "photoreal_text_bus_lane")
+        self._cube("PhotorealRoadKit_london_road_text_LOOK_LEFT_texture_plane_visible", (-515, -335, 114), (1.85, 0.44, 0.012), "photoreal_text_look_left")
+        self._cube("PhotorealRoadKit_london_road_text_LOOK_RIGHT_texture_plane_visible", (515, 335, 114), (2.05, 0.44, 0.012), "photoreal_text_look_right")
+        self._cube("PhotorealRoadKit_london_road_text_KEEP_CLEAR_texture_plane_visible", (0, 0, 116), (2.6, 0.58, 0.012), "photoreal_text_keep_clear")
+        self._road_text("PhotorealRoadKit_london_road_text_LOOK_LEFT_visible", "LOOK LEFT", (-515, -335, 124), 54, material_name="photoreal_white_worn")
+        self._road_text("PhotorealRoadKit_london_road_text_LOOK_RIGHT_visible", "LOOK RIGHT", (515, 335, 124), 54, material_name="photoreal_white_worn")
+        self._road_text("PhotorealRoadKit_london_road_text_BUS_LANE_visible", "BUS LANE", (-520, -190, 126), 62, material_name="photoreal_white_worn")
+        self._road_text("PhotorealRoadKit_london_road_text_KEEP_CLEAR_visible", "KEEP CLEAR", (0, 0, 126), 58, material_name="photoreal_yellow_worn")
 
 
 def main() -> None:

@@ -1,6 +1,8 @@
 param(
   [string]$Profile = 'london',
-  [string]$Output = ''
+  [string]$Output = '',
+  [ValidateSet('layout','oblique')]
+  [string]$View = 'layout'
 )
 $ErrorActionPreference = 'Stop'
 $RepoRoot = Resolve-Path (Join-Path $PSScriptRoot '..')
@@ -12,6 +14,7 @@ $PythonScript = Join-Path $RepoRoot 'renderer\unreal\SmartIntersection\Content\P
 $UnrealEditor = 'C:\Program Files\Epic Games\UE_5.7\Engine\Binaries\Win64\UnrealEditor.exe'
 if (-not (Test-Path $UnrealEditor)) { throw "UnrealEditor.exe not found: $UnrealEditor" }
 $env:SMART_INTERSECTION_CITY = $Profile
+$env:SMART_INTERSECTION_PROOF_VIEW = $View
 $env:SMART_INTERSECTION_PROOF_OUTPUT = $Output
 & $UnrealEditor $ProjectPath "-ExecutePythonScript=$PythonScript" -unattended -nop4 -nosplash
 exit $LASTEXITCODE
