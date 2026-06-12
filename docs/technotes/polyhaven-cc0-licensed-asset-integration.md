@@ -97,7 +97,11 @@ Generated map sizes after integration:
 
 Screenshot proof:
 
-- `docs/technotes/assets/unreal-polyhaven-cc0-screenshots/`
+- Initial proof set: `docs/technotes/assets/unreal-polyhaven-cc0-screenshots/unreal-*-polyhaven-cc0.png`
+- Corrected visible proof set: `docs/technotes/assets/unreal-polyhaven-cc0-screenshots/unreal-*-polyhaven-cc0-visible.png`
+- Corrected proof manifest: `docs/technotes/assets/unreal-polyhaven-cc0-screenshots/visible-asset-proof-manifest.json`
+
+The first proof set passed semantic map checks but looked too similar because the assets were normal-scale and hidden in the wide CCTV composition. The corrected set adds an in-world foreground proof strip with labels such as `PolyHaven CC0 VISIBLE ... foreground proof`. These screenshots are **renderer verification artifacts only** and are not landing-page imagery.
 
 ## Important note
 

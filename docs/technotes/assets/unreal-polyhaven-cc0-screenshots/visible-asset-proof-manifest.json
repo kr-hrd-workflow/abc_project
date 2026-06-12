@@ -1,0 +1,46 @@
+{
+  "generated_at": "2026-06-12T12:29:00+0900",
+  "note": "Corrected proof: CC0 assets moved into camera-visible foreground strip after initial screenshots looked unchanged. Not for landing page use.",
+  "screenshots": [
+    {
+      "city": "seoul",
+      "file": "docs/technotes/assets/unreal-polyhaven-cc0-screenshots/unreal-seoul-polyhaven-cc0-visible.png",
+      "bytes": 1873588,
+      "size": [
+        1721,
+        927
+      ],
+      "stddev": 87.1
+    },
+    {
+      "city": "new_york",
+      "file": "docs/technotes/assets/unreal-polyhaven-cc0-screenshots/unreal-new_york-polyhaven-cc0-visible.png",
+      "bytes": 1907893,
+      "size": [
+        1721,
+        927
+      ],
+      "stddev": 79.48
+    },
+    {
+      "city": "paris",
+      "file": "docs/technotes/assets/unreal-polyhaven-cc0-screenshots/unreal-paris-polyhaven-cc0-visible.png",
+      "bytes": 1859604,
+      "size": [
+        1721,
+        927
+      ],
+      "stddev": 87.44
+    },
+    {
+      "city": "london",
+      "file": "docs/technotes/assets/unreal-polyhaven-cc0-screenshots/unreal-london-polyhaven-cc0-visible.png",
+      "bytes": 2022074,
+      "size": [
+        1721,
+        927
+      ],
+      "stddev": 85.09
+    }
+  ]
+}

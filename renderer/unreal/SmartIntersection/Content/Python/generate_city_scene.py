@@ -569,6 +569,34 @@ def spawn_polyhaven_cc0_city_pass(unreal: Any, profile: dict[str, Any], mats: di
         if not spawn_static_mesh_asset(unreal, f"{display} PolyHaven CC0 water manhole cover {idx}", polyhaven.get("manhole_cover"), (x, y, 64), (1.0, 1.0, 1.0), rotation=(0, 0, idx * 23)):
             spawn_cube(unreal, f"{display} fallback licensed manhole cover {idx}", (x, y, 66), (0.58, 0.58, 0.018), mats["dark"])
 
+    # Camera-facing proof strip: the wide CCTV proof shot made normal-scale CC0
+    # props look unchanged. Keep this cluster in-world, on the near curb/shoulder,
+    # so screenshots unmistakably show the downloaded licensed assets.
+    foreground_y = -520
+    foreground = [
+        ("road_barrier", "concrete road barrier foreground proof", (-760, foreground_y, 92), (7.0, 7.0, 7.0), 8),
+        ("fire_hydrant", "fire hydrant foreground proof", (-420, foreground_y - 30, 92), (8.0, 8.0, 8.0), -12),
+        ("trash_can", "metal trash can foreground proof", (-90, foreground_y - 5, 92), (7.5, 7.5, 7.5), 18),
+        ("street_seating", "modular street seating foreground proof", (300, foreground_y, 92), (4.8, 4.8, 4.8), 90),
+        ("manhole_cover", "water manhole cover foreground proof", (680, foreground_y + 15, 78), (10.0, 10.0, 10.0), 14),
+        ("street_lamp", "street lamp foreground proof", (1040, foreground_y + 30, 76), (4.0, 4.0, 4.0), 0),
+    ]
+    for key, label, loc, scale, yaw in foreground:
+        if not spawn_static_mesh_asset(unreal, f"{display} PolyHaven CC0 VISIBLE {label}", polyhaven.get(key), loc, scale, rotation=(0, 0, yaw)):
+            spawn_cube(unreal, f"{display} fallback PolyHaven CC0 VISIBLE {label}", loc, (0.8, 0.8, 0.8), mats["warm"], rotation=(0, 0, yaw))
+
+    # Small color-coded curb plinths make the foreground asset strip read at a
+    # glance without pretending the plinths are downloaded assets.
+    for idx, x in enumerate([-760, -420, -90, 300, 680, 1040]):
+        spawn_cube(
+            unreal,
+            f"{display} CC0 asset foreground plinth {idx}",
+            (x, foreground_y + 105, 42),
+            (1.65, 0.16, 0.095),
+            mats["warm"] if idx % 2 == 0 else mats["green"],
+            rotation=(0, 0, 0),
+        )
+
 
 def spawn_roads(unreal: Any, profile: dict[str, Any], mats: dict[str, Any], road_width: float) -> None:
     asphalt, marking, sidewalk, accent = mats["asphalt"], mats["marking"], mats["sidewalk"], mats["accent"]

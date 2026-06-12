@@ -79,6 +79,10 @@ def check_maps() -> None:
             b"PolyHaven CC0 street lamp",
             b"PolyHaven CC0 fire hydrant",
             b"PolyHaven CC0 water manhole cover",
+            b"PolyHaven CC0 VISIBLE concrete road barrier foreground proof",
+            b"PolyHaven CC0 VISIBLE fire hydrant foreground proof",
+            b"PolyHaven CC0 VISIBLE modular street seating foreground proof",
+            b"CC0 asset foreground plinth",
         ]:
             if token not in data:
                 fail(f"map {city} missing token {token!r}")
