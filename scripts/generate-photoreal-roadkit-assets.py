@@ -205,6 +205,155 @@ def obj_rail_segment(path: Path) -> None:
         for face in faces: f.write('f '+' '.join(map(str,face))+'\n')
 
 
+def write_ascii_fbx_mesh(path: Path, name: str, vertices: list[tuple[float, float, float]], faces: list[tuple[int, ...]]) -> None:
+    """Write a simple ASCII FBX 7.4 mesh as a durable source-asset seam."""
+    coords = ",".join(f"{v:.6f}" for xyz in vertices for v in xyz)
+    polygon_indices = []
+    for face in faces:
+        if len(face) < 3:
+            continue
+        *head, tail = face
+        polygon_indices.extend(head)
+        polygon_indices.append(-tail - 1)
+    poly = ",".join(str(i) for i in polygon_indices)
+    normals = ",".join(["0","0","1"] * len(polygon_indices))
+    path.write_text(f"""; FBX 7.4.0 project-owned ASCII source generated for SmartIntersection
+FBXHeaderExtension:  {{
+    FBXHeaderVersion: 1003
+    FBXVersion: 7400
+    Creator: "SmartIntersection procedural FBX seam"
+}}
+GlobalSettings:  {{
+    Version: 1000
+    Properties70:  {{
+        P: "UpAxis", "int", "Integer", "",1
+        P: "UpAxisSign", "int", "Integer", "",1
+        P: "FrontAxis", "int", "Integer", "",2
+        P: "FrontAxisSign", "int", "Integer", "",1
+        P: "CoordAxis", "int", "Integer", "",0
+        P: "CoordAxisSign", "int", "Integer", "",1
+        P: "UnitScaleFactor", "double", "Number", "",1
+    }}
+}}
+Objects:  {{
+    Geometry: 1000, "Geometry::{name}", "Mesh" {{
+        Vertices: *{len(vertices)*3} {{ a: {coords} }}
+        PolygonVertexIndex: *{len(polygon_indices)} {{ a: {poly} }}
+        LayerElementNormal: 0 {{
+            Version: 101
+            Name: ""
+            MappingInformationType: "ByPolygonVertex"
+            ReferenceInformationType: "Direct"
+            Normals: *{len(polygon_indices)*3} {{ a: {normals} }}
+        }}
+        Layer: 0 {{
+            Version: 100
+            LayerElement: {{ Type: "LayerElementNormal" TypedIndex: 0 }}
+        }}
+    }}
+    Model: 2000, "Model::{name}", "Mesh" {{
+        Version: 232
+        Properties70:  {{
+            P: "Lcl Translation", "Lcl Translation", "", "A",0,0,0
+            P: "Lcl Rotation", "Lcl Rotation", "", "A",0,0,0
+            P: "Lcl Scaling", "Lcl Scaling", "", "A",1,1,1
+        }}
+        Shading: T
+        Culling: "CullingOff"
+    }}
+}}
+Connections:  {{
+    C: "OO",1000,2000
+}}
+""", encoding="utf-8")
+
+
+def box_mesh(cx: float, cy: float, cz: float, sx: float, sy: float, sz: float):
+    v = [(cx-sx,cy-sy,cz-sz),(cx+sx,cy-sy,cz-sz),(cx+sx,cy+sy,cz-sz),(cx-sx,cy+sy,cz-sz),
+         (cx-sx,cy-sy,cz+sz),(cx+sx,cy-sy,cz+sz),(cx+sx,cy+sy,cz+sz),(cx-sx,cy+sy,cz+sz)]
+    f = [(0,1,2,3),(4,7,6,5),(0,4,5,1),(1,5,6,2),(2,6,7,3),(3,7,4,0)]
+    return v, f
+
+
+def combine_meshes(parts):
+    vertices=[]; faces=[]
+    for v, f in parts:
+        offset=len(vertices)
+        vertices.extend(v)
+        faces.extend(tuple(i+offset for i in face) for face in f)
+    return vertices, faces
+
+
+def cylinder_mesh(cx: float, cy: float, cz: float, radius: float, height: float, segments: int = 32):
+    vertices=[]
+    for z in [cz, cz+height]:
+        for i in range(segments):
+            a=2*math.pi*i/segments
+            vertices.append((cx+math.cos(a)*radius, cy+math.sin(a)*radius, z))
+    faces=[]
+    for i in range(segments):
+        j=(i+1)%segments
+        faces.append((i,j,segments+j,segments+i))
+    faces.append(tuple(range(segments)))
+    faces.append(tuple(reversed(range(segments,segments*2))))
+    return vertices, faces
+
+
+def generate_high_quality_fbx_sources() -> None:
+    """Generate fallback FBX source replacements if Blender-authored binary FBX is absent.
+
+    The preferred path is `scripts/generate-high-fidelity-fbx-blender.py`, which exports
+    real binary FBX via Blender. This fallback never overwrites those larger authored FBX files.
+    """
+    preferred = [
+        MESH_DIR / "london_streetlight_high_fidelity.fbx",
+        MESH_DIR / "london_pedestrian_railing_high_fidelity.fbx",
+        MESH_DIR / "signal_head_uk_high_fidelity.fbx",
+        MESH_DIR / "cctv_camera_high_fidelity.fbx",
+        MESH_DIR / "london_shopfront_high_fidelity.fbx",
+        MESH_DIR / "london_window_strip_high_fidelity.fbx",
+    ]
+    if all(path.exists() and path.stat().st_size > 40_000 for path in preferred):
+        return
+    lamp_parts=[cylinder_mesh(0,0,0,4,300,40), cylinder_mesh(0,0,0,10,18,40)]
+    for i in range(6):
+        x=18+i*17; z=292 - i*3
+        lamp_parts.append(box_mesh(x,0,z,12,3.2,3.2))
+    lamp_parts.extend([box_mesh(124,0,270,26,12,8), box_mesh(124,0,260,20,8,3)])
+    write_ascii_fbx_mesh(MESH_DIR / "london_streetlight_high_fidelity.fbx", "london_streetlight_high_fidelity", *combine_meshes(lamp_parts))
+
+    rail_parts=[]
+    for x in [-110,-70,-30,10,50,90,130]:
+        rail_parts.append(cylinder_mesh(x,0,0,2.6,92,24))
+    for z in [38,72,94]:
+        rail_parts.append(box_mesh(10,0,z,138,2.8,2.8))
+    write_ascii_fbx_mesh(MESH_DIR / "london_pedestrian_railing_high_fidelity.fbx", "london_pedestrian_railing_high_fidelity", *combine_meshes(rail_parts))
+
+    sig_parts=[box_mesh(0,0,54,18,7,58), box_mesh(0,-9,94,15,13,8), box_mesh(0,-9,54,15,13,8), box_mesh(0,-9,14,15,13,8)]
+    for z in [94,54,14]:
+        sig_parts.append(cylinder_mesh(0,-16,z-6,7,12,32))
+        sig_parts.append(box_mesh(0,-25,z+2,14,12,3))
+    write_ascii_fbx_mesh(MESH_DIR / "signal_head_uk_high_fidelity.fbx", "signal_head_uk_high_fidelity", *combine_meshes(sig_parts))
+
+    cctv_parts=[box_mesh(0,0,0,30,12,10), box_mesh(34,0,0,7,7,7), box_mesh(-20,0,14,34,15,3), box_mesh(-35,0,-16,4,4,22), cylinder_mesh(-35,0,-38,3,45,24)]
+    write_ascii_fbx_mesh(MESH_DIR / "cctv_camera_high_fidelity.fbx", "cctv_camera_high_fidelity", *combine_meshes(cctv_parts))
+
+    facade_parts=[box_mesh(0,0,170,145,14,170), box_mesh(0,-18,44,132,8,42), box_mesh(-70,-26,44,5,8,42), box_mesh(0,-26,44,5,8,42), box_mesh(70,-26,44,5,8,42)]
+    for x in [-86,-43,0,43,86]:
+        facade_parts.append(box_mesh(x,-26,160,16,6,42))
+        facade_parts.append(box_mesh(x,-27,228,16,6,42))
+    for z in [96,294,338]:
+        facade_parts.append(box_mesh(0,-28,z,150,8,5))
+    write_ascii_fbx_mesh(MESH_DIR / "london_shopfront_high_fidelity.fbx", "london_shopfront_high_fidelity", *combine_meshes(facade_parts))
+
+    window_parts=[box_mesh(0,0,0,138,5,34)]
+    for x in [-96,-48,0,48,96]:
+        window_parts.append(box_mesh(x,-7,0,3,4,38))
+    for z in [-18,18]:
+        window_parts.append(box_mesh(0,-7,z,138,4,3))
+    write_ascii_fbx_mesh(MESH_DIR / "london_window_strip_high_fidelity.fbx", "london_window_strip_high_fidelity", *combine_meshes(window_parts))
+
+
 def install_cc0_texture_sources() -> None:
     """Prefer committed ambientCG CC0 sources when present.
 
@@ -269,6 +418,7 @@ def main() -> None:
     obj_rail_segment(MESH_DIR / "london_pedestrian_railing_proxy.obj")
     obj_box(MESH_DIR / "cctv_camera_box.obj", "cctv_camera_box", 26, 10, 10, 2)
     obj_box(MESH_DIR / "signal_visor_box.obj", "signal_visor_box", 18, 10, 5, 1)
+    generate_high_quality_fbx_sources()
     install_cc0_texture_sources()
     MANIFEST.write_text("""# PhotorealRoadKit procedural source assets\n\nProject-owned procedural source assets for the London SmartIntersection photoreal fidelity pass.\n\nThese are project-owned procedural source assets plus committed ambientCG CC0 texture maps for road asphalt and brick facade detail. They replace the pure cube/flat-color blockout with visible asphalt wear, worn markings, curb material variation, signal/pole proxies, utility covers, drains, bollards, tactile paving, and urban scene context.\n""", encoding="utf-8")
     print(f"PHOTOREAL_ROADKIT_SOURCE_WRITTEN {ASSET_ROOT}")

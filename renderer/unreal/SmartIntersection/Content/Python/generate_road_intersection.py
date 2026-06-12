@@ -2,6 +2,7 @@
 # Architecture: SUMO truth source; Python TraCI bridge streams state later; Unreal renders only.
 # Scope: no vehicles, no pedestrians, no gameplay, no UE-side traffic simulation.
 # Asset provenance: project procedural assets plus ambientCG CC0 sources under CC0AmbientCG; source refresh uses install_cc0_texture_sources.
+# High-fidelity mesh seam: generate_high_quality_fbx_sources emits FBX replacements for visible target props.
 from __future__ import annotations
 
 import json
@@ -116,6 +117,7 @@ class RoadOnlyRenderer:
             "markings": self.profile["markings"],
             "palette": self.profile["palette"],
             "unreal_map": self.package_path,
+            "high_fidelity_mesh_seam": "FBX source meshes under SourceAssets/PhotorealRoadKit/Meshes replace proxy OBJ props",
         }
 
     def write_manifest(self) -> Path:
@@ -128,6 +130,9 @@ class RoadOnlyRenderer:
             print("UNREAL_UNAVAILABLE_MANIFEST_ONLY")
             return
         self._new_level()
+        # Existing generated maps can retain actors when regenerated into the same package;
+        # clear explicitly so stale oversized proxy/FBX actors cannot survive a fidelity pass.
+        self._clear_level()
         self._import_photoreal_roadkit()
         self._create_materials()
         self._build_scene()
@@ -149,7 +154,7 @@ class RoadOnlyRenderer:
         ]:
             unreal.EditorAssetLibrary.make_directory(dest)
             for file_path in sorted(src.glob("*")):
-                if file_path.suffix.lower() not in {".png", ".jpg", ".jpeg", ".obj"}:
+                if file_path.suffix.lower() not in {".png", ".jpg", ".jpeg", ".obj", ".fbx"}:
                     continue
                 task = unreal.AssetImportTask()
                 task.filename = str(file_path)
@@ -157,6 +162,20 @@ class RoadOnlyRenderer:
                 task.automated = True
                 task.replace_existing = True
                 task.save = True
+                if file_path.suffix.lower() == ".fbx":
+                    try:
+                        options = unreal.FbxImportUI()
+                        options.import_mesh = True
+                        options.import_as_skeletal = False
+                        options.import_materials = False
+                        options.import_textures = False
+                        if hasattr(options, "static_mesh_import_data") and options.static_mesh_import_data:
+                            options.static_mesh_import_data.combine_meshes = True
+                            options.static_mesh_import_data.generate_lightmap_u_vs = True
+                            options.static_mesh_import_data.auto_generate_collision = True
+                        task.options = options
+                    except Exception as exc:
+                        print(f"PHOTOREAL_FBX_IMPORT_OPTIONS_FALLBACK file={file_path.name} error={exc}")
                 tasks.append(task)
         if tasks:
             asset_tools.import_asset_tasks(tasks)
@@ -351,7 +370,7 @@ class RoadOnlyRenderer:
         for idx, (x, y) in enumerate([(-420, -80), (260, 140), (650, -260), (-680, 240)]):
             self._cube(f"RoadOnlyRenderer_{self.city}_utility_cover_{idx}", (x, y, 58), (0.28, 0.28, 0.018), "metal")
         for idx, (x, y) in enumerate([(-820, -430), (820, -430), (-820, 430), (820, 430)]):
-            self._cube(f"RoadOnlyRenderer_{self.city}_signal_pole_placeholder_{idx}", (x, y, 165), (0.06, 0.06, 1.4), "signal")
+            self._cube(f"RoadOnlyRenderer_{self.city}_signal_pole_placeholder_{idx}", (x, y, 125), (0.06, 0.06, 1.4), "signal")
             self._cube(f"RoadOnlyRenderer_{self.city}_signal_head_red_green_placeholder_{idx}", (x, y, 315), (0.28, 0.07, 0.16), "signal")
 
         if self.city == "london":
@@ -392,14 +411,14 @@ class RoadOnlyRenderer:
             for x in [-720, -360, 0, 360, 720]:
                 self._mesh_actor(f"PhotorealRoadKit_london_curb_profile_mesh_{x}_{y}", f"{mesh_root}/curb_beveled_module", (x, y, 92), (1.35, 1.0, 1.0), "photoreal_curb")
         for idx, (x, y) in enumerate([(-520, -105), (310, 155), (650, -275), (-700, 260), (120, -365)]):
-            self._mesh_actor(f"PhotorealRoadKit_london_utility_cover_mesh_{idx}", f"{mesh_root}/utility_cover_round", (x, y, 98), (1.0, 1.0, 1.0), "photoreal_metal")
+            self._mesh_actor(f"PhotorealRoadKit_london_utility_cover_mesh_{idx}", f"{mesh_root}/utility_cover_round", (x, y, 98), (0.000022, 0.000022, 0.000022), "photoreal_metal")
         for idx, (x, y) in enumerate([(-790, -500), (790, 500), (-610, 420)]):
-            self._mesh_actor(f"PhotorealRoadKit_london_drain_grate_mesh_{idx}", f"{mesh_root}/drain_grate_rect", (x, y, 98), (1.0, 1.0, 1.0), "photoreal_metal")
+            self._mesh_actor(f"PhotorealRoadKit_london_drain_grate_mesh_{idx}", f"{mesh_root}/drain_grate_rect", (x, y, 98), (0.000022, 0.000022, 0.000022), "photoreal_metal")
         for idx, (x, y) in enumerate([(-80, -70), (80, 70)]):
             self._mesh_actor(f"PhotorealRoadKit_london_keep_left_bollard_mesh_{idx}", f"{mesh_root}/keep_left_bollard", (x, y, 125), (1.0, 1.0, 1.0), "photoreal_white_worn")
         for idx, (x, y) in enumerate([(-820, -430), (820, -430), (-820, 430), (820, 430)]):
-            self._mesh_actor(f"PhotorealRoadKit_london_signal_pole_mesh_{idx}", f"{mesh_root}/signal_pole_slim", (x, y, 100), (1.0, 1.0, 1.0), "photoreal_metal")
-            self._mesh_actor(f"PhotorealRoadKit_london_uk_black_signal_head_mesh_{idx}", f"{mesh_root}/signal_head_uk_black", (x, y, 295), (1.15, 1.15, 1.15), "signal")
+            self._mesh_actor(f"PhotorealRoadKit_london_signal_pole_mesh_{idx}", f"{mesh_root}/signal_pole_slim", (x, y, 100), (0.000022, 0.000022, 0.000022), "photoreal_metal")
+            self._mesh_actor(f"PhotorealRoadKit_london_uk_black_signal_head_mesh_{idx}", f"{mesh_root}/signal_head_uk_high_fidelity", (x, y, 295), (0.000022, 0.000022, 0.000022), "signal")
         for idx, (x, y) in enumerate([(-720, 430), (-600, 430), (-720, -430), (-600, -430)]):
             self._mesh_actor(f"PhotorealRoadKit_london_tactile_paving_tile_mesh_{idx}", f"{mesh_root}/tactile_paving_tile", (x, y, 100), (1.0, 1.0, 1.0), "tactile")
         # London road text required by the prompt. Use texture-backed road planes for reliable capture.
@@ -423,12 +442,12 @@ class RoadOnlyRenderer:
         # Mid/background London streetscape silhouettes: not gameplay, just renderer context.
         for idx, x in enumerate([-880, -520, -160, 240, 620, 980]):
             height = [2.8, 3.5, 2.9, 4.2, 3.2, 3.8][idx]
-            self._mesh_actor(f"PhotorealScene_london_brick_shopfront_left_{idx}", f"{mesh_root}/london_shopfront_module", (x, -760, 110), (1.0, 1.0, height), "photoreal_brick")
-            self._mesh_actor(f"PhotorealScene_london_window_strip_left_{idx}", f"{mesh_root}/london_window_strip", (x, -785, 285 + height * 25), (1.0, 1.0, 1.0), "photoreal_glass")
+            self._mesh_actor(f"PhotorealScene_london_brick_shopfront_left_{idx}", f"{mesh_root}/london_shopfront_high_fidelity", (x, -1120, 100), (0.000062, 0.000062, 0.000062 + height * 0.000005), "photoreal_brick")
+            self._mesh_actor(f"PhotorealScene_london_window_strip_left_{idx}", f"{mesh_root}/london_window_strip_high_fidelity", (x, -1145, 245 + height * 15), (0.000058, 0.000058, 0.000058), "photoreal_glass")
         for idx, x in enumerate([-760, -360, 80, 520, 900]):
             height = [3.1, 2.7, 3.9, 3.4, 2.9][idx]
-            self._mesh_actor(f"PhotorealScene_london_brick_shopfront_right_{idx}", f"{mesh_root}/london_shopfront_module", (x, 760, 110), (1.05, 1.0, height), "photoreal_brick")
-            self._mesh_actor(f"PhotorealScene_london_window_strip_right_{idx}", f"{mesh_root}/london_window_strip", (x, 785, 280 + height * 25), (1.0, 1.0, 1.0), "photoreal_glass")
+            self._mesh_actor(f"PhotorealScene_london_brick_shopfront_right_{idx}", f"{mesh_root}/london_shopfront_high_fidelity", (x, 1120, 100), (0.000062, 0.000062, 0.000062 + height * 0.000005), "photoreal_brick")
+            self._mesh_actor(f"PhotorealScene_london_window_strip_right_{idx}", f"{mesh_root}/london_window_strip_high_fidelity", (x, 1145, 245 + height * 15), (0.000058, 0.000058, 0.000058), "photoreal_glass")
         # Street furniture/readability props in camera frustum.
         for idx, (x, y) in enumerate([(-650, -535), (-250, -535), (220, 535), (680, 535)]):
             self._mesh_actor(f"PhotorealScene_london_bollard_curb_edge_{idx}", f"{mesh_root}/keep_left_bollard", (x, y, 130), (0.75, 0.75, 0.9), "photoreal_white_worn")
@@ -471,13 +490,13 @@ class RoadOnlyRenderer:
             self._cube(f"PhotorealScenePass2_london_curb_grime_decal_visible_{idx}", (x, y, 153 + idx), (sx, sy, 0.01), "photoreal_grime_overlay")
         # Vertical detail: lamps, railings, CCTV and signal visors break the toy-block silhouette.
         for idx, (x, y, rot) in enumerate([(-850,-555,0),(50,-555,0),(850,-555,0),(-650,555,180),(280,555,180),(940,555,180)]):
-            self._mesh_actor(f"PhotorealScenePass2_london_streetlight_proxy_{idx}", f"{mesh_root}/london_streetlight_proxy", (x, y, 108), (1.0, 1.0, 1.0), "photoreal_metal", rotation=(0,0,rot))
+            self._mesh_actor(f"PhotorealScenePass2_london_streetlight_proxy_{idx}", f"{mesh_root}/london_streetlight_high_fidelity", (x, y, 108), (0.000022, 0.000022, 0.000022), "photoreal_metal", rotation=(0,0,rot))
         for idx, (x, y) in enumerate([(-520,-575),(-250,-575),(40,-575),(330,-575),(620,-575),(-520,575),(-250,575),(40,575),(330,575),(620,575)]):
-            self._mesh_actor(f"PhotorealScenePass2_london_pedestrian_railing_{idx}", f"{mesh_root}/london_pedestrian_railing_proxy", (x, y, 107), (1.0, 1.0, 1.0), "photoreal_metal")
+            self._mesh_actor(f"PhotorealScenePass2_london_pedestrian_railing_{idx}", f"{mesh_root}/london_pedestrian_railing_high_fidelity", (x, y, 107), (0.000022, 0.000022, 0.000022), "photoreal_metal")
         for idx, (x, y, z) in enumerate([(-820,-430,420),(820,430,420)]):
-            self._mesh_actor(f"PhotorealScenePass2_london_cctv_camera_box_{idx}", f"{mesh_root}/cctv_camera_box", (x, y, z), (1.0, 1.0, 1.0), "photoreal_metal")
+            self._mesh_actor(f"PhotorealScenePass2_london_cctv_camera_box_{idx}", f"{mesh_root}/cctv_camera_high_fidelity", (x, y, z), (0.000022, 0.000022, 0.000022), "photoreal_metal")
         for idx, (x, y, z) in enumerate([(-820,-430,315),(820,-430,315),(-820,430,315),(820,430,315)]):
-            self._mesh_actor(f"PhotorealScenePass2_london_signal_visor_depth_{idx}", f"{mesh_root}/signal_visor_box", (x, y, z), (1.0, 1.0, 1.0), "signal")
+            self._mesh_actor(f"PhotorealScenePass2_london_signal_visor_depth_{idx}", f"{mesh_root}/signal_visor_box", (x, y, z), (0.000025, 0.000025, 0.000025), "signal")
         # Window highlights: small warm panels improve urban depth without adding vehicles/pedestrians.
         for idx, (x, y, z) in enumerate([(-880,-790,360),(-520,-790,410),(-160,-790,340),(240,-790,440),(620,-790,380),(-760,790,360),(-360,790,330),(80,790,420),(520,790,390)]):
             self._cube(f"PhotorealScenePass2_london_warm_window_highlight_{idx}", (x, y, z), (0.48, 0.018, 0.17), "photoreal_warm_window")
@@ -496,27 +515,27 @@ class RoadOnlyRenderer:
             self._cube(f"FinalTargetMatch_london_wet_reflection_streak_{idx}", (x, y, 181+idx), (sx, sy, 0.01), "target_wet_reflection")
         # Foreground corner railings, matching the reference's lower-left/lower-center black guard rails.
         for idx, (x, y, rot) in enumerate([(-840,-600,0),(-620,-600,0),(-400,-600,0),(140,-600,0),(360,-600,0),(580,-600,0),(-920,555,180),(-700,555,180),(600,555,180),(820,555,180)]):
-            self._mesh_actor(f"FinalTargetMatch_london_foreground_black_guard_railing_{idx}", f"{mesh_root}/london_pedestrian_railing_proxy", (x, y, 175), (1.05, 1.05, 1.1), "photoreal_metal", rotation=(0,0,rot))
+            self._mesh_actor(f"FinalTargetMatch_london_foreground_black_guard_railing_{idx}", f"{mesh_root}/london_pedestrian_railing_high_fidelity", (x, y, 175), (0.000022, 0.000022, 0.000024), "photoreal_metal", rotation=(0,0,rot))
         # Multiple black signal heads/poles in the same visual rhythm as the target image.
         for idx, (x, y, z) in enumerate([(-930,-450,350),(-520,-370,355),(-70,-285,360),(360,-250,360),(850,-220,355),(-760,370,355),(-250,430,360),(380,440,360),(870,410,355)]):
-            self._mesh_actor(f"FinalTargetMatch_london_black_signal_head_cluster_{idx}", f"{mesh_root}/signal_head_uk_black", (x, y, z), (1.35, 1.25, 1.25), "signal")
+            self._mesh_actor(f"FinalTargetMatch_london_black_signal_head_cluster_{idx}", f"{mesh_root}/signal_head_uk_high_fidelity", (x, y, z), (0.000025, 0.000025, 0.000025), "signal")
         for idx, (x, y) in enumerate([(-930,-450),(-520,-370),(-70,-285),(360,-250),(850,-220),(-760,370),(-250,430),(380,440),(870,410)]):
             self._mesh_actor(f"FinalTargetMatch_london_slim_signal_pole_cluster_{idx}", f"{mesh_root}/signal_pole_slim", (x, y, 170), (0.9,0.9,1.45), "photoreal_metal")
         # Stronger background: two staggered rows so the proof reads like a London canyon rather than isolated boxes.
-        for row, y in enumerate([-830, 830]):
+        for row, y in enumerate([-1180, 1180]):
             for idx, x in enumerate([-1050,-760,-470,-180,110,400,690,980]):
                 height = 3.8 + ((idx + row) % 3) * 0.55
                 mat = "photoreal_brick" if idx % 2 else "photoreal_sidewalk"
-                self._mesh_actor(f"FinalTargetMatch_london_continuous_facade_row{row}_{idx}", f"{mesh_root}/london_shopfront_module", (x, y, 165), (1.12,1.0,height), mat)
-                self._mesh_actor(f"FinalTargetMatch_london_repeated_window_band_row{row}_{idx}", f"{mesh_root}/london_window_strip", (x, y + (-25 if y < 0 else 25), 360 + height * 30), (1.05,1.0,1.2), "photoreal_glass")
+                self._mesh_actor(f"FinalTargetMatch_london_continuous_facade_row{row}_{idx}", f"{mesh_root}/london_shopfront_high_fidelity", (x, y, 125), (0.000062,0.000062,0.000062 + height * 0.000005), mat)
+                self._mesh_actor(f"FinalTargetMatch_london_repeated_window_band_row{row}_{idx}", f"{mesh_root}/london_window_strip_high_fidelity", (x, y + (-25 if y < 0 else 25), 270 + height * 18), (0.00006,0.00006,0.000065), "photoreal_glass")
         # Reference-like curb/sidewalk slabs in foreground.
         for idx, (x, y, sx, sy) in enumerate([(-720,-695,4.0,.9),(120,-695,3.8,.9),(820,-695,2.6,.9),(-760,680,3.6,.75),(420,680,4.4,.75)]):
             self._cube(f"FinalTargetMatch_london_foreground_wet_pavement_slab_{idx}", (x, y, 188+idx), (sx, sy, 0.025), "photoreal_sidewalk")
         # Camera-visible CCTV mast and streetlights, matching the reference's infrastructure emphasis.
         for idx, (x, y, rot) in enumerate([(-760,-560,12),(-180,-540,0),(520,-520,-8),(-460,560,180),(420,560,180)]):
-            self._mesh_actor(f"FinalTargetMatch_london_tall_streetlight_reference_{idx}", f"{mesh_root}/london_streetlight_proxy", (x, y, 190), (1.1,1.1,1.25), "photoreal_metal", rotation=(0,0,rot))
+            self._mesh_actor(f"FinalTargetMatch_london_tall_streetlight_reference_{idx}", f"{mesh_root}/london_streetlight_high_fidelity", (x, y, 190), (0.000024,0.000024,0.000028), "photoreal_metal", rotation=(0,0,rot))
         for idx, (x, y, z) in enumerate([(-520,-470,470),(480,430,470)]):
-            self._mesh_actor(f"FinalTargetMatch_london_visible_cctv_mast_camera_{idx}", f"{mesh_root}/cctv_camera_box", (x, y, z), (1.15,1.15,1.15), "photoreal_metal")
+            self._mesh_actor(f"FinalTargetMatch_london_visible_cctv_mast_camera_{idx}", f"{mesh_root}/cctv_camera_high_fidelity", (x, y, z), (0.000024,0.000024,0.000024), "photoreal_metal")
 
 
 def main() -> None:

@@ -23,3 +23,5 @@ This repo currently uses legal project-owned procedural assets and ambientCG CC0
 
 
 Latest target-match comparison: `docs/references/assets/unreal-london-final-target-match-comparison.png`
+
+Latest high-fidelity FBX comparison: `docs/references/assets/unreal-london-high-fidelity-fbx-comparison.png`

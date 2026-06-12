@@ -31,5 +31,6 @@
     "green cycle box",
     "pale concrete curb"
   ],
-  "unreal_map": "/Game/Maps/Generated/london_RoadOnly"
+  "unreal_map": "/Game/Maps/Generated/london_RoadOnly",
+  "high_fidelity_mesh_seam": "FBX source meshes under SourceAssets/PhotorealRoadKit/Meshes replace proxy OBJ props"
 }

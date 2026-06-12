@@ -55,6 +55,12 @@ REQUIRED_SOURCE = [
     "Meshes/london_pedestrian_railing_proxy.obj",
     "Meshes/cctv_camera_box.obj",
     "Meshes/signal_visor_box.obj",
+    "Meshes/london_window_strip_high_fidelity.fbx",
+    "Meshes/london_shopfront_high_fidelity.fbx",
+    "Meshes/cctv_camera_high_fidelity.fbx",
+    "Meshes/signal_head_uk_high_fidelity.fbx",
+    "Meshes/london_pedestrian_railing_high_fidelity.fbx",
+    "Meshes/london_streetlight_high_fidelity.fbx",
     "CC0AmbientCG/Road007_1K-JPG_Color.jpg",
     "CC0AmbientCG/Road007_1K-JPG_NormalGL.jpg",
     "CC0AmbientCG/Bricks097_1K-JPG_Color.jpg",
@@ -89,6 +95,20 @@ REQUIRED_GENERATOR_TOKENS = [
     "FinalTargetMatch_london_center_yellow_box_junction_visible",
     "FinalTargetMatch_london_foreground_black_guard_railing",
     "FinalTargetMatch_london_continuous_facade",
+    "london_shopfront_high_fidelity",
+    "signal_head_uk_high_fidelity",
+    "london_pedestrian_railing_high_fidelity",
+    "london_streetlight_high_fidelity",
+    "generate_high_quality_fbx_sources",
+]
+
+REQUIRED_IMPORTED_MESHES = [
+    "Content/PhotorealRoadKit/Meshes/london_streetlight_high_fidelity.uasset",
+    "Content/PhotorealRoadKit/Meshes/london_pedestrian_railing_high_fidelity.uasset",
+    "Content/PhotorealRoadKit/Meshes/signal_head_uk_high_fidelity.uasset",
+    "Content/PhotorealRoadKit/Meshes/cctv_camera_high_fidelity.uasset",
+    "Content/PhotorealRoadKit/Meshes/london_shopfront_high_fidelity.uasset",
+    "Content/PhotorealRoadKit/Meshes/london_window_strip_high_fidelity.uasset",
 ]
 
 REQUIRED_MAP_TOKENS = [
@@ -120,6 +140,11 @@ REQUIRED_MAP_TOKENS = [
     b"FinalTargetMatch_london_foreground_black_guard_railing_0",
     b"FinalTargetMatch_london_black_signal_head_cluster_0",
     b"FinalTargetMatch_london_continuous_facade_row0_0",
+    b"london_shopfront_high_fidelity",
+    b"cctv_camera_high_fidelity",
+    b"signal_head_uk_high_fidelity",
+    b"london_pedestrian_railing_high_fidelity",
+    b"london_streetlight_high_fidelity",
 ]
 
 FORBIDDEN = ["spawn_vehicle", "spawn_pedestrian", "traffic_ai_controller", "drivable_car", "gameplay_mode"]
@@ -152,6 +177,10 @@ def main() -> int:
             check_image(path)
         elif path.stat().st_size < 200:
             fail(f"mesh source too small: {rel}")
+    for rel in REQUIRED_IMPORTED_MESHES:
+        path = UE / rel
+        if not path.exists() or path.stat().st_size < 1000:
+            fail(f"missing imported high-fidelity mesh asset: {rel}")
     text = GEN.read_text(encoding="utf-8")
     lower = text.lower()
     for token in REQUIRED_GENERATOR_TOKENS:
