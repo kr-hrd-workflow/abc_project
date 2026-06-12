@@ -1,0 +1,45 @@
+{
+  "generated_at": "2026-06-12T11:37:53+0900",
+  "screenshots": [
+    {
+      "city": "seoul",
+      "file": "docs/technotes/assets/unreal-commercial-photoreal-screenshots/unreal-seoul-commercial-photoreal.png",
+      "bytes": 1875813,
+      "size": [
+        1721,
+        927
+      ],
+      "stddev": 87.01
+    },
+    {
+      "city": "new_york",
+      "file": "docs/technotes/assets/unreal-commercial-photoreal-screenshots/unreal-new_york-commercial-photoreal.png",
+      "bytes": 1954221,
+      "size": [
+        1721,
+        927
+      ],
+      "stddev": 86.38
+    },
+    {
+      "city": "paris",
+      "file": "docs/technotes/assets/unreal-commercial-photoreal-screenshots/unreal-paris-commercial-photoreal.png",
+      "bytes": 1815812,
+      "size": [
+        1721,
+        927
+      ],
+      "stddev": 88.5
+    },
+    {
+      "city": "london",
+      "file": "docs/technotes/assets/unreal-commercial-photoreal-screenshots/unreal-london-commercial-photoreal.png",
+      "bytes": 2000127,
+      "size": [
+        1721,
+        927
+      ],
+      "stddev": 85.94
+    }
+  ]
+}

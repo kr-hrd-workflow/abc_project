@@ -67,9 +67,14 @@ def cube(name, loc, scale, material):
     bpy.ops.object.transform_apply(location=False, rotation=False, scale=True)
     obj.data.materials.append(material)
     bevel = obj.modifiers.new(name="small_bevels", type="BEVEL")
-    bevel.width = min(scale) * 0.08
-    bevel.segments = 2
+    bevel.width = min(scale) * 0.12
+    bevel.segments = 5
     obj.modifiers.new(name="weighted_normals", type="WEIGHTED_NORMAL")
+    try:
+        for poly in obj.data.polygons:
+            poly.use_smooth = True
+    except Exception:
+        pass
     return obj
 
 
@@ -79,14 +84,37 @@ def cyl(name, loc, radius, depth, material, vertices=32, rot=(0,0,0)):
     obj.name = name
     obj.data.materials.append(material)
     obj.modifiers.new(name="weighted_normals", type="WEIGHTED_NORMAL")
+    try:
+        for poly in obj.data.polygons:
+            poly.use_smooth = True
+    except Exception:
+        pass
     return obj
 
 
 def sphere(name, loc, radius, material):
-    bpy.ops.mesh.primitive_uv_sphere_add(segments=32, ring_count=16, radius=radius, location=loc)
+    bpy.ops.mesh.primitive_uv_sphere_add(segments=48, ring_count=24, radius=radius, location=loc)
     obj = bpy.context.object
     obj.name = name
     obj.data.materials.append(material)
+    try:
+        for poly in obj.data.polygons:
+            poly.use_smooth = True
+    except Exception:
+        pass
+    return obj
+
+
+def torus(name, loc, major_radius, minor_radius, material, rot=(0,0,0)):
+    bpy.ops.mesh.primitive_torus_add(major_segments=48, minor_segments=14, major_radius=major_radius, minor_radius=minor_radius, location=loc, rotation=rot)
+    obj = bpy.context.object
+    obj.name = name
+    obj.data.materials.append(material)
+    try:
+        for poly in obj.data.polygons:
+            poly.use_smooth = True
+    except Exception:
+        pass
     return obj
 
 
@@ -103,10 +131,17 @@ def sedan() -> None:
     cube("sedan_upper_cabin", (0, -0.25, 1.15), (1.42, 2.15, 0.70), MAT["glass"])
     cube("sedan_front_windshield", (0, 1.00, 1.18), (1.28, 0.08, 0.52), MAT["glass"])
     cube("sedan_rear_windshield", (0, -1.45, 1.10), (1.20, 0.08, 0.42), MAT["glass"])
+    cube("sedan_front_grille", (0, 2.205, 0.62), (1.18, 0.035, 0.22), MAT["black"])
+    cube("sedan_rear_plate_recess", (0, -2.205, 0.58), (0.92, 0.035, 0.18), MAT["black"])
     for x in (-0.93, 0.93):
         for y in (-1.55, 1.55):
-            cyl("sedan_tire", (x, y, 0.36), 0.34, 0.22, MAT["black"], rot=(math.pi/2, 0, 0))
+            torus("sedan_tire_rounded_sidewall", (x, y, 0.36), 0.255, 0.080, MAT["black"], rot=(math.pi/2, 0, 0))
             cyl("sedan_wheel_hub", (x, y, 0.36), 0.17, 0.24, MAT["chrome"], rot=(math.pi/2, 0, 0))
+    for x in (-1.08, 1.08):
+        cube("sedan_side_mirror", (x, 0.88, 1.16), (0.11, 0.28, 0.09), MAT["black"])
+    for y in (-0.55, 0.55):
+        cube("sedan_door_cutline_left", (-1.035, y, 0.78), (0.018, 0.035, 0.42), MAT["black"])
+        cube("sedan_door_cutline_right", (1.035, y, 0.78), (0.018, 0.035, 0.42), MAT["black"])
     for x in (-0.45, 0.45):
         sphere("sedan_headlight", (x, 2.23, 0.62), 0.12, MAT["white"])
         sphere("sedan_tail_light", (x, -2.23, 0.62), 0.10, MAT["red"])
@@ -120,9 +155,14 @@ def city_bus() -> None:
     cube("bus_window_ribbon_left", (-1.24, 0, 1.32), (0.035, 6.5, 0.42), MAT["glass"])
     cube("bus_window_ribbon_right", (1.24, 0, 1.32), (0.035, 6.5, 0.42), MAT["glass"])
     cube("bus_destination_sign", (0, 3.66, 1.55), (1.2, 0.06, 0.28), MAT["white"])
+    for i, y in enumerate([-2.2, -1.2, -0.2, 0.8, 1.8, 2.8]):
+        cube(f"bus_individual_window_left_{i}", (-1.265, y, 1.36), (0.035, 0.58, 0.38), MAT["glass"])
+        cube(f"bus_individual_window_right_{i}", (1.265, y, 1.36), (0.035, 0.58, 0.38), MAT["glass"])
+    cube("bus_double_door_outline", (-1.275, 2.35, 0.86), (0.035, 0.74, 1.12), MAT["black"])
+    cube("bus_front_grille", (0, 3.63, 0.74), (1.24, 0.04, 0.28), MAT["black"])
     for x in (-1.25, 1.25):
         for y in (-2.65, -0.75, 1.65, 2.85):
-            cyl("bus_tire", (x, y, 0.38), 0.38, 0.25, MAT["black"], rot=(math.pi/2, 0, 0))
+            torus("bus_tire_rounded_sidewall", (x, y, 0.38), 0.285, 0.095, MAT["black"], rot=(math.pi/2, 0, 0))
             cyl("bus_hub", (x, y, 0.38), 0.18, 0.27, MAT["chrome"], rot=(math.pi/2, 0, 0))
     export("city_bus_photoreal_proxy")
 
@@ -143,9 +183,9 @@ def traffic_signal() -> None:
     cyl("signal_pole", (0, 0, 2.0), 0.07, 4.0, MAT["black"])
     cyl("signal_mast", (0.85, 0, 3.8), 0.05, 1.8, MAT["black"], rot=(0, math.pi/2, 0))
     cube("signal_head_housing", (1.8, 0, 3.55), (0.42, 0.25, 0.88), MAT["black"])
-    sphere("signal_red_lens", (1.8, -0.14, 3.83), 0.095, MAT["red"])
-    sphere("signal_amber_lens", (1.8, -0.14, 3.55), 0.095, MAT["amber"])
-    sphere("signal_green_lens", (1.8, -0.14, 3.27), 0.095, MAT["green"])
+    for z, color, label in [(3.83, "red", "red"), (3.55, "amber", "amber"), (3.27, "green", "green")]:
+        cyl(f"signal_{label}_visor", (1.8, -0.19, z + 0.03), 0.125, 0.20, MAT["black"], vertices=32, rot=(math.pi/2, 0, 0))
+        sphere(f"signal_{label}_lens", (1.8, -0.25, z), 0.095, MAT[color])
     cube("ped_button_box", (0.11, -0.08, 1.35), (0.22, 0.10, 0.32), MAT["white"])
     export("traffic_signal_photoreal_proxy")
 
@@ -161,8 +201,8 @@ def street_light() -> None:
 def urban_tree() -> None:
     clean(); init_mats()
     cyl("tree_trunk", (0, 0, 1.1), 0.18, 2.2, MAT["brick"])
-    sphere("tree_lower_canopy", (0, 0, 2.65), 0.95, MAT["leaf"])
-    sphere("tree_upper_canopy", (0.25, -0.15, 3.25), 0.72, MAT["leaf"])
+    for i, (x, y, z, r) in enumerate([(0,0,2.65,0.95),(0.35,-0.20,3.08,0.74),(-0.38,0.18,3.02,0.68),(0.10,0.42,3.34,0.58),(0.22,-0.45,2.48,0.52)]):
+        sphere(f"tree_layered_canopy_lobe_{i}", (x, y, z), r, MAT["leaf"])
     export("urban_tree_photoreal_proxy")
 
 

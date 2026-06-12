@@ -251,10 +251,6 @@ def import_photoreal_kit(unreal: Any) -> dict[str, Any]:
     imported: dict[str, Any] = {}
     tasks = []
     for key, asset_name in PHOTOREAL_KIT.items():
-        asset = unreal.EditorAssetLibrary.load_asset(photoreal_asset_path(asset_name))
-        if asset:
-            imported[key] = asset
-            continue
         fbx = source_assets_dir() / f"{asset_name}.fbx"
         if not fbx.exists():
             unreal.log_warning(f"Missing photoreal source asset {fbx}")
@@ -306,6 +302,181 @@ def spawn_static_mesh_asset(
     component.set_static_mesh(asset)
     component.set_mobility(mobility(unreal))
     return actor
+
+
+COMMERCIAL_TEXTURE_SETS = {
+    "asphalt": "CommercialWetAsphalt",
+    "sidewalk": "CommercialSidewalkSlab",
+    "marking": "CommercialWornMarking",
+    "facade": "CommercialWeatheredFacade",
+    "glass": "CommercialCCTVGlass",
+}
+
+
+def commercial_texture_source_dir() -> Path:
+    return Path(__file__).resolve().parents[2] / "SourceAssets" / "CommercialPhotorealKit" / "Textures"
+
+
+def commercial_texture_asset_path(texture_name: str) -> str:
+    return f"/Game/CommercialPhotorealKit/Textures/{texture_name}.{texture_name}"
+
+
+def import_commercial_textures(unreal: Any) -> dict[str, Any]:
+    package = "/Game/CommercialPhotorealKit/Textures"
+    unreal.EditorAssetLibrary.make_directory(package)
+    imported: dict[str, Any] = {}
+    tasks = []
+    for path in sorted(commercial_texture_source_dir().glob("*.png")):
+        asset_name = path.stem
+        task = unreal.AssetImportTask()
+        task.filename = str(path)
+        task.destination_path = package
+        task.automated = True
+        task.replace_existing = True
+        task.save = True
+        tasks.append(task)
+    if tasks:
+        unreal.AssetToolsHelpers.get_asset_tools().import_asset_tasks(tasks)
+    for path in sorted(commercial_texture_source_dir().glob("*.png")):
+        asset_name = path.stem
+        asset = unreal.EditorAssetLibrary.load_asset(commercial_texture_asset_path(asset_name))
+        if asset:
+            imported[asset_name] = asset
+        else:
+            unreal.log_warning(f"Commercial texture failed to import: {asset_name}")
+    return imported
+
+
+def connect_material_expression_safe(unreal: Any, material: Any, expression: Any, output: str, prop: Any) -> bool:
+    try:
+        unreal.MaterialEditingLibrary.connect_material_property(expression, output, prop)
+        return True
+    except Exception as exc:
+        unreal.log_warning(f"Material connection failed: {exc}")
+        return False
+
+
+def make_commercial_material(unreal: Any, name: str, texture_prefix: str, textures: dict[str, Any], roughness: float = 0.72) -> Any:
+    package_path = "/Game/CommercialPhotorealKit/Materials"
+    asset_path = f"{package_path}/M_{name}"
+    existing = unreal.EditorAssetLibrary.load_asset(asset_path)
+    if existing:
+        return existing
+    base = textures.get(f"{texture_prefix}_BaseColor")
+    normal = textures.get(f"{texture_prefix}_Normal")
+    rough = textures.get(f"{texture_prefix}_Roughness")
+    if not base or not hasattr(unreal, "MaterialEditingLibrary"):
+        return make_material(unreal, f"MI_commercial_{name}", (0.12, 0.12, 0.12, 1), roughness)
+    try:
+        unreal.EditorAssetLibrary.make_directory(package_path)
+        material = unreal.AssetToolsHelpers.get_asset_tools().create_asset(
+            f"M_{name}", package_path, unreal.Material, unreal.MaterialFactoryNew()
+        )
+        base_sample = unreal.MaterialEditingLibrary.create_material_expression(material, unreal.MaterialExpressionTextureSample, -620, -120)
+        base_sample.set_editor_property("texture", base)
+        connect_material_expression_safe(unreal, material, base_sample, "RGB", unreal.MaterialProperty.MP_BASE_COLOR)
+        if rough:
+            rough_sample = unreal.MaterialEditingLibrary.create_material_expression(material, unreal.MaterialExpressionTextureSample, -620, 110)
+            rough_sample.set_editor_property("texture", rough)
+            connect_material_expression_safe(unreal, material, rough_sample, "R", unreal.MaterialProperty.MP_ROUGHNESS)
+        else:
+            rough_const = unreal.MaterialEditingLibrary.create_material_expression(material, unreal.MaterialExpressionConstant, -620, 110)
+            rough_const.r = roughness
+            connect_material_expression_safe(unreal, material, rough_const, "", unreal.MaterialProperty.MP_ROUGHNESS)
+        if normal:
+            normal_sample = unreal.MaterialEditingLibrary.create_material_expression(material, unreal.MaterialExpressionTextureSample, -620, 340)
+            normal_sample.set_editor_property("texture", normal)
+            try:
+                normal_sample.set_editor_property("sampler_type", unreal.MaterialSamplerType.SAMPLERTYPE_NORMAL)
+            except Exception:
+                pass
+            connect_material_expression_safe(unreal, material, normal_sample, "RGB", unreal.MaterialProperty.MP_NORMAL)
+        unreal.MaterialEditingLibrary.recompile_material(material)
+        unreal.EditorAssetLibrary.save_loaded_asset(material)
+        return material
+    except Exception as exc:
+        unreal.log_warning(f"Commercial material creation failed for {name}: {exc}")
+        return make_material(unreal, f"MI_commercial_{name}", (0.12, 0.12, 0.12, 1), roughness)
+
+
+def import_commercial_photoreal_kit(unreal: Any) -> dict[str, Any]:
+    textures = import_commercial_textures(unreal)
+    return {
+        key: make_commercial_material(unreal, key, prefix, textures, roughness=0.34 if key in {"asphalt", "glass"} else 0.78)
+        for key, prefix in COMMERCIAL_TEXTURE_SETS.items()
+    }
+
+
+def spawn_commercial_fidelity_pass(unreal: Any, profile: dict[str, Any], mats: dict[str, Any], commercial: dict[str, Any], road_width: float) -> None:
+    """Dense project-owned detail pass for production-fidelity screenshots.
+
+    Uses imported texture materials in `/Game/CommercialPhotorealKit` so maps carry a clear
+    replaceable seam for licensed Fab/Megascans assets later.
+    """
+    display = profile["display_name"]
+    asphalt = commercial.get("asphalt", mats["asphalt"])
+    sidewalk = commercial.get("sidewalk", mats["sidewalk"])
+    marking = commercial.get("marking", mats["marking"])
+    facade = commercial.get("facade", mats["facade"])
+    glass = commercial.get("glass", mats["glass"])
+
+    # Thin material overlays give close-up screenshots texture detail without changing road geometry.
+    spawn_cube(unreal, f"{display} CommercialPhotorealKit wet asphalt texture overlay NS", (0, 0, 34), (road_width / 100, 190, 0.012), asphalt)
+    spawn_cube(unreal, f"{display} CommercialPhotorealKit wet asphalt texture overlay EW", (0, 0, 36), (190, road_width / 100, 0.012), asphalt)
+    offset = road_width / 2 + profile["city_style"]["sidewalk_width_cm"] / 2
+    for label, x, y, sx, sy in [
+        ("north commercial sidewalk slab texture", 0, offset, 190, 5.4),
+        ("south commercial sidewalk slab texture", 0, -offset, 190, 5.4),
+        ("east commercial sidewalk slab texture", offset, 0, 5.4, 190),
+        ("west commercial sidewalk slab texture", -offset, 0, 5.4, 190),
+    ]:
+        spawn_cube(unreal, f"{display} CommercialPhotorealKit {label}", (x, y, 42), (sx, sy, 0.014), sidewalk)
+
+    # Worn decals, turn arrows, cracked patches, storm drains, manholes, curb stones.
+    for i, y in enumerate(range(-7200, 7201, 900)):
+        spawn_flat_marking(unreal, f"{display} commercial worn lane marking NS {i}", -road_width / 6, y, 52, 0.12, 3.8, marking, 0)
+        spawn_flat_marking(unreal, f"{display} commercial worn lane marking NS B {i}", road_width / 6, y + 180, 52, 0.12, 2.8, marking, 0)
+    for i, x in enumerate(range(-7200, 7201, 900)):
+        spawn_flat_marking(unreal, f"{display} commercial worn lane marking EW {i}", x, -road_width / 6, 53, 3.8, 0.12, marking, 0)
+        spawn_flat_marking(unreal, f"{display} commercial worn lane marking EW B {i}", x + 180, road_width / 6, 53, 2.8, 0.12, marking, 0)
+    for idx, (x, y, yaw) in enumerate([(-520, -1220, 0), (520, 1220, 180), (-1220, 520, 90), (1220, -520, -90)]):
+        spawn_flat_marking(unreal, f"{display} commercial directional arrow shaft {idx}", x, y, 58, 0.16, 1.7, marking, yaw)
+        spawn_flat_marking(unreal, f"{display} commercial directional arrow head L {idx}", x - 38, y + 74, 59, 0.10, 0.75, marking, yaw + 38)
+        spawn_flat_marking(unreal, f"{display} commercial directional arrow head R {idx}", x + 38, y + 74, 59, 0.10, 0.75, marking, yaw - 38)
+    for idx, (x, y) in enumerate([(-640, -440), (690, 580), (-980, 820), (1120, -780), (240, -1160), (-220, 1110)]):
+        spawn_cube(unreal, f"{display} commercial cast iron manhole cover {idx}", (x, y, 61), (0.58, 0.58, 0.018), mats["dark"])
+        for ring in range(3):
+            spawn_cube(unreal, f"{display} commercial manhole radial groove {idx}-{ring}", (x, y, 63 + ring), (0.08 + ring * 0.10, 0.56, 0.012), mats["marking"], rotation=(0, 0, ring * 60))
+    for idx, (x, y, yaw) in enumerate([(-1560, -1120, 0), (1560, 1120, 180), (-1120, 1560, 90), (1120, -1560, -90)]):
+        spawn_cube(unreal, f"{display} commercial curb storm drain grate {idx}", (x, y, 62), (0.92, 0.28, 0.018), mats["dark"], rotation=(0, 0, yaw))
+        for bar in range(5):
+            spawn_cube(unreal, f"{display} commercial drain slot {idx}-{bar}", (x - 32 + bar * 16, y, 64), (0.035, 0.30, 0.012), mats["marking"], rotation=(0, 0, yaw))
+    for idx, x in enumerate(range(-3600, 3601, 420)):
+        spawn_cube(unreal, f"{display} commercial individual curb stone north {idx}", (x, offset - 290, 66), (1.8, 0.22, 0.16), sidewalk)
+        spawn_cube(unreal, f"{display} commercial individual curb stone south {idx}", (x, -offset + 290, 66), (1.8, 0.22, 0.16), sidewalk)
+        spawn_cube(unreal, f"{display} commercial hairline asphalt crack north {idx}", (x + 70, offset - 570, 68), (1.3, 0.035, 0.012), mats["dark"], rotation=(0, 0, 8 if idx % 2 else -13))
+
+    # Textured facade plates and glass storefront inserts in the camera-facing quadrants.
+    for idx, (x, y, z, sx, sy, sz) in enumerate([
+        (-3200, -2608, 520, 8.2, 0.032, 4.2), (-1700, -2758, 620, 7.0, 0.032, 5.4),
+        (1700, -2758, 720, 7.4, 0.032, 6.1), (3200, -2608, 560, 8.6, 0.032, 4.7),
+        (-3200, 2608, 540, 8.0, 0.032, 4.5), (1700, 2758, 680, 7.2, 0.032, 5.8),
+    ]):
+        spawn_cube(unreal, f"{display} CommercialPhotorealKit weathered facade skin {idx}", (x, y, z), (sx, sy, sz), facade)
+        for floor in range(3):
+            spawn_cube(unreal, f"{display} commercial reflective glass band {idx}-{floor}", (x, y - 6, z - 150 + floor * 150), (sx * 0.74, 0.024, 0.22), glass)
+
+    # Close camera props that sell scale: sign plates, cones, litter, pavement repairs.
+    for idx, (x, y) in enumerate([(-1390, -1420), (-1240, -1420), (1430, 1350), (1580, 1350), (960, -1510), (-970, 1510)]):
+        spawn_cube(unreal, f"{display} commercial traffic cone body {idx}", (x, y, 92), (0.18, 0.18, 0.48), mats["warm"])
+        spawn_cube(unreal, f"{display} commercial traffic cone reflective band {idx}", (x, y, 112), (0.20, 0.20, 0.045), marking)
+    for idx, (x, y, yaw) in enumerate([(-1500, -1260, 0), (-1350, -1260, 0), (1380, 1480, 180), (1530, 1480, 180)]):
+        spawn_cube(unreal, f"{display} commercial regulatory sign pole {idx}", (x, y, 190), (0.055, 0.055, 1.75), mats["dark"])
+        spawn_cube(unreal, f"{display} commercial reflective regulatory sign plate {idx}", (x, y, 326), (0.42, 0.035, 0.30), marking, rotation=(0, 0, yaw))
+    for idx in range(36):
+        x = -1680 + (idx % 12) * 280
+        y = -1720 + (idx // 12) * 115
+        spawn_cube(unreal, f"{display} commercial micro litter pavement fleck {idx}", (x, y, 70), (0.08, 0.035, 0.006), mats["marking"] if idx % 3 else mats["warm"], rotation=(0, 0, (idx * 17) % 180))
 
 
 def spawn_roads(unreal: Any, profile: dict[str, Any], mats: dict[str, Any], road_width: float) -> None:
@@ -844,12 +1015,14 @@ def spawn_city(unreal: Any, profile: dict[str, Any]) -> None:
 
     mats = make_materials(unreal, profile["id"])
     assets = import_photoreal_kit(unreal)
+    commercial = import_commercial_photoreal_kit(unreal)
     lanes = profile["intersection"]["lanes_per_direction"]
     lane_width = profile["intersection"]["lane_width_cm"]
     road_width = lanes * lane_width * 2 + profile["intersection"].get("median_width_cm", 0)
 
     spawn_roads(unreal, profile, mats, road_width)
     spawn_cinematic_road_dressing(unreal, profile, assets)
+    spawn_commercial_fidelity_pass(unreal, profile, mats, commercial, road_width)
     spawn_buildings(unreal, profile, mats)
     spawn_signals_and_street_furniture(unreal, profile, mats, assets=assets)
     spawn_city_specific_details(unreal, profile, mats, road_width)
