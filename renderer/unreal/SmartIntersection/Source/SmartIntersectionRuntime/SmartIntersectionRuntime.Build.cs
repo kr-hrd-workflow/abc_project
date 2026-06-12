@@ -6,14 +6,17 @@ public class SmartIntersectionRuntime : ModuleRules
     {
         PCHUsage = PCHUsageMode.UseExplicitOrSharedPCHs;
 
-        PublicDependencyModuleNames.AddRange(
-            new string[]
-            {
-                "Core",
-                "CoreUObject",
-                "Engine",
-                "Json"
-            }
-        );
+        PublicDependencyModuleNames.AddRange(new[]
+        {
+            "Core",
+            "CoreUObject",
+            "Engine"
+        });
+
+        PrivateDependencyModuleNames.AddRange(new[]
+        {
+            "Json",
+            "JsonUtilities"
+        });
     }
 }

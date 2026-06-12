@@ -20,7 +20,9 @@
     "unreal:generate:paris": "npm run unreal:generate-city -- -Profile paris",
     "unreal:generate:london": "npm run unreal:generate-city -- -Profile london",
     "simulator:agent": "python3 scripts/run-simulator-builder-agent.py",
+    "codex:agent": "bash scripts/codex-agent.sh",
     "verify:simulator-agent": "python3 scripts/verify-simulator-builder-agent.py",
+    "verify:road-only-renderer": "python3 scripts/verify-road-only-ue-renderer.py",
     "verify": "npm run test:api && npm run test:web && npm run build:web && git diff --check"
   },
   "workspaces": [

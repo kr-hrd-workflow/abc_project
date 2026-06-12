@@ -1,7 +1,8 @@
 {
   "FileVersion": 3,
+  "EngineAssociation": "5.7",
   "Category": "Simulation",
-  "Description": "Smart Intersection photoreal traffic simulation renderer for Unreal Engine Pixel Streaming.",
+  "Description": "SmartIntersection road-only Unreal renderer. SUMO remains the truth source; Python TraCI bridge streams state later; Unreal renders approved road/intersection scenes only.",
   "Modules": [
     {
       "Name": "SmartIntersectionRuntime",
@@ -11,15 +12,15 @@
   ],
   "Plugins": [
     {
-      "Name": "PixelStreaming",
-      "Enabled": true
-    },
-    {
       "Name": "PythonScriptPlugin",
       "Enabled": true
     },
     {
       "Name": "EditorScriptingUtilities",
+      "Enabled": true
+    },
+    {
+      "Name": "PixelStreaming",
       "Enabled": true
     }
   ]

@@ -1,15 +1,3 @@
-#include "SmartIntersectionRuntimeModule.h"
+#include "Modules/ModuleManager.h"
 
-#define LOCTEXT_NAMESPACE "FSmartIntersectionRuntimeModule"
-
-void FSmartIntersectionRuntimeModule::StartupModule()
-{
-}
-
-void FSmartIntersectionRuntimeModule::ShutdownModule()
-{
-}
-
-#undef LOCTEXT_NAMESPACE
-
-IMPLEMENT_MODULE(FSmartIntersectionRuntimeModule, SmartIntersectionRuntime)
+IMPLEMENT_MODULE(FDefaultModuleImpl, SmartIntersectionRuntime)

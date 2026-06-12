@@ -6,9 +6,9 @@ param(
 $ErrorActionPreference = 'Stop'
 $RepoRoot = Resolve-Path (Join-Path $PSScriptRoot '..')
 $ProjectPath = Join-Path $RepoRoot 'renderer\unreal\SmartIntersection\SmartIntersection.uproject'
-$MapPath = "/Game/Maps/Generated/${Profile}_Intersection"
+$MapPath = "/Game/Maps/Generated/${Profile}_RoadOnly"
 if (-not $Output) {
-  $Output = Join-Path $RepoRoot "docs\technotes\assets\clean-ue57-renderer-${Profile}.png"
+  $Output = Join-Path $RepoRoot "artifacts\unreal-road-only-${Profile}.png"
 }
 $OutputDir = Split-Path -Parent $Output
 New-Item -ItemType Directory -Force -Path $OutputDir | Out-Null

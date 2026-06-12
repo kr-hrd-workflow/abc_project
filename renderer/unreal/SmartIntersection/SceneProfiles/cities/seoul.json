@@ -1,72 +1,39 @@
 {
-  "id": "seoul",
-  "display_name": "Seoul Gangnam Arterial",
-  "country_code": "KR",
-  "traffic_side": "right",
-  "seed": 20260611,
-  "intersection": {
-    "lane_width_cm": 360,
-    "lanes_per_direction": 3,
-    "crosswalk_width_cm": 560,
-    "stop_line_offset_cm": 900,
-    "median_width_cm": 180
-  },
-  "visual_style": {
-    "road_markings": [
-      "white dashed lane dividers",
-      "muted red bus-priority lane segments",
-      "large white turn arrows"
-    ],
-    "crosswalk": "wide bright-white zebra crosswalk",
-    "signals": "overhead horizontal signal bars on mast arms",
-    "signage": "Korean primary, English secondary, blue-green overhead boards",
-    "street_furniture": [
-      "glass bus shelter",
-      "subway entrance canopy",
-      "bollards",
-      "bike racks",
-      "smart-city kiosks"
-    ],
-    "building_style": "dense mid/high-rise commercial blocks with glass, tile, and illuminated shop signs",
-    "palette": [
-      "wet charcoal asphalt",
-      "light gray pavers",
-      "blue signage",
-      "green transit signs",
-      "red bus lane",
-      "neon storefront glow"
-    ],
-    "camera_mood": "rainy dusk CCTV with wet asphalt reflections"
-  },
-  "city_style": {
-    "building_density": "high",
-    "building_height_min_cm": 1800,
-    "building_height_max_cm": 9000,
-    "sidewalk_width_cm": 540,
-    "street_furniture_density": "medium"
-  },
-  "traffic": {
-    "vehicle_placeholders": 48,
-    "bus_placeholders": 3,
-    "pedestrian_placeholders": 20,
-    "traffic_light_heads": 12
-  },
-  "lighting": {
-    "time_of_day": "rainy_dusk",
-    "weather": "wet",
-    "exposure_bias": -0.15
-  },
-  "camera": {
-    "location_cm": [
-      4200,
-      -3600,
-      1400
-    ],
-    "rotation_deg": [
-      -18,
-      0,
-      42
-    ],
-    "focal_length_mm": 28
-  }
+  "display_name": "Seoul road-only arterial intersection",
+  "traffic_orientation": "right_hand",
+  "signature_scene": "wide multi-lane arterial with median bus corridor and broad zebra crossings",
+  "road_features": [
+    "bus_lane",
+    "wide_zebra_crosswalk",
+    "tactile_paving",
+    "korean_road_text",
+    "median_bus_island",
+    "thick_stop_line",
+    "utility_covers",
+    "asphalt_patch_variation"
+  ],
+  "markings": [
+    "wide white zebra bars",
+    "thick stop bars",
+    "BUS ONLY / \ubc84\uc2a4\uc804\uc6a9 road text",
+    "lane arrows"
+  ],
+  "palette": [
+    "dark patched asphalt",
+    "red-brown bus lane",
+    "white worn paint",
+    "yellow tactile paving",
+    "concrete curb"
+  ],
+  "city": "seoul",
+  "renderer_role": "unreal_renderer_only",
+  "simulation_truth_source": "SUMO",
+  "future_state_bridge": "Python TraCI bridge",
+  "excluded_scope": [
+    "vehicles",
+    "pedestrians",
+    "gameplay",
+    "ue_side_traffic_simulation"
+  ],
+  "reference_packet": "docs/references/city-road-intersection-image-reference-approval-packet.md"
 }

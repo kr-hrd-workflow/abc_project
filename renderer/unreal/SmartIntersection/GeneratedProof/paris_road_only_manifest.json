@@ -1,0 +1,34 @@
+{
+  "generator": "RoadOnlyRenderer",
+  "city": "paris",
+  "display_name": "Paris road-only boulevard intersection",
+  "simulation_truth_source": "SUMO truth source",
+  "future_bridge": "TraCI bridge",
+  "renderer_role": "Unreal renderer only",
+  "scope": "road/intersection only; no vehicles; no pedestrians",
+  "signature_scene": "compact European boulevard crossing with protected bike/bus cues and stone curb contrast",
+  "road_features": [
+    "european_zebra_crossing",
+    "bike_lane",
+    "stone_curb",
+    "refuge_island",
+    "bus_lane",
+    "slim_signal_poles",
+    "curb_bollards",
+    "worn_asphalt"
+  ],
+  "markings": [
+    "European zebra crossing",
+    "BUS lane text",
+    "bike lane glyph strip",
+    "short dashed lane lines"
+  ],
+  "palette": [
+    "charcoal asphalt",
+    "granite curb",
+    "muted green bike lane",
+    "white worn paint",
+    "dark signal poles"
+  ],
+  "unreal_map": "/Game/Maps/Generated/paris_RoadOnly"
+}

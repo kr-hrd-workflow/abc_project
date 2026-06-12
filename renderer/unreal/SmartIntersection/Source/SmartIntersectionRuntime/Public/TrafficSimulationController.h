@@ -7,11 +7,10 @@
 UENUM(BlueprintType)
 enum class ETrafficSimulationPhase : uint8
 {
-    Offline UMETA(DisplayName = "Offline"),
-    Initializing UMETA(DisplayName = "Initializing"),
-    Running UMETA(DisplayName = "Running"),
-    Paused UMETA(DisplayName = "Paused"),
-    Error UMETA(DisplayName = "Error")
+    Unknown UMETA(DisplayName = "Unknown"),
+    NorthSouthGreen UMETA(DisplayName = "North/South Green"),
+    EastWestGreen UMETA(DisplayName = "East/West Green"),
+    AllRed UMETA(DisplayName = "All Red")
 };
 
 USTRUCT(BlueprintType)
@@ -19,17 +18,22 @@ struct FTrafficSignalTiming
 {
     GENERATED_BODY()
 
-    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Simulation|Signals")
-    float GreenSeconds = 30.0f;
+    UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "SUMO TraCI Snapshot")
+    ETrafficSimulationPhase ActivePhase = ETrafficSimulationPhase::Unknown;
 
-    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Simulation|Signals")
-    float AmberSeconds = 4.0f;
+    UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "SUMO TraCI Snapshot")
+    float CycleSecond = 0.0f;
 
-    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Simulation|Signals")
-    float RedClearanceSeconds = 2.0f;
+    UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "SUMO TraCI Snapshot")
+    FString Source = TEXT("SUMO truth source via future Python TraCI bridge");
 };
 
-UCLASS(BlueprintType, Blueprintable)
+/**
+ * Renderer-side receiver shell for future SUMO/TraCI snapshots.
+ * This actor does not simulate traffic, spawn vehicles, or own signal truth.
+ * SUMO remains authoritative; Unreal only renders received state.
+ */
+UCLASS(BlueprintType)
 class SMARTINTERSECTIONRUNTIME_API ATrafficSimulationController : public AActor
 {
     GENERATED_BODY()
@@ -37,54 +41,12 @@ class SMARTINTERSECTIONRUNTIME_API ATrafficSimulationController : public AActor
 public:
     ATrafficSimulationController();
 
-    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Simulation|Profile")
-    FString CityProfileId = TEXT("seoul");
+    UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "SUMO TraCI Snapshot")
+    FTrafficSignalTiming CurrentTiming;
 
-    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Simulation|State")
-    ETrafficSimulationPhase SimulationPhase = ETrafficSimulationPhase::Offline;
-
-    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Simulation|Signals")
-    FTrafficSignalTiming SignalTiming;
-
-    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Simulation|Streaming")
+    UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Pixel Streaming")
     bool bPixelStreamConnected = false;
 
-    UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Simulation|Snapshot")
-    FString LastSnapshotJson;
-
-    UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Simulation|Snapshot")
-    float LastSnapshotWorldSeconds = 0.0f;
-
-    UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Simulation|Snapshot")
-    FString ActiveSignalGroup = TEXT("unknown");
-
-    UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Simulation|Snapshot")
-    float CycleSecond = 0.0f;
-
-    UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Simulation|Snapshot")
-    TMap<FString, int32> DirectionalQueues;
-
-    UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Simulation|Snapshot")
-    bool bEmergencyVehicleApproaching = false;
-
-    UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Simulation|Snapshot")
-    FString EmergencyVehicleDirection = TEXT("none");
-
-    UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Simulation|Snapshot")
-    bool bLastSnapshotParsed = false;
-
-    UFUNCTION(BlueprintCallable, Category = "Simulation|Profile")
-    void SetCityProfileId(const FString& InCityProfileId);
-
-    UFUNCTION(BlueprintCallable, Category = "Simulation|State")
-    void SetSimulationPhase(ETrafficSimulationPhase InPhase);
-
-    UFUNCTION(BlueprintCallable, Category = "Simulation|Signals")
-    void SetSignalTiming(float InGreenSeconds, float InAmberSeconds, float InRedClearanceSeconds);
-
-    UFUNCTION(BlueprintCallable, Category = "Simulation|Streaming")
-    void SetPixelStreamConnected(bool bInConnected);
-
-    UFUNCTION(BlueprintCallable, Category = "Simulation|Snapshot")
+    UFUNCTION(BlueprintCallable, Category = "SUMO TraCI Snapshot")
     void ApplySimulationSnapshotJson(const FString& SnapshotJson);
 };

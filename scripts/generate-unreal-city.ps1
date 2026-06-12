@@ -8,7 +8,7 @@ $ErrorActionPreference = 'Stop'
 $RepoRoot = Resolve-Path (Join-Path $PSScriptRoot '..')
 $ProjectPath = Join-Path $RepoRoot 'renderer\unreal\SmartIntersection\SmartIntersection.uproject'
 $ProfilePath = Join-Path $RepoRoot "renderer\unreal\SmartIntersection\SceneProfiles\cities\$Profile.json"
-$PythonScript = Join-Path $RepoRoot 'renderer\unreal\SmartIntersection\Content\Python\generate_city_scene.py'
+$PythonScript = Join-Path $RepoRoot 'renderer\unreal\SmartIntersection\Content\Python\generate_road_intersection.py'
 
 function Find-UnrealEditor {
   $candidates = @(

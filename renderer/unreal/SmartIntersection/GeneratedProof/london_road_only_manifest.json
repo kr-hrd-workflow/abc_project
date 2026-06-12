@@ -1,0 +1,35 @@
+{
+  "generator": "RoadOnlyRenderer",
+  "city": "london",
+  "display_name": "London road-only yellow-box junction",
+  "simulation_truth_source": "SUMO truth source",
+  "future_bridge": "TraCI bridge",
+  "renderer_role": "Unreal renderer only",
+  "scope": "road/intersection only; no vehicles; no pedestrians",
+  "signature_scene": "UK left-hand yellow box junction with bus lane, double yellow curb lines, and cycle box",
+  "road_features": [
+    "yellow_box_junction",
+    "left_hand_traffic",
+    "double_yellow_lines",
+    "cycle_box",
+    "bus_lane",
+    "look_left_right_text",
+    "refuge_island",
+    "keep_clear_marking"
+  ],
+  "markings": [
+    "yellow box junction grid",
+    "double yellow curb lines",
+    "BUS LANE",
+    "LOOK LEFT / LOOK RIGHT",
+    "green advanced cycle box"
+  ],
+  "palette": [
+    "cool dark asphalt",
+    "yellow thermoplastic markings",
+    "red bus lane",
+    "green cycle box",
+    "pale concrete curb"
+  ],
+  "unreal_map": "/Game/Maps/Generated/london_RoadOnly"
+}

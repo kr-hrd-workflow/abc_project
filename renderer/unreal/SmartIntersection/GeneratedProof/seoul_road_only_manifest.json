@@ -1,0 +1,34 @@
+{
+  "generator": "RoadOnlyRenderer",
+  "city": "seoul",
+  "display_name": "Seoul road-only arterial intersection",
+  "simulation_truth_source": "SUMO truth source",
+  "future_bridge": "TraCI bridge",
+  "renderer_role": "Unreal renderer only",
+  "scope": "road/intersection only; no vehicles; no pedestrians",
+  "signature_scene": "wide multi-lane arterial with median bus corridor and broad zebra crossings",
+  "road_features": [
+    "bus_lane",
+    "wide_zebra_crosswalk",
+    "tactile_paving",
+    "korean_road_text",
+    "median_bus_island",
+    "thick_stop_line",
+    "utility_covers",
+    "asphalt_patch_variation"
+  ],
+  "markings": [
+    "wide white zebra bars",
+    "thick stop bars",
+    "BUS ONLY / \ubc84\uc2a4\uc804\uc6a9 road text",
+    "lane arrows"
+  ],
+  "palette": [
+    "dark patched asphalt",
+    "red-brown bus lane",
+    "white worn paint",
+    "yellow tactile paving",
+    "concrete curb"
+  ],
+  "unreal_map": "/Game/Maps/Generated/seoul_RoadOnly"
+}

@@ -1,0 +1,35 @@
+{
+  "generator": "RoadOnlyRenderer",
+  "city": "new_york",
+  "display_name": "New York road-only grid intersection",
+  "simulation_truth_source": "SUMO truth source",
+  "future_bridge": "TraCI bridge",
+  "renderer_role": "Unreal renderer only",
+  "scope": "road/intersection only; no vehicles; no pedestrians",
+  "signature_scene": "orthogonal Manhattan-style intersection with bus/bike lane treatments and utility-heavy asphalt",
+  "road_features": [
+    "continental_crosswalk",
+    "bus_lane",
+    "bike_lane",
+    "utility_covers",
+    "double_yellow_centerline",
+    "stop_bar",
+    "patched_asphalt",
+    "manhole_cluster"
+  ],
+  "markings": [
+    "continental crosswalk",
+    "white ONLY arrows",
+    "red BUS ONLY lane",
+    "green bike conflict zone",
+    "double yellow centerline"
+  ],
+  "palette": [
+    "dark asphalt",
+    "red bus lane",
+    "green bike lane",
+    "yellow signals",
+    "concrete curb"
+  ],
+  "unreal_map": "/Game/Maps/Generated/new_york_RoadOnly"
+}
