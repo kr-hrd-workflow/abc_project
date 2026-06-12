@@ -150,6 +150,19 @@ def decal_texture(path: Path, kind: str, color=(235, 232, 210)) -> None:
         for _ in range(420):
             x=random.randint(0,size); y=random.randint(0,size); r=random.randint(3,22)
             draw.ellipse((x-r,y-r,x+r,y+r), fill=(12,10,8,random.randint(20,75)))
+    elif kind == "target_cycle_box":
+        draw.rectangle((70,80,954,944), fill=(36,74,70,210), outline=(225,230,220,235), width=28)
+        draw.ellipse((345,535,470,660), outline=(225,230,220,245), width=18)
+        draw.ellipse((575,535,700,660), outline=(225,230,220,245), width=18)
+        draw.line((470,598,560,450,640,598,525,598,470,598), fill=(225,230,220,245), width=16)
+    elif kind == "target_yellow_box":
+        for off in range(-420,421,120):
+            draw.line((0,512+off,1024,512-off), fill=(232,178,25,235), width=28)
+            draw.line((0,512-off,1024,512+off), fill=(232,178,25,190), width=18)
+    elif kind == "target_wet_reflection":
+        for _ in range(180):
+            x=random.randint(0,size); y=random.randint(0,size); w=random.randint(40,260)
+            draw.line((x,y,x+w,y+random.randint(-5,5)), fill=(180,190,190,random.randint(25,90)), width=random.randint(2,8))
     # wear through road paint/decal
     alpha=img.getchannel('A'); ad=ImageDraw.Draw(alpha)
     for _ in range(120):
@@ -238,6 +251,9 @@ def main() -> None:
     decal_texture(TEXTURE_DIR / "T_london_lane_arrow_left_worn.png", "arrow_left")
     decal_texture(TEXTURE_DIR / "T_london_asphalt_crack_overlay.png", "cracks")
     decal_texture(TEXTURE_DIR / "T_london_grime_overlay.png", "grime")
+    decal_texture(TEXTURE_DIR / "T_london_target_cycle_box.png", "target_cycle_box")
+    decal_texture(TEXTURE_DIR / "T_london_target_yellow_box.png", "target_yellow_box")
+    decal_texture(TEXTURE_DIR / "T_london_target_wet_reflection.png", "target_wet_reflection")
     obj_box(MESH_DIR / "curb_beveled_module.obj", "curb_beveled_module", 120, 16, 18, 8)
     obj_box(MESH_DIR / "paint_worn_strip.obj", "paint_worn_strip", 110, 4, 1.3, 0.8)
     obj_box(MESH_DIR / "signal_head_uk_black.obj", "signal_head_uk_black", 16, 7, 22, 2)

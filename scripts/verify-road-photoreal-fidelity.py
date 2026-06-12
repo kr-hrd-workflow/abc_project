@@ -37,6 +37,9 @@ REQUIRED_SOURCE = [
     "Textures/T_london_lane_arrow_left_worn.png",
     "Textures/T_london_asphalt_crack_overlay.png",
     "Textures/T_london_grime_overlay.png",
+    "Textures/T_london_target_cycle_box.png",
+    "Textures/T_london_target_yellow_box.png",
+    "Textures/T_london_target_wet_reflection.png",
     "Meshes/curb_beveled_module.obj",
     "Meshes/paint_worn_strip.obj",
     "Meshes/signal_head_uk_black.obj",
@@ -82,6 +85,10 @@ REQUIRED_GENERATOR_TOKENS = [
     "PhotorealScenePass2_london_streetlight_proxy",
     "PhotorealScenePass2_london_pedestrian_railing",
     "PhotorealScenePass2_london_cctv_camera_box",
+    "FinalTargetMatch_london_dark_wet_road_full_frame",
+    "FinalTargetMatch_london_center_yellow_box_junction_visible",
+    "FinalTargetMatch_london_foreground_black_guard_railing",
+    "FinalTargetMatch_london_continuous_facade",
 ]
 
 REQUIRED_MAP_TOKENS = [
@@ -106,6 +113,13 @@ REQUIRED_MAP_TOKENS = [
     b"PhotorealScenePass2_london_streetlight_proxy_0",
     b"PhotorealScenePass2_london_pedestrian_railing_0",
     b"PhotorealScenePass2_london_cctv_camera_box_0",
+    b"FinalTargetMatch_london_dark_wet_road_full_frame",
+    b"FinalTargetMatch_london_left_red_bus_lane_long_wet",
+    b"FinalTargetMatch_london_center_yellow_box_junction_visible",
+    b"FinalTargetMatch_london_foreground_cycle_box_visible",
+    b"FinalTargetMatch_london_foreground_black_guard_railing_0",
+    b"FinalTargetMatch_london_black_signal_head_cluster_0",
+    b"FinalTargetMatch_london_continuous_facade_row0_0",
 ]
 
 FORBIDDEN = ["spawn_vehicle", "spawn_pedestrian", "traffic_ai_controller", "drivable_car", "gameplay_mode"]

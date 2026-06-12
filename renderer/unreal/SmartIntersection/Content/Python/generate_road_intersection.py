@@ -51,6 +51,10 @@ MATERIAL_COLORS = {
     "photoreal_decal_arrow": (0.92, 0.91, 0.82, 1.0),
     "photoreal_crack_overlay": (0.035, 0.030, 0.026, 1.0),
     "photoreal_grime_overlay": (0.05, 0.043, 0.035, 1.0),
+    "target_cycle_box": (0.03, 0.24, 0.22, 1.0),
+    "target_yellow_box": (0.95, 0.68, 0.05, 1.0),
+    "target_wet_reflection": (0.34, 0.38, 0.38, 1.0),
+    "target_dark_wet_asphalt": (0.115, 0.125, 0.125, 1.0),
 }
 
 
@@ -74,6 +78,9 @@ LONDON_TEXTURE_MATERIALS = {
     "photoreal_decal_arrow": "/Game/PhotorealRoadKit/Textures/T_london_lane_arrow_straight_worn",
     "photoreal_crack_overlay": "/Game/PhotorealRoadKit/Textures/T_london_asphalt_crack_overlay",
     "photoreal_grime_overlay": "/Game/PhotorealRoadKit/Textures/T_london_grime_overlay",
+    "target_cycle_box": "/Game/PhotorealRoadKit/Textures/T_london_target_cycle_box",
+    "target_yellow_box": "/Game/PhotorealRoadKit/Textures/T_london_target_yellow_box",
+    "target_wet_reflection": "/Game/PhotorealRoadKit/Textures/T_london_target_wet_reflection",
 }
 
 
@@ -351,6 +358,7 @@ class RoadOnlyRenderer:
             self._build_london_photoreal_fidelity_layer()
             self._build_london_photoreal_scene_layer()
             self._build_london_photoreal_scene_pass2()
+            self._build_london_final_target_match_layer()
 
         # Lighting/camera proof. Use movable lights so the editor viewport is visible without a baked-lighting pass.
         light = unreal.EditorLevelLibrary.spawn_actor_from_class(unreal.DirectionalLight, unreal.Vector(-800, -900, 1200), unreal.Rotator(-48, -35, 0))
@@ -473,6 +481,42 @@ class RoadOnlyRenderer:
         # Window highlights: small warm panels improve urban depth without adding vehicles/pedestrians.
         for idx, (x, y, z) in enumerate([(-880,-790,360),(-520,-790,410),(-160,-790,340),(240,-790,440),(620,-790,380),(-760,790,360),(-360,790,330),(80,790,420),(520,790,390)]):
             self._cube(f"PhotorealScenePass2_london_warm_window_highlight_{idx}", (x, y, z), (0.48, 0.018, 0.17), "photoreal_warm_window")
+
+
+    def _build_london_final_target_match_layer(self) -> None:
+        mesh_root = "/Game/PhotorealRoadKit/Meshes"
+        # Final target-match layer based on artifacts/london-photoreal-final-target.png.
+        # Goal: elevated London rainy-intersection composition with wet road, yellow box, red bus lane,
+        # foreground railings, dense signals, and brick/stone urban depth.
+        self._cube("FinalTargetMatch_london_dark_wet_road_full_frame", (0, 0, 158), (18.8, 7.2, 0.014), "target_dark_wet_asphalt")
+        self._cube("FinalTargetMatch_london_left_red_bus_lane_long_wet", (-420, -305, 164), (12.8, 0.78, 0.012), "photoreal_bus_lane")
+        self._cube("FinalTargetMatch_london_center_yellow_box_junction_visible", (120, 30, 171), (5.1, 2.6, 0.012), "target_yellow_box")
+        self._cube("FinalTargetMatch_london_foreground_cycle_box_visible", (520, -420, 178), (2.55, 1.25, 0.012), "target_cycle_box")
+        for idx, (x, y, sx, sy) in enumerate([(-610,-110,2.8,.32),(-140,140,2.1,.26),(380,-40,2.4,.3),(760,220,1.7,.22),(-880,330,1.8,.24)]):
+            self._cube(f"FinalTargetMatch_london_wet_reflection_streak_{idx}", (x, y, 181+idx), (sx, sy, 0.01), "target_wet_reflection")
+        # Foreground corner railings, matching the reference's lower-left/lower-center black guard rails.
+        for idx, (x, y, rot) in enumerate([(-840,-600,0),(-620,-600,0),(-400,-600,0),(140,-600,0),(360,-600,0),(580,-600,0),(-920,555,180),(-700,555,180),(600,555,180),(820,555,180)]):
+            self._mesh_actor(f"FinalTargetMatch_london_foreground_black_guard_railing_{idx}", f"{mesh_root}/london_pedestrian_railing_proxy", (x, y, 175), (1.05, 1.05, 1.1), "photoreal_metal", rotation=(0,0,rot))
+        # Multiple black signal heads/poles in the same visual rhythm as the target image.
+        for idx, (x, y, z) in enumerate([(-930,-450,350),(-520,-370,355),(-70,-285,360),(360,-250,360),(850,-220,355),(-760,370,355),(-250,430,360),(380,440,360),(870,410,355)]):
+            self._mesh_actor(f"FinalTargetMatch_london_black_signal_head_cluster_{idx}", f"{mesh_root}/signal_head_uk_black", (x, y, z), (1.35, 1.25, 1.25), "signal")
+        for idx, (x, y) in enumerate([(-930,-450),(-520,-370),(-70,-285),(360,-250),(850,-220),(-760,370),(-250,430),(380,440),(870,410)]):
+            self._mesh_actor(f"FinalTargetMatch_london_slim_signal_pole_cluster_{idx}", f"{mesh_root}/signal_pole_slim", (x, y, 170), (0.9,0.9,1.45), "photoreal_metal")
+        # Stronger background: two staggered rows so the proof reads like a London canyon rather than isolated boxes.
+        for row, y in enumerate([-830, 830]):
+            for idx, x in enumerate([-1050,-760,-470,-180,110,400,690,980]):
+                height = 3.8 + ((idx + row) % 3) * 0.55
+                mat = "photoreal_brick" if idx % 2 else "photoreal_sidewalk"
+                self._mesh_actor(f"FinalTargetMatch_london_continuous_facade_row{row}_{idx}", f"{mesh_root}/london_shopfront_module", (x, y, 165), (1.12,1.0,height), mat)
+                self._mesh_actor(f"FinalTargetMatch_london_repeated_window_band_row{row}_{idx}", f"{mesh_root}/london_window_strip", (x, y + (-25 if y < 0 else 25), 360 + height * 30), (1.05,1.0,1.2), "photoreal_glass")
+        # Reference-like curb/sidewalk slabs in foreground.
+        for idx, (x, y, sx, sy) in enumerate([(-720,-695,4.0,.9),(120,-695,3.8,.9),(820,-695,2.6,.9),(-760,680,3.6,.75),(420,680,4.4,.75)]):
+            self._cube(f"FinalTargetMatch_london_foreground_wet_pavement_slab_{idx}", (x, y, 188+idx), (sx, sy, 0.025), "photoreal_sidewalk")
+        # Camera-visible CCTV mast and streetlights, matching the reference's infrastructure emphasis.
+        for idx, (x, y, rot) in enumerate([(-760,-560,12),(-180,-540,0),(520,-520,-8),(-460,560,180),(420,560,180)]):
+            self._mesh_actor(f"FinalTargetMatch_london_tall_streetlight_reference_{idx}", f"{mesh_root}/london_streetlight_proxy", (x, y, 190), (1.1,1.1,1.25), "photoreal_metal", rotation=(0,0,rot))
+        for idx, (x, y, z) in enumerate([(-520,-470,470),(480,430,470)]):
+            self._mesh_actor(f"FinalTargetMatch_london_visible_cctv_mast_camera_{idx}", f"{mesh_root}/cctv_camera_box", (x, y, z), (1.15,1.15,1.15), "photoreal_metal")
 
 
 def main() -> None:

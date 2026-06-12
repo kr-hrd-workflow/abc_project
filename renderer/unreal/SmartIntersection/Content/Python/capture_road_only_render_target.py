@@ -71,8 +71,10 @@ def main() -> None:
 
     proof_view = os.environ.get("SMART_INTERSECTION_PROOF_VIEW", "layout")
     if proof_view == "oblique":
-        origin = unreal.Vector(-1650, -1260, 920)
-        target = unreal.Vector(80, 20, 120)
+        # Final-target framing: elevated corner camera in front of the near building row,
+        # looking across the wet intersection rather than through facade meshes.
+        origin = unreal.Vector(-1180, -520, 760)
+        target = unreal.Vector(120, 20, 135)
     else:
         # Top-down, near-orthographic proof view. The previous oblique proof left most pixels black
         # and was unreadable after Telegram/mobile compression.
@@ -106,7 +108,7 @@ def main() -> None:
             pass
     comp.fov_angle = 55.0
     if proof_view == "oblique":
-        comp.fov_angle = 38.0
+        comp.fov_angle = 58.0
     else:
         try:
             comp.projection_type = unreal.CameraProjectionMode.ORTHOGRAPHIC
