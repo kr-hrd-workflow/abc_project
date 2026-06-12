@@ -25,6 +25,33 @@ function Find-UnrealEditor {
   return $null
 }
 
+function Invoke-UnrealProjectBuildIfNeeded {
+  param(
+    [string]$EditorPath,
+    [string]$ProjectFile
+  )
+  $runtimeDll = Join-Path $RepoRoot 'renderer\unreal\SmartIntersection\Binaries\Win64\UnrealEditor-SmartIntersectionRuntime.dll'
+  if (Test-Path $runtimeDll) {
+    Write-Output "UNREAL_RUNTIME_MODULE_FOUND=$runtimeDll"
+    return
+  }
+  $engineRoot = Resolve-Path (Join-Path (Split-Path -Parent $EditorPath) '..\..')
+  $buildBat = Join-Path $engineRoot 'Build\BatchFiles\Build.bat'
+  if (-not (Test-Path $buildBat)) {
+    throw "Unreal Build.bat not found: $buildBat"
+  }
+  Write-Output 'UNREAL_RUNTIME_MODULE_FOUND=false'
+  Write-Output "Building SmartIntersectionEditor because runtime DLL is missing..."
+  & $buildBat SmartIntersectionEditor Win64 Development "-Project=$ProjectFile" -WaitMutex -NoHotReloadFromIDE
+  if ($LASTEXITCODE -ne 0) {
+    throw "Unreal project build failed with exit code $LASTEXITCODE"
+  }
+  if (-not (Test-Path $runtimeDll)) {
+    throw "Unreal project build completed, but runtime DLL is still missing: $runtimeDll"
+  }
+  Write-Output "UNREAL_RUNTIME_MODULE_BUILT=$runtimeDll"
+}
+
 foreach ($path in @($ProjectPath, $ProfilePath, $PythonScript)) {
   if (-not (Test-Path $path)) {
     throw "Required path not found: $path"
@@ -48,6 +75,8 @@ if (-not $UnrealEditor) {
   Write-Error 'UnrealEditor.exe not found. Install Unreal Engine 5.x or run npm run unreal:precheck.'
   exit 3
 }
+
+Invoke-UnrealProjectBuildIfNeeded -EditorPath $UnrealEditor -ProjectFile $ProjectPath
 
 $env:SMART_INTERSECTION_CITY_PROFILE = $ProfilePath
 $args = @(

@@ -14,14 +14,17 @@ except Exception:  # normal when running verifier/dry tooling outside UE
 
 
 MATERIAL_COLORS = {
-    "asphalt": (0.025, 0.027, 0.026, 1.0),
-    "asphalt_patch": (0.045, 0.044, 0.040, 1.0),
-    "paint": (0.86, 0.84, 0.76, 1.0),
-    "yellow": (1.00, 0.72, 0.08, 1.0),
-    "bus_lane": (0.58, 0.08, 0.045, 1.0),
-    "bike_lane": (0.03, 0.40, 0.18, 1.0),
-    "curb": (0.45, 0.43, 0.38, 1.0),
-    "island": (0.30, 0.29, 0.25, 1.0),
+    # Deliberately brighter than real asphalt for proof screenshots: Telegram/mobile compression
+    # made the physically darker first pass read as an empty black image.
+    "background": (0.20, 0.23, 0.24, 1.0),
+    "asphalt": (0.30, 0.32, 0.31, 1.0),
+    "asphalt_patch": (0.40, 0.39, 0.34, 1.0),
+    "paint": (1.00, 0.98, 0.86, 1.0),
+    "yellow": (1.00, 0.86, 0.04, 1.0),
+    "bus_lane": (0.86, 0.11, 0.07, 1.0),
+    "bike_lane": (0.05, 0.70, 0.32, 1.0),
+    "curb": (0.72, 0.70, 0.62, 1.0),
+    "island": (0.58, 0.56, 0.48, 1.0),
     "tactile": (0.95, 0.72, 0.12, 1.0),
     "metal": (0.08, 0.085, 0.09, 1.0),
     "signal": (0.02, 0.022, 0.024, 1.0),
@@ -150,6 +153,9 @@ class RoadOnlyRenderer:
 
     def _build_scene(self) -> None:
         features = set(self.profile["road_features"])
+        # Proof background plate prevents the road from disappearing into a black editor clear color.
+        self._cube(f"RoadOnlyRenderer_{self.city}_mobile_visible_proof_background", (0, 0, -35), (22, 18, 0.035), "background")
+
         # Main asphalt plates with subtle patch strips.
         self._cube(f"RoadOnlyRenderer_{self.city}_main_asphalt_roughness_variation", (0, 0, 0), (18, 4.6, 0.04), "asphalt")
         self._cube(f"RoadOnlyRenderer_{self.city}_cross_asphalt_patch_variation", (0, 0, 4), (5.4, 16, 0.04), "asphalt_patch")

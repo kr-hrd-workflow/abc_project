@@ -69,8 +69,10 @@ def main() -> None:
         except Exception:
             pass
 
-    origin = unreal.Vector(-1250, -1150, 900)
-    target = unreal.Vector(0, 0, 20)
+    # Top-down, near-orthographic proof view. The previous oblique proof left most pixels black
+    # and was unreadable after Telegram/mobile compression.
+    origin = unreal.Vector(0, -80, 2300)
+    target = unreal.Vector(0, 0, 0)
     rotation = look_at_rotation(origin, target)
 
     capture = unreal.EditorLevelLibrary.spawn_actor_from_class(unreal.SceneCapture2D, origin, rotation)
@@ -98,6 +100,11 @@ def main() -> None:
         except Exception:
             pass
     comp.fov_angle = 55.0
+    try:
+        comp.projection_type = unreal.CameraProjectionMode.ORTHOGRAPHIC
+        comp.ortho_width = 1600.0
+    except Exception:
+        pass
     comp.capture_scene()
 
     out_dir = str(output_path.parent)
