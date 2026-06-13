@@ -63,11 +63,20 @@ MATERIAL_COLORS = {
     "target_mist_building": (0.42, 0.46, 0.46, 1.0),
     "target_bright_reflection": (0.68, 0.74, 0.76, 1.0),
     "target_black_silhouette": (0.012, 0.013, 0.014, 1.0),
-    "target_london_stone": (0.62, 0.60, 0.54, 1.0),
+    "target_london_stone": (0.43, 0.41, 0.36, 1.0),
     "target_window_dark_recess": (0.018, 0.030, 0.034, 1.0),
-    "target_window_warm_glass": (0.85, 0.48, 0.20, 1.0),
+    "target_window_warm_glass": (0.52, 0.34, 0.18, 1.0),
     "target_road_glint": (0.78, 0.86, 0.88, 1.0),
     "target_shadow_grime": (0.030, 0.027, 0.024, 1.0),
+    "target_wet_micro_highlight": (0.48, 0.55, 0.58, 1.0),
+    "target_bus_stop_amber": (0.88, 0.58, 0.18, 1.0),
+    "target_shop_awning_deep_red": (0.20, 0.055, 0.045, 1.0),
+    "target_shop_sign_cream": (0.48, 0.43, 0.34, 1.0),
+    "target_fog_plane_soft": (0.30, 0.34, 0.35, 1.0),
+    "target_masonry_shadow_red": (0.23, 0.105, 0.070, 1.0),
+    "target_masonry_soot": (0.075, 0.060, 0.052, 1.0),
+    "target_window_reflection_cool": (0.14, 0.19, 0.20, 1.0),
+    "target_wet_asphalt_dark": (0.055, 0.062, 0.064, 1.0),
 }
 
 
@@ -400,6 +409,8 @@ class RoadOnlyRenderer:
             self._build_london_target_convergence_atlas_layer()
             self._build_london_target_hero_depth_layer()
             self._build_london_target_hero3_pbr_geometry_layer()
+            self._build_london_target_hero4_realism_layer()
+            self._build_london_target_hero5_visual_acceptance_layer()
 
         # Lighting/camera proof. Use movable lights so the editor viewport is visible without a baked-lighting pass.
         light = unreal.EditorLevelLibrary.spawn_actor_from_class(unreal.DirectionalLight, unreal.Vector(-800, -900, 1200), unreal.Rotator(-48, -35, 0))
@@ -761,6 +772,103 @@ class RoadOnlyRenderer:
             self._cube(f"TargetHero3_london_signal_green_lens_readable_{idx}", (x, y-18, z+18), (0.055,0.016,0.055), "green_signal")
         # Foreground railing shadow/contact, so the rail sits on the pavement rather than floating.
         self._cube("TargetHero3_london_foreground_railing_contact_shadow", (-60, -812, 330), (9.8, 0.055, 0.018), "target_shadow_grime")
+
+
+    def _build_london_target_hero4_realism_layer(self) -> None:
+        """Visible realism pass for remaining target gaps.
+
+        Adds facade articulation that reads beyond cuboids: window mullions, bay columns,
+        shop awnings/signage, parapet depth, layered haze cards, and broken wet asphalt
+        highlights. These are intentionally camera-readable large forms so visual proof improves
+        instead of only adding hidden semantic tokens.
+        """
+        # Facade articulation: mullions, side columns, awnings and signs on camera-facing modules.
+        for module, (x, y, side, bays) in enumerate([
+            (1128, -520, "side", 4), (1128, 120, "side", 4), (-1128, -420, "side", 4),
+            (-1128, 280, "side", 4), (-720, 835, "horizon", 5), (-120, 838, "horizon", 5), (520, 836, "horizon", 5),
+        ]):
+            # Vertical bay piers and parapet depth.
+            for bay in range(bays + 1):
+                offset = (bay - bays / 2) * 135
+                if side == "side":
+                    self._cube(f"TargetHero4_facade_bay_pier_{module}_{bay}", (x - 4, y + offset, 710), (0.035, 0.035, 1.95), "target_london_stone")
+                    self._cube(f"TargetHero4_window_black_mullion_{module}_{bay}", (x - 8, y + offset - 32, 675), (0.026, 0.020, 1.38), "target_black_silhouette")
+                else:
+                    self._cube(f"TargetHero4_facade_bay_pier_{module}_{bay}", (x + offset, y - 4, 705), (0.035, 0.035, 1.90), "target_london_stone")
+                    self._cube(f"TargetHero4_window_black_mullion_{module}_{bay}", (x + offset - 32, y - 8, 670), (0.020, 0.026, 1.34), "target_black_silhouette")
+            # Shopfront awning/sign band at pedestrian scale.
+            if side == "side":
+                self._cube(f"TargetHero4_shop_awning_deep_red_{module}", (x - 16, y, 385), (0.085, 1.05, 0.085), "target_shop_awning_deep_red")
+                self._cube(f"TargetHero4_shop_sign_cream_band_{module}", (x - 20, y, 440), (0.060, 1.02, 0.075), "target_shop_sign_cream")
+            else:
+                self._cube(f"TargetHero4_shop_awning_deep_red_{module}", (x, y - 16, 385), (1.05, 0.085, 0.085), "target_shop_awning_deep_red")
+                self._cube(f"TargetHero4_shop_sign_cream_band_{module}", (x, y - 20, 440), (1.02, 0.060, 0.075), "target_shop_sign_cream")
+        # London street clutter that makes scale less toy-like.
+        for idx, (x, y) in enumerate([(-930,-575),(-710,-535),(-480,-500),(760,-265),(950,-185),(1030,70)]):
+            self._cube(f"TargetHero4_slim_bollard_body_{idx}", (x, y, 390), (0.030,0.030,0.34), "target_black_silhouette")
+            self._cube(f"TargetHero4_bollard_reflective_cap_{idx}", (x, y, 455), (0.040,0.040,0.030), "target_wet_micro_highlight")
+        for idx, (x, y) in enumerate([(-1020, -715), (1010, -445), (-985, 650)]):
+            self._cube(f"TargetHero4_bus_stop_pole_{idx}", (x, y, 505), (0.028,0.028,1.05), "target_black_silhouette")
+            self._cube(f"TargetHero4_bus_stop_amber_plate_{idx}", (x, y, 650), (0.10,0.028,0.13), "target_bus_stop_amber")
+        # Break the road's procedural smoothness with many small glints and darker grime islands.
+        for idx, (x, y, sx, sy) in enumerate([
+            (-890,-455,.42,.035),(-740,-402,.55,.032),(-565,-355,.36,.03),(-410,-305,.62,.034),
+            (-230,-245,.48,.028),(-40,-198,.70,.030),(155,-148,.52,.030),(320,-105,.62,.028),
+            (515,-62,.44,.026),(690,-18,.58,.024),(835,32,.40,.022),(955,86,.32,.020),
+        ]):
+            self._cube(f"TargetHero4_asphalt_micro_specular_streak_{idx}", (x, y, 416 + idx * 0.3), (sx, sy, 0.008), "target_wet_micro_highlight")
+        for idx, (x, y, sx, sy) in enumerate([
+            (-800,-620,.68,.09),(-610,-498,.52,.07),(-315,-420,.75,.08),(-95,-322,.50,.06),
+            (215,-256,.80,.075),(475,-185,.52,.06),(730,-132,.68,.065),(920,-70,.46,.055),
+        ]):
+            self._cube(f"TargetHero4_asphalt_irregular_grime_island_{idx}", (x, y, 414 + idx * 0.35), (sx, sy, 0.008), "target_shadow_grime")
+        # Paint breakup on the hero yellow box: thin occluding scuffs to avoid toy-perfect striping.
+        for idx, (x, y, rotish) in enumerate([(-260,-90,0),(0,-34,0),(255,24,0),(-140,72,0),(160,124,0)]):
+            self._cube(f"TargetHero4_yellow_box_scuffed_gap_{idx}", (x, y, 425 + idx * 0.25), (0.58,0.035,0.008), "target_shadow_grime")
+        # Soft distant haze cards near horizon/roofline to reduce harsh blockout silhouette in lit proof.
+        for idx, (x, y, z, sx, sy) in enumerate([(-520,900,925,2.6,.035),(240,910,955,3.0,.035),(820,790,880,1.8,.035)]):
+            self._cube(f"TargetHero4_soft_overcast_haze_card_{idx}", (x, y, z), (sx, sy, 0.26), "target_fog_plane_soft")
+
+
+    def _build_london_target_hero5_visual_acceptance_layer(self) -> None:
+        """Anti-toy visual acceptance pass: muted masonry, arches, and closer-view realism.
+
+        The previous pass was visibly richer but too orange/isometric. This layer adds large muted
+        facade skins, arch-window silhouettes, ground-floor colonnade rhythm, and darker wet-asphalt
+        overlays that are obvious in the target proof camera.
+        """
+        # Muted masonry overlays on the largest camera-facing blocks to kill the bright orange toy look.
+        for idx, (x, y, z, side, sx, sy) in enumerate([
+            (1136,-520,710,"side",0.045,1.18),(1136,120,720,"side",0.045,1.18),(-1136,-420,675,"side",0.045,1.12),
+            (-1136,280,690,"side",0.045,1.12),(-720,846,680,"horizon",1.18,0.045),(-120,848,700,"horizon",1.28,0.045),(520,846,675,"horizon",1.18,0.045)
+        ]):
+            if side == "side":
+                self._cube(f"TargetHero5_muted_masonry_skin_{idx}", (x-3,y,z), (sx,sy,1.82), "target_masonry_shadow_red")
+            else:
+                self._cube(f"TargetHero5_muted_masonry_skin_{idx}", (x,y-3,z), (sx,sy,1.82), "target_masonry_shadow_red")
+        # Ground-floor arches and cool glass recesses: closer to London civic/commercial facade language.
+        for idx, (x, y, side, bays) in enumerate([(1130,-520,"side",4),(1130,120,"side",4),(-1130,-420,"side",4),(-720,842,"horizon",5),(-120,842,"horizon",5)]):
+            for bay in range(bays):
+                off=(bay-(bays-1)/2)*135
+                if side=="side":
+                    self._cube(f"TargetHero5_arch_left_pier_{idx}_{bay}", (x-11,y+off-42,420), (.045,.020,.42), "target_london_stone")
+                    self._cube(f"TargetHero5_arch_right_pier_{idx}_{bay}", (x-11,y+off+42,420), (.045,.020,.42), "target_london_stone")
+                    self._cube(f"TargetHero5_arch_top_lintel_{idx}_{bay}", (x-12,y+off,520), (.050,.090,.038), "target_london_stone")
+                    self._cube(f"TargetHero5_cool_recessed_shop_glass_{idx}_{bay}", (x-16,y+off,445), (.035,.065,.30), "target_window_reflection_cool")
+                else:
+                    self._cube(f"TargetHero5_arch_left_pier_{idx}_{bay}", (x+off-42,y-11,420), (.020,.045,.42), "target_london_stone")
+                    self._cube(f"TargetHero5_arch_right_pier_{idx}_{bay}", (x+off+42,y-11,420), (.020,.045,.42), "target_london_stone")
+                    self._cube(f"TargetHero5_arch_top_lintel_{idx}_{bay}", (x+off,y-12,520), (.090,.050,.038), "target_london_stone")
+                    self._cube(f"TargetHero5_cool_recessed_shop_glass_{idx}_{bay}", (x+off,y-16,445), (.065,.035,.30), "target_window_reflection_cool")
+        # Dark, irregular wet asphalt overlay to remove gray-striped procedural road feel.
+        for idx, (x,y,sx,sy) in enumerate([(-520,-300,2.2,.55),(-40,-170,2.9,.50),(470,-20,2.6,.48),(820,120,1.7,.40),(-760,-520,1.6,.38)]):
+            self._cube(f"TargetHero5_dark_wet_asphalt_irregular_plate_{idx}", (x,y,409+idx*.2), (sx,sy,.006), "target_wet_asphalt_dark")
+        # Thinner, less glowing road-reflection cues so lit proof doesn't look like neon stripes.
+        for idx, (x,y,sx,sy) in enumerate([(-720,-410,.65,.018),(-360,-285,.82,.017),(20,-166,.72,.016),(375,-75,.58,.015),(720,20,.45,.014)]):
+            self._cube(f"TargetHero5_subtle_rain_sheen_line_{idx}", (x,y,427+idx*.2), (sx,sy,.006), "target_wet_micro_highlight")
+        # Foreground crop masks / dark columns to create target-like left-edge occlusion and reduce isometric-map feel.
+        self._cube("TargetHero5_left_edge_dark_occlusion_column", (-1265,-720,760), (.12,.22,2.55), "target_black_silhouette")
+        self._cube("TargetHero5_near_camera_shadow_wedge", (-680,-870,382), (2.6,.18,.020), "target_shadow_grime")
 
 
 def main() -> None:

@@ -55,7 +55,7 @@ def main() -> None:
     lit_capture = proof_view == "lit_oblique"
 
     if sun_comp:
-        sun_comp.set_editor_property("intensity", 0.55 if lit_capture else 1.8)
+        sun_comp.set_editor_property("intensity", 0.32 if lit_capture else 1.35)
         try:
             sun_comp.set_mobility(unreal.ComponentMobility.MOVABLE)
         except Exception:
@@ -65,7 +65,7 @@ def main() -> None:
     fill.set_actor_label(f"RoadOnlyRenderer_{city}_capture_fill_visible_proof")
     fill_comp = fill.get_component_by_class(unreal.PointLightComponent)
     if fill_comp:
-        fill_comp.set_editor_property("intensity", 180.0 if lit_capture else 850.0)
+        fill_comp.set_editor_property("intensity", 90.0 if lit_capture else 620.0)
         fill_comp.set_editor_property("attenuation_radius", 5000.0)
         try:
             fill_comp.set_mobility(unreal.ComponentMobility.MOVABLE)
@@ -75,8 +75,10 @@ def main() -> None:
     if proof_view in {"oblique", "lit_oblique"}:
         # Final-target framing: elevated corner camera in front of the near building row,
         # looking across the wet intersection rather than through facade meshes.
-        origin = unreal.Vector(-1260, -1320, 760)
-        target = unreal.Vector(120, -80, 260)
+        # Closer target-like corner CCTV/elevated viewport. The wider isometric view makes
+        # the scene read as a model. This crop gives road/facade/foreground rail more screen area.
+        origin = unreal.Vector(-980, -1080, 650)
+        target = unreal.Vector(-90, -120, 245)
     else:
         # Top-down, near-orthographic proof view. The previous oblique proof left most pixels black
         # and was unreadable after Telegram/mobile compression.
@@ -113,9 +115,9 @@ def main() -> None:
             comp.capture_source = unreal.SceneCaptureSource.SCS_BASE_COLOR
         except Exception:
             pass
-    comp.fov_angle = 55.0
+    comp.fov_angle = 52.0
     if proof_view in {"oblique", "lit_oblique"}:
-        comp.fov_angle = 57.0
+        comp.fov_angle = 47.0
     else:
         try:
             comp.projection_type = unreal.CameraProjectionMode.ORTHOGRAPHIC
