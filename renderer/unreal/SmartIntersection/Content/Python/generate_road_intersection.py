@@ -64,6 +64,10 @@ MATERIAL_COLORS = {
     "target_bright_reflection": (0.68, 0.74, 0.76, 1.0),
     "target_black_silhouette": (0.012, 0.013, 0.014, 1.0),
     "target_london_stone": (0.62, 0.60, 0.54, 1.0),
+    "target_window_dark_recess": (0.018, 0.030, 0.034, 1.0),
+    "target_window_warm_glass": (0.85, 0.48, 0.20, 1.0),
+    "target_road_glint": (0.78, 0.86, 0.88, 1.0),
+    "target_shadow_grime": (0.030, 0.027, 0.024, 1.0),
 }
 
 
@@ -395,6 +399,7 @@ class RoadOnlyRenderer:
             self._build_london_final_target_match_layer()
             self._build_london_target_convergence_atlas_layer()
             self._build_london_target_hero_depth_layer()
+            self._build_london_target_hero3_pbr_geometry_layer()
 
         # Lighting/camera proof. Use movable lights so the editor viewport is visible without a baked-lighting pass.
         light = unreal.EditorLevelLibrary.spawn_actor_from_class(unreal.DirectionalLight, unreal.Vector(-800, -900, 1200), unreal.Rotator(-48, -35, 0))
@@ -609,6 +614,52 @@ class RoadOnlyRenderer:
 
 
 
+
+    def _target_facade_module(self, prefix: str, x: float, y: float, z: float, side: str, floors: int = 4, bays: int = 4) -> None:
+        """Build a camera-readable 3D London facade from cuboids, not a flat card.
+
+        `side` controls which axis is thin: y-facing horizon cards use side='horizon';
+        x-facing street walls use side='side'. Dimensions are deliberately chunky so they
+        survive Telegram/mobile compression and base-color proof captures.
+        """
+        if side == "side":
+            wall_scale = (0.22, 1.18, 2.1 + floors * 0.32)
+            band_scale = (0.24, 1.22, 0.10)
+            glass_scale = (0.055, 0.20, 0.26)
+            def loc(dx, dy, dz): return (x + dx, y + dy, z + dz)
+        else:
+            wall_scale = (1.22, 0.22, 2.1 + floors * 0.32)
+            band_scale = (1.26, 0.24, 0.10)
+            glass_scale = (0.20, 0.055, 0.26)
+            def loc(dx, dy, dz): return (x + dx, y + dy, z + dz)
+        self._cube(f"{prefix}_brick_mass_3d", (x, y, z), wall_scale, "target_facade_atlas")
+        # Stone ground floor and cornices.
+        self._cube(f"{prefix}_stone_ground_floor", loc(0, 0, -210), band_scale, "target_london_stone")
+        self._cube(f"{prefix}_upper_cornice", loc(0, 0, 210), band_scale, "target_london_stone")
+        self._cube(f"{prefix}_roof_cornice", loc(0, 0, 370), band_scale, "target_london_stone")
+        # Recessed windows with small lintels/sills.
+        for floor in range(floors):
+            dz = -70 + floor * 145
+            for bay in range(bays):
+                offset = (bay - (bays - 1) / 2) * 135
+                if side == "side":
+                    wx, wy = 0, offset
+                    sill_scale=(0.060,0.24,0.028)
+                else:
+                    wx, wy = offset, 0
+                    sill_scale=(0.24,0.060,0.028)
+                mat = "target_window_warm_glass" if (floor + bay) % 5 == 0 else "target_window_dark_recess"
+                self._cube(f"{prefix}_window_recess_{floor}_{bay}", loc(wx, wy, dz), glass_scale, mat)
+                self._cube(f"{prefix}_window_sill_{floor}_{bay}", loc(wx, wy, dz - 35), sill_scale, "target_london_stone")
+                self._cube(f"{prefix}_window_lintel_{floor}_{bay}", loc(wx, wy, dz + 35), sill_scale, "target_london_stone")
+        # Shopfront doors at road level.
+        for bay in range(max(2, bays - 1)):
+            offset = (bay - (max(2, bays - 1) - 1) / 2) * 160
+            if side == "side":
+                self._cube(f"{prefix}_shopfront_glass_{bay}", loc(0, offset, -320), (0.065, 0.31, 0.42), "photoreal_glass")
+            else:
+                self._cube(f"{prefix}_shopfront_glass_{bay}", loc(offset, 0, -320), (0.31, 0.065, 0.42), "photoreal_glass")
+
     def _build_london_target_hero_depth_layer(self) -> None:
         """Camera-readable 2.5D target hero layer.
 
@@ -676,6 +727,40 @@ class RoadOnlyRenderer:
             for col, x in enumerate(range(-980, 480, 175)):
                 self._cube(f"TargetHero2_london_foreground_large_paving_slab_{row}_{col}", (x, y, 372+row), (0.78,0.32,0.014), "target_london_stone")
 
+
+
+    def _build_london_target_hero3_pbr_geometry_layer(self) -> None:
+        """Next target pass: more genuine 3D facade depth and wet-road glints.
+
+        This does not claim final photorealism; it removes the most obvious card/blockout feel by
+        adding cuboid facade relief, window recesses, cornices, shopfront bands, and geometric road
+        reflection details that remain visible in both base-color and balanced lit captures.
+        """
+        # Replace the flattest visible street-wall cards with cuboid facade modules.
+        for idx, (x, y, z, side, floors, bays) in enumerate([
+            (1120, -520, 690, "side", 5, 4),
+            (1120, 120, 710, "side", 5, 4),
+            (-1120, -420, 650, "side", 4, 4),
+            (-1120, 280, 670, "side", 5, 4),
+            (-720, 820, 660, "horizon", 4, 5),
+            (-120, 830, 690, "horizon", 5, 5),
+            (520, 820, 665, "horizon", 4, 5),
+        ]):
+            self._target_facade_module(f"TargetHero3_london_facade_module_{idx}", x, y, z, side, floors=floors, bays=bays)
+        # Wet-road PBR/readability cues: glints, puddle silhouettes, tire-wear bands.
+        for idx, (x, y, sx, sy) in enumerate([(-760,-520,2.2,.12),(-520,-350,1.6,.10),(-210,-180,2.0,.11),(180,-60,2.5,.12),(540,130,2.0,.10),(840,310,1.4,.09)]):
+            self._cube(f"TargetHero3_london_long_wet_specular_glint_{idx}", (x, y, 388+idx), (sx, sy, 0.010), "target_road_glint")
+        for idx, (x, y, sx, sy) in enumerate([(-620,-610,1.4,.18),(-40,-390,1.9,.20),(420,-250,1.5,.16),(760,-80,1.1,.14)]):
+            self._cube(f"TargetHero3_london_dark_puddle_reflection_shape_{idx}", (x, y, 396+idx), (sx, sy, 0.010), "target_shadow_grime")
+        for idx, y in enumerate([-455, -340, -225, 105, 230]):
+            self._cube(f"TargetHero3_london_subtle_tire_wear_band_{idx}", (0, y, 402+idx), (9.5, 0.035, 0.010), "target_shadow_grime")
+        # More believable signal gantry/heads close to target rhythm.
+        for idx, (x, y, z) in enumerate([(-760,-395,560),(-320,-270,545),(220,-205,555),(680,-170,540)]):
+            self._cube(f"TargetHero3_london_signal_pole_readable_{idx}", (x, y, z-120), (0.035,0.035,1.15), "target_black_silhouette")
+            self._cube(f"TargetHero3_london_signal_head_box_readable_{idx}", (x, y-12, z), (0.13,0.04,0.20), "target_black_silhouette")
+            self._cube(f"TargetHero3_london_signal_green_lens_readable_{idx}", (x, y-18, z+18), (0.055,0.016,0.055), "green_signal")
+        # Foreground railing shadow/contact, so the rail sits on the pavement rather than floating.
+        self._cube("TargetHero3_london_foreground_railing_contact_shadow", (-60, -812, 330), (9.8, 0.055, 0.018), "target_shadow_grime")
 
 
 def main() -> None:

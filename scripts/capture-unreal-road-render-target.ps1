@@ -1,7 +1,7 @@
 param(
   [string]$Profile = 'london',
   [string]$Output = '',
-  [ValidateSet('layout','oblique')]
+  [ValidateSet('layout','oblique','lit_oblique')]
   [string]$View = 'layout'
 )
 $ErrorActionPreference = 'Stop'

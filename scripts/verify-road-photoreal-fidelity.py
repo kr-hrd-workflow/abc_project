@@ -8,6 +8,7 @@ ROOT = Path(__file__).resolve().parents[1]
 UE = ROOT / "renderer" / "unreal" / "SmartIntersection"
 SOURCE = UE / "SourceAssets" / "PhotorealRoadKit"
 GEN = UE / "Content" / "Python" / "generate_road_intersection.py"
+CAPTURE = UE / "Content" / "Python" / "capture_road_only_render_target.py"
 LONDON_MAP = UE / "Content" / "Maps" / "Generated" / "london_RoadOnly.umap"
 
 REQUIRED_SOURCE = [
@@ -108,6 +109,10 @@ REQUIRED_GENERATOR_TOKENS = [
     "TargetConvergence_london_colored_signal_lens",
     "TargetHero_london_yellow_box_readability_overlay",
     "TargetHero2_london_left_continuous_street_wall",
+    "TargetHero3_london_foreground_railing_contact_shadow",
+    "TargetHero3_london_signal_head_box_readable",
+    "TargetHero3_london_long_wet_specular_glint",
+    "TargetHero3_london_facade_module",
     "TargetHero2_london_right_masonry_corner_mass",
     "TargetHero2_london_dense_foreground_railing_toprail",
     "TargetHero2_london_geometric_yellow_box_grid",
@@ -172,6 +177,10 @@ REQUIRED_MAP_TOKENS = [
     b'TargetConvergence_london_colored_signal_lens_0',
     b'TargetHero_london_yellow_box_readability_overlay',
     b'TargetHero2_london_left_continuous_street_wall_0',
+    b'TargetHero3_london_foreground_railing_contact_shadow',
+    b'TargetHero3_london_signal_head_box_readable_0',
+    b'TargetHero3_london_long_wet_specular_glint_0',
+    b'TargetHero3_london_facade_module_0_brick_mass_3d',
     b'TargetHero2_london_right_masonry_corner_mass',
     b'TargetHero2_london_dense_foreground_railing_toprail',
     b'TargetHero2_london_geometric_yellow_box_grid_a_0',

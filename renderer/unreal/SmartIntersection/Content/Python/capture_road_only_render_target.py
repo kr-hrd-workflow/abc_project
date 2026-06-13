@@ -51,8 +51,11 @@ def main() -> None:
     )
     sun.set_actor_label(f"RoadOnlyRenderer_{city}_capture_sun_visible_proof")
     sun_comp = sun.get_component_by_class(unreal.DirectionalLightComponent)
+    proof_view = os.environ.get("SMART_INTERSECTION_PROOF_VIEW", "layout")
+    lit_capture = proof_view == "lit_oblique"
+
     if sun_comp:
-        sun_comp.set_editor_property("intensity", 1.8)
+        sun_comp.set_editor_property("intensity", 0.55 if lit_capture else 1.8)
         try:
             sun_comp.set_mobility(unreal.ComponentMobility.MOVABLE)
         except Exception:
@@ -62,15 +65,14 @@ def main() -> None:
     fill.set_actor_label(f"RoadOnlyRenderer_{city}_capture_fill_visible_proof")
     fill_comp = fill.get_component_by_class(unreal.PointLightComponent)
     if fill_comp:
-        fill_comp.set_editor_property("intensity", 850.0)
+        fill_comp.set_editor_property("intensity", 180.0 if lit_capture else 850.0)
         fill_comp.set_editor_property("attenuation_radius", 5000.0)
         try:
             fill_comp.set_mobility(unreal.ComponentMobility.MOVABLE)
         except Exception:
             pass
 
-    proof_view = os.environ.get("SMART_INTERSECTION_PROOF_VIEW", "layout")
-    if proof_view == "oblique":
+    if proof_view in {"oblique", "lit_oblique"}:
         # Final-target framing: elevated corner camera in front of the near building row,
         # looking across the wet intersection rather than through facade meshes.
         origin = unreal.Vector(-1260, -1320, 760)
@@ -100,16 +102,19 @@ def main() -> None:
             rt.set_editor_property("render_target_format", unreal.TextureRenderTargetFormat.RTF_RGBA8)
     comp.texture_target = rt
     try:
-        # Use base color for visual-acceptance proof. The current generated materials do not yet have
-        # production exposure/postprocess, and final-color SceneCapture blows out the baked wet-road atlas.
-        comp.capture_source = unreal.SceneCaptureSource.SCS_BASE_COLOR
+        if lit_capture and hasattr(unreal.SceneCaptureSource, "SCS_FINAL_COLOR_LDR"):
+            comp.capture_source = unreal.SceneCaptureSource.SCS_FINAL_COLOR_LDR
+        else:
+            # Use base color for visual-acceptance proof. The generated materials are still being tuned,
+            # so base-color proof remains the stable composition gate.
+            comp.capture_source = unreal.SceneCaptureSource.SCS_BASE_COLOR
     except Exception:
         try:
             comp.capture_source = unreal.SceneCaptureSource.SCS_BASE_COLOR
         except Exception:
             pass
     comp.fov_angle = 55.0
-    if proof_view == "oblique":
+    if proof_view in {"oblique", "lit_oblique"}:
         comp.fov_angle = 57.0
     else:
         try:
