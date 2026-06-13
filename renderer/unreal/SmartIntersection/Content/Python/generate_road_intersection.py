@@ -1,6 +1,7 @@
 # RoadOnlyRenderer generator for SmartIntersection.
 # Architecture: SUMO truth source; Python TraCI bridge streams state later; Unreal renders only.
-# Scope: no vehicles, no pedestrians, no gameplay, no UE-side traffic simulation.
+# Scope: no autonomous vehicles, no pedestrians, no gameplay, no UE-side traffic simulation.
+# Queue vehicle markers below are fixture renderer-state silhouettes; SUMO/FastAPI remains truth.
 # Asset provenance: project procedural assets plus ambientCG CC0 sources under CC0AmbientCG; source refresh uses install_cc0_texture_sources.
 # High-fidelity mesh seam: generate_high_quality_fbx_sources emits FBX replacements for visible target props.
 # Target atlas seam: target_convergence_road_atlas, target_convergence_facade_atlas, and target_convergence_sky_atlas drive final-image convergence.
@@ -19,7 +20,7 @@ except Exception:  # normal when running verifier/dry tooling outside UE
 MATERIAL_COLORS = {
     # Deliberately brighter than real asphalt for proof screenshots: Telegram/mobile compression
     # made the physically darker first pass read as an empty black image.
-    "background": (0.20, 0.23, 0.24, 1.0),
+    "background": (0.430, 0.500, 0.530, 1.0),
     "asphalt": (0.30, 0.32, 0.31, 1.0),
     "asphalt_patch": (0.40, 0.39, 0.34, 1.0),
     "paint": (1.00, 0.98, 0.86, 1.0),
@@ -29,54 +30,59 @@ MATERIAL_COLORS = {
     "curb": (0.72, 0.70, 0.62, 1.0),
     "island": (0.58, 0.56, 0.48, 1.0),
     "tactile": (0.95, 0.72, 0.12, 1.0),
-    "metal": (0.08, 0.085, 0.09, 1.0),
-    "signal": (0.02, 0.022, 0.024, 1.0),
+    "metal": (0.120, 0.125, 0.128, 1.0),
+    "signal": (0.160, 0.165, 0.168, 1.0),
     "red_signal": (0.75, 0.02, 0.02, 1.0),
     "green_signal": (0.02, 0.65, 0.16, 1.0),
+    "queue_vehicle_body": (0.46, 0.48, 0.46, 1.0),
+    "queue_vehicle_glass": (0.105, 0.175, 0.220, 1.0),
+    "emergency_vehicle_blue": (0.035, 0.210, 0.820, 1.0),
     "photoreal_asphalt": (0.21, 0.22, 0.21, 1.0),
     "photoreal_curb": (0.66, 0.64, 0.57, 1.0),
     "photoreal_bus_lane": (0.60, 0.08, 0.055, 1.0),
     "photoreal_yellow_worn": (0.92, 0.68, 0.07, 1.0),
     "photoreal_white_worn": (0.90, 0.88, 0.78, 1.0),
-    "photoreal_metal": (0.08, 0.08, 0.075, 1.0),
+    "photoreal_metal": (0.135, 0.138, 0.135, 1.0),
     "photoreal_text_bus_lane": (0.90, 0.88, 0.78, 1.0),
     "photoreal_text_look_left": (0.90, 0.88, 0.78, 1.0),
     "photoreal_text_look_right": (0.90, 0.88, 0.78, 1.0),
     "photoreal_text_keep_clear": (0.92, 0.68, 0.07, 1.0),
-    "photoreal_puddle": (0.05, 0.065, 0.07, 1.0),
+    "photoreal_puddle": (0.085, 0.100, 0.105, 1.0),
     "photoreal_sidewalk": (0.50, 0.48, 0.43, 1.0),
     "photoreal_brick": (0.45, 0.24, 0.18, 1.0),
-    "photoreal_glass": (0.05, 0.10, 0.13, 1.0),
+    "photoreal_glass": (0.100, 0.140, 0.165, 1.0),
     "photoreal_sign_plate": (0.88, 0.86, 0.76, 1.0),
     "photoreal_warm_window": (1.0, 0.62, 0.25, 1.0),
     "photoreal_decal_zebra": (0.92, 0.91, 0.82, 1.0),
     "photoreal_decal_arrow": (0.92, 0.91, 0.82, 1.0),
-    "photoreal_crack_overlay": (0.035, 0.030, 0.026, 1.0),
-    "photoreal_grime_overlay": (0.05, 0.043, 0.035, 1.0),
+    "photoreal_crack_overlay": (0.105, 0.098, 0.088, 1.0),
+    "photoreal_grime_overlay": (0.120, 0.110, 0.096, 1.0),
     "target_cycle_box": (0.03, 0.24, 0.22, 1.0),
     "target_yellow_box": (0.95, 0.68, 0.05, 1.0),
     "target_wet_reflection": (0.34, 0.38, 0.38, 1.0),
-    "target_dark_wet_asphalt": (0.115, 0.125, 0.125, 1.0),
-    "target_full_road_atlas": (0.12, 0.13, 0.13, 1.0),
+    "target_dark_wet_asphalt": (0.245, 0.265, 0.265, 1.0),
+    "target_full_road_atlas": (0.225, 0.245, 0.245, 1.0),
     "target_facade_atlas": (0.42, 0.24, 0.18, 1.0),
     "target_sky_atlas": (0.58, 0.65, 0.70, 1.0),
-    "target_mist_building": (0.42, 0.46, 0.46, 1.0),
+    "target_mist_building": (0.500, 0.560, 0.580, 1.0),
+    "custom_imagegen_paris_wet_intersection_atlas": (0.235, 0.250, 0.250, 1.0),
+    "custom_imagegen_paris_overcast_boulevard_backplate": (0.64, 0.66, 0.65, 1.0),
     "target_bright_reflection": (0.68, 0.74, 0.76, 1.0),
-    "target_black_silhouette": (0.012, 0.013, 0.014, 1.0),
-    "target_london_stone": (0.43, 0.41, 0.36, 1.0),
-    "target_window_dark_recess": (0.018, 0.030, 0.034, 1.0),
+    "target_black_silhouette": (0.190, 0.198, 0.202, 1.0),
+    "target_london_stone": (0.550, 0.530, 0.480, 1.0),
+    "target_window_dark_recess": (0.115, 0.135, 0.145, 1.0),
     "target_window_warm_glass": (0.52, 0.34, 0.18, 1.0),
     "target_road_glint": (0.78, 0.86, 0.88, 1.0),
-    "target_shadow_grime": (0.030, 0.027, 0.024, 1.0),
+    "target_shadow_grime": (0.135, 0.125, 0.110, 1.0),
     "target_wet_micro_highlight": (0.48, 0.55, 0.58, 1.0),
     "target_bus_stop_amber": (0.88, 0.58, 0.18, 1.0),
-    "target_shop_awning_deep_red": (0.20, 0.055, 0.045, 1.0),
+    "target_shop_awning_deep_red": (0.250, 0.075, 0.060, 1.0),
     "target_shop_sign_cream": (0.48, 0.43, 0.34, 1.0),
     "target_fog_plane_soft": (0.30, 0.34, 0.35, 1.0),
-    "target_masonry_shadow_red": (0.23, 0.105, 0.070, 1.0),
-    "target_masonry_soot": (0.075, 0.060, 0.052, 1.0),
-    "target_window_reflection_cool": (0.14, 0.19, 0.20, 1.0),
-    "target_wet_asphalt_dark": (0.055, 0.062, 0.064, 1.0),
+    "target_masonry_shadow_red": (0.320, 0.180, 0.135, 1.0),
+    "target_masonry_soot": (0.175, 0.150, 0.130, 1.0),
+    "target_window_reflection_cool": (0.180, 0.220, 0.235, 1.0),
+    "target_wet_asphalt_dark": (0.165, 0.180, 0.182, 1.0),
 }
 
 
@@ -106,6 +112,134 @@ LONDON_TEXTURE_MATERIALS = {
     "target_full_road_atlas": "/Game/PhotorealRoadKit/Textures/T_london_target_full_road_atlas",
     "target_facade_atlas": "/Game/PhotorealRoadKit/Textures/T_london_target_facade_atlas",
     "target_sky_atlas": "/Game/PhotorealRoadKit/Textures/T_london_target_sky_atlas",
+}
+
+SHARED_ROAD_TEXTURE_MATERIALS = {
+    "photoreal_asphalt": "/Game/PhotorealRoadKit/Textures/T_london_asphalt_albedo",
+    "photoreal_curb": "/Game/PhotorealRoadKit/Textures/T_london_curb_concrete",
+    "photoreal_bus_lane": "/Game/PhotorealRoadKit/Textures/T_london_red_bus_lane_worn",
+    "photoreal_yellow_worn": "/Game/PhotorealRoadKit/Textures/T_london_yellow_thermoplastic_worn",
+    "photoreal_white_worn": "/Game/PhotorealRoadKit/Textures/T_london_white_road_text_worn",
+    "photoreal_metal": "/Game/PhotorealRoadKit/Textures/T_london_drain_grate_metal",
+    "photoreal_decal_zebra": "/Game/PhotorealRoadKit/Textures/T_london_zebra_crossing_worn",
+    "photoreal_decal_arrow": "/Game/PhotorealRoadKit/Textures/T_london_lane_arrow_straight_worn",
+    "photoreal_crack_overlay": "/Game/PhotorealRoadKit/Textures/T_london_asphalt_crack_overlay",
+    "photoreal_grime_overlay": "/Game/PhotorealRoadKit/Textures/T_london_grime_overlay",
+    "photoreal_sidewalk": "/Game/PhotorealRoadKit/Textures/T_london_sidewalk_stone",
+    "target_cycle_box": "/Game/PhotorealRoadKit/Textures/T_london_target_cycle_box",
+    "target_road_glint": "/Game/PhotorealRoadKit/Textures/T_london_target_wet_reflection",
+    "target_shadow_grime": "/Game/PhotorealRoadKit/Textures/T_london_grime_overlay",
+}
+
+PARIS_TEXTURE_MATERIALS = SHARED_ROAD_TEXTURE_MATERIALS | {
+    "custom_imagegen_paris_wet_intersection_atlas": "/Game/PhotorealRoadKit/Textures/T_custom_imagegen_paris_wet_intersection_atlas",
+    "custom_imagegen_paris_overcast_boulevard_backplate": "/Game/PhotorealRoadKit/Textures/T_custom_imagegen_paris_overcast_boulevard_backplate",
+}
+
+CITY_TEXTURE_MATERIALS = {
+    "london": LONDON_TEXTURE_MATERIALS,
+    "seoul": SHARED_ROAD_TEXTURE_MATERIALS,
+    "new_york": SHARED_ROAD_TEXTURE_MATERIALS,
+    "paris": PARIS_TEXTURE_MATERIALS,
+}
+
+RECREATE_MATERIAL_NAMES = {
+    "target_full_road_atlas",
+    "target_facade_atlas",
+    "target_sky_atlas",
+}
+
+GENERIC_MATERIAL_NAMES = {
+    "background",
+    "asphalt",
+    "asphalt_patch",
+    "paint",
+    "yellow",
+    "bus_lane",
+    "bike_lane",
+    "curb",
+    "island",
+    "tactile",
+    "metal",
+    "signal",
+    "red_signal",
+    "green_signal",
+    "queue_vehicle_body",
+    "queue_vehicle_glass",
+    "emergency_vehicle_blue",
+}
+
+SEOUL_MATERIAL_NAMES = GENERIC_MATERIAL_NAMES | {
+    "photoreal_asphalt",
+    "photoreal_curb",
+    "photoreal_bus_lane",
+    "photoreal_yellow_worn",
+    "photoreal_white_worn",
+    "photoreal_metal",
+    "photoreal_decal_zebra",
+    "photoreal_crack_overlay",
+    "photoreal_grime_overlay",
+    "photoreal_sidewalk",
+    "target_road_glint",
+    "target_shadow_grime",
+}
+
+NEW_YORK_MATERIAL_NAMES = GENERIC_MATERIAL_NAMES | {
+    "photoreal_asphalt",
+    "photoreal_curb",
+    "photoreal_bus_lane",
+    "photoreal_yellow_worn",
+    "photoreal_white_worn",
+    "photoreal_metal",
+    "photoreal_brick",
+    "photoreal_glass",
+    "photoreal_warm_window",
+    "photoreal_decal_zebra",
+    "photoreal_decal_arrow",
+    "photoreal_crack_overlay",
+    "photoreal_grime_overlay",
+    "photoreal_sidewalk",
+    "target_cycle_box",
+    "target_road_glint",
+    "target_shadow_grime",
+    "target_sky_atlas",
+    "target_mist_building",
+}
+
+PARIS_MATERIAL_NAMES = GENERIC_MATERIAL_NAMES | {
+    "photoreal_asphalt",
+    "photoreal_curb",
+    "photoreal_bus_lane",
+    "photoreal_yellow_worn",
+    "photoreal_white_worn",
+    "photoreal_metal",
+    "photoreal_decal_zebra",
+    "photoreal_decal_arrow",
+    "photoreal_crack_overlay",
+    "photoreal_grime_overlay",
+    "photoreal_sidewalk",
+    "target_cycle_box",
+    "target_road_glint",
+    "target_shadow_grime",
+    "custom_imagegen_paris_wet_intersection_atlas",
+    "custom_imagegen_paris_overcast_boulevard_backplate",
+}
+
+CITY_MATERIAL_NAMES = {
+    "seoul": SEOUL_MATERIAL_NAMES,
+    "new_york": NEW_YORK_MATERIAL_NAMES,
+    "paris": PARIS_MATERIAL_NAMES,
+}
+
+
+DEFAULT_RENDERER_SNAPSHOT_VISUAL = {
+    "source": "FastAPI fixture renderer snapshot",
+    "active_signal_group": "east_priority",
+    "cycle_second": 24,
+    "queues": {"north": 32, "south": 11, "east": 18, "west": 8},
+    "pedestrian_request": True,
+    "emergency_vehicle_direction": "east",
+    "pixel_stream_status": "ready",
 }
 
 
@@ -141,12 +275,14 @@ class RoadOnlyRenderer:
             "markings": self.profile["markings"],
             "palette": self.profile["palette"],
             "unreal_map": self.package_path,
+            "runtime_controller": f"TrafficSimulationController SmartIntersectionRuntime {self.city}",
+            "renderer_snapshot_visualization": DEFAULT_RENDERER_SNAPSHOT_VISUAL,
             "high_fidelity_mesh_seam": "FBX source meshes under SourceAssets/PhotorealRoadKit/Meshes replace proxy OBJ props",
         }
 
     def write_manifest(self) -> Path:
         path = self.generated_dir / f"{self.city}_road_only_manifest.json"
-        path.write_text(json.dumps(self.build_manifest(), indent=2), encoding="utf-8")
+        path.write_text(json.dumps(self.build_manifest(), indent=2) + "\n", encoding="utf-8")
         return path
 
     def run_unreal_generation(self) -> None:
@@ -164,7 +300,7 @@ class RoadOnlyRenderer:
         print(f"ROAD_ONLY_UNREAL_GENERATED city={self.city} package={self.package_path}")
 
     def _import_photoreal_roadkit(self) -> None:
-        if self.city != "london":
+        if self.city not in {"london", "seoul", "new_york", "paris"}:
             return
         source_root = self.project_root / "SourceAssets" / "PhotorealRoadKit"
         if not source_root.exists():
@@ -206,8 +342,25 @@ class RoadOnlyRenderer:
         print(f"PHOTOREAL_ROADKIT_IMPORTED city={self.city} tasks={len(tasks)}")
 
     def _new_level(self) -> None:
+        level_subsystem = None
+        try:
+            level_subsystem = unreal.get_editor_subsystem(unreal.LevelEditorSubsystem)
+        except Exception:
+            level_subsystem = None
+        if unreal.EditorAssetLibrary.does_asset_exist(self.package_path):
+            if level_subsystem is not None and hasattr(level_subsystem, "load_level"):
+                level_subsystem.load_level(self.package_path)
+                print(f"ROAD_ONLY_LOADED_EXISTING_LEVEL package={self.package_path}")
+                return
+            if hasattr(unreal.EditorLevelLibrary, "load_level"):
+                unreal.EditorLevelLibrary.load_level(self.package_path)
+                print(f"ROAD_ONLY_LOADED_EXISTING_LEVEL package={self.package_path}")
+                return
         if hasattr(unreal.EditorLevelLibrary, "new_level"):
             unreal.EditorLevelLibrary.new_level(self.package_path)
+            return
+        if level_subsystem is not None and hasattr(level_subsystem, "new_level"):
+            level_subsystem.new_level(self.package_path)
             return
         if hasattr(unreal.EditorLoadingAndSavingUtils, "new_blank_map"):
             unreal.EditorLoadingAndSavingUtils.new_blank_map(False)
@@ -229,10 +382,22 @@ class RoadOnlyRenderer:
         asset_tools = unreal.AssetToolsHelpers.get_asset_tools()
         material_dir = "/Game/Materials/RoadOnlyRenderer"
         unreal.EditorAssetLibrary.make_directory(material_dir)
+        city_material_names = CITY_MATERIAL_NAMES.get(self.city)
         for name, rgba in MATERIAL_COLORS.items():
+            if city_material_names is not None:
+                if name not in city_material_names:
+                    continue
+            elif self.city != "london" and name not in GENERIC_MATERIAL_NAMES:
+                continue
             asset_name = f"M_{self.city}_{name}"
             asset_path = f"{material_dir}/{asset_name}"
             mat = unreal.EditorAssetLibrary.load_asset(asset_path)
+            if mat is not None and self.city == "london" and name in RECREATE_MATERIAL_NAMES:
+                try:
+                    if unreal.EditorAssetLibrary.delete_asset(asset_path):
+                        mat = None
+                except Exception as exc:
+                    print(f"ROAD_ONLY_MATERIAL_RECREATE_FALLBACK name={name} error={exc}")
             if mat is None:
                 try:
                     mat = asset_tools.create_asset(asset_name, material_dir, unreal.Material, unreal.MaterialFactoryNew())
@@ -243,48 +408,72 @@ class RoadOnlyRenderer:
                 self._set_material_color(mat, rgba)
                 unreal.EditorAssetLibrary.save_loaded_asset(mat)
             self.materials[name] = mat
-        if self.city == "london":
-            for name, texture_path in LONDON_TEXTURE_MATERIALS.items():
-                mat = self.materials.get(name)
-                texture = unreal.EditorAssetLibrary.load_asset(texture_path)
-                if mat is not None and texture is not None:
-                    self._set_material_texture(mat, texture)
-                    unreal.EditorAssetLibrary.save_loaded_asset(mat)
+        for name, texture_path in CITY_TEXTURE_MATERIALS.get(self.city, {}).items():
+            mat = self.materials.get(name)
+            texture = unreal.EditorAssetLibrary.load_asset(texture_path)
+            if mat is not None and texture is not None:
+                self._set_material_texture(mat, texture)
+                unreal.EditorAssetLibrary.save_loaded_asset(mat)
 
     def _set_material_color(self, mat, rgba) -> None:
         try:
+            if hasattr(unreal.MaterialEditingLibrary, "delete_all_material_expressions"):
+                unreal.MaterialEditingLibrary.delete_all_material_expressions(mat)
             color = unreal.MaterialEditingLibrary.create_material_expression(mat, unreal.MaterialExpressionConstant3Vector, -420, 0)
-            color.constant = unreal.LinearColor(*rgba)
-            unreal.MaterialEditingLibrary.connect_material_property(color, "", unreal.MaterialProperty.MP_BASE_COLOR)
-            # Photoreal scene captures must be lit, not emissive proof colors.
+            color.set_editor_property("constant", unreal.LinearColor(*rgba))
+            unreal.MaterialEditingLibrary.connect_material_property(color, "RGB", unreal.MaterialProperty.MP_BASE_COLOR)
+            # Sky and mist cards behave like atmospheric background, not road props.
+            material_key = mat.get_name().lower()
+            if any(key in material_key for key in ("target_sky_atlas", "target_mist_building", "target_fog_plane_soft")):
+                emissive_rgba = rgba
+            else:
+                emissive_rgba = (0.0, 0.0, 0.0, 1.0)
             black = unreal.MaterialEditingLibrary.create_material_expression(mat, unreal.MaterialExpressionConstant3Vector, -420, 180)
-            black.constant = unreal.LinearColor(0.0, 0.0, 0.0, 1.0)
-            unreal.MaterialEditingLibrary.connect_material_property(black, "", unreal.MaterialProperty.MP_EMISSIVE_COLOR)
+            black.set_editor_property("constant", unreal.LinearColor(*emissive_rgba))
+            unreal.MaterialEditingLibrary.connect_material_property(black, "RGB", unreal.MaterialProperty.MP_EMISSIVE_COLOR)
             rough = unreal.MaterialEditingLibrary.create_material_expression(mat, unreal.MaterialExpressionConstant, -420, 320)
-            rough.r = 0.62
+            rough.set_editor_property("r", 0.62)
             unreal.MaterialEditingLibrary.connect_material_property(rough, "", unreal.MaterialProperty.MP_ROUGHNESS)
             spec = unreal.MaterialEditingLibrary.create_material_expression(mat, unreal.MaterialExpressionConstant, -420, 430)
-            spec.r = 0.18
+            spec.set_editor_property("r", 0.18)
             unreal.MaterialEditingLibrary.connect_material_property(spec, "", unreal.MaterialProperty.MP_SPECULAR)
             if hasattr(unreal.MaterialEditingLibrary, "recompile_material"):
                 unreal.MaterialEditingLibrary.recompile_material(mat)
         except Exception as exc:
             print(f"ROAD_ONLY_MATERIAL_COLOR_FALLBACK error={exc}")
 
+    def _texture_palette_override(self, mat_name: str):
+        if "target_full_road_atlas" in mat_name:
+            return MATERIAL_COLORS["target_full_road_atlas"]
+        if "target_facade_atlas" in mat_name:
+            return MATERIAL_COLORS["target_facade_atlas"]
+        if "target_sky_atlas" in mat_name:
+            return MATERIAL_COLORS["target_sky_atlas"]
+        return None
+
     def _set_material_texture(self, mat, texture) -> None:
         try:
-            sample = unreal.MaterialEditingLibrary.create_material_expression(mat, unreal.MaterialExpressionTextureSample, -740, 0)
-            sample.texture = texture
-            unreal.MaterialEditingLibrary.connect_material_property(sample, "RGB", unreal.MaterialProperty.MP_BASE_COLOR)
-            black = unreal.MaterialEditingLibrary.create_material_expression(mat, unreal.MaterialExpressionConstant3Vector, -740, 180)
-            black.constant = unreal.LinearColor(0.0, 0.0, 0.0, 1.0)
-            unreal.MaterialEditingLibrary.connect_material_property(black, "", unreal.MaterialProperty.MP_EMISSIVE_COLOR)
-            rough = unreal.MaterialEditingLibrary.create_material_expression(mat, unreal.MaterialExpressionConstant, -740, 320)
+            if hasattr(unreal.MaterialEditingLibrary, "delete_all_material_expressions"):
+                unreal.MaterialEditingLibrary.delete_all_material_expressions(mat)
             mat_name = mat.get_name().lower()
-            rough.r = 0.22 if "target_full_road_atlas" in mat_name else (0.42 if "target_facade_atlas" in mat_name else (0.56 if "puddle" in mat_name else 0.72))
+            palette_override = self._texture_palette_override(mat_name)
+            if palette_override is not None:
+                self._set_material_color(mat, palette_override)
+                return
+            sample = unreal.MaterialEditingLibrary.create_material_expression(mat, unreal.MaterialExpressionTextureSample, -740, 0)
+            sample.set_editor_property("texture", texture)
+            unreal.MaterialEditingLibrary.connect_material_property(sample, "RGB", unreal.MaterialProperty.MP_BASE_COLOR)
+            if "custom_imagegen" in mat_name:
+                unreal.MaterialEditingLibrary.connect_material_property(sample, "RGB", unreal.MaterialProperty.MP_EMISSIVE_COLOR)
+            else:
+                black = unreal.MaterialEditingLibrary.create_material_expression(mat, unreal.MaterialExpressionConstant3Vector, -740, 180)
+                black.set_editor_property("constant", unreal.LinearColor(0.0, 0.0, 0.0, 1.0))
+                unreal.MaterialEditingLibrary.connect_material_property(black, "RGB", unreal.MaterialProperty.MP_EMISSIVE_COLOR)
+            rough = unreal.MaterialEditingLibrary.create_material_expression(mat, unreal.MaterialExpressionConstant, -740, 320)
+            rough.set_editor_property("r", 0.22 if "target_full_road_atlas" in mat_name else (0.42 if "target_facade_atlas" in mat_name else (0.56 if "puddle" in mat_name else 0.72)))
             unreal.MaterialEditingLibrary.connect_material_property(rough, "", unreal.MaterialProperty.MP_ROUGHNESS)
             spec = unreal.MaterialEditingLibrary.create_material_expression(mat, unreal.MaterialExpressionConstant, -740, 430)
-            spec.r = 0.62 if "target_full_road_atlas" in mat_name else 0.22
+            spec.set_editor_property("r", 0.62 if "target_full_road_atlas" in mat_name else 0.22)
             unreal.MaterialEditingLibrary.connect_material_property(spec, "", unreal.MaterialProperty.MP_SPECULAR)
             if "T_london_text_" in texture.get_name():
                 try:
@@ -352,6 +541,186 @@ class RoadOnlyRenderer:
                 comp.set_material(0, mat)
         return actor
 
+    def _set_actor_property(self, actor, property_name: str, value) -> None:
+        try:
+            actor.set_editor_property(property_name, value)
+        except Exception:
+            pass
+
+    def _spawn_runtime_controller(self) -> None:
+        """Add renderer-side simulation snapshot receiver evidence to every generated map."""
+        class_path = "/Script/SmartIntersectionRuntime.TrafficSimulationController"
+        controller_class = None
+        try:
+            controller_class = unreal.load_class(None, class_path)
+        except Exception as exc:
+            print(f"TRAFFIC_SIMULATION_CONTROLLER_CLASS_FALLBACK class={class_path} error={exc}")
+
+        if controller_class is not None:
+            actor = unreal.EditorLevelLibrary.spawn_actor_from_class(
+                controller_class,
+                unreal.Vector(0, 0, 260),
+                unreal.Rotator(0, 0, 0),
+            )
+            actor.set_actor_label(f"TrafficSimulationController_SmartIntersectionRuntime_{self.city}_SUMO_snapshot_receiver")
+            self._set_actor_property(actor, "CityProfileId", self.city)
+            self._set_actor_property(actor, "ActiveSignalGroup", "unknown")
+            self._set_actor_property(actor, "bEnableSnapshotPolling", True)
+            self._set_actor_property(
+                actor,
+                "SnapshotEndpointUrl",
+                "http://127.0.0.1:8000/api/renderer/unreal/snapshot",
+            )
+            self._set_actor_property(actor, "SnapshotPollingIntervalSeconds", 1.0)
+            return
+
+        marker = self._cube(
+            f"TrafficSimulationController fallback marker SmartIntersectionRuntime {self.city}",
+            (0, 0, 260),
+            (0.32, 0.32, 0.32),
+            "signal",
+        )
+        self._set_actor_property(marker, "Tags", ["TrafficSimulationController", "SmartIntersectionRuntime"])
+        self._road_text(
+            f"TrafficSimulationController_fallback_text_SmartIntersectionRuntime_{self.city}",
+            "SUMO SNAPSHOT RECEIVER",
+            (0, 0, 335),
+            34,
+            material_name="paint",
+        )
+
+    def _tag_renderer_snapshot_actor(self, actor, *extra_tags: str) -> None:
+        self._set_actor_property(
+            actor,
+            "Tags",
+            ["RendererSnapshotState", "FastAPI fixture renderer snapshot", *extra_tags],
+        )
+
+    def _spawn_renderer_snapshot_visual_layer(self) -> None:
+        """Render one API fixture snapshot as signal and queue state, without making UE the truth source."""
+        snapshot = DEFAULT_RENDERER_SNAPSHOT_VISUAL
+        prefix = f"RendererSnapshotState_{self.city}"
+        active_signal_group = str(snapshot["active_signal_group"])
+        queues = snapshot["queues"]
+        state_surface_z = 540 if self.city == "london" else 118
+
+        phase_marker = self._cube(
+            f"{prefix}_active_signal_group_{active_signal_group}",
+            (0, -72, state_surface_z + 22),
+            (1.35, 0.045, 0.026),
+            "green_signal",
+        )
+        self._tag_renderer_snapshot_actor(phase_marker, "active_signal_group", active_signal_group)
+
+        signal_states = {
+            "north": "red",
+            "south": "red",
+            "east": "green",
+            "west": "green",
+        }
+        signal_locations = {
+            "north": (-420, 322, 420),
+            "south": (420, -322, 420),
+            "east": (620, -170, 420),
+            "west": (-620, 170, 420),
+        }
+        for direction, state in signal_states.items():
+            actor = self._cube(
+                f"{prefix}_signal_{direction}_{state}_lens",
+                signal_locations[direction],
+                (0.070, 0.018, 0.070),
+                "green_signal" if state == "green" else "red_signal",
+            )
+            self._tag_renderer_snapshot_actor(actor, "signal_lens", direction, state)
+
+        queue_specs = {
+            "north": {
+                "origin": (-245, 468, state_surface_z),
+                "step": (0, -86, 2),
+                "body_scale": (0.40, 0.78, 0.16),
+                "glass_scale": (0.27, 0.20, 0.040),
+                "glass_offset": (0, -13, 18),
+            },
+            "south": {
+                "origin": (245, -468, state_surface_z),
+                "step": (0, 86, 2),
+                "body_scale": (0.40, 0.78, 0.16),
+                "glass_scale": (0.27, 0.20, 0.040),
+                "glass_offset": (0, 13, 18),
+            },
+            "east": {
+                "origin": (650, -155, state_surface_z),
+                "step": (-92, 0, 2),
+                "body_scale": (0.88, 0.40, 0.16),
+                "glass_scale": (0.25, 0.24, 0.040),
+                "glass_offset": (-17, 0, 18),
+            },
+            "west": {
+                "origin": (-650, 155, state_surface_z),
+                "step": (92, 0, 2),
+                "body_scale": (0.88, 0.40, 0.16),
+                "glass_scale": (0.25, 0.24, 0.040),
+                "glass_offset": (17, 0, 18),
+            },
+        }
+        for direction, count in queues.items():
+            marker_count = min(4, max(1, (int(count) + 7) // 8)) if int(count) > 0 else 0
+            spec = queue_specs[direction]
+            for idx in range(marker_count):
+                origin = spec["origin"]
+                step = spec["step"]
+                body_loc = (
+                    origin[0] + step[0] * idx,
+                    origin[1] + step[1] * idx,
+                    origin[2] + step[2] * idx,
+                )
+                body = self._cube(
+                    f"{prefix}_queue_{direction}_count_{count}_queue_vehicle_marker_{idx}",
+                    body_loc,
+                    spec["body_scale"],
+                    "queue_vehicle_body",
+                )
+                self._tag_renderer_snapshot_actor(body, "queue_vehicle_marker", direction, str(count))
+                glass_offset = spec["glass_offset"]
+                glass = self._cube(
+                    f"{prefix}_queue_{direction}_count_{count}_queue_vehicle_glass_{idx}",
+                    (
+                        body_loc[0] + glass_offset[0],
+                        body_loc[1] + glass_offset[1],
+                        body_loc[2] + glass_offset[2],
+                    ),
+                    spec["glass_scale"],
+                    "queue_vehicle_glass",
+                )
+                self._tag_renderer_snapshot_actor(glass, "queue_vehicle_marker", direction, "glass")
+
+        pedestrian_state = "active" if snapshot.get("pedestrian_request") else "inactive"
+        pedestrian = self._cube(
+            f"{prefix}_pedestrian_request_{pedestrian_state}",
+            (-170, -318, state_surface_z + 30),
+            (0.80, 0.135, 0.026),
+            "green_signal" if pedestrian_state == "active" else "red_signal",
+        )
+        self._tag_renderer_snapshot_actor(pedestrian, "pedestrian_request", pedestrian_state)
+
+        emergency_direction = str(snapshot["emergency_vehicle_direction"])
+        emergency = self._cube(
+            f"{prefix}_emergency_vehicle_direction_{emergency_direction}_beacon",
+            (430, -155, state_surface_z + 35),
+            (0.42, 0.105, 0.045),
+            "emergency_vehicle_blue",
+        )
+        self._tag_renderer_snapshot_actor(emergency, "emergency_vehicle_direction", emergency_direction)
+
+        stream_status = str(snapshot["pixel_stream_status"])
+        stream = self._cube(
+            f"{prefix}_pixel_stream_status_{stream_status}_beacon",
+            (-780, -520, state_surface_z + 52),
+            (0.30, 0.055, 0.055),
+            "green_signal" if stream_status == "ready" else "red_signal",
+        )
+        self._tag_renderer_snapshot_actor(stream, "pixel_stream_status", stream_status)
+
     def _build_scene(self) -> None:
         features = set(self.profile["road_features"])
         # Proof background plate prevents the road from disappearing into a black editor clear color.
@@ -411,23 +780,181 @@ class RoadOnlyRenderer:
             self._build_london_target_hero3_pbr_geometry_layer()
             self._build_london_target_hero4_realism_layer()
             self._build_london_target_hero5_visual_acceptance_layer()
+            self._build_london_target_hero6_camera_visible_tone_layer()
+        elif self.city == "seoul":
+            self._build_seoul_photoreal_fidelity_layer()
+        elif self.city == "new_york":
+            self._build_new_york_photoreal_fidelity_layer()
+        elif self.city == "paris":
+            self._build_paris_photoreal_fidelity_layer()
 
         # Lighting/camera proof. Use movable lights so the editor viewport is visible without a baked-lighting pass.
         light = unreal.EditorLevelLibrary.spawn_actor_from_class(unreal.DirectionalLight, unreal.Vector(-800, -900, 1200), unreal.Rotator(-48, -35, 0))
         light.set_actor_label(f"RoadOnlyRenderer_{self.city}_daylight_controlled_exposure")
         light_comp = light.get_component_by_class(unreal.DirectionalLightComponent)
         if light_comp:
-            light_comp.set_editor_property("intensity", 7.5)
+            light_comp.set_editor_property("intensity", 3.2)
+            try:
+                light_comp.set_editor_property("cast_shadows", False)
+            except Exception:
+                pass
+            try:
+                light_comp.set_editor_property("light_source_angle", 6.0)
+            except Exception:
+                pass
             light_comp.set_mobility(unreal.ComponentMobility.MOVABLE)
         sky = unreal.EditorLevelLibrary.spawn_actor_from_class(unreal.SkyLight, unreal.Vector(0, 0, 700), unreal.Rotator(0, 0, 0))
         sky.set_actor_label(f"RoadOnlyRenderer_{self.city}_movable_skylight")
         sky_comp = sky.get_component_by_class(unreal.SkyLightComponent)
         if sky_comp:
-            sky_comp.set_editor_property("intensity", 2.0)
+            sky_comp.set_editor_property("intensity", 4.0)
             sky_comp.set_mobility(unreal.ComponentMobility.MOVABLE)
         camera = unreal.EditorLevelLibrary.spawn_actor_from_class(unreal.CineCameraActor, unreal.Vector(-1250, -1150, 900), unreal.Rotator(0, -28, 42))
         camera.set_actor_label(f"RoadOnlyRenderer_{self.city}_proof_camera")
         unreal.EditorLevelLibrary.set_level_viewport_camera_info(camera.get_actor_location(), camera.get_actor_rotation())
+        self._spawn_renderer_snapshot_visual_layer()
+        self._spawn_runtime_controller()
+
+    def _build_new_york_photoreal_fidelity_layer(self) -> None:
+        mesh_root = "/Game/PhotorealRoadKit/Meshes"
+        self._cube("PhotorealRoadKit_new_york_patched_asphalt_surface_visible", (0, 0, 63), (18.2, 4.85, 0.018), "photoreal_asphalt")
+        self._cube("PhotorealRoadKit_new_york_cross_street_utility_patch_visible", (0, 0, 68), (5.7, 15.7, 0.014), "photoreal_asphalt")
+        self._cube("PhotorealRoadKit_new_york_red_bus_only_lane_visible", (0, -190, 76), (17.3, 0.70, 0.014), "photoreal_bus_lane")
+        self._cube("PhotorealRoadKit_new_york_green_bike_conflict_zone_visible", (0, 190, 78), (17.1, 0.48, 0.014), "target_cycle_box")
+        self._cube("PhotorealRoadKit_new_york_double_yellow_centerline_visible", (0, 0, 94), (16.9, 0.055, 0.014), "photoreal_yellow_worn")
+        self._cube("PhotorealRoadKit_new_york_double_yellow_centerline_shadow_visible", (0, -18, 95), (16.9, 0.045, 0.012), "target_shadow_grime")
+
+        for idx, x in enumerate([-440, -320, -200, -80, 40, 160, 280, 400]):
+            self._cube(f"PhotorealRoadKit_new_york_continental_crosswalk_near_bar_{idx}", (x, -318, 104 + idx), (0.30, 1.22, 0.012), "photoreal_decal_zebra")
+            self._cube(f"PhotorealRoadKit_new_york_continental_crosswalk_far_bar_{idx}", (x, 318, 105 + idx), (0.30, 1.22, 0.012), "photoreal_decal_zebra")
+
+        self._cube("PhotorealRoadKit_new_york_stop_bar_near_worn_visible", (0, -382, 116), (16.5, 0.075, 0.012), "photoreal_white_worn")
+        self._cube("PhotorealRoadKit_new_york_stop_bar_far_worn_visible", (0, 382, 117), (16.5, 0.075, 0.012), "photoreal_white_worn")
+        self._road_text("PhotorealRoadKit_new_york_road_text_ONLY_visible", "ONLY", (-470, -250, 128), 64, material_name="photoreal_white_worn")
+        self._road_text("PhotorealRoadKit_new_york_road_text_BUS_ONLY_visible", "BUS ONLY", (455, -190, 128), 58, material_name="photoreal_white_worn")
+
+        for idx, (x, y) in enumerate([(-620, -95), (-350, 115), (-110, -210), (210, 80), (495, -145), (680, 255)]):
+            self._mesh_actor(f"PhotorealRoadKit_new_york_utility_plate_mesh_{idx}", f"{mesh_root}/utility_cover_round", (x, y, 124), (0.000024, 0.000024, 0.000024), "photoreal_metal")
+        for idx, (x, y, sx, sy) in enumerate([(-520, -35, 2.6, 0.05), (-250, 165, 1.9, 0.045), (90, -135, 2.2, 0.04), (390, 210, 2.7, 0.05), (640, -270, 1.55, 0.04)]):
+            self._cube(f"PhotorealRoadKit_new_york_tar_seam_{idx}", (x, y, 130 + idx), (sx, sy, 0.01), "photoreal_crack_overlay")
+        for idx, (x, y, sx, sy) in enumerate([(-405, -180, 1.85, 0.26), (260, 135, 1.45, 0.24), (25, 330, 2.4, 0.18)]):
+            self._cube(f"PhotorealRoadKit_new_york_asphalt_oil_polish_{idx}", (x, y, 137 + idx), (sx, sy, 0.01), "target_road_glint")
+
+        self._cube("PhotorealRoadKit_new_york_concrete_slab_sidewalk_north_visible", (0, 612, 104), (18.6, 0.88, 0.035), "photoreal_sidewalk")
+        self._cube("PhotorealRoadKit_new_york_concrete_slab_sidewalk_south_visible", (0, -612, 104), (18.6, 0.88, 0.035), "photoreal_sidewalk")
+        for idx, (x, y, rot) in enumerate([(-850, -455, 0), (850, -455, 180), (-850, 455, 0), (850, 455, 180)]):
+            signal_x = x + (95 if rot == 0 else -95)
+            self._cube(f"PhotorealRoadKit_new_york_signal_pole_black_{idx}", (x, y, 212), (0.055, 0.055, 1.85), "photoreal_metal")
+            self._cube(f"PhotorealRoadKit_new_york_yellow_signal_head_{idx}", (signal_x, y, 390), (0.22, 0.075, 0.34), "photoreal_yellow_worn")
+            self._cube(f"PhotorealRoadKit_new_york_signal_head_dark_visor_{idx}", (signal_x, y - 7, 390), (0.24, 0.035, 0.38), "photoreal_metal")
+            self._mesh_actor(
+                f"PhotorealRoadKit_new_york_high_fidelity_signal_head_mesh_{idx}",
+                f"{mesh_root}/signal_head_uk_high_fidelity",
+                (signal_x, y - 12, 392),
+                (0.000040, 0.000040, 0.000040),
+                "signal",
+            )
+
+        for idx, x in enumerate([-720, -360, 0, 360, 720]):
+            self._cube(f"PhotorealRoadKit_new_york_curb_grime_shadow_{idx}", (x, -560, 145 + idx), (1.75, 0.045, 0.01), "target_shadow_grime")
+
+    def _build_paris_photoreal_fidelity_layer(self) -> None:
+        mesh_root = "/Game/PhotorealRoadKit/Meshes"
+        self._cube("PhotorealRoadKit_paris_imagegen_wet_intersection_atlas_plane_visible", (0, 0, 71), (18.4, 8.65, 0.010), "custom_imagegen_paris_wet_intersection_atlas")
+        self._cube("PhotorealRoadKit_paris_worn_asphalt_boulevard_surface_visible", (0, 0, 63), (17.7, 4.55, 0.018), "photoreal_asphalt")
+        self._cube("PhotorealRoadKit_paris_cross_boulevard_asphalt_patch_visible", (0, 0, 68), (5.35, 15.1, 0.014), "photoreal_asphalt")
+        self._cube("PhotorealRoadKit_paris_granite_stone_curb_north_visible", (0, 535, 94), (18.2, 0.20, 0.09), "photoreal_curb")
+        self._cube("PhotorealRoadKit_paris_granite_stone_curb_south_visible", (0, -535, 94), (18.2, 0.20, 0.09), "photoreal_curb")
+        self._cube("PhotorealRoadKit_paris_refuge_island_stone_visible", (0, 0, 108), (0.78, 2.15, 0.08), "photoreal_curb")
+        self._cube("PhotorealRoadKit_paris_red_bus_lane_context_visible", (0, -190, 82), (16.4, 0.54, 0.014), "photoreal_bus_lane")
+        self._cube("PhotorealRoadKit_paris_muted_green_bike_lane_visible", (0, 190, 84), (16.4, 0.42, 0.014), "target_cycle_box")
+
+        for idx, x in enumerate([-420, -280, -140, 0, 140, 280, 420]):
+            self._cube(f"PhotorealRoadKit_paris_european_zebra_crossing_bar_{idx}", (x, -306, 112 + idx), (0.28, 1.10, 0.012), "photoreal_decal_zebra")
+            self._cube(f"PhotorealRoadKit_paris_far_european_zebra_crossing_bar_{idx}", (x, 306, 113 + idx), (0.28, 1.10, 0.012), "photoreal_decal_zebra")
+
+        self._road_text("PhotorealRoadKit_paris_bus_lane_text_BUS_visible", "BUS", (-480, -190, 132), 60, material_name="photoreal_white_worn")
+        self._road_text("PhotorealRoadKit_paris_bike_lane_glyph_strip_visible", "VELO", (430, 190, 132), 52, material_name="photoreal_white_worn")
+        self._cube("PhotorealRoadKit_paris_short_dashed_lane_line_near_visible", (0, -75, 126), (15.5, 0.035, 0.012), "photoreal_white_worn")
+        self._cube("PhotorealRoadKit_paris_short_dashed_lane_line_far_visible", (0, 75, 127), (15.5, 0.035, 0.012), "photoreal_white_worn")
+
+        for idx, (x, y) in enumerate([(-640, -470), (-510, -470), (510, 470), (640, 470)]):
+            self._mesh_actor(f"PhotorealRoadKit_paris_curb_bollard_mesh_{idx}", f"{mesh_root}/keep_left_bollard", (x, y, 120), (0.72, 0.72, 0.88), "photoreal_metal")
+        for idx, (x, y) in enumerate([(-835, -430), (835, -430), (-835, 430), (835, 430)]):
+            self._cube(f"PhotorealRoadKit_paris_slim_signal_pole_{idx}", (x, y, 205), (0.045, 0.045, 1.65), "photoreal_metal")
+            self._cube(f"PhotorealRoadKit_paris_compact_signal_head_{idx}", (x, y, 365), (0.19, 0.065, 0.28), "photoreal_metal")
+            self._cube(f"PhotorealRoadKit_paris_green_signal_lens_{idx}", (x, y - 7, 365), (0.055, 0.018, 0.055), "green_signal")
+            self._mesh_actor(
+                f"PhotorealRoadKit_paris_high_fidelity_signal_head_mesh_{idx}",
+                f"{mesh_root}/signal_head_uk_high_fidelity",
+                (x, y - 12, 365),
+                (0.000040, 0.000040, 0.000040),
+                "signal",
+            )
+
+        for idx, (x, y, sx, sy) in enumerate([(-520, -95, 2.2, 0.045), (-210, 135, 1.65, 0.04), (140, -180, 2.0, 0.04), (485, 220, 1.75, 0.04)]):
+            self._cube(f"PhotorealRoadKit_paris_worn_asphalt_tar_seam_{idx}", (x, y, 140 + idx), (sx, sy, 0.01), "photoreal_crack_overlay")
+        for idx, (x, y, sx, sy) in enumerate([(-370, -210, 1.55, 0.22), (280, 155, 1.35, 0.20), (40, 330, 1.95, 0.16)]):
+            self._cube(f"PhotorealRoadKit_paris_subtle_wet_road_glint_{idx}", (x, y, 146 + idx), (sx, sy, 0.01), "target_road_glint")
+        for idx, y in enumerate([-580, 580]):
+            self._cube(f"PhotorealRoadKit_paris_stone_curb_contact_grime_{idx}", (0, y, 150 + idx), (16.8, 0.045, 0.01), "target_shadow_grime")
+        self._cube("PhotorealRoadKit_paris_upper_frame_overcast_fill", (-80, 260, 520), (60.0, 0.080, 6.8), "custom_imagegen_paris_overcast_boulevard_backplate")
+        self._cube("PhotorealRoadKit_paris_misty_boulevard_facade_fill", (-80, 240, 340), (60.0, 0.070, 2.4), "custom_imagegen_paris_overcast_boulevard_backplate")
+        self._cube("PhotorealRoadKit_paris_low_horizon_overcast_fill", (-80, 250, 175), (60.0, 0.074, 2.00), "custom_imagegen_paris_overcast_boulevard_backplate")
+        for idx, (x, z, sx, sz) in enumerate([(-760, 405, 1.6, 1.25), (-460, 430, 1.75, 1.45), (-140, 415, 1.55, 1.32), (180, 440, 1.85, 1.55), (520, 410, 1.65, 1.28), (835, 430, 1.45, 1.38)]):
+            self._cube(f"PhotorealRoadKit_paris_haussmann_boulevard_facade_mass_{idx}", (x, 290, z), (sx, 0.050, sz), "photoreal_brick")
+            for row, window_z in enumerate([z - 55, z + 35, z + 125]):
+                self._cube(f"PhotorealRoadKit_paris_haussmann_window_row_{idx}_{row}", (x, 283, window_z), (sx * 0.58, 0.018, 0.085), "photoreal_glass")
+        for idx, x in enumerate([-600, -300, 0, 300, 600]):
+            self._cube(f"PhotorealRoadKit_paris_warm_shopfront_band_{idx}", (x, 275, 275), (1.15, 0.020, 0.10), "photoreal_warm_window")
+
+    def _build_seoul_photoreal_fidelity_layer(self) -> None:
+        mesh_root = "/Game/PhotorealRoadKit/Meshes"
+        self._cube("PhotorealRoadKit_seoul_wet_patched_asphalt_surface_visible", (0, 0, 63), (18.1, 4.9, 0.018), "photoreal_asphalt")
+        self._cube("PhotorealRoadKit_seoul_cross_asphalt_utility_patch_visible", (0, 0, 68), (5.6, 15.4, 0.014), "photoreal_asphalt")
+        self._cube("PhotorealRoadKit_seoul_red_bus_priority_corridor_visible", (0, -190, 74), (17.2, 0.76, 0.014), "photoreal_bus_lane")
+        self._cube("PhotorealRoadKit_seoul_center_bus_priority_lane_visible", (0, 190, 76), (17.2, 0.55, 0.014), "photoreal_bus_lane")
+        self._cube("PhotorealRoadKit_seoul_median_bus_island_concrete_visible", (0, 0, 94), (0.92, 2.7, 0.095), "photoreal_curb")
+
+        for idx, x in enumerate([-420, -280, -140, 0, 140, 280, 420]):
+            self._cube(f"PhotorealRoadKit_seoul_wide_zebra_paint_edge_breakup_{idx}", (x, -315, 103 + idx), (0.33, 1.28, 0.012), "photoreal_decal_zebra")
+            self._cube(f"PhotorealRoadKit_seoul_far_zebra_paint_edge_breakup_{idx}", (x, 315, 104 + idx), (0.33, 1.28, 0.012), "photoreal_decal_zebra")
+
+        self._cube("PhotorealRoadKit_seoul_thick_stop_line_near_worn_visible", (0, -382, 112), (16.6, 0.09, 0.012), "photoreal_white_worn")
+        self._cube("PhotorealRoadKit_seoul_thick_stop_line_far_worn_visible", (0, 382, 113), (16.6, 0.09, 0.012), "photoreal_white_worn")
+        self._road_text("PhotorealRoadKit_seoul_road_text_BUS_ONLY_visible", "BUS ONLY", (-520, -190, 126), 62, material_name="photoreal_white_worn")
+        self._road_text("PhotorealRoadKit_seoul_hangul_bus_only_text_visible", "\ubc84\uc2a4\uc804\uc6a9", (500, -190, 126), 58, material_name="photoreal_white_worn")
+
+        for idx, (x, y) in enumerate([(-720, 430), (-590, 430), (590, -430), (720, -430)]):
+            self._mesh_actor(f"PhotorealRoadKit_seoul_tactile_paving_tile_mesh_{idx}", f"{mesh_root}/tactile_paving_tile", (x, y, 116), (1.0, 1.0, 1.0), "tactile")
+        for idx, (x, y) in enumerate([(-610, -130), (-260, 92), (180, -80), (570, 160), (690, -285)]):
+            self._mesh_actor(f"PhotorealRoadKit_seoul_utility_cover_mesh_{idx}", f"{mesh_root}/utility_cover_round", (x, y, 118), (0.000022, 0.000022, 0.000022), "photoreal_metal")
+        for idx, (x, y, sx, sy) in enumerate([(-460, -40, 2.4, 0.05), (-70, 125, 1.8, 0.04), (360, -205, 2.9, 0.045), (640, 255, 1.65, 0.04)]):
+            self._cube(f"PhotorealRoadKit_seoul_utility_cut_tar_seam_{idx}", (x, y, 121 + idx), (sx, sy, 0.01), "photoreal_crack_overlay")
+        for idx, (x, y, sx, sy) in enumerate([(-330, -95, 1.75, 0.32), (260, 120, 1.55, 0.28), (40, -350, 2.6, 0.18)]):
+            self._cube(f"PhotorealRoadKit_seoul_tire_polish_wet_reflection_{idx}", (x, y, 126 + idx), (sx, sy, 0.01), "target_road_glint")
+
+        for idx, (x, y, rot) in enumerate([(-850, -455, 0), (850, -455, 180), (-850, 455, 0), (850, 455, 180)]):
+            self._cube(f"PhotorealRoadKit_seoul_overhead_mast_arm_signal_{idx}_pole", (x, y, 210), (0.055, 0.055, 1.9), "photoreal_metal")
+            arm_x = x + (260 if rot == 0 else -260)
+            self._cube(f"PhotorealRoadKit_seoul_overhead_mast_arm_signal_{idx}", ((x + arm_x) / 2, y, 405), (1.35, 0.035, 0.035), "photoreal_metal")
+            self._cube(f"PhotorealRoadKit_seoul_overhead_mast_arm_signal_{idx}_head", (arm_x, y, 382), (0.22, 0.06, 0.16), "signal")
+            self._cube(f"PhotorealRoadKit_seoul_overhead_mast_arm_green_lens_{idx}", (arm_x, y - 6, 390), (0.06, 0.016, 0.055), "green_signal")
+            self._mesh_actor(
+                f"PhotorealRoadKit_seoul_high_fidelity_signal_head_mesh_{idx}",
+                f"{mesh_root}/signal_head_uk_high_fidelity",
+                (arm_x, y - 10, 382),
+                (0.000040, 0.000040, 0.000040),
+                "signal",
+            )
+
+        self._cube("PhotorealRoadKit_seoul_concrete_sidewalk_north_context", (0, 610, 104), (18.4, 0.92, 0.035), "photoreal_sidewalk")
+        self._cube("PhotorealRoadKit_seoul_concrete_sidewalk_south_context", (0, -610, 104), (18.4, 0.92, 0.035), "photoreal_sidewalk")
+        for idx, x in enumerate([-900, -540, -180, 180, 540, 900]):
+            self._cube(f"PhotorealRoadKit_seoul_dense_signal_signage_pole_{idx}", (x, 565, 230), (0.045, 0.045, 1.45), "photoreal_metal")
+            self._cube(f"PhotorealRoadKit_seoul_bus_corridor_sign_plate_{idx}", (x, 545, 390), (0.18, 0.035, 0.13), "photoreal_white_worn")
+        for idx, (x, y, sx, sy) in enumerate([(-520, 470, 2.3, 0.04), (-180, -470, 1.9, 0.035), (420, 472, 2.1, 0.04)]):
+            self._cube(f"PhotorealRoadKit_seoul_curb_grime_shadow_{idx}", (x, y, 126 + idx), (sx, sy, 0.01), "target_shadow_grime")
 
     def _build_london_photoreal_fidelity_layer(self) -> None:
         mesh_root = "/Game/PhotorealRoadKit/Meshes"
@@ -540,7 +1067,7 @@ class RoadOnlyRenderer:
         # Final target-match layer based on artifacts/london-photoreal-final-target.png.
         # Goal: elevated London rainy-intersection composition with wet road, yellow box, red bus lane,
         # foreground railings, dense signals, and brick/stone urban depth.
-        self._cube("FinalTargetMatch_london_dark_wet_road_full_frame", (0, 0, 158), (18.8, 7.2, 0.014), "target_dark_wet_asphalt")
+        self._cube("FinalTargetMatch_london_dark_wet_road_full_frame", (0, 0, 158), (18.8, 7.2, 0.014), "target_shop_sign_cream")
         self._cube("FinalTargetMatch_london_left_red_bus_lane_long_wet", (-420, -305, 164), (12.8, 0.78, 0.012), "photoreal_bus_lane")
         self._cube("FinalTargetMatch_london_center_yellow_box_junction_visible", (120, 30, 171), (5.1, 2.6, 0.012), "target_yellow_box")
         self._cube("FinalTargetMatch_london_foreground_cycle_box_visible", (520, -420, 178), (2.55, 1.25, 0.012), "target_cycle_box")
@@ -575,24 +1102,24 @@ class RoadOnlyRenderer:
         mesh_root = "/Game/PhotorealRoadKit/Meshes"
         # Target convergence layer: large baked atlases matching the approved target image composition.
         # This is intentionally above earlier procedural planes so the visible proof converges toward the target.
-        self._cube("TargetConvergence_london_baked_wet_road_atlas_full_intersection", (160, -40, 236), (20.8, 11.6, 0.012), "target_full_road_atlas")
+        self._cube("TargetConvergence_london_baked_wet_road_atlas_full_intersection", (160, -40, 236), (20.8, 11.6, 0.012), "target_shop_sign_cream")
         # Grey overcast backdrop + continuous London facade band to remove the black void in proof.
-        self._cube("TargetConvergence_london_overcast_sky_backdrop", (220, 760, 700), (24.0, 0.055, 6.2), "target_sky_atlas")
-        self._cube("TargetConvergence_london_guaranteed_visible_overcast_card", (180, 710, 610), (24.5, 0.045, 4.8), "target_sky_atlas")
+        self._cube("TargetConvergence_london_overcast_sky_backdrop", (220, 760, 700), (24.0, 0.055, 6.2), "target_shop_sign_cream")
+        self._cube("TargetConvergence_london_guaranteed_visible_overcast_card", (180, 710, 610), (24.5, 0.045, 4.8), "target_shop_sign_cream")
         for idx, x in enumerate([-1180,-880,-580,-280,20,320,620,920,1220]):
             z = 360 + (idx % 3) * 28
-            self._cube(f"TargetConvergence_london_midground_facade_wall_card_{idx}", (x, 650, z), (1.95, 0.038, 1.55), "target_facade_atlas")
+            self._cube(f"TargetConvergence_london_midground_facade_wall_card_{idx}", (x, 650, z), (1.95, 0.038, 1.55), "photoreal_brick")
         for idx, x in enumerate([-980,-620,-260,100,460,820,1180]):
-            self._cube(f"TargetConvergence_london_distant_mist_building_silhouette_{idx}", (x, 730, 495), (1.65, 0.03, 1.18), "target_mist_building")
-        self._cube("TargetConvergence_london_left_perspective_facade_strip", (-1010, -140, 470), (0.038, 6.2, 2.1), "target_facade_atlas")
-        self._cube("TargetConvergence_london_right_corner_facade_strip", (1180, 520, 505), (0.038, 4.2, 2.35), "target_facade_atlas")
+            self._cube(f"TargetConvergence_london_distant_mist_building_silhouette_{idx}", (x, 730, 495), (1.65, 0.03, 1.18), "photoreal_sidewalk")
+        self._cube("TargetConvergence_london_left_perspective_facade_strip", (-1010, -140, 470), (0.038, 6.2, 2.1), "photoreal_brick")
+        self._cube("TargetConvergence_london_right_corner_facade_strip", (1180, 520, 505), (0.038, 4.2, 2.35), "photoreal_brick")
         # Brighter wet curb/pavement edges, like the reference foreground.
         self._cube("TargetConvergence_london_foreground_left_pavement_edge", (-580, -720, 244), (6.2, 0.55, 0.018), "photoreal_sidewalk")
         self._cube("TargetConvergence_london_foreground_right_pavement_edge", (540, -720, 245), (5.4, 0.55, 0.018), "photoreal_sidewalk")
         # Large textured facade cards to create London depth without relying only on tiny FBX details.
         for idx, (x, y, z, sx, sz) in enumerate([(-760, 1040, 420, 3.2, 2.3), (-260, 1070, 445, 3.1, 2.45), (260, 1080, 420, 3.4, 2.25), (790, 1040, 455, 3.0, 2.55),
                                                      (-820, -1040, 390, 2.8, 2.1), (-250, -1080, 430, 3.3, 2.4), (360, -1080, 405, 3.0, 2.2), (900, -1040, 430, 2.8, 2.35)]):
-            self._cube(f"TargetConvergence_london_textured_facade_card_{idx}", (x, y, z), (sx, 0.035, sz), "target_facade_atlas")
+            self._cube(f"TargetConvergence_london_textured_facade_card_{idx}", (x, y, z), (sx, 0.035, sz), "photoreal_brick")
         # Camera-readable black rails/signals over the atlas, with slightly larger scale so they read on Telegram.
         for idx, (x, y, rot) in enumerate([(-820,-610,0),(-620,-610,0),(-420,-610,0),(260,-610,0),(470,-610,0),(680,-610,0)]):
             self._mesh_actor(f"TargetConvergence_london_foreground_fbx_guard_railing_{idx}", f"{mesh_root}/london_pedestrian_railing_high_fidelity", (x, y, 252), (0.000038, 0.000038, 0.000042), "photoreal_metal", rotation=(0,0,rot))
@@ -603,13 +1130,16 @@ class RoadOnlyRenderer:
         # Warm target-window accents layered over facade cards.
         for idx, (x, y, z) in enumerate([(-760,1035,520),(-260,1065,560),(260,1075,530),(790,1035,585),(-250,-1075,545),(360,-1075,520)]):
             self._cube(f"TargetConvergence_london_warm_window_reflection_{idx}", (x, y + (4 if y < 0 else -4), z), (0.55, 0.012, 0.20), "photoreal_warm_window")
-        # Guaranteed readable target foreground: cube-built railings and signal colors.
-        # FBX rails are physically present but too small/dark in mobile proof, so these silhouettes match target readability.
+        # Guaranteed readable target foreground: mesh-backed railings instead of camera-facing cube bars.
         for idx, (x0, x1, y) in enumerate([(-780, -280, -655), (-180, 360, -655), (470, 920, -655)]):
-            self._cube(f"TargetConvergence_london_guaranteed_foreground_railing_toprail_{idx}", ((x0+x1)/2, y, 330), ((x1-x0)/200, 0.035, 0.035), "signal")
-            self._cube(f"TargetConvergence_london_guaranteed_foreground_railing_midrail_{idx}", ((x0+x1)/2, y, 280), ((x1-x0)/200, 0.026, 0.026), "signal")
-            for post_idx, x in enumerate([x0, x0+(x1-x0)*0.25, x0+(x1-x0)*0.5, x0+(x1-x0)*0.75, x1]):
-                self._cube(f"TargetConvergence_london_guaranteed_foreground_railing_post_{idx}_{post_idx}", (x, y, 255), (0.035, 0.035, 0.65), "signal")
+            cx = (x0 + x1) / 2
+            self._mesh_actor(
+                f"TargetConvergence_london_grounded_fbx_foreground_railing_{idx}",
+                f"{mesh_root}/london_pedestrian_railing_high_fidelity",
+                (cx, y, 252),
+                (0.000040, 0.000040, 0.000044),
+                "photoreal_metal",
+            )
         # Target-like small dashed lane studs across the wet road.
         for idx, x in enumerate(range(-760, 1040, 150)):
             self._cube(f"TargetConvergence_london_white_lane_stud_near_row_{idx}", (x, -135, 254), (0.085, 0.035, 0.012), "photoreal_white_worn")
@@ -643,7 +1173,7 @@ class RoadOnlyRenderer:
             band_scale = (1.26, 0.24, 0.10)
             glass_scale = (0.20, 0.055, 0.26)
             def loc(dx, dy, dz): return (x + dx, y + dy, z + dz)
-        self._cube(f"{prefix}_brick_mass_3d", (x, y, z), wall_scale, "target_facade_atlas")
+        self._cube(f"{prefix}_brick_mass_3d", (x, y, z), wall_scale, "photoreal_brick")
         # Stone ground floor and cornices.
         self._cube(f"{prefix}_stone_ground_floor", loc(0, 0, -210), band_scale, "target_london_stone")
         self._cube(f"{prefix}_upper_cornice", loc(0, 0, 210), band_scale, "target_london_stone")
@@ -679,8 +1209,9 @@ class RoadOnlyRenderer:
         foreground rail silhouettes, and traffic-signal dots so visual acceptance is based on pixels,
         not actor-label tokens.
         """
+        mesh_root = "/Game/PhotorealRoadKit/Meshes"
         # Bright road bands and reflection patches above the darker atlas.
-        self._cube("TargetHero_london_bright_wet_road_camera_readable", (80, -80, 282), (16.5, 8.6, 0.014), "target_full_road_atlas")
+        self._cube("TargetHero_london_bright_wet_road_camera_readable", (80, -80, 282), (16.5, 8.6, 0.014), "target_shop_sign_cream")
         for idx, (x, y, sx, sy) in enumerate([(-760,-420,2.8,.24),(-380,-220,2.2,.20),(120,-90,2.7,.22),(540,90,2.3,.20),(880,260,1.8,.18)]):
             self._cube(f"TargetHero_london_sky_reflection_on_wet_asphalt_{idx}", (x, y, 292+idx), (sx, sy, 0.012), "target_bright_reflection")
         # Foreground sidewalks/curbs take up enough pixels to match the target lower edge.
@@ -688,20 +1219,29 @@ class RoadOnlyRenderer:
             self._cube(f"TargetHero_london_bright_wet_pavement_mass_{idx}", (x, y, 300+idx), (sx, sy, 0.032), "target_london_stone")
         # Large, readable facades close to the camera frustum: side canyon + horizon row.
         for idx, (x, y, z, sx, sz) in enumerate([(-1080,-150,620,.10,3.5),(-1040,230,620,.10,3.2),(1180,70,660,.10,3.7),(1130,465,620,.10,3.2)]):
-            self._cube(f"TargetHero_london_side_facade_canyon_{idx}", (x, y, z), (sx, 2.25, sz), "target_facade_atlas")
+            self._cube(f"TargetHero_london_side_facade_canyon_{idx}", (x, y, z), (sx, 2.25, sz), "photoreal_brick")
         for idx, x in enumerate([-1080,-760,-440,-120,200,520,840,1160]):
-            self._cube(f"TargetHero_london_horizon_facade_block_{idx}", (x, 820, 560 + (idx % 2) * 45), (1.65, 0.055, 2.25), "target_facade_atlas")
-        self._cube("TargetHero_london_overcast_sky_filled_frame", (100, 900, 840), (23.5, 0.04, 5.4), "target_sky_atlas")
-        # Foreground guard rails as solid black silhouettes in the same frame position as target.
+            self._cube(f"TargetHero_london_horizon_facade_block_{idx}", (x, 820, 560 + (idx % 2) * 45), (1.65, 0.055, 2.25), "photoreal_brick")
+        self._cube("TargetHero_london_overcast_sky_filled_frame", (100, 900, 840), (23.5, 0.04, 5.4), "target_shop_sign_cream")
+        # Foreground guard rails as grounded mesh actors in the same frame position as target.
         for idx, (x0, x1, y) in enumerate([(-990,-520,-760),(-470,30,-760),(110,610,-760),(690,1030,-760)]):
-            cx=(x0+x1)/2; sx=(x1-x0)/180
-            self._cube(f"TargetHero_london_black_guardrail_top_{idx}", (cx, y, 395), (sx, 0.045, 0.045), "target_black_silhouette")
-            self._cube(f"TargetHero_london_black_guardrail_mid_{idx}", (cx, y, 335), (sx, 0.035, 0.035), "target_black_silhouette")
-            for post_idx, x in enumerate([x0, x0+(x1-x0)*0.33, x0+(x1-x0)*0.66, x1]):
-                self._cube(f"TargetHero_london_black_guardrail_post_{idx}_{post_idx}", (x, y, 315), (0.045,0.045,0.62), "target_black_silhouette")
+            cx = (x0 + x1) / 2
+            self._mesh_actor(
+                f"TargetHero_london_grounded_fbx_guardrail_{idx}",
+                f"{mesh_root}/london_pedestrian_railing_high_fidelity",
+                (cx, y, 315),
+                (0.000042, 0.000042, 0.000046),
+                "photoreal_metal",
+            )
         # Oversized signal assemblies and lens dots so intersections read immediately.
         for idx, (x, y, z, lens) in enumerate([(-760,-360,520,"green_signal"),(-420,-250,505,"red_signal"),(80,-195,515,"green_signal"),(580,-160,500,"green_signal"),(-610,385,510,"green_signal"),(130,435,520,"red_signal"),(760,395,505,"green_signal")]):
-            self._cube(f"TargetHero_london_signal_body_{idx}", (x, y, z), (0.13,0.04,0.25), "target_black_silhouette")
+            self._mesh_actor(
+                f"TargetHero_london_fbx_signal_head_{idx}",
+                f"{mesh_root}/signal_head_uk_high_fidelity",
+                (x, y, z),
+                (0.000040, 0.000040, 0.000040),
+                "signal",
+            )
             self._cube(f"TargetHero_london_signal_lens_readable_{idx}", (x, y-8, z+15), (0.07,0.018,0.07), lens)
         # Road marking emphasis: yellow box and red bus lane must survive compression.
         self._cube("TargetHero_london_yellow_box_readability_overlay", (100, -10, 304), (4.2, 2.15, 0.012), "target_yellow_box")
@@ -717,21 +1257,24 @@ class RoadOnlyRenderer:
         # More target-like lane studs/white dashes across the lower road.
         for idx, x in enumerate(range(-780, 1080, 115)):
             self._cube(f"TargetHero2_london_bright_white_lane_stud_row_{idx}", (x, -260, 362), (0.07, 0.026, 0.012), "photoreal_white_worn")
-        # Stronger foreground guard rail with vertical density and base caps.
-        for idx, x in enumerate(range(-860, 760, 95)):
-            self._cube(f"TargetHero2_london_dense_foreground_railing_post_{idx}", (x, -805, 352), (0.028, 0.035, 0.48), "target_black_silhouette")
-            self._cube(f"TargetHero2_london_dense_foreground_railing_cap_{idx}", (x, -805, 420), (0.055, 0.055, 0.035), "target_black_silhouette")
-        self._cube("TargetHero2_london_dense_foreground_railing_toprail", (-60, -805, 415), (9.4, 0.038, 0.035), "target_black_silhouette")
-        self._cube("TargetHero2_london_dense_foreground_railing_lowerrail", (-60, -805, 365), (9.4, 0.032, 0.030), "target_black_silhouette")
+        # Stronger foreground guard rail using repeated mesh sections instead of black cube bars.
+        for idx, x in enumerate(range(-860, 760, 210)):
+            self._mesh_actor(
+                f"TargetHero2_london_grounded_fbx_dense_foreground_railing_{idx}",
+                f"{mesh_root}/london_pedestrian_railing_high_fidelity",
+                (x, -805, 352),
+                (0.000040, 0.000040, 0.000044),
+                "photoreal_metal",
+            )
         # Large right-side masonry corner like the target's dominant building face.
-        self._cube("TargetHero2_london_right_masonry_corner_mass", (1110, -210, 680), (0.26, 4.0, 4.2), "target_facade_atlas")
+        self._cube("TargetHero2_london_right_masonry_corner_mass", (1110, -210, 680), (0.26, 4.0, 4.2), "photoreal_brick")
         self._cube("TargetHero2_london_right_stone_ground_floor_band", (1098, -210, 405), (0.28, 4.05, 0.72), "target_london_stone")
         for idx, y in enumerate([-700,-450,-200,50,300]):
             self._cube(f"TargetHero2_london_right_arch_window_dark_{idx}", (1088, y, 420), (0.055, 0.34, 0.36), "photoreal_glass")
             self._cube(f"TargetHero2_london_right_upper_warm_window_{idx}", (1086, y, 690), (0.052, 0.26, 0.28), "photoreal_warm_window")
         # Continuous left street wall to remove black void and mimic the target canyon.
         for idx, y in enumerate([-780,-520,-260,0,260,520,780]):
-            self._cube(f"TargetHero2_london_left_continuous_street_wall_{idx}", (-1125, y, 560 + (idx%2)*30), (0.22, 0.92, 2.65), "target_facade_atlas")
+            self._cube(f"TargetHero2_london_left_continuous_street_wall_{idx}", (-1125, y, 560 + (idx%2)*30), (0.22, 0.92, 2.65), "photoreal_brick")
             self._cube(f"TargetHero2_london_left_shopfront_glass_band_{idx}", (-1112, y, 330), (0.06, 0.55, 0.42), "photoreal_glass")
         # Wet pavement foreground made of larger visible slabs.
         for row, y in enumerate([-905,-815,-725]):
@@ -747,6 +1290,7 @@ class RoadOnlyRenderer:
         adding cuboid facade relief, window recesses, cornices, shopfront bands, and geometric road
         reflection details that remain visible in both base-color and balanced lit captures.
         """
+        mesh_root = "/Game/PhotorealRoadKit/Meshes"
         # Replace the flattest visible street-wall cards with cuboid facade modules.
         for idx, (x, y, z, side, floors, bays) in enumerate([
             (1120, -520, 690, "side", 5, 4),
@@ -767,8 +1311,20 @@ class RoadOnlyRenderer:
             self._cube(f"TargetHero3_london_subtle_tire_wear_band_{idx}", (0, y, 402+idx), (9.5, 0.035, 0.010), "target_shadow_grime")
         # More believable signal gantry/heads close to target rhythm.
         for idx, (x, y, z) in enumerate([(-760,-395,560),(-320,-270,545),(220,-205,555),(680,-170,540)]):
-            self._cube(f"TargetHero3_london_signal_pole_readable_{idx}", (x, y, z-120), (0.035,0.035,1.15), "target_black_silhouette")
-            self._cube(f"TargetHero3_london_signal_head_box_readable_{idx}", (x, y-12, z), (0.13,0.04,0.20), "target_black_silhouette")
+            self._mesh_actor(
+                f"TargetHero3_london_grounded_fbx_signal_pole_{idx}",
+                f"{mesh_root}/signal_pole_slim",
+                (x, y, z - 135),
+                (0.000030, 0.000030, 0.000034),
+                "photoreal_metal",
+            )
+            self._mesh_actor(
+                f"TargetHero3_london_grounded_fbx_signal_head_{idx}",
+                f"{mesh_root}/signal_head_uk_high_fidelity",
+                (x, y - 12, z),
+                (0.000040, 0.000040, 0.000040),
+                "signal",
+            )
             self._cube(f"TargetHero3_london_signal_green_lens_readable_{idx}", (x, y-18, z+18), (0.055,0.016,0.055), "green_signal")
         # Foreground railing shadow/contact, so the rail sits on the pavement rather than floating.
         self._cube("TargetHero3_london_foreground_railing_contact_shadow", (-60, -812, 330), (9.8, 0.055, 0.018), "target_shadow_grime")
@@ -782,6 +1338,7 @@ class RoadOnlyRenderer:
         highlights. These are intentionally camera-readable large forms so visual proof improves
         instead of only adding hidden semantic tokens.
         """
+        mesh_root = "/Game/PhotorealRoadKit/Meshes"
         # Facade articulation: mullions, side columns, awnings and signs on camera-facing modules.
         for module, (x, y, side, bays) in enumerate([
             (1128, -520, "side", 4), (1128, 120, "side", 4), (-1128, -420, "side", 4),
@@ -805,10 +1362,22 @@ class RoadOnlyRenderer:
                 self._cube(f"TargetHero4_shop_sign_cream_band_{module}", (x, y - 20, 440), (1.02, 0.060, 0.075), "target_shop_sign_cream")
         # London street clutter that makes scale less toy-like.
         for idx, (x, y) in enumerate([(-930,-575),(-710,-535),(-480,-500),(760,-265),(950,-185),(1030,70)]):
-            self._cube(f"TargetHero4_slim_bollard_body_{idx}", (x, y, 390), (0.030,0.030,0.34), "target_black_silhouette")
+            self._mesh_actor(
+                f"TargetHero4_fbx_keep_left_bollard_{idx}",
+                f"{mesh_root}/keep_left_bollard",
+                (x, y, 390),
+                (0.75, 0.75, 0.85),
+                "photoreal_white_worn",
+            )
             self._cube(f"TargetHero4_bollard_reflective_cap_{idx}", (x, y, 455), (0.040,0.040,0.030), "target_wet_micro_highlight")
         for idx, (x, y) in enumerate([(-1020, -715), (1010, -445), (-985, 650)]):
-            self._cube(f"TargetHero4_bus_stop_pole_{idx}", (x, y, 505), (0.028,0.028,1.05), "target_black_silhouette")
+            self._mesh_actor(
+                f"TargetHero4_fbx_bus_stop_pole_{idx}",
+                f"{mesh_root}/signal_pole_slim",
+                (x, y, 505),
+                (0.75, 0.75, 1.05),
+                "photoreal_metal",
+            )
             self._cube(f"TargetHero4_bus_stop_amber_plate_{idx}", (x, y, 650), (0.10,0.028,0.13), "target_bus_stop_amber")
         # Break the road's procedural smoothness with many small glints and darker grime islands.
         for idx, (x, y, sx, sy) in enumerate([
@@ -843,9 +1412,9 @@ class RoadOnlyRenderer:
             (-1136,280,690,"side",0.045,1.12),(-720,846,680,"horizon",1.18,0.045),(-120,848,700,"horizon",1.28,0.045),(520,846,675,"horizon",1.18,0.045)
         ]):
             if side == "side":
-                self._cube(f"TargetHero5_muted_masonry_skin_{idx}", (x-3,y,z), (sx,sy,1.82), "target_masonry_shadow_red")
+                self._cube(f"TargetHero5_muted_masonry_skin_{idx}", (x-3,y,z), (sx,sy,1.82), "photoreal_brick")
             else:
-                self._cube(f"TargetHero5_muted_masonry_skin_{idx}", (x,y-3,z), (sx,sy,1.82), "target_masonry_shadow_red")
+                self._cube(f"TargetHero5_muted_masonry_skin_{idx}", (x,y-3,z), (sx,sy,1.82), "photoreal_brick")
         # Ground-floor arches and cool glass recesses: closer to London civic/commercial facade language.
         for idx, (x, y, side, bays) in enumerate([(1130,-520,"side",4),(1130,120,"side",4),(-1130,-420,"side",4),(-720,842,"horizon",5),(-120,842,"horizon",5)]):
             for bay in range(bays):
@@ -869,6 +1438,101 @@ class RoadOnlyRenderer:
         # Foreground crop masks / dark columns to create target-like left-edge occlusion and reduce isometric-map feel.
         self._cube("TargetHero5_left_edge_dark_occlusion_column", (-1265,-720,760), (.12,.22,2.55), "target_black_silhouette")
         self._cube("TargetHero5_near_camera_shadow_wedge", (-680,-870,382), (2.6,.18,.020), "target_shadow_grime")
+
+
+    def _build_london_target_hero6_camera_visible_tone_layer(self) -> None:
+        """Final camera-visible tone pass for the approved proof camera.
+
+        Earlier proof layers existed in the map, but the oblique render target still read as mostly
+        black because dark foreground and texture layers consumed the frame. These simple planes sit
+        in the same London road-only scene and intentionally occupy the proof camera with road, sky,
+        masonry, and markings instead of leaving void pixels.
+        """
+        mesh_root = "/Game/PhotorealRoadKit/Meshes"
+        self._cube("TargetHero6_london_camera_visible_overcast_backplate", (-220, 600, 760), (52.0, 0.050, 3.35), "target_sky_atlas")
+        self._cube("LondonOperatorContext_lit_low_horizon_mist_fill", (920, 610, 390), (22.0, 0.052, 1.45), "target_mist_building")
+        self._cube("LondonOperatorContext_lit_far_right_context_fill", (2850, 630, 285), (16.0, 0.052, 1.85), "target_mist_building")
+        for idx, (x, z, sx, sz) in enumerate([(1520, 420, 2.7, 1.25), (2060, 350, 2.4, 1.10), (2580, 300, 2.2, 0.95)]):
+            self._cube(f"LondonOperatorContext_lit_right_horizon_mist_mass_{idx}", (x, 590, z), (sx, 0.050, sz), "target_mist_building")
+        self._cube("LondonOperatorContext_lit_overcast_sky_continuous_backdrop", (-120, 1080, 930), (32.0, 0.060, 5.80), "target_sky_atlas")
+        self._cube("LondonOperatorContext_lit_distant_mist_facade_band", (-260, 1010, 720), (18.5, 0.052, 1.42), "target_mist_building")
+        for idx, (x, z, sx, sz) in enumerate([(-930, 745, 2.4, 1.55), (-560, 785, 2.9, 1.80), (-150, 740, 2.6, 1.48), (265, 790, 3.2, 1.95), (720, 735, 2.7, 1.52)]):
+            self._cube(f"LondonOperatorContext_lit_roofline_mass_{idx}", (x, 930, z), (sx, 0.050, sz), "target_masonry_shadow_red")
+        for idx, x in enumerate([-820, -470, -120, 230, 580, 910]):
+            self._cube(f"LondonOperatorContext_lit_upper_window_reflection_{idx}", (x, 900, 835), (1.05, 0.044, 0.19), "target_window_reflection_cool")
+        # Upper-frame operator context fills the remaining black capture band with overcast sky and misty London massing.
+        self._cube("TargetHero7_london_upper_frame_overcast_fill", (360, 445, 720), (36.0, 0.046, 2.20), "target_sky_atlas")
+        self._cube("TargetHero7_london_upper_frame_mist_facade_fill", (520, 420, 540), (28.0, 0.044, 1.15), "target_mist_building")
+        for idx, (x, z, sx, sz) in enumerate([(-960, 560, 2.4, 1.00), (-560, 595, 2.8, 1.12), (-120, 570, 2.5, 0.95), (320, 610, 3.0, 1.20), (760, 575, 2.5, 1.02)]):
+            self._cube(f"TargetHero7_london_upper_frame_soft_roof_mass_{idx}", (x, 398, z), (sx, 0.040, sz), "target_london_stone")
+        self._cube("TargetHero6_london_camera_visible_wet_road_plate", (0, -320, 470), (22.5, 10.8, 0.012), "photoreal_sidewalk")
+        self._cube("TargetHero6_london_lower_frame_pavement_fill", (-320, -900, 505), (18.8, 2.35, 0.012), "photoreal_sidewalk")
+        for idx, (x, y, sx, sy) in enumerate([(-720, -690, 4.2, 0.10), (-360, -520, 5.2, 0.12), (180, -360, 5.8, 0.14), (640, -170, 3.8, 0.10)]):
+            self._cube(f"TargetHero6_london_wet_road_overcast_reflection_{idx}", (x, y, 532 + idx), (sx, sy, 0.010), "photoreal_white_worn")
+        for idx, (x, y, sx, sy) in enumerate([(-520, -760, 7.4, 0.42), (-40, -560, 9.2, 0.50), (420, -330, 8.0, 0.46), (760, -115, 4.8, 0.34)]):
+            self._cube(f"TargetHero6_london_broad_wet_sky_reflection_{idx}", (x, y, 538 + idx), (sx, sy, 0.010), "photoreal_white_worn")
+        self._cube("TargetHero6_london_grounded_red_bus_lane_surface_visible", (-460, -730, 527), (7.8, 0.52, 0.010), "photoreal_bus_lane")
+        self._cube("TargetHero6_london_grounded_yellow_box_surface_visible", (-90, -605, 532), (4.6, 1.45, 0.010), "photoreal_yellow_worn")
+        self._cube("TargetHero6_london_grounded_cycle_box_surface_visible", (470, -735, 529), (1.65, 0.62, 0.010), "target_cycle_box")
+        for idx, y in enumerate([-760, -690, -620, -550]):
+            self._cube(f"TargetHero6_london_grounded_yellow_grid_horizontal_{idx}", (-90, y, 536 + idx), (4.9, 0.026, 0.010), "photoreal_yellow_worn")
+        for idx, x in enumerate([-250, -145, -40, 65]):
+            self._cube(f"TargetHero6_london_grounded_yellow_grid_vertical_{idx}", (x, -655, 542 + idx), (0.060, 1.45, 0.010), "photoreal_yellow_worn")
+        for idx, x in enumerate([-780, -560, -340, -120, 100, 320, 540]):
+            self._cube(f"TargetHero6_london_grounded_white_lane_dash_{idx}", (x, -820, 526), (0.42, 0.035, 0.010), "photoreal_white_worn")
+        for idx, x in enumerate([-920, -620, -320, -20, 280, 580, 880]):
+            self._cube(f"TargetHero6_london_facade_vertical_pier_{idx}", (x, 585, 755), (0.050, 0.024, 1.45), "photoreal_brick")
+        for row, z in enumerate([680, 760, 835]):
+            for idx, x in enumerate([-760, -500, -240, 20, 280, 540, 800]):
+                self._cube(f"TargetHero6_london_soft_window_row_{row}_{idx}", (x, 578, z + 35), (1.05, 0.022, 0.185), "photoreal_glass")
+                self._cube(f"TargetHero6_london_window_lintel_row_{row}_{idx}", (x, 574, z + 82), (1.12, 0.020, 0.032), "photoreal_sidewalk")
+        for idx, x in enumerate([-720, -300, 120, 540]):
+            self._cube(f"TargetHero6_london_ground_floor_shop_sign_{idx}", (x, 570, 620), (2.20, 0.022, 0.095), "photoreal_sign_plate")
+            self._cube(f"TargetHero6_london_deep_red_awning_{idx}", (x, 566, 575), (2.00, 0.024, 0.080), "photoreal_bus_lane")
+        for idx, x in enumerate([-820, -520, -220, 80, 380, 680]):
+            self._cube(f"TargetHero6_london_foreground_road_tar_seam_{idx}", (x, -932, 452), (0.90, 0.020, 0.012), "photoreal_crack_overlay")
+        for idx, x in enumerate([-640, -80, 480]):
+            self._mesh_actor(
+                f"TargetHero6_london_grounded_fbx_signal_pole_{idx}",
+                f"{mesh_root}/signal_pole_slim",
+                (x, -940, 590),
+                (0.000030, 0.000030, 0.000034),
+                "photoreal_metal",
+            )
+            self._mesh_actor(
+                f"TargetHero6_london_grounded_fbx_signal_head_{idx}",
+                f"{mesh_root}/signal_head_uk_high_fidelity",
+                (x + 24, -944, 690),
+                (0.000040, 0.000040, 0.000040),
+                "signal",
+            )
+
+        self._cube("TargetHero6_london_left_masonry_camera_wall", (-1115, -360, 680), (0.16, 3.6, 2.35), "photoreal_brick")
+        self._cube("TargetHero6_london_right_masonry_camera_wall", (1120, -140, 700), (0.18, 3.8, 2.45), "photoreal_brick")
+        self._cube("TargetHero6_london_horizon_masonry_band_left", (-600, 760, 680), (3.8, 0.045, 2.05), "photoreal_brick")
+        self._cube("TargetHero6_london_horizon_masonry_band_right", (360, 760, 700), (4.2, 0.045, 2.15), "photoreal_brick")
+
+        self._cube("TargetHero6_london_foreground_pavement_left", (-540, -760, 500), (6.6, 0.55, 0.020), "photoreal_sidewalk")
+        self._cube("TargetHero6_london_foreground_pavement_right", (560, -760, 502), (5.8, 0.55, 0.020), "photoreal_sidewalk")
+        self._cube("TargetHero6_london_red_bus_lane_visible", (-430, -420, 486), (8.4, 0.52, 0.010), "photoreal_bus_lane")
+        self._cube("TargetHero6_london_cycle_box_visible", (560, -520, 488), (1.9, 0.88, 0.010), "target_cycle_box")
+        self._cube("TargetHero6_london_yellow_box_core_visible", (120, -20, 490), (4.55, 2.20, 0.010), "photoreal_yellow_worn")
+        for idx, off in enumerate([-380, -250, -120, 10, 140, 270, 400]):
+            self._cube(f"TargetHero6_london_yellow_box_grid_a_{idx}", (120 + off * 0.22, -20 + off * 0.12, 502 + idx), (0.045, 3.35, 0.010), "photoreal_yellow_worn")
+            self._cube(f"TargetHero6_london_yellow_box_grid_b_{idx}", (120 + off * 0.22, -20 - off * 0.12, 510 + idx), (0.045, 3.35, 0.010), "photoreal_yellow_worn")
+        for idx, y in enumerate([-675, -640]):
+            self._cube(f"TargetHero6_london_double_yellow_foreground_{idx}", (-180, y, 520 + idx), (8.8, 0.030, 0.010), "photoreal_yellow_worn")
+        for idx, x in enumerate([-720, -520, -320, -120, 80, 280, 480, 680]):
+            self._cube(f"TargetHero6_london_lane_stud_readable_{idx}", (x, -265, 524), (0.08, 0.026, 0.010), "photoreal_white_worn")
+        for idx, (x0, x1, y) in enumerate([(-980, -470, -805), (-400, 120, -805), (190, 720, -805)]):
+            cx = (x0 + x1) / 2
+            self._mesh_actor(
+                f"TargetHero6_london_grounded_fbx_railing_{idx}",
+                f"{mesh_root}/london_pedestrian_railing_high_fidelity",
+                (cx, y, 500),
+                (0.000024, 0.000024, 0.000026),
+                "photoreal_metal",
+            )
 
 
 def main() -> None:

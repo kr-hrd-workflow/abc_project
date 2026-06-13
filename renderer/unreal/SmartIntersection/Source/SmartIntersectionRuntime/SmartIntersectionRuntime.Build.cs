@@ -10,7 +10,8 @@ public class SmartIntersectionRuntime : ModuleRules
         {
             "Core",
             "CoreUObject",
-            "Engine"
+            "Engine",
+            "HTTP"
         });
 
         PrivateDependencyModuleNames.AddRange(new[]

@@ -88,5 +88,5 @@ $args = @(
 )
 
 Write-Output "Launching Unreal city generation for $Profile..."
-$process = Start-Process -FilePath $UnrealEditor -ArgumentList $args -Wait -PassThru
+$process = Start-Process -FilePath $UnrealEditor -ArgumentList $args -Wait -PassThru -WindowStyle Hidden
 exit $process.ExitCode

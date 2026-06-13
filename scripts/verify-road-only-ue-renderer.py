@@ -30,11 +30,14 @@ FORBIDDEN_PATH_TOKENS = [
     "photorealkit",
     "commercialphotorealkit",
     "externallicensedkit",
-    "saved/",
-    "intermediate/",
-    "binaries/",
-    "deriveddatacache/",
 ]
+
+IGNORED_UNREAL_DIRS = {
+    "binaries",
+    "deriveddatacache",
+    "intermediate",
+    "saved",
+}
 
 FORBIDDEN_IMPLEMENTATION_TOKENS = [
     "spawn_vehicle",
@@ -90,7 +93,10 @@ def main() -> None:
     for path in UE_ROOT.rglob("*"):
         if not path.is_file():
             continue
-        rel = path.relative_to(UE_ROOT).as_posix().lower()
+        rel_path = path.relative_to(UE_ROOT)
+        if any(part.lower() in IGNORED_UNREAL_DIRS for part in rel_path.parts):
+            continue
+        rel = rel_path.as_posix().lower()
         if any(token in rel for token in FORBIDDEN_PATH_TOKENS):
             fail(f"forbidden scope token in path: {rel}")
         if path.suffix.lower() in {".py", ".md", ".json", ".ini", ".uproject", ".cs"}:

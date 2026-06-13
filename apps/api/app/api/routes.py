@@ -53,6 +53,7 @@ from app.services.persistence import (
 )
 from app.services.recommendations import recommend_signal_action
 from app.services.reports import generate_scenario_report
+from app.services.renderer_snapshot import build_unreal_renderer_snapshot
 from app.services.runtime_readiness import (
     RuntimeSectionName,
     filter_runtime_readiness,
@@ -298,6 +299,26 @@ def simulate_signal(
     comparison = simulation_adapter.compare_signal_plan(scenario_id)
     create_simulation_run(session, observation, comparison)
     return comparison.model_dump()
+
+
+@router.get("/api/renderer/unreal/snapshot")
+def get_unreal_renderer_snapshot(
+    scenario_id: str = "emergency",
+    city_profile_id: str = "london",
+    pixel_stream_status: str = "disconnected",
+    pixel_stream_signalling_url: str = "ws://127.0.0.1:8888",
+    session: Session = Depends(get_session),
+) -> dict[str, object]:
+    observation = vision_adapter.analyze(scenario_id)
+    status, _events = ensure_scenario_snapshot(session, observation)
+    return build_unreal_renderer_snapshot(
+        observation=observation,
+        status=status,
+        city_profile_id=city_profile_id,
+        pixel_stream_status=pixel_stream_status,
+        pixel_stream_signalling_url=pixel_stream_signalling_url,
+        simulation_source=getattr(simulation_adapter, "source", "unknown"),
+    )
 
 
 @router.post("/api/chat")

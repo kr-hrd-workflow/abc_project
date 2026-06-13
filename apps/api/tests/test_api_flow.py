@@ -314,6 +314,46 @@ def test_simulate_signal_returns_scenario_comparison(client: TestClient) -> None
         assert simulation_run.baseline_metrics_json["total_delay_seconds"] == 128.4
 
 
+def test_unreal_renderer_snapshot_matches_runtime_controller_contract(
+    client: TestClient,
+) -> None:
+    response = client.get(
+        "/api/renderer/unreal/snapshot"
+        "?city_profile_id=paris"
+        "&pixel_stream_status=ready"
+        "&pixel_stream_signalling_url=ws://127.0.0.1:8888"
+    )
+
+    assert response.status_code == 200
+    payload = response.json()
+    assert payload["snapshot_type"] == "unreal_renderer_snapshot"
+    assert payload["cityProfileId"] == "paris"
+    assert payload["city_profile"] == "paris"
+    assert payload["activeSignalGroup"] == "east_priority"
+    assert payload["signal_phase"] == "east_priority"
+    assert payload["cycleSecond"] == 24
+    assert payload["cycle_second"] == 24
+    assert payload["queues"] == {
+        "north": 32,
+        "south": 11,
+        "east": 18,
+        "west": 8,
+    }
+    assert payload["pedestrianRequest"] is True
+    assert payload["pedestrian_request"] is True
+    assert payload["emergency_vehicle_approach"] is True
+    assert payload["emergency_priority"] is True
+    assert payload["emergencyVehicleDirection"] == "east"
+    assert payload["emergency_direction"] == "east"
+    assert payload["pixelStreamConnected"] is True
+    assert payload["pixel_stream_connected"] is True
+    assert payload["pixelStreamStatus"] == "ready"
+    assert payload["pixel_stream_status"] == "ready"
+    assert payload["pixelStreamSignallingUrl"] == "ws://127.0.0.1:8888"
+    assert payload["pixel_stream_signalling_url"] == "ws://127.0.0.1:8888"
+    assert "No real traffic signal control" in payload["safety_boundary"]
+
+
 def test_analyze_returns_current_scenario_observation(client: TestClient) -> None:
     response = client.post("/api/analyze")
 

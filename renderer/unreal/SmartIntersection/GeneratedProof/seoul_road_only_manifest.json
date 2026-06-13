@@ -30,5 +30,21 @@
     "yellow tactile paving",
     "concrete curb"
   ],
-  "unreal_map": "/Game/Maps/Generated/seoul_RoadOnly"
+  "unreal_map": "/Game/Maps/Generated/seoul_RoadOnly",
+  "runtime_controller": "TrafficSimulationController SmartIntersectionRuntime seoul",
+  "renderer_snapshot_visualization": {
+    "source": "FastAPI fixture renderer snapshot",
+    "active_signal_group": "east_priority",
+    "cycle_second": 24,
+    "queues": {
+      "north": 32,
+      "south": 11,
+      "east": 18,
+      "west": 8
+    },
+    "pedestrian_request": true,
+    "emergency_vehicle_direction": "east",
+    "pixel_stream_status": "ready"
+  },
+  "high_fidelity_mesh_seam": "FBX source meshes under SourceAssets/PhotorealRoadKit/Meshes replace proxy OBJ props"
 }
