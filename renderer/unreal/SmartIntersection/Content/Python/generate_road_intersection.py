@@ -583,6 +583,26 @@ class RoadOnlyRenderer:
         # Warm target-window accents layered over facade cards.
         for idx, (x, y, z) in enumerate([(-760,1035,520),(-260,1065,560),(260,1075,530),(790,1035,585),(-250,-1075,545),(360,-1075,520)]):
             self._cube(f"TargetConvergence_london_warm_window_reflection_{idx}", (x, y + (4 if y < 0 else -4), z), (0.55, 0.012, 0.20), "photoreal_warm_window")
+        # Guaranteed readable target foreground: cube-built railings and signal colors.
+        # FBX rails are physically present but too small/dark in mobile proof, so these silhouettes match target readability.
+        for idx, (x0, x1, y) in enumerate([(-780, -280, -655), (-180, 360, -655), (470, 920, -655)]):
+            self._cube(f"TargetConvergence_london_guaranteed_foreground_railing_toprail_{idx}", ((x0+x1)/2, y, 330), ((x1-x0)/200, 0.035, 0.035), "signal")
+            self._cube(f"TargetConvergence_london_guaranteed_foreground_railing_midrail_{idx}", ((x0+x1)/2, y, 280), ((x1-x0)/200, 0.026, 0.026), "signal")
+            for post_idx, x in enumerate([x0, x0+(x1-x0)*0.25, x0+(x1-x0)*0.5, x0+(x1-x0)*0.75, x1]):
+                self._cube(f"TargetConvergence_london_guaranteed_foreground_railing_post_{idx}_{post_idx}", (x, y, 255), (0.035, 0.035, 0.65), "signal")
+        # Target-like small dashed lane studs across the wet road.
+        for idx, x in enumerate(range(-760, 1040, 150)):
+            self._cube(f"TargetConvergence_london_white_lane_stud_near_row_{idx}", (x, -135, 254), (0.085, 0.035, 0.012), "photoreal_white_worn")
+            self._cube(f"TargetConvergence_london_white_lane_stud_far_row_{idx}", (x, 205, 255), (0.085, 0.035, 0.012), "photoreal_white_worn")
+        # Camera-readable traffic signal heads with colored lenses.
+        for idx, (x, y, z, mat) in enumerate([(-780,-410,435,"green_signal"),(-410,-325,430,"red_signal"),(90,-270,432,"green_signal"),(610,-245,428,"green_signal"),(-560,410,430,"green_signal"),(180,455,432,"red_signal"),(760,425,428,"green_signal")]):
+            self._cube(f"TargetConvergence_london_colored_signal_lens_{idx}", (x, y-6, z), (0.08, 0.016, 0.08), mat)
+        # Wet foreground pavement tiles similar to the target lower-left sidewalk.
+        for row, y in enumerate([-760, -690, -620]):
+            for col, x in enumerate(range(-930, -260, 135)):
+                mat = "photoreal_sidewalk" if (row + col) % 2 else "photoreal_curb"
+                self._cube(f"TargetConvergence_london_foreground_pavement_tile_grid_{row}_{col}", (x, y, 258 + row), (0.55, 0.24, 0.018), mat)
+
 
 
 def main() -> None:
