@@ -40,6 +40,9 @@ REQUIRED_SOURCE = [
     "Textures/T_london_target_cycle_box.png",
     "Textures/T_london_target_yellow_box.png",
     "Textures/T_london_target_wet_reflection.png",
+    "Textures/T_london_target_facade_atlas.png",
+    "Textures/T_london_target_sky_atlas.png",
+    "Textures/T_london_target_full_road_atlas.png",
     "Meshes/curb_beveled_module.obj",
     "Meshes/paint_worn_strip.obj",
     "Meshes/signal_head_uk_black.obj",
@@ -100,6 +103,13 @@ REQUIRED_GENERATOR_TOKENS = [
     "london_pedestrian_railing_high_fidelity",
     "london_streetlight_high_fidelity",
     "generate_high_quality_fbx_sources",
+    "target_convergence_facade_atlas",
+    "TargetConvergence_london_midground_facade_wall_card",
+    "TargetConvergence_london_overcast_sky_backdrop",
+    "target_convergence_sky_atlas",
+    "target_convergence_road_atlas",
+    "TargetConvergence_london_textured_facade_card",
+    "TargetConvergence_london_baked_wet_road_atlas_full_intersection",
 ]
 
 REQUIRED_IMPORTED_MESHES = [
@@ -145,6 +155,13 @@ REQUIRED_MAP_TOKENS = [
     b"signal_head_uk_high_fidelity",
     b"london_pedestrian_railing_high_fidelity",
     b"london_streetlight_high_fidelity",
+    b'TargetConvergence_london_foreground_fbx_guard_railing_0',
+    b'TargetConvergence_london_left_perspective_facade_strip',
+    b'TargetConvergence_london_midground_facade_wall_card_0',
+    b'TargetConvergence_london_overcast_sky_backdrop',
+    b'TargetConvergence_london_visible_fbx_signal_head_0',
+    b'TargetConvergence_london_textured_facade_card_0',
+    b'TargetConvergence_london_baked_wet_road_atlas_full_intersection',
 ]
 
 FORBIDDEN = ["spawn_vehicle", "spawn_pedestrian", "traffic_ai_controller", "drivable_car", "gameplay_mode"]

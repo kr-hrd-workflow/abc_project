@@ -3,6 +3,7 @@
 # Scope: no vehicles, no pedestrians, no gameplay, no UE-side traffic simulation.
 # Asset provenance: project procedural assets plus ambientCG CC0 sources under CC0AmbientCG; source refresh uses install_cc0_texture_sources.
 # High-fidelity mesh seam: generate_high_quality_fbx_sources emits FBX replacements for visible target props.
+# Target atlas seam: target_convergence_road_atlas, target_convergence_facade_atlas, and target_convergence_sky_atlas drive final-image convergence.
 from __future__ import annotations
 
 import json
@@ -56,6 +57,10 @@ MATERIAL_COLORS = {
     "target_yellow_box": (0.95, 0.68, 0.05, 1.0),
     "target_wet_reflection": (0.34, 0.38, 0.38, 1.0),
     "target_dark_wet_asphalt": (0.115, 0.125, 0.125, 1.0),
+    "target_full_road_atlas": (0.12, 0.13, 0.13, 1.0),
+    "target_facade_atlas": (0.42, 0.24, 0.18, 1.0),
+    "target_sky_atlas": (0.58, 0.65, 0.70, 1.0),
+    "target_mist_building": (0.42, 0.46, 0.46, 1.0),
 }
 
 
@@ -82,6 +87,9 @@ LONDON_TEXTURE_MATERIALS = {
     "target_cycle_box": "/Game/PhotorealRoadKit/Textures/T_london_target_cycle_box",
     "target_yellow_box": "/Game/PhotorealRoadKit/Textures/T_london_target_yellow_box",
     "target_wet_reflection": "/Game/PhotorealRoadKit/Textures/T_london_target_wet_reflection",
+    "target_full_road_atlas": "/Game/PhotorealRoadKit/Textures/T_london_target_full_road_atlas",
+    "target_facade_atlas": "/Game/PhotorealRoadKit/Textures/T_london_target_facade_atlas",
+    "target_sky_atlas": "/Game/PhotorealRoadKit/Textures/T_london_target_sky_atlas",
 }
 
 
@@ -256,8 +264,12 @@ class RoadOnlyRenderer:
             black.constant = unreal.LinearColor(0.0, 0.0, 0.0, 1.0)
             unreal.MaterialEditingLibrary.connect_material_property(black, "", unreal.MaterialProperty.MP_EMISSIVE_COLOR)
             rough = unreal.MaterialEditingLibrary.create_material_expression(mat, unreal.MaterialExpressionConstant, -740, 320)
-            rough.r = 0.56 if "puddle" in mat.get_name().lower() else 0.72
+            mat_name = mat.get_name().lower()
+            rough.r = 0.22 if "target_full_road_atlas" in mat_name else (0.42 if "target_facade_atlas" in mat_name else (0.56 if "puddle" in mat_name else 0.72))
             unreal.MaterialEditingLibrary.connect_material_property(rough, "", unreal.MaterialProperty.MP_ROUGHNESS)
+            spec = unreal.MaterialEditingLibrary.create_material_expression(mat, unreal.MaterialExpressionConstant, -740, 430)
+            spec.r = 0.62 if "target_full_road_atlas" in mat_name else 0.22
+            unreal.MaterialEditingLibrary.connect_material_property(spec, "", unreal.MaterialProperty.MP_SPECULAR)
             if "T_london_text_" in texture.get_name():
                 try:
                     mat.set_editor_property("blend_mode", unreal.BlendMode.BLEND_MASKED)
@@ -378,6 +390,7 @@ class RoadOnlyRenderer:
             self._build_london_photoreal_scene_layer()
             self._build_london_photoreal_scene_pass2()
             self._build_london_final_target_match_layer()
+            self._build_london_target_convergence_atlas_layer()
 
         # Lighting/camera proof. Use movable lights so the editor viewport is visible without a baked-lighting pass.
         light = unreal.EditorLevelLibrary.spawn_actor_from_class(unreal.DirectionalLight, unreal.Vector(-800, -900, 1200), unreal.Rotator(-48, -35, 0))
@@ -536,6 +549,40 @@ class RoadOnlyRenderer:
             self._mesh_actor(f"FinalTargetMatch_london_tall_streetlight_reference_{idx}", f"{mesh_root}/london_streetlight_high_fidelity", (x, y, 190), (0.000024,0.000024,0.000028), "photoreal_metal", rotation=(0,0,rot))
         for idx, (x, y, z) in enumerate([(-520,-470,470),(480,430,470)]):
             self._mesh_actor(f"FinalTargetMatch_london_visible_cctv_mast_camera_{idx}", f"{mesh_root}/cctv_camera_high_fidelity", (x, y, z), (0.000024,0.000024,0.000024), "photoreal_metal")
+
+
+    def _build_london_target_convergence_atlas_layer(self) -> None:
+        mesh_root = "/Game/PhotorealRoadKit/Meshes"
+        # Target convergence layer: large baked atlases matching the approved target image composition.
+        # This is intentionally above earlier procedural planes so the visible proof converges toward the target.
+        self._cube("TargetConvergence_london_baked_wet_road_atlas_full_intersection", (160, -40, 236), (20.8, 11.6, 0.012), "target_full_road_atlas")
+        # Grey overcast backdrop + continuous London facade band to remove the black void in proof.
+        self._cube("TargetConvergence_london_overcast_sky_backdrop", (220, 760, 700), (24.0, 0.055, 6.2), "target_sky_atlas")
+        self._cube("TargetConvergence_london_guaranteed_visible_overcast_card", (180, 710, 610), (24.5, 0.045, 4.8), "target_sky_atlas")
+        for idx, x in enumerate([-1180,-880,-580,-280,20,320,620,920,1220]):
+            z = 360 + (idx % 3) * 28
+            self._cube(f"TargetConvergence_london_midground_facade_wall_card_{idx}", (x, 650, z), (1.95, 0.038, 1.55), "target_facade_atlas")
+        for idx, x in enumerate([-980,-620,-260,100,460,820,1180]):
+            self._cube(f"TargetConvergence_london_distant_mist_building_silhouette_{idx}", (x, 730, 495), (1.65, 0.03, 1.18), "target_mist_building")
+        self._cube("TargetConvergence_london_left_perspective_facade_strip", (-1010, -140, 470), (0.038, 6.2, 2.1), "target_facade_atlas")
+        self._cube("TargetConvergence_london_right_corner_facade_strip", (1180, 520, 505), (0.038, 4.2, 2.35), "target_facade_atlas")
+        # Brighter wet curb/pavement edges, like the reference foreground.
+        self._cube("TargetConvergence_london_foreground_left_pavement_edge", (-580, -720, 244), (6.2, 0.55, 0.018), "photoreal_sidewalk")
+        self._cube("TargetConvergence_london_foreground_right_pavement_edge", (540, -720, 245), (5.4, 0.55, 0.018), "photoreal_sidewalk")
+        # Large textured facade cards to create London depth without relying only on tiny FBX details.
+        for idx, (x, y, z, sx, sz) in enumerate([(-760, 1040, 420, 3.2, 2.3), (-260, 1070, 445, 3.1, 2.45), (260, 1080, 420, 3.4, 2.25), (790, 1040, 455, 3.0, 2.55),
+                                                     (-820, -1040, 390, 2.8, 2.1), (-250, -1080, 430, 3.3, 2.4), (360, -1080, 405, 3.0, 2.2), (900, -1040, 430, 2.8, 2.35)]):
+            self._cube(f"TargetConvergence_london_textured_facade_card_{idx}", (x, y, z), (sx, 0.035, sz), "target_facade_atlas")
+        # Camera-readable black rails/signals over the atlas, with slightly larger scale so they read on Telegram.
+        for idx, (x, y, rot) in enumerate([(-820,-610,0),(-620,-610,0),(-420,-610,0),(260,-610,0),(470,-610,0),(680,-610,0)]):
+            self._mesh_actor(f"TargetConvergence_london_foreground_fbx_guard_railing_{idx}", f"{mesh_root}/london_pedestrian_railing_high_fidelity", (x, y, 252), (0.000038, 0.000038, 0.000042), "photoreal_metal", rotation=(0,0,rot))
+        for idx, (x, y, z) in enumerate([(-900,-390,390),(-480,-330,392),(80,-270,395),(640,-250,390),(-620,410,392),(20,455,395),(700,430,390)]):
+            self._mesh_actor(f"TargetConvergence_london_visible_fbx_signal_head_{idx}", f"{mesh_root}/signal_head_uk_high_fidelity", (x, y, z), (0.000040, 0.000040, 0.000040), "signal")
+        for idx, (x, y, rot) in enumerate([(-730,-560,8),(-100,-550,0),(540,-540,-6),(-420,580,180),(420,580,180)]):
+            self._mesh_actor(f"TargetConvergence_london_visible_fbx_streetlight_{idx}", f"{mesh_root}/london_streetlight_high_fidelity", (x, y, 265), (0.000036,0.000036,0.000042), "photoreal_metal", rotation=(0,0,rot))
+        # Warm target-window accents layered over facade cards.
+        for idx, (x, y, z) in enumerate([(-760,1035,520),(-260,1065,560),(260,1075,530),(790,1035,585),(-250,-1075,545),(360,-1075,520)]):
+            self._cube(f"TargetConvergence_london_warm_window_reflection_{idx}", (x, y + (4 if y < 0 else -4), z), (0.55, 0.012, 0.20), "photoreal_warm_window")
 
 
 def main() -> None:

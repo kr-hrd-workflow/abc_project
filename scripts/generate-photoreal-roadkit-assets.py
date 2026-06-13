@@ -5,7 +5,7 @@ import math
 import random
 import shutil
 from pathlib import Path
-from PIL import Image, ImageDraw, ImageFilter, ImageFont, ImageOps
+from PIL import Image, ImageDraw, ImageEnhance, ImageFilter, ImageFont, ImageOps
 
 ROOT = Path(__file__).resolve().parents[1]
 ASSET_ROOT = ROOT / "renderer" / "unreal" / "SmartIntersection" / "SourceAssets" / "PhotorealRoadKit"
@@ -354,6 +354,116 @@ def generate_high_quality_fbx_sources() -> None:
     write_ascii_fbx_mesh(MESH_DIR / "london_window_strip_high_fidelity.fbx", "london_window_strip_high_fidelity", *combine_meshes(window_parts))
 
 
+def target_convergence_road_atlas(path: Path) -> None:
+    size = 2048
+    img = Image.new("RGB", (size, size), (68, 75, 78))
+    pix = img.load()
+    # Wet asphalt grain, darker at edges, mild perspective-like streaking.
+    for y in range(size):
+        for x in range(size):
+            vign = int(28 * (((x-size/2)**2 + (y-size/2)**2) ** 0.5) / (size*0.72))
+            n = random.randint(-18, 18) + int(10 * math.sin((x * 0.015) + (y * 0.045)))
+            base = max(34, min(122, 78 + n - int(vign * 0.55)))
+            pix[x, y] = (base, max(18, base+2), max(18, base+3))
+    draw = ImageDraw.Draw(img, "RGBA")
+    # Red bus lane, near-left approach in target image.
+    draw.polygon([(0,1250),(730,1170),(900,1455),(0,1640)], fill=(104,20,18,230))
+    for _ in range(520):
+        x=random.randint(0,900); y=random.randint(1130,1660); a=random.randint(18,70)
+        draw.line((x,y,x+random.randint(40,190),y+random.randint(-6,6)), fill=(30,20,18,a), width=random.randint(1,6))
+    # Yellow box junction, central.
+    box=(700,700,1420,1260)
+    draw.rectangle(box, outline=(190,145,35,210), width=18)
+    for off in range(-540, 620, 105):
+        draw.line((box[0], box[1]+off, box[2], box[1]+off+540), fill=(190,145,38,185), width=12)
+        draw.line((box[0], box[3]-off, box[2], box[3]-off-540), fill=(180,135,35,145), width=8)
+    # Foreground cycle box.
+    cyc=(1240,1360,1840,1885)
+    draw.rounded_rectangle(cyc, radius=18, fill=(26,76,72,210), outline=(218,226,216,225), width=16)
+    draw.ellipse((1440,1585,1525,1670), outline=(225,230,220,235), width=9)
+    draw.ellipse((1615,1585,1700,1670), outline=(225,230,220,235), width=9)
+    draw.line((1525,1628,1588,1515,1668,1628,1582,1628,1525,1628), fill=(225,230,220,235), width=8)
+    # Zebra/stop lines and worn white markings.
+    for i in range(7):
+        y=1320+i*54
+        draw.rounded_rectangle((350,y,1075,y+24), radius=6, fill=(224,222,204,205))
+    for i in range(6):
+        y=430+i*44
+        draw.rounded_rectangle((840,y,1510,y+20), radius=6, fill=(224,222,204,180))
+    # Double yellow curb lines.
+    for y in [1710, 1750, 345, 385]:
+        draw.line((0,y,2048,y+random.randint(-8,8)), fill=(232,179,26,230), width=10)
+    # Wet reflection streaks and puddles.
+    for _ in range(240):
+        x=random.randint(0,size); y=random.randint(0,size); w=random.randint(60,390)
+        draw.line((x,y,x+w,y+random.randint(-4,4)), fill=(180,195,198,random.randint(18,78)), width=random.randint(1,7))
+    for _ in range(32):
+        x=random.randint(150,1900); y=random.randint(250,1800); rx=random.randint(50,230); ry=random.randint(8,38)
+        draw.ellipse((x-rx,y-ry,x+rx,y+ry), fill=(32,42,45,random.randint(30,88)))
+    # Cracks/grime/paint wear.
+    for _ in range(120):
+        x=random.randint(50,1990); y=random.randint(80,1970)
+        pts=[]
+        for k in range(random.randint(3,8)):
+            pts.append((x+k*random.randint(15,60), y+random.randint(-35,35)))
+        draw.line(pts, fill=(8,8,7,random.randint(80,170)), width=random.randint(1,4))
+    for _ in range(600):
+        x=random.randint(0,size); y=random.randint(0,size); r=random.randint(2,18)
+        draw.ellipse((x-r,y-r,x+r,y+r), fill=(12,12,11,random.randint(5,24)))
+    img = ImageEnhance.Contrast(img).enhance(1.08)
+    img.save(path, quality=95)
+
+
+def target_convergence_facade_atlas(path: Path) -> None:
+    size = 2048
+    img = Image.new("RGB", (size, size), (96, 56, 45))
+    draw = ImageDraw.Draw(img, "RGBA")
+    # Brick courses.
+    for y in range(0,size,34):
+        draw.line((0,y,size,y), fill=(55,32,27,120), width=3)
+        offset = 0 if (y//34)%2==0 else 54
+        for x in range(-offset,size,108):
+            draw.line((x,y,x,y+34), fill=(55,32,27,90), width=2)
+    for _ in range(2000):
+        x=random.randint(0,size-1); y=random.randint(0,size-1); c=random.randint(-24,24)
+        r,g,b=img.getpixel((x,y)); draw.point((x,y), fill=(max(0,min(255,r+c)), max(0,min(255,g+c)), max(0,min(255,b+c)),255))
+    # Shopfront glass and repeated warm/dark windows.
+    for col,x in enumerate(range(120,1900,300)):
+        draw.rounded_rectangle((x,1120,x+210,1760), radius=8, fill=(17,31,36,235), outline=(20,20,18,255), width=12)
+        draw.rectangle((x+18,1180,x+192,1270), fill=(225,144,58,110))
+    for y in [210,460,710,940]:
+        for x in range(90,1930,235):
+            warm = random.random() < 0.35
+            fill=(32,55,64,230) if not warm else (230,142,55,180)
+            draw.rectangle((x,y,x+145,y+105), fill=fill, outline=(18,19,18,255), width=8)
+            draw.line((x+72,y,x+72,y+105), fill=(13,14,14,220), width=4)
+            draw.line((x,y+52,x+145,y+52), fill=(13,14,14,220), width=4)
+    # Stone cornices/ledges.
+    for y in [1040,1800,80]:
+        draw.rectangle((0,y,2048,y+42), fill=(128,122,108,220))
+        draw.line((0,y+42,2048,y+42), fill=(58,56,50,160), width=5)
+    img = ImageEnhance.Contrast(img).enhance(1.15)
+    img.save(path, quality=95)
+
+
+def target_convergence_sky_atlas(path: Path) -> None:
+    size = 1024
+    img = Image.new("RGB", (size, size), (154, 166, 173))
+    pix = img.load()
+    for y in range(size):
+        for x in range(size):
+            grad = int((1 - y/size) * 34)
+            n = random.randint(-8, 8) + int(9 * math.sin((x+y) * 0.018))
+            c = max(105, min(202, 145 + grad + n))
+            pix[x,y] = (c-3, c+3, c+7)
+    draw=ImageDraw.Draw(img, "RGBA")
+    for _ in range(70):
+        x=random.randint(-100,size); y=random.randint(40,700); rx=random.randint(120,360); ry=random.randint(18,55)
+        draw.ellipse((x-rx,y-ry,x+rx,y+ry), fill=(190,198,202,random.randint(15,42)))
+    img=img.filter(ImageFilter.GaussianBlur(radius=2.2))
+    img.save(path, quality=95)
+
+
 def install_cc0_texture_sources() -> None:
     """Prefer committed ambientCG CC0 sources when present.
 
@@ -403,6 +513,9 @@ def main() -> None:
     decal_texture(TEXTURE_DIR / "T_london_target_cycle_box.png", "target_cycle_box")
     decal_texture(TEXTURE_DIR / "T_london_target_yellow_box.png", "target_yellow_box")
     decal_texture(TEXTURE_DIR / "T_london_target_wet_reflection.png", "target_wet_reflection")
+    target_convergence_road_atlas(TEXTURE_DIR / "T_london_target_full_road_atlas.png")
+    target_convergence_facade_atlas(TEXTURE_DIR / "T_london_target_facade_atlas.png")
+    target_convergence_sky_atlas(TEXTURE_DIR / "T_london_target_sky_atlas.png")
     obj_box(MESH_DIR / "curb_beveled_module.obj", "curb_beveled_module", 120, 16, 18, 8)
     obj_box(MESH_DIR / "paint_worn_strip.obj", "paint_worn_strip", 110, 4, 1.3, 0.8)
     obj_box(MESH_DIR / "signal_head_uk_black.obj", "signal_head_uk_black", 16, 7, 22, 2)

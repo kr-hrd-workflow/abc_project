@@ -73,8 +73,8 @@ def main() -> None:
     if proof_view == "oblique":
         # Final-target framing: elevated corner camera in front of the near building row,
         # looking across the wet intersection rather than through facade meshes.
-        origin = unreal.Vector(-1180, -520, 760)
-        target = unreal.Vector(120, 20, 135)
+        origin = unreal.Vector(-1680, -980, 1180)
+        target = unreal.Vector(140, -35, 155)
     else:
         # Top-down, near-orthographic proof view. The previous oblique proof left most pixels black
         # and was unreadable after Telegram/mobile compression.
@@ -100,6 +100,8 @@ def main() -> None:
             rt.set_editor_property("render_target_format", unreal.TextureRenderTargetFormat.RTF_RGBA8)
     comp.texture_target = rt
     try:
+        # Use base color for visual-acceptance proof. The current generated materials do not yet have
+        # production exposure/postprocess, and final-color SceneCapture blows out the baked wet-road atlas.
         comp.capture_source = unreal.SceneCaptureSource.SCS_BASE_COLOR
     except Exception:
         try:
@@ -108,7 +110,7 @@ def main() -> None:
             pass
     comp.fov_angle = 55.0
     if proof_view == "oblique":
-        comp.fov_angle = 58.0
+        comp.fov_angle = 50.0
     else:
         try:
             comp.projection_type = unreal.CameraProjectionMode.ORTHOGRAPHIC
