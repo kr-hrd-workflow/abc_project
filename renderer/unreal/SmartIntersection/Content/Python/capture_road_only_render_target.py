@@ -73,8 +73,8 @@ def main() -> None:
     if proof_view == "oblique":
         # Final-target framing: elevated corner camera in front of the near building row,
         # looking across the wet intersection rather than through facade meshes.
-        origin = unreal.Vector(-1680, -980, 1180)
-        target = unreal.Vector(140, -35, 155)
+        origin = unreal.Vector(-1260, -1320, 760)
+        target = unreal.Vector(120, -80, 260)
     else:
         # Top-down, near-orthographic proof view. The previous oblique proof left most pixels black
         # and was unreadable after Telegram/mobile compression.
@@ -110,7 +110,7 @@ def main() -> None:
             pass
     comp.fov_angle = 55.0
     if proof_view == "oblique":
-        comp.fov_angle = 50.0
+        comp.fov_angle = 57.0
     else:
         try:
             comp.projection_type = unreal.CameraProjectionMode.ORTHOGRAPHIC

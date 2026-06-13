@@ -363,11 +363,11 @@ def target_convergence_road_atlas(path: Path) -> None:
         for x in range(size):
             vign = int(28 * (((x-size/2)**2 + (y-size/2)**2) ** 0.5) / (size*0.72))
             n = random.randint(-18, 18) + int(10 * math.sin((x * 0.015) + (y * 0.045)))
-            base = max(34, min(122, 78 + n - int(vign * 0.55)))
+            base = max(58, min(150, 104 + n - int(vign * 0.42)))
             pix[x, y] = (base, max(18, base+2), max(18, base+3))
     draw = ImageDraw.Draw(img, "RGBA")
     # Red bus lane, near-left approach in target image.
-    draw.polygon([(0,1250),(730,1170),(900,1455),(0,1640)], fill=(104,20,18,230))
+    draw.polygon([(0,1250),(730,1170),(900,1455),(0,1640)], fill=(132,34,28,235))
     for _ in range(520):
         x=random.randint(0,900); y=random.randint(1130,1660); a=random.randint(18,70)
         draw.line((x,y,x+random.randint(40,190),y+random.randint(-6,6)), fill=(30,20,18,a), width=random.randint(1,6))
@@ -379,7 +379,7 @@ def target_convergence_road_atlas(path: Path) -> None:
         draw.line((box[0], box[3]-off, box[2], box[3]-off-540), fill=(180,135,35,145), width=8)
     # Foreground cycle box.
     cyc=(1240,1360,1840,1885)
-    draw.rounded_rectangle(cyc, radius=18, fill=(26,76,72,210), outline=(218,226,216,225), width=16)
+    draw.rounded_rectangle(cyc, radius=18, fill=(38,104,96,220), outline=(232,238,226,235), width=16)
     draw.ellipse((1440,1585,1525,1670), outline=(225,230,220,235), width=9)
     draw.ellipse((1615,1585,1700,1670), outline=(225,230,220,235), width=9)
     draw.line((1525,1628,1588,1515,1668,1628,1582,1628,1525,1628), fill=(225,230,220,235), width=8)
@@ -396,7 +396,7 @@ def target_convergence_road_atlas(path: Path) -> None:
     # Wet reflection streaks and puddles.
     for _ in range(240):
         x=random.randint(0,size); y=random.randint(0,size); w=random.randint(60,390)
-        draw.line((x,y,x+w,y+random.randint(-4,4)), fill=(180,195,198,random.randint(18,78)), width=random.randint(1,7))
+        draw.line((x,y,x+w,y+random.randint(-4,4)), fill=(215,230,232,random.randint(34,105)), width=random.randint(1,7))
     for _ in range(32):
         x=random.randint(150,1900); y=random.randint(250,1800); rx=random.randint(50,230); ry=random.randint(8,38)
         draw.ellipse((x-rx,y-ry,x+rx,y+ry), fill=(32,42,45,random.randint(30,88)))
@@ -410,13 +410,14 @@ def target_convergence_road_atlas(path: Path) -> None:
     for _ in range(600):
         x=random.randint(0,size); y=random.randint(0,size); r=random.randint(2,18)
         draw.ellipse((x-r,y-r,x+r,y+r), fill=(12,12,11,random.randint(5,24)))
-    img = ImageEnhance.Contrast(img).enhance(1.08)
+    img = ImageEnhance.Brightness(img).enhance(1.18)
+    img = ImageEnhance.Contrast(img).enhance(1.12)
     img.save(path, quality=95)
 
 
 def target_convergence_facade_atlas(path: Path) -> None:
     size = 2048
-    img = Image.new("RGB", (size, size), (96, 56, 45))
+    img = Image.new("RGB", (size, size), (122, 78, 60))
     draw = ImageDraw.Draw(img, "RGBA")
     # Brick courses.
     for y in range(0,size,34):
@@ -442,19 +443,20 @@ def target_convergence_facade_atlas(path: Path) -> None:
     for y in [1040,1800,80]:
         draw.rectangle((0,y,2048,y+42), fill=(128,122,108,220))
         draw.line((0,y+42,2048,y+42), fill=(58,56,50,160), width=5)
-    img = ImageEnhance.Contrast(img).enhance(1.15)
+    img = ImageEnhance.Brightness(img).enhance(1.18)
+    img = ImageEnhance.Contrast(img).enhance(1.18)
     img.save(path, quality=95)
 
 
 def target_convergence_sky_atlas(path: Path) -> None:
     size = 1024
-    img = Image.new("RGB", (size, size), (154, 166, 173))
+    img = Image.new("RGB", (size, size), (184, 196, 202))
     pix = img.load()
     for y in range(size):
         for x in range(size):
             grad = int((1 - y/size) * 34)
             n = random.randint(-8, 8) + int(9 * math.sin((x+y) * 0.018))
-            c = max(105, min(202, 145 + grad + n))
+            c = max(145, min(232, 180 + grad + n))
             pix[x,y] = (c-3, c+3, c+7)
     draw=ImageDraw.Draw(img, "RGBA")
     for _ in range(70):

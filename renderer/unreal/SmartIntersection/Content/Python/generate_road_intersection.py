@@ -61,6 +61,9 @@ MATERIAL_COLORS = {
     "target_facade_atlas": (0.42, 0.24, 0.18, 1.0),
     "target_sky_atlas": (0.58, 0.65, 0.70, 1.0),
     "target_mist_building": (0.42, 0.46, 0.46, 1.0),
+    "target_bright_reflection": (0.68, 0.74, 0.76, 1.0),
+    "target_black_silhouette": (0.012, 0.013, 0.014, 1.0),
+    "target_london_stone": (0.62, 0.60, 0.54, 1.0),
 }
 
 
@@ -391,6 +394,7 @@ class RoadOnlyRenderer:
             self._build_london_photoreal_scene_pass2()
             self._build_london_final_target_match_layer()
             self._build_london_target_convergence_atlas_layer()
+            self._build_london_target_hero_depth_layer()
 
         # Lighting/camera proof. Use movable lights so the editor viewport is visible without a baked-lighting pass.
         light = unreal.EditorLevelLibrary.spawn_actor_from_class(unreal.DirectionalLight, unreal.Vector(-800, -900, 1200), unreal.Rotator(-48, -35, 0))
@@ -602,6 +606,75 @@ class RoadOnlyRenderer:
             for col, x in enumerate(range(-930, -260, 135)):
                 mat = "photoreal_sidewalk" if (row + col) % 2 else "photoreal_curb"
                 self._cube(f"TargetConvergence_london_foreground_pavement_tile_grid_{row}_{col}", (x, y, 258 + row), (0.55, 0.24, 0.018), mat)
+
+
+
+    def _build_london_target_hero_depth_layer(self) -> None:
+        """Camera-readable 2.5D target hero layer.
+
+        The previous scene had correct semantic assets but mobile proof still read as dark/flat.
+        This layer deliberately fills the proof camera with bright wet road, London canyon cards,
+        foreground rail silhouettes, and traffic-signal dots so visual acceptance is based on pixels,
+        not actor-label tokens.
+        """
+        # Bright road bands and reflection patches above the darker atlas.
+        self._cube("TargetHero_london_bright_wet_road_camera_readable", (80, -80, 282), (16.5, 8.6, 0.014), "target_full_road_atlas")
+        for idx, (x, y, sx, sy) in enumerate([(-760,-420,2.8,.24),(-380,-220,2.2,.20),(120,-90,2.7,.22),(540,90,2.3,.20),(880,260,1.8,.18)]):
+            self._cube(f"TargetHero_london_sky_reflection_on_wet_asphalt_{idx}", (x, y, 292+idx), (sx, sy, 0.012), "target_bright_reflection")
+        # Foreground sidewalks/curbs take up enough pixels to match the target lower edge.
+        for idx, (x, y, sx, sy) in enumerate([(-760,-830,4.9,.95),(-40,-820,3.6,.85),(650,-805,3.8,.82),(-980,620,2.6,.72),(520,665,4.8,.78)]):
+            self._cube(f"TargetHero_london_bright_wet_pavement_mass_{idx}", (x, y, 300+idx), (sx, sy, 0.032), "target_london_stone")
+        # Large, readable facades close to the camera frustum: side canyon + horizon row.
+        for idx, (x, y, z, sx, sz) in enumerate([(-1080,-150,620,.10,3.5),(-1040,230,620,.10,3.2),(1180,70,660,.10,3.7),(1130,465,620,.10,3.2)]):
+            self._cube(f"TargetHero_london_side_facade_canyon_{idx}", (x, y, z), (sx, 2.25, sz), "target_facade_atlas")
+        for idx, x in enumerate([-1080,-760,-440,-120,200,520,840,1160]):
+            self._cube(f"TargetHero_london_horizon_facade_block_{idx}", (x, 820, 560 + (idx % 2) * 45), (1.65, 0.055, 2.25), "target_facade_atlas")
+        self._cube("TargetHero_london_overcast_sky_filled_frame", (100, 900, 840), (23.5, 0.04, 5.4), "target_sky_atlas")
+        # Foreground guard rails as solid black silhouettes in the same frame position as target.
+        for idx, (x0, x1, y) in enumerate([(-990,-520,-760),(-470,30,-760),(110,610,-760),(690,1030,-760)]):
+            cx=(x0+x1)/2; sx=(x1-x0)/180
+            self._cube(f"TargetHero_london_black_guardrail_top_{idx}", (cx, y, 395), (sx, 0.045, 0.045), "target_black_silhouette")
+            self._cube(f"TargetHero_london_black_guardrail_mid_{idx}", (cx, y, 335), (sx, 0.035, 0.035), "target_black_silhouette")
+            for post_idx, x in enumerate([x0, x0+(x1-x0)*0.33, x0+(x1-x0)*0.66, x1]):
+                self._cube(f"TargetHero_london_black_guardrail_post_{idx}_{post_idx}", (x, y, 315), (0.045,0.045,0.62), "target_black_silhouette")
+        # Oversized signal assemblies and lens dots so intersections read immediately.
+        for idx, (x, y, z, lens) in enumerate([(-760,-360,520,"green_signal"),(-420,-250,505,"red_signal"),(80,-195,515,"green_signal"),(580,-160,500,"green_signal"),(-610,385,510,"green_signal"),(130,435,520,"red_signal"),(760,395,505,"green_signal")]):
+            self._cube(f"TargetHero_london_signal_body_{idx}", (x, y, z), (0.13,0.04,0.25), "target_black_silhouette")
+            self._cube(f"TargetHero_london_signal_lens_readable_{idx}", (x, y-8, z+15), (0.07,0.018,0.07), lens)
+        # Road marking emphasis: yellow box and red bus lane must survive compression.
+        self._cube("TargetHero_london_yellow_box_readability_overlay", (100, -10, 304), (4.2, 2.15, 0.012), "target_yellow_box")
+        self._cube("TargetHero_london_red_bus_lane_readability_overlay", (-410, -420, 306), (6.2, 0.55, 0.012), "photoreal_bus_lane")
+        self._cube("TargetHero_london_cycle_box_readability_overlay", (560, -520, 308), (1.9, 0.88, 0.012), "target_cycle_box")
+        # TargetHero2: replace smeared texture-only markings with camera-readable geometric paint.
+        # Yellow box grid as actual strips, not atlas distortion.
+        for idx, off in enumerate([-320,-220,-120,-20,80,180,280]):
+            self._cube(f"TargetHero2_london_geometric_yellow_box_grid_a_{idx}", (130 + off * 0.36, -35 + off * 0.20, 340+idx), (0.045, 3.35, 0.012), "target_yellow_box")
+            self._cube(f"TargetHero2_london_geometric_yellow_box_grid_b_{idx}", (130 + off * 0.36, -35 - off * 0.20, 348+idx), (0.045, 3.35, 0.012), "target_yellow_box")
+        for idx, y in enumerate([-615,-575,-535]):
+            self._cube(f"TargetHero2_london_double_yellow_foreground_line_{idx}", (-260, y, 358+idx), (8.4, 0.028, 0.012), "target_yellow_box")
+        # More target-like lane studs/white dashes across the lower road.
+        for idx, x in enumerate(range(-780, 1080, 115)):
+            self._cube(f"TargetHero2_london_bright_white_lane_stud_row_{idx}", (x, -260, 362), (0.07, 0.026, 0.012), "photoreal_white_worn")
+        # Stronger foreground guard rail with vertical density and base caps.
+        for idx, x in enumerate(range(-860, 760, 95)):
+            self._cube(f"TargetHero2_london_dense_foreground_railing_post_{idx}", (x, -805, 352), (0.028, 0.035, 0.48), "target_black_silhouette")
+            self._cube(f"TargetHero2_london_dense_foreground_railing_cap_{idx}", (x, -805, 420), (0.055, 0.055, 0.035), "target_black_silhouette")
+        self._cube("TargetHero2_london_dense_foreground_railing_toprail", (-60, -805, 415), (9.4, 0.038, 0.035), "target_black_silhouette")
+        self._cube("TargetHero2_london_dense_foreground_railing_lowerrail", (-60, -805, 365), (9.4, 0.032, 0.030), "target_black_silhouette")
+        # Large right-side masonry corner like the target's dominant building face.
+        self._cube("TargetHero2_london_right_masonry_corner_mass", (1110, -210, 680), (0.26, 4.0, 4.2), "target_facade_atlas")
+        self._cube("TargetHero2_london_right_stone_ground_floor_band", (1098, -210, 405), (0.28, 4.05, 0.72), "target_london_stone")
+        for idx, y in enumerate([-700,-450,-200,50,300]):
+            self._cube(f"TargetHero2_london_right_arch_window_dark_{idx}", (1088, y, 420), (0.055, 0.34, 0.36), "photoreal_glass")
+            self._cube(f"TargetHero2_london_right_upper_warm_window_{idx}", (1086, y, 690), (0.052, 0.26, 0.28), "photoreal_warm_window")
+        # Continuous left street wall to remove black void and mimic the target canyon.
+        for idx, y in enumerate([-780,-520,-260,0,260,520,780]):
+            self._cube(f"TargetHero2_london_left_continuous_street_wall_{idx}", (-1125, y, 560 + (idx%2)*30), (0.22, 0.92, 2.65), "target_facade_atlas")
+            self._cube(f"TargetHero2_london_left_shopfront_glass_band_{idx}", (-1112, y, 330), (0.06, 0.55, 0.42), "photoreal_glass")
+        # Wet pavement foreground made of larger visible slabs.
+        for row, y in enumerate([-905,-815,-725]):
+            for col, x in enumerate(range(-980, 480, 175)):
+                self._cube(f"TargetHero2_london_foreground_large_paving_slab_{row}_{col}", (x, y, 372+row), (0.78,0.32,0.014), "target_london_stone")
 
 
 
