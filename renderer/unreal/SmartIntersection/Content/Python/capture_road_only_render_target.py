@@ -136,6 +136,512 @@ def apply_state_layout_proof_filter() -> None:
     print(f"ROAD_ONLY_RENDER_TARGET_STATE_LAYOUT_FILTER hidden={hidden}")
 
 
+def apply_beauty_capture_filter(proof_view: str) -> None:
+    """Hide renderer-state debug actors from final visual proof captures."""
+    if proof_view not in {"oblique", "lit_oblique"}:
+        return
+    hidden = 0
+    hidden_prefixes = (
+        "TrafficSimulationController fallback marker",
+        "TrafficSimulationController_fallback_text_",
+        "FinalTargetMatch_",
+        "TargetConvergence_",
+        "TargetHero_",
+        "TargetHero2_",
+        "TargetHero3_",
+        "TargetHero4_",
+        "TargetHero5_",
+        "TargetHero6_",
+        "TargetHero7_",
+    )
+    for actor in unreal.EditorLevelLibrary.get_all_level_actors():
+        try:
+            label = actor.get_actor_label()
+        except Exception:
+            continue
+        if not label.startswith(hidden_prefixes):
+            continue
+        try:
+            actor.set_actor_hidden_in_game(True)
+            actor.set_is_temporarily_hidden_in_editor(True)
+            hidden += 1
+        except Exception as exc:
+            print(f"ROAD_ONLY_RENDER_TARGET_BEAUTY_FILTER_HIDE_FAIL label={label} error={exc}")
+    print(f"ROAD_ONLY_RENDER_TARGET_BEAUTY_FILTER hidden={hidden}")
+
+
+def apply_london_imagegen_beauty_filter(city: str, proof_view: str) -> None:
+    if city != "london" or proof_view not in {"oblique", "lit_oblique"}:
+        return
+    hidden = 0
+    blockout_prefixes = (
+        "ImageGenLondon_overcast_photo_backplate_plane_visible",
+        "ImageGenLondon_left_overcast_photo_backplate_plane_visible",
+        "LondonOperatorContext_lit_overcast_sky_continuous_backdrop",
+        "LondonOperatorContext_lit_distant_mist_facade_band",
+        "LondonOperatorContext_lit_low_horizon_mist_fill",
+        "LondonOperatorContext_lit_far_right_context_fill",
+    )
+    for actor in unreal.EditorLevelLibrary.get_all_level_actors():
+        try:
+            label = actor.get_actor_label()
+        except Exception:
+            continue
+        if not label.startswith(blockout_prefixes):
+            continue
+        try:
+            actor.set_actor_hidden_in_game(True)
+            actor.set_is_temporarily_hidden_in_editor(True)
+            hidden += 1
+        except Exception as exc:
+            print(f"ROAD_ONLY_RENDER_TARGET_LONDON_IMAGEGEN_FILTER_HIDE_FAIL label={label} error={exc}")
+    print(f"ROAD_ONLY_RENDER_TARGET_LONDON_IMAGEGEN_FILTER hidden={hidden}")
+
+
+def apply_london_real_geometry_beauty_filter(city: str, proof_view: str) -> None:
+    """Keep London beauty captures on photoreal/real-geometry actors, not state/base placeholders."""
+    if city != "london" or proof_view not in {"oblique", "lit_oblique"}:
+        return
+    hidden = 0
+    blockout_prefixes = (
+        "RendererSnapshotState_london_",
+        "RoadOnlyRenderer_london_",
+    )
+    for actor in unreal.EditorLevelLibrary.get_all_level_actors():
+        try:
+            label = actor.get_actor_label()
+        except Exception:
+            continue
+        if not label.startswith(blockout_prefixes):
+            continue
+        try:
+            visual_components = [
+                component
+                for component in (
+                    actor.get_component_by_class(unreal.StaticMeshComponent),
+                    actor.get_component_by_class(unreal.TextRenderComponent),
+                )
+                if component is not None
+            ]
+        except Exception:
+            visual_components = []
+        if not visual_components:
+            continue
+        try:
+            actor.set_actor_hidden_in_game(True)
+            actor.set_is_temporarily_hidden_in_editor(True)
+            for component in visual_components:
+                try:
+                    component.set_visibility(False, True)
+                except Exception:
+                    pass
+                try:
+                    component.set_hidden_in_game(True)
+                except Exception:
+                    pass
+                try:
+                    component.set_editor_property("visible", False)
+                except Exception:
+                    pass
+            hidden += 1
+        except Exception as exc:
+            print(f"ROAD_ONLY_RENDER_TARGET_LONDON_REAL_GEOMETRY_FILTER_HIDE_FAIL label={label} error={exc}")
+    print(f"ROAD_ONLY_RENDER_TARGET_LONDON_REAL_GEOMETRY_FILTER hidden={hidden}")
+
+
+def apply_new_york_real_geometry_beauty_filter(city: str, proof_view: str) -> None:
+    """Keep New York captures on photoreal/real-geometry actors, not state/base placeholders."""
+    if city != "new_york" or proof_view not in {"oblique", "lit_oblique"}:
+        return
+    hidden = 0
+    blockout_prefixes = (
+        "RendererSnapshotState_new_york_",
+        "RoadOnlyRenderer_new_york_",
+    )
+    for actor in unreal.EditorLevelLibrary.get_all_level_actors():
+        try:
+            label = actor.get_actor_label()
+        except Exception:
+            continue
+        if not label.startswith(blockout_prefixes):
+            continue
+        try:
+            visual_components = [
+                component
+                for component in (
+                    actor.get_component_by_class(unreal.StaticMeshComponent),
+                    actor.get_component_by_class(unreal.TextRenderComponent),
+                )
+                if component is not None
+            ]
+        except Exception:
+            visual_components = []
+        if not visual_components:
+            continue
+        try:
+            actor.set_actor_hidden_in_game(True)
+            actor.set_is_temporarily_hidden_in_editor(True)
+            for component in visual_components:
+                try:
+                    component.set_visibility(False, True)
+                except Exception:
+                    pass
+                try:
+                    component.set_hidden_in_game(True)
+                except Exception:
+                    pass
+                try:
+                    component.set_editor_property("visible", False)
+                except Exception:
+                    pass
+            hidden += 1
+        except Exception as exc:
+            print(f"ROAD_ONLY_RENDER_TARGET_NEW_YORK_REAL_GEOMETRY_FILTER_HIDE_FAIL label={label} error={exc}")
+    print(f"ROAD_ONLY_RENDER_TARGET_NEW_YORK_REAL_GEOMETRY_FILTER hidden={hidden}")
+
+
+def apply_london_final_beauty_filter(city: str, proof_view: str) -> None:
+    if city != "london" or proof_view not in {"oblique", "lit_oblique"}:
+        return
+    if os.environ.get("SMART_INTERSECTION_DISABLE_LONDON_FINAL_FILTER") == "1":
+        print("ROAD_ONLY_RENDER_TARGET_LONDON_FINAL_FILTER disabled=1")
+        return
+
+    allowed_prefixes = ("LondonFinal_",)
+    actors = []
+    allowed_visual = 0
+    for actor in unreal.EditorLevelLibrary.get_all_level_actors():
+        try:
+            label = actor.get_actor_label()
+        except Exception:
+            continue
+        try:
+            visual_components = [
+                component
+                for component in (
+                    actor.get_component_by_class(unreal.StaticMeshComponent),
+                    actor.get_component_by_class(unreal.TextRenderComponent),
+                )
+                if component is not None
+            ]
+        except Exception:
+            visual_components = []
+        if not visual_components:
+            continue
+        actors.append((actor, label, visual_components))
+        if label.startswith(allowed_prefixes):
+            allowed_visual += 1
+
+    if allowed_visual == 0:
+        print("ROAD_ONLY_RENDER_TARGET_LONDON_FINAL_FILTER skipped_missing_final_layer=1")
+        return
+
+    hidden = 0
+    for actor, label, visual_components in actors:
+        if label.startswith(allowed_prefixes):
+            continue
+        try:
+            actor.set_actor_hidden_in_game(True)
+            actor.set_is_temporarily_hidden_in_editor(True)
+            for component in visual_components:
+                try:
+                    component.set_visibility(False, True)
+                except Exception:
+                    pass
+                try:
+                    component.set_hidden_in_game(True)
+                except Exception:
+                    pass
+                try:
+                    component.set_editor_property("visible", False)
+                except Exception:
+                    pass
+            hidden += 1
+        except Exception as exc:
+            print(f"ROAD_ONLY_RENDER_TARGET_LONDON_FINAL_FILTER_HIDE_FAIL label={label} error={exc}")
+    print(f"ROAD_ONLY_RENDER_TARGET_LONDON_FINAL_FILTER hidden={hidden} kept={allowed_visual}")
+
+
+def apply_new_york_final_beauty_filter(city: str, proof_view: str) -> None:
+    if city != "new_york" or proof_view not in {"oblique", "lit_oblique"}:
+        return
+    if os.environ.get("SMART_INTERSECTION_DISABLE_NEW_YORK_FINAL_FILTER") == "1":
+        print("ROAD_ONLY_RENDER_TARGET_NEW_YORK_FINAL_FILTER disabled=1")
+        return
+
+    allowed_prefixes = ("NewYorkFinal_",)
+    actors = []
+    allowed_visual = 0
+    for actor in unreal.EditorLevelLibrary.get_all_level_actors():
+        try:
+            label = actor.get_actor_label()
+        except Exception:
+            continue
+        try:
+            visual_components = [
+                component
+                for component in (
+                    actor.get_component_by_class(unreal.StaticMeshComponent),
+                    actor.get_component_by_class(unreal.TextRenderComponent),
+                )
+                if component is not None
+            ]
+        except Exception:
+            visual_components = []
+        if not visual_components:
+            continue
+        actors.append((actor, label, visual_components))
+        if label.startswith(allowed_prefixes):
+            allowed_visual += 1
+
+    if allowed_visual == 0:
+        print("ROAD_ONLY_RENDER_TARGET_NEW_YORK_FINAL_FILTER skipped_missing_final_layer=1")
+        return
+
+    hidden = 0
+    for actor, label, visual_components in actors:
+        if label.startswith(allowed_prefixes):
+            continue
+        try:
+            actor.set_actor_hidden_in_game(True)
+            actor.set_is_temporarily_hidden_in_editor(True)
+            for component in visual_components:
+                try:
+                    component.set_visibility(False, True)
+                except Exception:
+                    pass
+                try:
+                    component.set_hidden_in_game(True)
+                except Exception:
+                    pass
+                try:
+                    component.set_editor_property("visible", False)
+                except Exception:
+                    pass
+            hidden += 1
+        except Exception as exc:
+            print(f"ROAD_ONLY_RENDER_TARGET_NEW_YORK_FINAL_FILTER_HIDE_FAIL label={label} error={exc}")
+    print(f"ROAD_ONLY_RENDER_TARGET_NEW_YORK_FINAL_FILTER hidden={hidden} kept={allowed_visual}")
+
+
+def apply_paris_final_beauty_filter(city: str, proof_view: str) -> None:
+    if city != "paris" or proof_view not in {"oblique", "lit_oblique"}:
+        return
+    if os.environ.get("SMART_INTERSECTION_DISABLE_PARIS_FINAL_FILTER") == "1":
+        print("ROAD_ONLY_RENDER_TARGET_PARIS_FINAL_FILTER disabled=1")
+        return
+
+    allowed_prefixes = ("ParisFinal_",)
+    actors = []
+    allowed_visual = 0
+    for actor in unreal.EditorLevelLibrary.get_all_level_actors():
+        try:
+            label = actor.get_actor_label()
+        except Exception:
+            continue
+        try:
+            visual_components = [
+                component
+                for component in (
+                    actor.get_component_by_class(unreal.StaticMeshComponent),
+                    actor.get_component_by_class(unreal.TextRenderComponent),
+                )
+                if component is not None
+            ]
+        except Exception:
+            visual_components = []
+        if not visual_components:
+            continue
+        actors.append((actor, label, visual_components))
+        if label.startswith(allowed_prefixes):
+            allowed_visual += 1
+
+    if allowed_visual == 0:
+        print("ROAD_ONLY_RENDER_TARGET_PARIS_FINAL_FILTER skipped_missing_final_layer=1")
+        return
+
+    hidden = 0
+    for actor, label, visual_components in actors:
+        if label.startswith(allowed_prefixes):
+            continue
+        try:
+            actor.set_actor_hidden_in_game(True)
+            actor.set_is_temporarily_hidden_in_editor(True)
+            for component in visual_components:
+                try:
+                    component.set_visibility(False, True)
+                except Exception:
+                    pass
+                try:
+                    component.set_hidden_in_game(True)
+                except Exception:
+                    pass
+                try:
+                    component.set_editor_property("visible", False)
+                except Exception:
+                    pass
+            hidden += 1
+        except Exception as exc:
+            print(f"ROAD_ONLY_RENDER_TARGET_PARIS_FINAL_FILTER_HIDE_FAIL label={label} error={exc}")
+    print(f"ROAD_ONLY_RENDER_TARGET_PARIS_FINAL_FILTER hidden={hidden} kept={allowed_visual}")
+
+
+def apply_seoul_final_beauty_filter(city: str, proof_view: str) -> None:
+    if city != "seoul" or proof_view not in {"oblique", "lit_oblique"}:
+        return
+    if os.environ.get("SMART_INTERSECTION_DISABLE_SEOUL_FINAL_FILTER") == "1":
+        print("ROAD_ONLY_RENDER_TARGET_SEOUL_FINAL_FILTER disabled=1")
+        return
+
+    allowed_prefixes = ("SeoulFinal_",)
+    actors = []
+    allowed_visual = 0
+    for actor in unreal.EditorLevelLibrary.get_all_level_actors():
+        try:
+            label = actor.get_actor_label()
+        except Exception:
+            continue
+        try:
+            visual_components = [
+                component
+                for component in (
+                    actor.get_component_by_class(unreal.StaticMeshComponent),
+                    actor.get_component_by_class(unreal.TextRenderComponent),
+                )
+                if component is not None
+            ]
+        except Exception:
+            visual_components = []
+        if not visual_components:
+            continue
+        actors.append((actor, label, visual_components))
+        if label.startswith(allowed_prefixes):
+            allowed_visual += 1
+
+    if allowed_visual == 0:
+        print("ROAD_ONLY_RENDER_TARGET_SEOUL_FINAL_FILTER skipped_missing_final_layer=1")
+        return
+
+    hidden = 0
+    for actor, label, visual_components in actors:
+        if label.startswith(allowed_prefixes):
+            continue
+        try:
+            actor.set_actor_hidden_in_game(True)
+            actor.set_is_temporarily_hidden_in_editor(True)
+            for component in visual_components:
+                try:
+                    component.set_visibility(False, True)
+                except Exception:
+                    pass
+                try:
+                    component.set_hidden_in_game(True)
+                except Exception:
+                    pass
+                try:
+                    component.set_editor_property("visible", False)
+                except Exception:
+                    pass
+            hidden += 1
+        except Exception as exc:
+            print(f"ROAD_ONLY_RENDER_TARGET_SEOUL_FINAL_FILTER_HIDE_FAIL label={label} error={exc}")
+    print(f"ROAD_ONLY_RENDER_TARGET_SEOUL_FINAL_FILTER hidden={hidden} kept={allowed_visual}")
+
+
+def apply_env_label_hide_filter() -> None:
+    raw = os.environ.get("SMART_INTERSECTION_HIDE_LABEL_PREFIXES", "").strip()
+    if not raw:
+        return
+    prefixes = tuple(part.strip() for part in raw.split(";") if part.strip())
+    if not prefixes:
+        return
+    hidden = 0
+    for actor in unreal.EditorLevelLibrary.get_all_level_actors():
+        try:
+            label = actor.get_actor_label()
+        except Exception:
+            continue
+        if not label.startswith(prefixes):
+            continue
+        try:
+            actor.set_actor_hidden_in_game(True)
+            actor.set_is_temporarily_hidden_in_editor(True)
+            hidden += 1
+        except Exception as exc:
+            print(f"ROAD_ONLY_RENDER_TARGET_ENV_HIDE_FAIL label={label} error={exc}")
+    print(f"ROAD_ONLY_RENDER_TARGET_ENV_HIDE hidden={hidden} prefixes={len(prefixes)}")
+
+
+def apply_new_york_imagegen_beauty_filter(city: str, proof_view: str) -> None:
+    if city != "new_york" or proof_view not in {"oblique", "lit_oblique"}:
+        return
+    hidden = 0
+    blockout_prefixes = (
+        "ImageGenNewYork_wet_intersection_atlas_plane_visible",
+    )
+    for actor in unreal.EditorLevelLibrary.get_all_level_actors():
+        try:
+            label = actor.get_actor_label()
+        except Exception:
+            continue
+        if not label.startswith(blockout_prefixes):
+            continue
+        try:
+            actor.set_actor_hidden_in_game(True)
+            actor.set_is_temporarily_hidden_in_editor(True)
+            hidden += 1
+        except Exception as exc:
+            print(f"ROAD_ONLY_RENDER_TARGET_NEW_YORK_IMAGEGEN_FILTER_HIDE_FAIL label={label} error={exc}")
+    print(f"ROAD_ONLY_RENDER_TARGET_NEW_YORK_IMAGEGEN_FILTER hidden={hidden}")
+
+
+def apply_seoul_imagegen_beauty_filter(city: str, proof_view: str) -> None:
+    if city != "seoul" or proof_view not in {"oblique", "lit_oblique"}:
+        return
+    hidden = 0
+    blockout_prefixes = (
+        "ImageGenSeoul_wet_bus_lane_atlas_plane_visible",
+    )
+    for actor in unreal.EditorLevelLibrary.get_all_level_actors():
+        try:
+            label = actor.get_actor_label()
+        except Exception:
+            continue
+        if not label.startswith(blockout_prefixes):
+            continue
+        try:
+            actor.set_actor_hidden_in_game(True)
+            actor.set_is_temporarily_hidden_in_editor(True)
+            hidden += 1
+        except Exception as exc:
+            print(f"ROAD_ONLY_RENDER_TARGET_SEOUL_IMAGEGEN_FILTER_HIDE_FAIL label={label} error={exc}")
+    print(f"ROAD_ONLY_RENDER_TARGET_SEOUL_IMAGEGEN_FILTER hidden={hidden}")
+
+
+def apply_paris_imagegen_beauty_filter(city: str, proof_view: str) -> None:
+    if city != "paris" or proof_view not in {"oblique", "lit_oblique"}:
+        return
+    hidden = 0
+    blockout_prefixes = (
+        "PhotorealRoadKit_paris_imagegen_wet_intersection_atlas_plane_visible",
+        "PhotorealRoadKit_paris_single_imagegen_boulevard_backplate_plane_visible",
+    )
+    for actor in unreal.EditorLevelLibrary.get_all_level_actors():
+        try:
+            label = actor.get_actor_label()
+        except Exception:
+            continue
+        if not label.startswith(blockout_prefixes):
+            continue
+        try:
+            actor.set_actor_hidden_in_game(True)
+            actor.set_is_temporarily_hidden_in_editor(True)
+            hidden += 1
+        except Exception as exc:
+            print(f"ROAD_ONLY_RENDER_TARGET_PARIS_IMAGEGEN_FILTER_HIDE_FAIL label={label} error={exc}")
+    print(f"ROAD_ONLY_RENDER_TARGET_PARIS_IMAGEGEN_FILTER hidden={hidden}")
+
+
 def float_env(name: str, default: float) -> float:
     raw = os.environ.get(name)
     if raw is None:
@@ -145,6 +651,52 @@ def float_env(name: str, default: float) -> float:
     except ValueError:
         print(f"ROAD_ONLY_RENDER_TARGET_BAD_FLOAT name={name} value={raw!r} default={default}")
         return default
+
+
+def vector_env(name: str):
+    raw = os.environ.get(name)
+    if not raw:
+        return None
+    try:
+        x, y, z = (float(part.strip()) for part in raw.split(",", 2))
+        return unreal.Vector(x, y, z)
+    except Exception:
+        print(f"ROAD_ONLY_RENDER_TARGET_BAD_VECTOR name={name} value={raw!r}")
+        return None
+
+
+def oblique_camera_pose(city: str, lit_capture: bool):
+    if city == "london" and lit_capture:
+        origin = unreal.Vector(-1040, -1180, 690)
+        target = unreal.Vector(-80, 80, 520)
+        return (
+            vector_env("SMART_INTERSECTION_CAMERA_ORIGIN") or origin,
+            vector_env("SMART_INTERSECTION_CAMERA_TARGET") or target,
+        )
+    if city == "new_york" and lit_capture:
+        origin = unreal.Vector(-1040, -1180, 690)
+        target = unreal.Vector(-80, 80, 520)
+        return (
+            vector_env("SMART_INTERSECTION_CAMERA_ORIGIN") or origin,
+            vector_env("SMART_INTERSECTION_CAMERA_TARGET") or target,
+        )
+    if city == "paris" and lit_capture:
+        origin = unreal.Vector(-1040, -1180, 690)
+        target = unreal.Vector(-80, 80, 520)
+        return (
+            vector_env("SMART_INTERSECTION_CAMERA_ORIGIN") or origin,
+            vector_env("SMART_INTERSECTION_CAMERA_TARGET") or target,
+        )
+    if city == "seoul" and lit_capture:
+        origin = unreal.Vector(-1040, -1180, 690)
+        target = unreal.Vector(-80, 80, 520)
+        return (
+            vector_env("SMART_INTERSECTION_CAMERA_ORIGIN") or origin,
+            vector_env("SMART_INTERSECTION_CAMERA_TARGET") or target,
+        )
+    origin = unreal.Vector(-1040, -1180, 690)
+    target = unreal.Vector(-55, -95, 35)
+    return origin, target
 
 
 def set_editor_property_if_supported(obj, name: str, value) -> bool:
@@ -179,7 +731,7 @@ def apply_lit_proof_post_process_settings(settings) -> list[str]:
         set_pp("override_auto_exposure_method", True)
         set_pp("auto_exposure_method", exposure_method)
 
-    exposure_bias = float_env("SMART_INTERSECTION_LIT_EXPOSURE_BIAS", 2.35)
+    exposure_bias = float_env("SMART_INTERSECTION_LIT_EXPOSURE_BIAS", 4.25)
     set_pp("override_auto_exposure_bias", True)
     set_pp("auto_exposure_bias", exposure_bias)
     for min_name, max_name, min_value, max_value in (
@@ -307,6 +859,9 @@ def main() -> None:
             "TargetHero6_london_camera_visible_overcast_backplate",
             "TargetHero6_london_camera_visible_wet_road_plate",
             "TargetHero6_london_lower_frame_pavement_fill",
+            "LondonFinal_london_facade_road_backplate_card",
+            "LondonFinal_london_left_facade_return_card",
+            "LondonFinal_london_wet_yellow_box_road_card",
         }
     )
     spawn_material_swatches(city)
@@ -314,6 +869,26 @@ def main() -> None:
     proof_view = os.environ.get("SMART_INTERSECTION_PROOF_VIEW", "layout")
     if proof_view == "state_layout":
         apply_state_layout_proof_filter()
+    else:
+        if os.environ.get("SMART_INTERSECTION_DISABLE_BEAUTY_FILTER") == "1":
+            print("ROAD_ONLY_RENDER_TARGET_BEAUTY_FILTER disabled=1")
+        else:
+            apply_beauty_capture_filter(proof_view)
+        if os.environ.get("SMART_INTERSECTION_DISABLE_CITY_IMAGEGEN_FILTER") == "1":
+            print("ROAD_ONLY_RENDER_TARGET_CITY_IMAGEGEN_FILTER disabled=1")
+        else:
+            apply_london_imagegen_beauty_filter(city, proof_view)
+            apply_new_york_imagegen_beauty_filter(city, proof_view)
+            apply_seoul_imagegen_beauty_filter(city, proof_view)
+            apply_paris_imagegen_beauty_filter(city, proof_view)
+        if os.environ.get("SMART_INTERSECTION_ENABLE_REAL_GEOMETRY_FILTER") == "1":
+            apply_london_real_geometry_beauty_filter(city, proof_view)
+        apply_new_york_real_geometry_beauty_filter(city, proof_view)
+        apply_london_final_beauty_filter(city, proof_view)
+        apply_new_york_final_beauty_filter(city, proof_view)
+        apply_paris_final_beauty_filter(city, proof_view)
+        apply_seoul_final_beauty_filter(city, proof_view)
+        apply_env_label_hide_filter()
 
     try:
         unreal.SystemLibrary.execute_console_command(world, "DisableAllScreenMessages")
@@ -329,14 +904,14 @@ def main() -> None:
     sun.set_actor_label(f"RoadOnlyRenderer_{city}_capture_sun_visible_proof")
     sun_comp = sun.get_component_by_class(unreal.DirectionalLightComponent)
     lit_capture = proof_view == "lit_oblique"
-    lit_postprocess = os.environ.get("SMART_INTERSECTION_LIT_POSTPROCESS") == "1"
+    lit_postprocess = lit_capture and os.environ.get("SMART_INTERSECTION_LIT_POSTPROCESS", "1") != "0"
     if lit_capture and lit_postprocess:
         configure_lit_capture_post_process(city, world)
     if lit_capture:
         spawn_lit_capture_atmosphere(city)
 
     if sun_comp:
-        sun_comp.set_editor_property("intensity", float_env("SMART_INTERSECTION_LIT_SUN_INTENSITY", 2.0) if lit_capture else 1.15)
+        sun_comp.set_editor_property("intensity", float_env("SMART_INTERSECTION_LIT_SUN_INTENSITY", 8.0) if lit_capture else 1.15)
         try:
             sun_comp.set_editor_property("cast_shadows", False)
         except Exception:
@@ -357,7 +932,7 @@ def main() -> None:
         if lit_capture:
             configure_point_light_for_lit_proof(
                 fill_comp,
-                float_env("SMART_INTERSECTION_LIT_FILL_INTENSITY", 5.0),
+                float_env("SMART_INTERSECTION_LIT_FILL_INTENSITY", 12.0),
                 float_env("SMART_INTERSECTION_LIT_FILL_RADIUS", 9500.0),
             )
         else:
@@ -376,7 +951,7 @@ def main() -> None:
         sky.set_actor_label(f"RoadOnlyRenderer_{city}_capture_sky_visible_proof")
         sky_comp = sky.get_component_by_class(unreal.SkyLightComponent)
         if sky_comp:
-            sky_comp.set_editor_property("intensity", float_env("SMART_INTERSECTION_LIT_SKY_INTENSITY", 1.0))
+            sky_comp.set_editor_property("intensity", float_env("SMART_INTERSECTION_LIT_SKY_INTENSITY", 5.0))
             try:
                 sky_comp.set_mobility(unreal.ComponentMobility.MOVABLE)
             except Exception:
@@ -397,8 +972,7 @@ def main() -> None:
         # looking across the wet intersection rather than through facade meshes.
         # Closer target-like corner CCTV/elevated viewport. The wider isometric view makes
         # the scene read as a model. This crop gives road/facade/foreground rail more screen area.
-        origin = unreal.Vector(-980, -1080, 650)
-        target = unreal.Vector(-90, -120, 245)
+        origin, target = oblique_camera_pose(city, lit_capture)
         rotation = look_at_rotation(origin, target)
     else:
         # Top-down, near-orthographic proof view. The previous oblique proof left most pixels black
@@ -413,7 +987,7 @@ def main() -> None:
         if camera_fill_comp:
             configure_point_light_for_lit_proof(
                 camera_fill_comp,
-                float_env("SMART_INTERSECTION_LIT_CAMERA_FILL_INTENSITY", 2.8),
+                float_env("SMART_INTERSECTION_LIT_CAMERA_FILL_INTENSITY", 8.0),
                 float_env("SMART_INTERSECTION_LIT_CAMERA_FILL_RADIUS", 6500.0),
             )
         upper_fill = unreal.EditorLevelLibrary.spawn_actor_from_class(
@@ -426,7 +1000,7 @@ def main() -> None:
         if upper_fill_comp:
             configure_point_light_for_lit_proof(
                 upper_fill_comp,
-                float_env("SMART_INTERSECTION_LIT_UPPER_FILL_INTENSITY", 3.8),
+                float_env("SMART_INTERSECTION_LIT_UPPER_FILL_INTENSITY", 12.0),
                 float_env("SMART_INTERSECTION_LIT_UPPER_FILL_RADIUS", 2200.0),
             )
 
@@ -450,12 +1024,18 @@ def main() -> None:
             rt.set_editor_property("render_target_format", unreal.TextureRenderTargetFormat.RTF_RGBA8)
     comp.texture_target = rt
     try:
-        capture_source = None
-        if lit_capture and hasattr(unreal.SceneCaptureSource, "SCS_FINAL_COLOR_LDR"):
-            capture_source = unreal.SceneCaptureSource.SCS_FINAL_COLOR_LDR
-        else:
-            # Use base color for visual-acceptance proof. The generated materials are still being tuned,
-            # so base-color proof remains the stable composition gate.
+        source_override = os.environ.get("SMART_INTERSECTION_CAPTURE_SOURCE", "").strip()
+        source_names = (
+            tuple(part.strip() for part in source_override.split(",") if part.strip())
+            if source_override
+            else (
+                ("SCS_SCENE_COLOR_HDR", "SCS_FINAL_COLOR_LDR", "SCS_FINAL_COLOR_HDR", "SCS_BASE_COLOR")
+                if lit_capture
+                else ("SCS_BASE_COLOR",)
+            )
+        )
+        capture_source = first_enum_value(unreal.SceneCaptureSource, source_names)
+        if capture_source is None:
             capture_source = unreal.SceneCaptureSource.SCS_BASE_COLOR
         try:
             comp.set_editor_property("capture_source", capture_source)
@@ -475,7 +1055,16 @@ def main() -> None:
                 pass
     comp.fov_angle = 52.0
     if proof_view in {"oblique", "lit_oblique"}:
-        default_oblique_fov = 36.0 if lit_capture else 47.0
+        if city == "london" and lit_capture:
+            default_oblique_fov = 36.0
+        elif city == "new_york" and lit_capture:
+            default_oblique_fov = 36.0
+        elif city == "seoul" and lit_capture:
+            default_oblique_fov = 36.0
+        elif city == "paris" and lit_capture:
+            default_oblique_fov = 36.0
+        else:
+            default_oblique_fov = 36.0 if lit_capture else 47.0
         comp.fov_angle = float_env("SMART_INTERSECTION_PROOF_OBLIQUE_FOV", default_oblique_fov)
     else:
         try:

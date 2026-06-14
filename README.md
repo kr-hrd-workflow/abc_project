@@ -392,3 +392,50 @@ docs/unreal-pixel-streaming.md
 docs/design/assets/dashboard-concept-approved.png
 docs/design/dashboard-concept-notes.md
 ```
+
+## Unreal 도로 렌더 캡처
+
+Unreal 도로 전용 렌더는 에디터 뷰포트가 아니라 `SceneCapture2D` 최종 카메라 경로로 캡처합니다. 에디터나 런처에서 보이는 화면은 디버그/원본 맵 상태일 수 있으므로 최종 검수에는 아래 캡처 스크립트의 결과물을 사용합니다.
+
+도시별 맵 생성:
+
+```powershell
+npm run unreal:generate-city -- -Profile london
+npm run unreal:generate-city -- -Profile new_york
+npm run unreal:generate-city -- -Profile paris
+npm run unreal:generate-city -- -Profile seoul
+```
+
+도시별 최종 렌더 캡처:
+
+```powershell
+powershell.exe -NoProfile -ExecutionPolicy Bypass -File scripts\capture-unreal-road-render-target.ps1 -Profile london -View lit_oblique -Output artifacts\unreal-road-only-london-lit-oblique-final-visible.png
+powershell.exe -NoProfile -ExecutionPolicy Bypass -File scripts\capture-unreal-road-render-target.ps1 -Profile new_york -View lit_oblique -Output artifacts\unreal-road-only-new-york-lit-oblique-final-visible.png
+powershell.exe -NoProfile -ExecutionPolicy Bypass -File scripts\capture-unreal-road-render-target.ps1 -Profile paris -View lit_oblique -Output artifacts\unreal-road-only-paris-lit-oblique-final-visible.png
+powershell.exe -NoProfile -ExecutionPolicy Bypass -File scripts\capture-unreal-road-render-target.ps1 -Profile seoul -View lit_oblique -Output artifacts\unreal-road-only-seoul-lit-oblique-final-visible.png
+```
+
+캡처 결과 열기:
+
+```powershell
+Start-Process "C:\Users\100ri\abc_project\artifacts\unreal-road-only-london-lit-oblique-final-visible.png"
+Start-Process "C:\Users\100ri\abc_project\artifacts\unreal-road-only-new-york-lit-oblique-final-visible.png"
+Start-Process "C:\Users\100ri\abc_project\artifacts\unreal-road-only-paris-lit-oblique-final-visible.png"
+Start-Process "C:\Users\100ri\abc_project\artifacts\unreal-road-only-seoul-lit-oblique-final-visible.png"
+```
+
+최종 PNG 미리보기:
+
+![London Unreal road render](artifacts/unreal-road-only-london-lit-oblique-final-visible.png)
+
+![New York Unreal road render](artifacts/unreal-road-only-new-york-lit-oblique-final-visible.png)
+
+![Paris Unreal road render](artifacts/unreal-road-only-paris-lit-oblique-final-visible.png)
+
+![Seoul Unreal road render](artifacts/unreal-road-only-seoul-lit-oblique-final-visible.png)
+
+참고:
+
+- 지원 도시 프로필은 `london`, `new_york`, `paris`, `seoul`입니다.
+- 캡처 스크립트는 Unreal이 PNG를 내보낸 뒤 불투명 RGB PNG로 다시 저장합니다. 이전 캡처처럼 알파 채널이 전부 `0`이면 Windows 이미지 뷰어에서 정상 RGB 픽셀이 있어도 검은 이미지처럼 보일 수 있기 때문입니다.
+- 최종 품질 판단은 스크립트 통과만으로 하지 않고, 새로 캡처한 PNG를 사람이 직접 확인해야 합니다.
