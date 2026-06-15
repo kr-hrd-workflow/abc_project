@@ -1,6 +1,7 @@
 param(
   [ValidateSet('seoul','new_york','paris','london')]
   [string]$Profile = 'seoul',
+  [switch]$OperatorStage1,
   [switch]$DryRun
 )
 
@@ -65,6 +66,7 @@ Write-Output "PROFILE_PATH=$ProfilePath"
 Write-Output "PYTHON_SCRIPT=$PythonScript"
 Write-Output "UNREAL_EDITOR_FOUND=$([bool]$UnrealEditor)"
 if ($UnrealEditor) { Write-Output "UNREAL_EDITOR=$UnrealEditor" }
+if ($OperatorStage1) { Write-Output 'OPERATOR_STAGE1=true' }
 
 if ($DryRun) {
   Write-Output 'DRY_RUN=true'
@@ -79,6 +81,11 @@ if (-not $UnrealEditor) {
 Invoke-UnrealProjectBuildIfNeeded -EditorPath $UnrealEditor -ProjectFile $ProjectPath
 
 $env:SMART_INTERSECTION_CITY_PROFILE = $ProfilePath
+if ($OperatorStage1) {
+  $env:SMART_INTERSECTION_OPERATOR_STAGE1 = '1'
+} else {
+  Remove-Item Env:\SMART_INTERSECTION_OPERATOR_STAGE1 -ErrorAction SilentlyContinue
+}
 $args = @(
   $ProjectPath,
   "-ExecutePythonScript=$PythonScript",
