@@ -1,6 +1,6 @@
 # SUMO-Ready 3D Operator Map Implementation Plan
 
-> **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
+> **For agentic workers:** REQUIRED SUB-SKILLS: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task, and use `karpathy-guidelines` before planning, writing, reviewing, refactoring, or debugging code. Steps use checkbox (`- [ ]`) syntax for tracking.
 
 **Goal:** Move SmartIntersection from polished static city render proofs into one large, SUMO-ready, 3D operator simulation viewport where traffic volume, lanes, signals, and vehicle movement can be read clearly.
 
@@ -328,7 +328,7 @@ Stage 1 carryover required before Stage 2 execution:
 
 ## Stage 2 Detailed Task Plan
 
-> **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
+> **For agentic workers:** REQUIRED SUB-SKILLS: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task, and use `karpathy-guidelines` before planning, writing, reviewing, refactoring, or debugging code. Steps use checkbox (`- [ ]`) syntax for tracking.
 
 **Goal:** Replace traffic-area image/card dependence with limited 3D operator context while preserving the large SUMO-ready intersection, queue readability, and Unreal-as-renderer-only boundary.
 
@@ -370,6 +370,7 @@ Stage 1 carryover required before Stage 2 execution:
 
 **Generated artifacts:**
 
+- `artifacts/imagegen/sumo-ready-operator-map-stage2-context-reference.png`
 - `renderer/unreal/SmartIntersection/Content/Maps/Generated/smart_intersection_rebuild_stage2.umap`
 - `renderer/unreal/SmartIntersection/GeneratedProof/smart_intersection_rebuild_operator_stage2_manifest.json`
 - `artifacts/unreal-operator-map-stage2-proof.png`
@@ -529,6 +530,43 @@ may appear. Building facades and distant cards must start outside the zone.
 ```
 
 Expected: Stage 2 context cannot hide lanes, queues, or signal heads.
+
+### Task 2A: Create Stage 2 Image Gen Reference Direction
+
+**Files:**
+- Generated: `artifacts/imagegen/sumo-ready-operator-map-stage2-context-reference.png`
+- Reference only: `docs/superpowers/plans/2026-06-15-sumo-ready-3d-operator-map.md`
+
+- [ ] **Step 1: Generate one Stage 2 reference board before geometry work**
+
+Use Image Gen to create a practical reference board for the Stage 2 foreground/context pass. The board should show:
+
+- traffic-readable curbs, sidewalks, medians, guardrails, traffic cabinets, CCTV poles, mast arms, street lights, and road signs
+- nearby low-rise facade massing that sits outside the traffic-reading zone
+- material direction for concrete, curb paint, dark windows, galvanized metal, signal hardware, and neutral facade blocks
+- operator-view clarity, not cinematic closeups
+
+Save the result at:
+
+```text
+artifacts/imagegen/sumo-ready-operator-map-stage2-context-reference.png
+```
+
+Expected: the reference board guides shapes, proportions, colors, and material direction for Stage 2 context geometry.
+
+- [ ] **Step 2: Keep Image Gen out of runtime map objects**
+
+Image Gen output is reference/input only for Stage 2. Do not import the generated image as a road card, facade card, billboard, sky card, backplate, or texture plane in the generated `.umap`.
+
+The generated Stage 2 map must still fail verification if its map bytes contain:
+
+```text
+ImageGen
+photo_backplate
+road_card
+```
+
+Expected: Image Gen influences the 3D context design, but runtime map objects remain Unreal geometry/material actors.
 
 ### Task 3: Add Stage 2 Materials Without Backplate Dependence
 
@@ -780,14 +818,26 @@ Expected: Stage 2 proof fixes the Stage 1 overexposure problem instead of carryi
 Use these minimums:
 
 ```python
+MIN_STAGE2_REFERENCE_BYTES = 500_000
 MIN_STAGE2_MAP_BYTES = 760_000
 MIN_STAGE2_PROOF_BYTES = 420_000
+REFERENCE = ROOT / "artifacts" / "imagegen" / "sumo-ready-operator-map-stage2-context-reference.png"
 MAP = UE / "Content" / "Maps" / "Generated" / "smart_intersection_rebuild_stage2.umap"
 MANIFEST = UE / "GeneratedProof" / "smart_intersection_rebuild_operator_stage2_manifest.json"
 PROOF = ROOT / "artifacts" / "unreal-operator-map-stage2-proof.png"
 ```
 
-Expected: Stage 2 must be measurably more than Stage 1's semantic artifact.
+Expected: Stage 2 must include a readable Image Gen reference board and be measurably more than Stage 1's semantic map artifact.
+
+- [ ] **Step 1A: Check the Stage 2 Image Gen reference image**
+
+Mirror the Stage 1 verifier pattern:
+
+```python
+check_image(REFERENCE, "stage2 imagegen reference", MIN_STAGE2_REFERENCE_BYTES)
+```
+
+Expected: the Stage 2 verifier fails if `artifacts/imagegen/sumo-ready-operator-map-stage2-context-reference.png` is missing, too small, unreadable, too dark, or visually flat.
 
 - [ ] **Step 2: Check required map tokens**
 
@@ -917,6 +967,48 @@ Do not mark these complete unless actually implemented and verified:
 - multi-city expansion
 - real traffic-controller integration
 
+## Stage 2 Goal Mode Prompt
+
+This prompt follows the OpenAI Cookbook guidance in "Using Goals in Codex":
+`https://developers.openai.com/cookbook/examples/codex/using_goals_in_codex`.
+
+The Goal is written as a compact completion contract with:
+
+- outcome
+- verification surface
+- constraints
+- boundaries
+- required skills
+- iteration policy
+- blocked stop condition
+- live checkbox tracking
+
+Use this prompt in the next Stage 2 session. It is intentionally kept under 4000 characters:
+
+```md
+/goal Build Stage 2 of the SUMO-ready 3D operator map for SmartIntersection: one generated Unreal Stage 2 map that keeps Stage 1 road/queue semantics and replaces traffic-area backplate/card dependence with real 3D context geometry: curbs, sidewalks, medians, guardrails, traffic cabinets, CCTV/street-light/sign hardware, and low-rise facade blocks outside the traffic-reading zone.
+
+First close Stage 1 carryover: fix or bypass the broken Windows `python3` npm verifier path, reduce Stage 1 proof overexposure, make the central median/island read as lane/median infrastructure rather than black obstruction bars, recapture `artifacts/unreal-operator-map-stage1-proof.png`, and re-run the Stage 1 verifier.
+
+Use required skills before acting: Superpowers process skills for execution/verification and `karpathy-guidelines` before planning, coding, review, refactor, or debugging. Keep changes surgical and define evidence for each slice.
+
+Keep `docs/superpowers/plans/2026-06-15-sumo-ready-3d-operator-map.md` as the live progress doc. Use checkboxes exactly: `- [ ]` for open, `- [x]` only when evidence exists. Do not track completion only in chat.
+
+Use Image Gen first to create `artifacts/imagegen/sumo-ready-operator-map-stage2-context-reference.png` for context/material direction. It is reference only; do not import it as a road card, facade card, billboard, backplate, or texture plane.
+
+Verify with: Stage 2 reference PNG, `smart_intersection_rebuild_stage2.umap`, Stage 2 manifest, `artifacts/unreal-operator-map-stage2-proof.png`, tokens `OperatorStage2`, `Stage2ContextGeometry`, `NoTrafficZoneBackplate`, `TrafficReadableQueueZone`, preserved `OperatorStage1`, `SUMOReadyLargeIntersection`, `QueueCapacity_40`, and `scripts/verify-sumo-ready-operator-map-stage2.py`.
+
+Run `npm run unreal:precheck`, Stage 1 verifier, `scripts/verify-simulator-builder-agent.py`, `scripts/verify-complete-simulation-renderer.py`, Stage 2 verifier, and `git diff --check`. Use `C:\Users\100ri\.cache\codex-runtimes\codex-primary-runtime\dependencies\python\python.exe` for Python unless npm verifier routing is fixed and proven.
+
+Preserve constraints: SUMO/TraCI truth, FastAPI orchestration, Unreal rendering, no real controller integration, no landing-page changes, no proof strips/plinths/debug lineups, no traffic-zone cards/backplates, no `photo_backplate`, `road_card`, `ImageGen`, `foreground proof`, `foreground plinth`, or `PolyHaven CC0 VISIBLE` in the Stage 2 map, and no commit/push unless asked.
+
+Use repo `C:\Users\100ri\abc_project`, `AGENTS.md`, `docs/agents/simulator-builder-agent.md`, this plan, UE 5.7 digests, and only Stage 2 owned files listed in the plan.
+
+Between iterations inspect map, manifest, verifier output, proof capture, visual failure, and checkbox state. Choose the smallest next change that improves context geometry, traffic readability, exposure/framing, or card/backplate removal without Stage 3+ scope creep.
+
+If blocked, report blocker, inspected files/commands, evidence, unchecked boxes, uncertainty, and what unlocks progress. Do not mark complete unless artifacts, verifier, human visual inspection, and checkboxes all prove Stage 2.
+```
+
 ## Stage 1 Goal Mode Prompt
 
 This prompt follows the OpenAI Cookbook guidance in "Using Goals in Codex":
@@ -928,6 +1020,7 @@ The Goal is written as a compact completion contract with:
 - verification surface
 - constraints
 - boundaries
+- required skills
 - iteration policy
 - blocked stop condition
 
@@ -954,4 +1047,5 @@ If blocked or no defensible path remains, stop and report the exact blocker, the
 - Ambiguity check: Image Gen is constrained to reference/texture direction until normalized 3D assets exist.
 - Verification check: Stage 1 has script, visual, git diff, and honest remaining-gate requirements.
 - Stage 1 verification update: semantic checks pass through the fallback Python runtime, but npm verifier routing and visual proof quality still block a perfect verdict.
-- Stage 2 coverage: plan covers generation mode, real 3D context geometry, no-traffic-zone-backplate policy, capture, semantic verifier, and visual inspection gates.
+- Stage 2 coverage: plan covers Image Gen reference direction, generation mode, real 3D context geometry, no-traffic-zone-backplate policy, capture, semantic verifier, and visual inspection gates.
+- Stage 2 Goal prompt update: explicitly requires live checkbox tracking with `- [ ]` and `- [x]` in this plan document.
