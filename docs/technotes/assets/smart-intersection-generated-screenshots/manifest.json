@@ -1,0 +1,1315 @@
+﻿{
+    "generated_at":  "2026-06-15",
+    "purpose":  "Technote writing archive for generated SmartIntersection screenshots copied from artifacts.",
+    "source_root":  "artifacts",
+    "target_root":  "docs/technotes/assets/smart-intersection-generated-screenshots",
+    "image_count":  185,
+    "total_bytes":  303089879,
+    "duplicate_basename_count":  0,
+    "category_counts":  {
+                            "dashboard":  28,
+                            "diagnostic":  30,
+                            "landing":  4,
+                            "operator_map_stage":  6,
+                            "other":  18,
+                            "photoreal_renderer":  31,
+                            "road_only_renderer":  68
+                        },
+    "files":  [
+                  {
+                      "file":  "docs/technotes/assets/smart-intersection-generated-screenshots/city-render-contact-sheet.jpg",
+                      "source":  "artifacts/city-render-contact-sheet.jpg",
+                      "bytes":  601017,
+                      "sha256":  "b521f8cb044df8d7278a01a75a64e7f0c5c1f89f969f850936a2851d20a85b2f",
+                      "category":  "other"
+                  },
+                  {
+                      "file":  "docs/technotes/assets/smart-intersection-generated-screenshots/dashboard-ba-desktop.png",
+                      "source":  "artifacts/dashboard-ba-desktop.png",
+                      "bytes":  1515210,
+                      "sha256":  "52dd3cb6b32e6a943a4114a063547700d46f4e1a65559f1c19756ab76f8c3a1e",
+                      "category":  "dashboard"
+                  },
+                  {
+                      "file":  "docs/technotes/assets/smart-intersection-generated-screenshots/dashboard-ba-mobile.png",
+                      "source":  "artifacts/dashboard-ba-mobile.png",
+                      "bytes":  200837,
+                      "sha256":  "a4d2f5c70af63eec9749460d6876b06287bef9962982ec685e4527ec9e1943e0",
+                      "category":  "dashboard"
+                  },
+                  {
+                      "file":  "docs/technotes/assets/smart-intersection-generated-screenshots/dashboard-concept-a-control-room.png",
+                      "source":  "artifacts/dashboard-concept-a-control-room.png",
+                      "bytes":  793114,
+                      "sha256":  "bdfdc5379714126522d7dfd880e94a448bf92d59436ca001db39b2aa1701192b",
+                      "category":  "dashboard"
+                  },
+                  {
+                      "file":  "docs/technotes/assets/smart-intersection-generated-screenshots/dashboard-concept-b-spatial-map.png",
+                      "source":  "artifacts/dashboard-concept-b-spatial-map.png",
+                      "bytes":  1242475,
+                      "sha256":  "4283c2f2b4993addac1dbeade092e5c394a728d6dfc41c36c770c54da74f7463",
+                      "category":  "dashboard"
+                  },
+                  {
+                      "file":  "docs/technotes/assets/smart-intersection-generated-screenshots/dashboard-concept-c-incident-brief.png",
+                      "source":  "artifacts/dashboard-concept-c-incident-brief.png",
+                      "bytes":  588183,
+                      "sha256":  "71faa91362e93ccacfebe62a7105918454ca5f7d1164893a742dbaa978aadc6a",
+                      "category":  "dashboard"
+                  },
+                  {
+                      "file":  "docs/technotes/assets/smart-intersection-generated-screenshots/dashboard-emil-desktop.png",
+                      "source":  "artifacts/dashboard-emil-desktop.png",
+                      "bytes":  1517232,
+                      "sha256":  "46fa327bb2bdd7a165fe43d878d695edf55d83447962e6b0d466dcf9bb43af95",
+                      "category":  "dashboard"
+                  },
+                  {
+                      "file":  "docs/technotes/assets/smart-intersection-generated-screenshots/dashboard-emil-mobile.png",
+                      "source":  "artifacts/dashboard-emil-mobile.png",
+                      "bytes":  200051,
+                      "sha256":  "78ad0a4eefcc5d3078a294ddda09978dde4bafa2489373654ef3cd1477d99009",
+                      "category":  "dashboard"
+                  },
+                  {
+                      "file":  "docs/technotes/assets/smart-intersection-generated-screenshots/dashboard-multicity-unreal-scaffold.png",
+                      "source":  "artifacts/dashboard-multicity-unreal-scaffold.png",
+                      "bytes":  2421181,
+                      "sha256":  "1210f29e7180afd1ee67622a5986aa2785d62d2e5c8bb1afd64a4ef333d1010c",
+                      "category":  "dashboard"
+                  },
+                  {
+                      "file":  "docs/technotes/assets/smart-intersection-generated-screenshots/dashboard-multicity-unreal-scaffold-live.png",
+                      "source":  "artifacts/dashboard-multicity-unreal-scaffold-live.png",
+                      "bytes":  639477,
+                      "sha256":  "afb14683b1dbc5cf46ccea9184c3a7c4b18691480d4f92de92058480d8adc97a",
+                      "category":  "dashboard"
+                  },
+                  {
+                      "file":  "docs/technotes/assets/smart-intersection-generated-screenshots/dashboard-redesign-concepts.png",
+                      "source":  "artifacts/dashboard-redesign-concepts.png",
+                      "bytes":  3478086,
+                      "sha256":  "3c627855cb313b4b7f785ead3fe5578d5617e17c016c0153851b036657982195",
+                      "category":  "dashboard"
+                  },
+                  {
+                      "file":  "docs/technotes/assets/smart-intersection-generated-screenshots/dashboard-unreal-iframe-final.png",
+                      "source":  "artifacts/dashboard-unreal-iframe-final.png",
+                      "bytes":  2533328,
+                      "sha256":  "c6e45dd7041bef09f00cebab0b812c72bb7d299ef47fd788a6c74fbba54fb507",
+                      "category":  "dashboard"
+                  },
+                  {
+                      "file":  "docs/technotes/assets/smart-intersection-generated-screenshots/dashboard-unreal-iframe-final2.png",
+                      "source":  "artifacts/dashboard-unreal-iframe-final2.png",
+                      "bytes":  2533793,
+                      "sha256":  "e4cd8f0b76482b97e4abb5e105bb02fb17c5ba1d6c472122a2237327c7e4187e",
+                      "category":  "dashboard"
+                  },
+                  {
+                      "file":  "docs/technotes/assets/smart-intersection-generated-screenshots/dashboard-unreal-iframe-final3.png",
+                      "source":  "artifacts/dashboard-unreal-iframe-final3.png",
+                      "bytes":  2533793,
+                      "sha256":  "e4cd8f0b76482b97e4abb5e105bb02fb17c5ba1d6c472122a2237327c7e4187e",
+                      "category":  "dashboard"
+                  },
+                  {
+                      "file":  "docs/technotes/assets/smart-intersection-generated-screenshots/dashboard-unreal-iframe-final4.png",
+                      "source":  "artifacts/dashboard-unreal-iframe-final4.png",
+                      "bytes":  2533793,
+                      "sha256":  "e4cd8f0b76482b97e4abb5e105bb02fb17c5ba1d6c472122a2237327c7e4187e",
+                      "category":  "dashboard"
+                  },
+                  {
+                      "file":  "docs/technotes/assets/smart-intersection-generated-screenshots/dashboard-unreal-iframe-rebuilt.png",
+                      "source":  "artifacts/dashboard-unreal-iframe-rebuilt.png",
+                      "bytes":  1518925,
+                      "sha256":  "78bf80d69f3d497a5cf0e0a9afae479477f82e00449f2863e1031a074b177037",
+                      "category":  "dashboard"
+                  },
+                  {
+                      "file":  "docs/technotes/assets/smart-intersection-generated-screenshots/dashboard-unreal-live.png",
+                      "source":  "artifacts/dashboard-unreal-live.png",
+                      "bytes":  2533921,
+                      "sha256":  "f2687c7ed527a28dc9583276b85b924116df5e28c5a47dd2f842b25cafa7c07d",
+                      "category":  "dashboard"
+                  },
+                  {
+                      "file":  "docs/technotes/assets/smart-intersection-generated-screenshots/dashboard-unreal-live-214434.png",
+                      "source":  "artifacts/dashboard-unreal-live-214434.png",
+                      "bytes":  2533921,
+                      "sha256":  "f2687c7ed527a28dc9583276b85b924116df5e28c5a47dd2f842b25cafa7c07d",
+                      "category":  "dashboard"
+                  },
+                  {
+                      "file":  "docs/technotes/assets/smart-intersection-generated-screenshots/dashboard-unreal-live-215952.png",
+                      "source":  "artifacts/dashboard-unreal-live-215952.png",
+                      "bytes":  2541141,
+                      "sha256":  "a01d2df9e0e0dfa5bd808fab3ac4f7258b336bd2c3a39b31f7b1440c1b24690b",
+                      "category":  "dashboard"
+                  },
+                  {
+                      "file":  "docs/technotes/assets/smart-intersection-generated-screenshots/dashboard-unreal-live-220911.png",
+                      "source":  "artifacts/dashboard-unreal-live-220911.png",
+                      "bytes":  2542051,
+                      "sha256":  "b893c8226c52899b9dce8fadf2125d40835b9479042e68cad69480df16efd92f",
+                      "category":  "dashboard"
+                  },
+                  {
+                      "file":  "docs/technotes/assets/smart-intersection-generated-screenshots/dashboard-unreal-live-222333.png",
+                      "source":  "artifacts/dashboard-unreal-live-222333.png",
+                      "bytes":  2542180,
+                      "sha256":  "7cd6dd5a6944c6f7d5c6c7495b11edbe4d9bb06d632a174d1e75907350f0abd7",
+                      "category":  "dashboard"
+                  },
+                  {
+                      "file":  "docs/technotes/assets/smart-intersection-generated-screenshots/dashboard-unreal-live-224919.png",
+                      "source":  "artifacts/dashboard-unreal-live-224919.png",
+                      "bytes":  2542262,
+                      "sha256":  "5df2a8e27f2d76fa6229e67181ca6c60c3d4b462b0eb7443397a35728bfa8976",
+                      "category":  "dashboard"
+                  },
+                  {
+                      "file":  "docs/technotes/assets/smart-intersection-generated-screenshots/dashboard-unreal-live-230202.png",
+                      "source":  "artifacts/dashboard-unreal-live-230202.png",
+                      "bytes":  670866,
+                      "sha256":  "50f3c6c9141d4ba1b6e20ad568930ef420b0c7741b3efee0e2e3a4c9f9ca35c0",
+                      "category":  "dashboard"
+                  },
+                  {
+                      "file":  "docs/technotes/assets/smart-intersection-generated-screenshots/dashboard-unreal-live-final.png",
+                      "source":  "artifacts/dashboard-unreal-live-final.png",
+                      "bytes":  2543682,
+                      "sha256":  "20889d057d871b024e2daaf800c897fe68c1d34af43e81711999902dc5fb252e",
+                      "category":  "dashboard"
+                  },
+                  {
+                      "file":  "docs/technotes/assets/smart-intersection-generated-screenshots/dashboard-unreal-live-final-ok.png",
+                      "source":  "artifacts/dashboard-unreal-live-final-ok.png",
+                      "bytes":  2533921,
+                      "sha256":  "f2687c7ed527a28dc9583276b85b924116df5e28c5a47dd2f842b25cafa7c07d",
+                      "category":  "dashboard"
+                  },
+                  {
+                      "file":  "docs/technotes/assets/smart-intersection-generated-screenshots/dashboard-unreal-pixel-streaming-renamed.png",
+                      "source":  "artifacts/dashboard-unreal-pixel-streaming-renamed.png",
+                      "bytes":  667708,
+                      "sha256":  "fa1dbf31e6e4f6bee92bc72d82091a28c9d495a2dde37040e3f8c1633968a217",
+                      "category":  "dashboard"
+                  },
+                  {
+                      "file":  "docs/technotes/assets/smart-intersection-generated-screenshots/dashboard-unreal-stream-url.png",
+                      "source":  "artifacts/dashboard-unreal-stream-url.png",
+                      "bytes":  1514563,
+                      "sha256":  "3793d4a8f927c24c410d6e17f73da55e7a1393e2067fb7b7cb62e3f061b6784d",
+                      "category":  "dashboard"
+                  },
+                  {
+                      "file":  "docs/technotes/assets/smart-intersection-generated-screenshots/debug-new-york-lit-oblique-no-postprocess.png",
+                      "source":  "artifacts/debug-new-york-lit-oblique-no-postprocess.png",
+                      "bytes":  3090912,
+                      "sha256":  "878e7080699cbd607658773c509b1282c5b7187702ef8bfd10de8d942d94703d",
+                      "category":  "diagnostic"
+                  },
+                  {
+                      "file":  "docs/technotes/assets/smart-intersection-generated-screenshots/debug-new-york-oblique-basecolor.png",
+                      "source":  "artifacts/debug-new-york-oblique-basecolor.png",
+                      "bytes":  1173227,
+                      "sha256":  "0e095c096055ac35fcfc90cc99c842dea98cdb453cdc1c128fb9de86b2b28919",
+                      "category":  "diagnostic"
+                  },
+                  {
+                      "file":  "docs/technotes/assets/smart-intersection-generated-screenshots/diagnostic-london-default-restored-camera.png",
+                      "source":  "artifacts/diagnostic-london-default-restored-camera.png",
+                      "bytes":  1624447,
+                      "sha256":  "b0bd138faba1451a6a4796fe232477eca7f2bc882fe305d5c2be0d6d80f0e119",
+                      "category":  "diagnostic"
+                  },
+                  {
+                      "file":  "docs/technotes/assets/smart-intersection-generated-screenshots/diagnostic-london-filters-disabled.png",
+                      "source":  "artifacts/diagnostic-london-filters-disabled.png",
+                      "bytes":  1624447,
+                      "sha256":  "5936550ead66ff9519f54e0eeb177fcdea53f1feeb9e1c21ee6b5687cd8657b3",
+                      "category":  "diagnostic"
+                  },
+                  {
+                      "file":  "docs/technotes/assets/smart-intersection-generated-screenshots/diagnostic-london-final-layer-basecolor.png",
+                      "source":  "artifacts/diagnostic-london-final-layer-basecolor.png",
+                      "bytes":  2244875,
+                      "sha256":  "d55eee401e9c4cb73fe94ef2b5bc399b2160172bacb21b21a6f975119aaf6698",
+                      "category":  "diagnostic"
+                  },
+                  {
+                      "file":  "docs/technotes/assets/smart-intersection-generated-screenshots/diagnostic-london-final-layer-hdr.png",
+                      "source":  "artifacts/diagnostic-london-final-layer-hdr.png",
+                      "bytes":  3090912,
+                      "sha256":  "a923a566dbcf9d60752f42b5681267521f508baca9c47ff87dbcaa00b2af7555",
+                      "category":  "diagnostic"
+                  },
+                  {
+                      "file":  "docs/technotes/assets/smart-intersection-generated-screenshots/diagnostic-london-final-layer-hdr-no-left-return.png",
+                      "source":  "artifacts/diagnostic-london-final-layer-hdr-no-left-return.png",
+                      "bytes":  3090912,
+                      "sha256":  "3843e2ee83f7012319a0ed202bfd87d83136000be87f999f40f408aeac26749c",
+                      "category":  "diagnostic"
+                  },
+                  {
+                      "file":  "docs/technotes/assets/smart-intersection-generated-screenshots/diagnostic-london-final-layer-hdr-wide.png",
+                      "source":  "artifacts/diagnostic-london-final-layer-hdr-wide.png",
+                      "bytes":  3090912,
+                      "sha256":  "73291a737d98b3572854ebea0ae80389ab28ece62fc1e9391a905873110e512f",
+                      "category":  "diagnostic"
+                  },
+                  {
+                      "file":  "docs/technotes/assets/smart-intersection-generated-screenshots/diagnostic-london-final-layer-v1.png",
+                      "source":  "artifacts/diagnostic-london-final-layer-v1.png",
+                      "bytes":  315909,
+                      "sha256":  "26795e9349823fcbd100903570cd1cd8b33f63ae4d5bc63bcd295217e4fc3fb2",
+                      "category":  "diagnostic"
+                  },
+                  {
+                      "file":  "docs/technotes/assets/smart-intersection-generated-screenshots/diagnostic-london-final-layer-v2.png",
+                      "source":  "artifacts/diagnostic-london-final-layer-v2.png",
+                      "bytes":  315909,
+                      "sha256":  "ebe6d64bf8d94e9e703611fcd2e3e6d059a4226013a4b8347ef07f547a4657d4",
+                      "category":  "diagnostic"
+                  },
+                  {
+                      "file":  "docs/technotes/assets/smart-intersection-generated-screenshots/diagnostic-london-no-filters-fov30-target-high.png",
+                      "source":  "artifacts/diagnostic-london-no-filters-fov30-target-high.png",
+                      "bytes":  2244875,
+                      "sha256":  "fe30f2bc8bb0d3e6fe75b71f6b0cd4d7b08876986106ab877582ddb99efb83b2",
+                      "category":  "photoreal_renderer"
+                  },
+                  {
+                      "file":  "docs/technotes/assets/smart-intersection-generated-screenshots/diagnostic-london-recovered-oldfilter.png",
+                      "source":  "artifacts/diagnostic-london-recovered-oldfilter.png",
+                      "bytes":  315909,
+                      "sha256":  "22d6ee2ff747545c4dd0c4a90f585be7cc2ba74a577908b56468de4a492cfc0a",
+                      "category":  "diagnostic"
+                  },
+                  {
+                      "file":  "docs/technotes/assets/smart-intersection-generated-screenshots/diagnostic-london-selective-hide.png",
+                      "source":  "artifacts/diagnostic-london-selective-hide.png",
+                      "bytes":  2244875,
+                      "sha256":  "0b17443d0441e775ecb0ee7c569393f9e1f5857255d27f8273095de5d85ae8d2",
+                      "category":  "diagnostic"
+                  },
+                  {
+                      "file":  "docs/technotes/assets/smart-intersection-generated-screenshots/fresh-b2519bf5-paris-lit-oblique.png",
+                      "source":  "artifacts/fresh-b2519bf5-paris-lit-oblique.png",
+                      "bytes":  3090912,
+                      "sha256":  "e052d1e987752ef69aef710a6d98dac95221cb4b447657c03a38e210641a2be9",
+                      "category":  "diagnostic"
+                  },
+                  {
+                      "file":  "docs/technotes/assets/smart-intersection-generated-screenshots/fresh-regenerated-new-york-lit-oblique.png",
+                      "source":  "artifacts/fresh-regenerated-new-york-lit-oblique.png",
+                      "bytes":  315909,
+                      "sha256":  "76ee9f59f44376411f136de2ae13fb0f8d1c087f6003ad31a1c7468873e5126e",
+                      "category":  "diagnostic"
+                  },
+                  {
+                      "file":  "docs/technotes/assets/smart-intersection-generated-screenshots/fresh-regenerated-new-york-lit-oblique-basecolor.png",
+                      "source":  "artifacts/fresh-regenerated-new-york-lit-oblique-basecolor.png",
+                      "bytes":  225665,
+                      "sha256":  "5591b19a475116c9d3ce7c8abcc6081a780c6e88b2977ac17da9a23373b5aaac",
+                      "category":  "diagnostic"
+                  },
+                  {
+                      "file":  "docs/technotes/assets/smart-intersection-generated-screenshots/fresh-regenerated-new-york-lit-oblique-hide-geometry.png",
+                      "source":  "artifacts/fresh-regenerated-new-york-lit-oblique-hide-geometry.png",
+                      "bytes":  225665,
+                      "sha256":  "8cb084a8301e6319a86ab9bb1b9a6f6bb07cc027e758e6eb1318ffaafea8fec0",
+                      "category":  "diagnostic"
+                  },
+                  {
+                      "file":  "docs/technotes/assets/smart-intersection-generated-screenshots/fresh-restored-new-york-balanced-backplate-v3.png",
+                      "source":  "artifacts/fresh-restored-new-york-balanced-backplate-v3.png",
+                      "bytes":  2244875,
+                      "sha256":  "ba29593c81b4edc0518944fd9e57ccb55e1a8e2623b209f50c1fe802f498dc1d",
+                      "category":  "diagnostic"
+                  },
+                  {
+                      "file":  "docs/technotes/assets/smart-intersection-generated-screenshots/fresh-restored-new-york-balanced-backplate-v3-camera-refit.png",
+                      "source":  "artifacts/fresh-restored-new-york-balanced-backplate-v3-camera-refit.png",
+                      "bytes":  3090912,
+                      "sha256":  "81a2c35781b97135b16d8563be76ccc4041de09bced2e7be4fe961cda9838bdc",
+                      "category":  "diagnostic"
+                  },
+                  {
+                      "file":  "docs/technotes/assets/smart-intersection-generated-screenshots/fresh-stash-new-york-lit-oblique.png",
+                      "source":  "artifacts/fresh-stash-new-york-lit-oblique.png",
+                      "bytes":  1624447,
+                      "sha256":  "17208488c0d533e0872a6662ff3e6ce8cccbe7566d69785733c9a549950788af",
+                      "category":  "diagnostic"
+                  },
+                  {
+                      "file":  "docs/technotes/assets/smart-intersection-generated-screenshots/fresh-stash-new-york-lit-oblique-camerafix.png",
+                      "source":  "artifacts/fresh-stash-new-york-lit-oblique-camerafix.png",
+                      "bytes":  609202,
+                      "sha256":  "0c2281ff7eebe791507f7be3aff801f9ed0a6959d91386fca07390e9d10a6394",
+                      "category":  "diagnostic"
+                  },
+                  {
+                      "file":  "docs/technotes/assets/smart-intersection-generated-screenshots/sumo-ready-operator-map-stage1-reference.png",
+                      "source":  "artifacts/imagegen/sumo-ready-operator-map-stage1-reference.png",
+                      "bytes":  2899322,
+                      "sha256":  "b26d9193f49ffd93177246e66e7de24809768b773e0b015f457a1afbb5096ccf",
+                      "category":  "operator_map_stage"
+                  },
+                  {
+                      "file":  "docs/technotes/assets/smart-intersection-generated-screenshots/sumo-ready-operator-map-stage2-context-reference.png",
+                      "source":  "artifacts/imagegen/sumo-ready-operator-map-stage2-context-reference.png",
+                      "bytes":  2512230,
+                      "sha256":  "ca1a3bc1be93af6097f22eef4fccf48501f0ca050de19d4fa6688f9e84129d58",
+                      "category":  "operator_map_stage"
+                  },
+                  {
+                      "file":  "docs/technotes/assets/smart-intersection-generated-screenshots/sumo-ready-operator-map-stage3-asset-reference.png",
+                      "source":  "artifacts/imagegen/sumo-ready-operator-map-stage3-asset-reference.png",
+                      "bytes":  1759815,
+                      "sha256":  "fddca08693128dac791428439a3d5d0ac8d062cca641c375329796e5d7458967",
+                      "category":  "operator_map_stage"
+                  },
+                  {
+                      "file":  "docs/technotes/assets/smart-intersection-generated-screenshots/landing-3d.png",
+                      "source":  "artifacts/landing-3d.png",
+                      "bytes":  1979210,
+                      "sha256":  "b6348659debd94209794766d9e4a36c018334e972a93413e90cf47db9af1a236",
+                      "category":  "landing"
+                  },
+                  {
+                      "file":  "docs/technotes/assets/smart-intersection-generated-screenshots/landing-section-assets-contact.png",
+                      "source":  "artifacts/landing-section-assets-contact.png",
+                      "bytes":  910091,
+                      "sha256":  "fe95be75ab2e53b1984a69d72d67bea637bfb621f048cb599e9358f273bff920",
+                      "category":  "landing"
+                  },
+                  {
+                      "file":  "docs/technotes/assets/smart-intersection-generated-screenshots/landing-section-assets-live.png",
+                      "source":  "artifacts/landing-section-assets-live.png",
+                      "bytes":  2977857,
+                      "sha256":  "e5f753f088033221763f3a00dc3567b9d8edd98f8a953757e97b6ee60f1ea786",
+                      "category":  "landing"
+                  },
+                  {
+                      "file":  "docs/technotes/assets/smart-intersection-generated-screenshots/landing-section-assets-live-tall.png",
+                      "source":  "artifacts/landing-section-assets-live-tall.png",
+                      "bytes":  7003639,
+                      "sha256":  "10dfc3af4f8eca15ba39e258611511962aa90ee4e1fcda681e58a6b15852c254",
+                      "category":  "landing"
+                  },
+                  {
+                      "file":  "docs/technotes/assets/smart-intersection-generated-screenshots/london-photoreal-final-target.png",
+                      "source":  "artifacts/london-photoreal-final-target.png",
+                      "bytes":  2961913,
+                      "sha256":  "b517ba2be24ca887965f07e43d1532314ef140cd4373cee9cef38f4413ba7692",
+                      "category":  "photoreal_renderer"
+                  },
+                  {
+                      "file":  "docs/technotes/assets/smart-intersection-generated-screenshots/contact_sheet_bright_review.png",
+                      "source":  "artifacts/preview/contact_sheet_bright_review.png",
+                      "bytes":  554062,
+                      "sha256":  "487922cffdfcf8626bf3f7bb2f519cd61926821a37d6a4d8d1051d4431af25a7",
+                      "category":  "other"
+                  },
+                  {
+                      "file":  "docs/technotes/assets/smart-intersection-generated-screenshots/ny.png",
+                      "source":  "artifacts/preview/ny.png",
+                      "bytes":  1173227,
+                      "sha256":  "4605d8a1dea9bc3a75fa06814f0903a1586434be20e07f3fcf9d91f60cb5e3fa",
+                      "category":  "other"
+                  },
+                  {
+                      "file":  "docs/technotes/assets/smart-intersection-generated-screenshots/ny_bright_review.png",
+                      "source":  "artifacts/preview/ny_bright_review.png",
+                      "bytes":  758982,
+                      "sha256":  "ea584cfbecf34cfb2a2fafddb934f2a9f5ebb7e33764dfcf786d47e9a22de4fb",
+                      "category":  "other"
+                  },
+                  {
+                      "file":  "docs/technotes/assets/smart-intersection-generated-screenshots/seoul.png",
+                      "source":  "artifacts/preview/seoul.png",
+                      "bytes":  846093,
+                      "sha256":  "9b40cb19b5ab786e1d7b1ffcb37d7baa06cf5587a1b89ade49596d6ddddc7d98",
+                      "category":  "other"
+                  },
+                  {
+                      "file":  "docs/technotes/assets/smart-intersection-generated-screenshots/seoul_bright_review.png",
+                      "source":  "artifacts/preview/seoul_bright_review.png",
+                      "bytes":  480530,
+                      "sha256":  "997882090fcd70a8a141c4e330ae6b6c98a713d4ebee785b95676285697ec6c2",
+                      "category":  "other"
+                  },
+                  {
+                      "file":  "docs/technotes/assets/smart-intersection-generated-screenshots/reference-approval-sheet.jpg",
+                      "source":  "artifacts/reference-approval-sheet.jpg",
+                      "bytes":  4348,
+                      "sha256":  "694fe4db4fa97b4eb9f42779e9cd3378ef9a9a63cb85663a91c4abb66ddcc6b7",
+                      "category":  "other"
+                  },
+                  {
+                      "file":  "docs/technotes/assets/smart-intersection-generated-screenshots/retake-contact-sheet-20260615-080325.jpg",
+                      "source":  "artifacts/retake-contact-sheet-20260615-080325.jpg",
+                      "bytes":  604205,
+                      "sha256":  "09c68f96be8535a1a743fe87fa4dde4fb34778d28e72c50267ccb8f929972aa5",
+                      "category":  "diagnostic"
+                  },
+                  {
+                      "file":  "docs/technotes/assets/smart-intersection-generated-screenshots/retake-contact-sheet-20260615-080325-opaque.jpg",
+                      "source":  "artifacts/retake-contact-sheet-20260615-080325-opaque.jpg",
+                      "bytes":  604741,
+                      "sha256":  "93cfc4843e7efdf1a698b1e07b4fadffbb46ee5318c921024aa6e46d56833a75",
+                      "category":  "diagnostic"
+                  },
+                  {
+                      "file":  "docs/technotes/assets/smart-intersection-generated-screenshots/retake-london-20260615-080325.png",
+                      "source":  "artifacts/retake-london-20260615-080325.png",
+                      "bytes":  3090912,
+                      "sha256":  "08373a2eb1d97aabe73befdd3369be428b4047ca648d435639bb6dc042f870c9",
+                      "category":  "diagnostic"
+                  },
+                  {
+                      "file":  "docs/technotes/assets/smart-intersection-generated-screenshots/retake-london-20260615-080325-opaque.png",
+                      "source":  "artifacts/retake-london-20260615-080325-opaque.png",
+                      "bytes":  2316357,
+                      "sha256":  "7a93ddeb8a7a5981bff021eb53768ea6908d054591e93ff93f82b4a39a101fb0",
+                      "category":  "diagnostic"
+                  },
+                  {
+                      "file":  "docs/technotes/assets/smart-intersection-generated-screenshots/retake-new_york-20260615-080325.png",
+                      "source":  "artifacts/retake-new_york-20260615-080325.png",
+                      "bytes":  3090912,
+                      "sha256":  "fcff8a23cc829a7be24a00a7b3803715ee7b253acce3e5b789d2748149f7e708",
+                      "category":  "diagnostic"
+                  },
+                  {
+                      "file":  "docs/technotes/assets/smart-intersection-generated-screenshots/retake-new_york-20260615-080325-opaque.png",
+                      "source":  "artifacts/retake-new_york-20260615-080325-opaque.png",
+                      "bytes":  2198117,
+                      "sha256":  "2244a68519471c9ab9c3324567bfec9abf9d1c63c825c7330512853a0a92327a",
+                      "category":  "diagnostic"
+                  },
+                  {
+                      "file":  "docs/technotes/assets/smart-intersection-generated-screenshots/retake-paris-20260615-080325.png",
+                      "source":  "artifacts/retake-paris-20260615-080325.png",
+                      "bytes":  2244875,
+                      "sha256":  "96e4d8f0f94ba2d2067aac9a2df25f0da1e1c40ea81da301b124313b039e147f",
+                      "category":  "diagnostic"
+                  },
+                  {
+                      "file":  "docs/technotes/assets/smart-intersection-generated-screenshots/retake-paris-20260615-080325-opaque.png",
+                      "source":  "artifacts/retake-paris-20260615-080325-opaque.png",
+                      "bytes":  1751929,
+                      "sha256":  "395915c1244852aa3297440f6c6b24cfb63751576d72c6eb9f0f30295ab0179a",
+                      "category":  "diagnostic"
+                  },
+                  {
+                      "file":  "docs/technotes/assets/smart-intersection-generated-screenshots/retake-seoul-20260615-080325.png",
+                      "source":  "artifacts/retake-seoul-20260615-080325.png",
+                      "bytes":  3090912,
+                      "sha256":  "c61473db85f8e63083a89db1a7066afcb4e3eaa2ef13e2459e678997cc3a1d04",
+                      "category":  "diagnostic"
+                  },
+                  {
+                      "file":  "docs/technotes/assets/smart-intersection-generated-screenshots/retake-seoul-20260615-080325-opaque.png",
+                      "source":  "artifacts/retake-seoul-20260615-080325-opaque.png",
+                      "bytes":  2208554,
+                      "sha256":  "4fc328f44e7dbcd197d79e46597977caaca76f1c076417b5d927c2249c9bcf77",
+                      "category":  "diagnostic"
+                  },
+                  {
+                      "file":  "docs/technotes/assets/smart-intersection-generated-screenshots/ue-current-screen.png",
+                      "source":  "artifacts/ue-current-screen.png",
+                      "bytes":  46850,
+                      "sha256":  "e7e7af3d31175ce01aee009b78ae737ddaaa484887f80b87796450d0188780ec",
+                      "category":  "other"
+                  },
+                  {
+                      "file":  "docs/technotes/assets/smart-intersection-generated-screenshots/unreal-london-final-target-match-comparison.png",
+                      "source":  "artifacts/unreal-london-final-target-match-comparison.png",
+                      "bytes":  2074847,
+                      "sha256":  "1f7b3c0f29c9bbe34005a18648dc32ddbf614a498ed89cfe575ff6b8af0dc824",
+                      "category":  "photoreal_renderer"
+                  },
+                  {
+                      "file":  "docs/technotes/assets/smart-intersection-generated-screenshots/unreal-london-final-target-match-oblique.png",
+                      "source":  "artifacts/unreal-london-final-target-match-oblique.png",
+                      "bytes":  846093,
+                      "sha256":  "dd4c854087fb70c5e40b09f2ac636c8b5c8eda03fb8a03cdc686ffbeef6c1c74",
+                      "category":  "photoreal_renderer"
+                  },
+                  {
+                      "file":  "docs/technotes/assets/smart-intersection-generated-screenshots/unreal-london-high-fidelity-fbx-comparison.png",
+                      "source":  "artifacts/unreal-london-high-fidelity-fbx-comparison.png",
+                      "bytes":  1942392,
+                      "sha256":  "3651a15e7b6f6667665bfb833fc92db862595d25a2c0e9c3db4ced1208bf65e1",
+                      "category":  "other"
+                  },
+                  {
+                      "file":  "docs/technotes/assets/smart-intersection-generated-screenshots/unreal-london-high-fidelity-fbx-layout.png",
+                      "source":  "artifacts/unreal-london-high-fidelity-fbx-layout.png",
+                      "bytes":  79019,
+                      "sha256":  "6e45f6e7b1840a4822a3ca1c37ce61766bb37dc3e9061ab0f9332715867e7137",
+                      "category":  "other"
+                  },
+                  {
+                      "file":  "docs/technotes/assets/smart-intersection-generated-screenshots/unreal-london-high-fidelity-fbx-oblique.png",
+                      "source":  "artifacts/unreal-london-high-fidelity-fbx-oblique.png",
+                      "bytes":  439995,
+                      "sha256":  "8123527f8f367aa3f808acf03df6ddc9f5d29ff1a36c881f2ab4bf38b9eeff24",
+                      "category":  "other"
+                  },
+                  {
+                      "file":  "docs/technotes/assets/smart-intersection-generated-screenshots/unreal-london-photoreal-pass.png",
+                      "source":  "artifacts/unreal-london-photoreal-pass.png",
+                      "bytes":  178075,
+                      "sha256":  "284bab6bfe08ce1bd02be9a11732bd9a79aecab9852de1840c96c6d1b8e321c1",
+                      "category":  "photoreal_renderer"
+                  },
+                  {
+                      "file":  "docs/technotes/assets/smart-intersection-generated-screenshots/unreal-london-photoreal-scene-cc0-telegram-proof.png",
+                      "source":  "artifacts/unreal-london-photoreal-scene-cc0-telegram-proof.png",
+                      "bytes":  834833,
+                      "sha256":  "79d1c420f0b56e452b7bd69d26c2b58ab9ed6cbce2e947dcc0787ca1fa569705",
+                      "category":  "photoreal_renderer"
+                  },
+                  {
+                      "file":  "docs/technotes/assets/smart-intersection-generated-screenshots/unreal-london-photoreal-scene-layout.png",
+                      "source":  "artifacts/unreal-london-photoreal-scene-layout.png",
+                      "bytes":  225665,
+                      "sha256":  "ab29c315761494063e1ded349ee47776692af1e3d8c9671831790ea7a1b3bb27",
+                      "category":  "photoreal_renderer"
+                  },
+                  {
+                      "file":  "docs/technotes/assets/smart-intersection-generated-screenshots/unreal-london-photoreal-scene-lit-telegram-proof.png",
+                      "source":  "artifacts/unreal-london-photoreal-scene-lit-telegram-proof.png",
+                      "bytes":  537513,
+                      "sha256":  "8239b93454559716d2f09290077bf9ca8d11f9bf4fda73b20e61aea29274115f",
+                      "category":  "photoreal_renderer"
+                  },
+                  {
+                      "file":  "docs/technotes/assets/smart-intersection-generated-screenshots/unreal-london-photoreal-scene-oblique.png",
+                      "source":  "artifacts/unreal-london-photoreal-scene-oblique.png",
+                      "bytes":  846093,
+                      "sha256":  "d491825a818c6a2eea73161629906543815013c4dac6de7913c7a5f8609b8ae7",
+                      "category":  "photoreal_renderer"
+                  },
+                  {
+                      "file":  "docs/technotes/assets/smart-intersection-generated-screenshots/unreal-london-photoreal-scene-pass2-layout.png",
+                      "source":  "artifacts/unreal-london-photoreal-scene-pass2-layout.png",
+                      "bytes":  225665,
+                      "sha256":  "f2804691d0822af822da3f337f67e5387c121f80b6eddabd3cba70cd478eefdb",
+                      "category":  "photoreal_renderer"
+                  },
+                  {
+                      "file":  "docs/technotes/assets/smart-intersection-generated-screenshots/unreal-london-photoreal-scene-pass2-oblique.png",
+                      "source":  "artifacts/unreal-london-photoreal-scene-pass2-oblique.png",
+                      "bytes":  846093,
+                      "sha256":  "397fc821629c35ac60b1365f6297d4609cc7cbc6d5682e88309355ac92f3b230",
+                      "category":  "photoreal_renderer"
+                  },
+                  {
+                      "file":  "docs/technotes/assets/smart-intersection-generated-screenshots/unreal-london-photoreal-scene-pass2-telegram-proof.png",
+                      "source":  "artifacts/unreal-london-photoreal-scene-pass2-telegram-proof.png",
+                      "bytes":  862102,
+                      "sha256":  "cb2b35211be73a3437f3a8719832883367d8f940ab107975b2af0f01b7fd7050",
+                      "category":  "photoreal_renderer"
+                  },
+                  {
+                      "file":  "docs/technotes/assets/smart-intersection-generated-screenshots/unreal-london-photoreal-scene-telegram-proof.png",
+                      "source":  "artifacts/unreal-london-photoreal-scene-telegram-proof.png",
+                      "bytes":  805884,
+                      "sha256":  "7b20836d710163a035dcee98871ea1d783b36b6b1a682108ebdc9e474855b71f",
+                      "category":  "photoreal_renderer"
+                  },
+                  {
+                      "file":  "docs/technotes/assets/smart-intersection-generated-screenshots/unreal-london-target-convergence-comparison.png",
+                      "source":  "artifacts/unreal-london-target-convergence-comparison.png",
+                      "bytes":  2198053,
+                      "sha256":  "68a8e57709d272611525f539d091d5ad95c411f5dd209b5b795bef99a478d716",
+                      "category":  "photoreal_renderer"
+                  },
+                  {
+                      "file":  "docs/technotes/assets/smart-intersection-generated-screenshots/unreal-london-target-convergence-oblique.png",
+                      "source":  "artifacts/unreal-london-target-convergence-oblique.png",
+                      "bytes":  1173227,
+                      "sha256":  "762667ee4e0a851f266e61e0a0127b5c04adc77b10797a68ed3fc8abfb520f6f",
+                      "category":  "photoreal_renderer"
+                  },
+                  {
+                      "file":  "docs/technotes/assets/smart-intersection-generated-screenshots/unreal-london-target-hero2-comparison.png",
+                      "source":  "artifacts/unreal-london-target-hero2-comparison.png",
+                      "bytes":  2212230,
+                      "sha256":  "adcd6ef5e886c548a949119177a27d900bfdc55513fbb4fc6c3ec5e187736e2d",
+                      "category":  "photoreal_renderer"
+                  },
+                  {
+                      "file":  "docs/technotes/assets/smart-intersection-generated-screenshots/unreal-london-target-hero2-oblique.png",
+                      "source":  "artifacts/unreal-london-target-hero2-oblique.png",
+                      "bytes":  1173227,
+                      "sha256":  "3cd4334672929cbb9b8d9b20c5d78b63cae01356428fa526af16f915453c6c22",
+                      "category":  "photoreal_renderer"
+                  },
+                  {
+                      "file":  "docs/technotes/assets/smart-intersection-generated-screenshots/unreal-london-target-hero3-base-oblique.png",
+                      "source":  "artifacts/unreal-london-target-hero3-base-oblique.png",
+                      "bytes":  1173227,
+                      "sha256":  "44b0c37948fe3fcf0658edb1d3c0c3c20537aac0354f8c36fb3dacb5d1976927",
+                      "category":  "photoreal_renderer"
+                  },
+                  {
+                      "file":  "docs/technotes/assets/smart-intersection-generated-screenshots/unreal-london-target-hero3-comparison.png",
+                      "source":  "artifacts/unreal-london-target-hero3-comparison.png",
+                      "bytes":  1657536,
+                      "sha256":  "afba900e5eb0adea49989a3d885e90eb8497ef1e92cd35154b32c446592bcf91",
+                      "category":  "photoreal_renderer"
+                  },
+                  {
+                      "file":  "docs/technotes/assets/smart-intersection-generated-screenshots/unreal-london-target-hero3-lit-oblique.png",
+                      "source":  "artifacts/unreal-london-target-hero3-lit-oblique.png",
+                      "bytes":  2244875,
+                      "sha256":  "946ed8a063cf477b04297004af01d0106500c1a0c79c6a1444f4effb6a8686df",
+                      "category":  "photoreal_renderer"
+                  },
+                  {
+                      "file":  "docs/technotes/assets/smart-intersection-generated-screenshots/unreal-london-target-hero4-base-oblique.png",
+                      "source":  "artifacts/unreal-london-target-hero4-base-oblique.png",
+                      "bytes":  1173227,
+                      "sha256":  "303292053eaf8546b8d055a38bf6748645ecb788e8bebcadef4230357e81bbec",
+                      "category":  "photoreal_renderer"
+                  },
+                  {
+                      "file":  "docs/technotes/assets/smart-intersection-generated-screenshots/unreal-london-target-hero4-comparison.png",
+                      "source":  "artifacts/unreal-london-target-hero4-comparison.png",
+                      "bytes":  1673420,
+                      "sha256":  "7815170481d5b5e3c5e2db541682a4a7dfc59423af8b564c57a2a2fc75e52e94",
+                      "category":  "photoreal_renderer"
+                  },
+                  {
+                      "file":  "docs/technotes/assets/smart-intersection-generated-screenshots/unreal-london-target-hero4-lit-oblique.png",
+                      "source":  "artifacts/unreal-london-target-hero4-lit-oblique.png",
+                      "bytes":  2244875,
+                      "sha256":  "186907382fd64404433316aea5dd7e619b156364dab6939d1be103fa4860a18c",
+                      "category":  "photoreal_renderer"
+                  },
+                  {
+                      "file":  "docs/technotes/assets/smart-intersection-generated-screenshots/unreal-london-target-hero5-base-oblique.png",
+                      "source":  "artifacts/unreal-london-target-hero5-base-oblique.png",
+                      "bytes":  846093,
+                      "sha256":  "0bb69b4d5214b81e9e1ff275dad5a597248e973f4b7bed002f355adba6d38d5b",
+                      "category":  "photoreal_renderer"
+                  },
+                  {
+                      "file":  "docs/technotes/assets/smart-intersection-generated-screenshots/unreal-london-target-hero5-comparison.png",
+                      "source":  "artifacts/unreal-london-target-hero5-comparison.png",
+                      "bytes":  1638485,
+                      "sha256":  "86574db91cb516876517a85c164356b00ecccfefff6d62cc525e3ed5d9513529",
+                      "category":  "photoreal_renderer"
+                  },
+                  {
+                      "file":  "docs/technotes/assets/smart-intersection-generated-screenshots/unreal-london-target-hero5-lit-oblique.png",
+                      "source":  "artifacts/unreal-london-target-hero5-lit-oblique.png",
+                      "bytes":  2242036,
+                      "sha256":  "1921aa0e647486c96981cc8fb79560bd0606b90ddd6507f5b2cfb652c9e785c9",
+                      "category":  "photoreal_renderer"
+                  },
+                  {
+                      "file":  "docs/technotes/assets/smart-intersection-generated-screenshots/unreal-london-target-hero-depth-comparison.png",
+                      "source":  "artifacts/unreal-london-target-hero-depth-comparison.png",
+                      "bytes":  2271329,
+                      "sha256":  "36f775f62c3d336bdbf809e170ff66d274e832798c7bd50ef23449cfa59e8ad2",
+                      "category":  "photoreal_renderer"
+                  },
+                  {
+                      "file":  "docs/technotes/assets/smart-intersection-generated-screenshots/unreal-london-target-hero-depth-oblique.png",
+                      "source":  "artifacts/unreal-london-target-hero-depth-oblique.png",
+                      "bytes":  1173227,
+                      "sha256":  "a459cc4c563f19a07f7c715dbc970dc3a465e596b29d78aa7859ed3cf88b60d7",
+                      "category":  "photoreal_renderer"
+                  },
+                  {
+                      "file":  "docs/technotes/assets/smart-intersection-generated-screenshots/unreal-london-window-proof.png",
+                      "source":  "artifacts/unreal-london-window-proof.png",
+                      "bytes":  2022074,
+                      "sha256":  "96236eb94a0988a2840fc76e3ed569d2d62a8ce7b55861ca12b2c82fdec30584",
+                      "category":  "other"
+                  },
+                  {
+                      "file":  "docs/technotes/assets/smart-intersection-generated-screenshots/unreal-new_york-photoreal-pass.png",
+                      "source":  "artifacts/unreal-new_york-photoreal-pass.png",
+                      "bytes":  140962,
+                      "sha256":  "5c834509e313f74496d131bc86dc73c55b1c8e0b7ff7cd2487ea736df893b623",
+                      "category":  "photoreal_renderer"
+                  },
+                  {
+                      "file":  "docs/technotes/assets/smart-intersection-generated-screenshots/unreal-new_york-window-proof.png",
+                      "source":  "artifacts/unreal-new_york-window-proof.png",
+                      "bytes":  1907893,
+                      "sha256":  "775144a6748db2283aff5d6fe96a8f78c2be47532e2cb53d44a9b8659528c0ca",
+                      "category":  "other"
+                  },
+                  {
+                      "file":  "docs/technotes/assets/smart-intersection-generated-screenshots/unreal-operator-map-stage1-proof.png",
+                      "source":  "artifacts/unreal-operator-map-stage1-proof.png",
+                      "bytes":  644459,
+                      "sha256":  "c12461839569f76ed3565f43632e2e6c63fd9cf543e9b3ba9151867fa23696de",
+                      "category":  "operator_map_stage"
+                  },
+                  {
+                      "file":  "docs/technotes/assets/smart-intersection-generated-screenshots/unreal-operator-map-stage2-proof.png",
+                      "source":  "artifacts/unreal-operator-map-stage2-proof.png",
+                      "bytes":  691520,
+                      "sha256":  "3d3ca914bcf534a557a2a7de078e44a7c0d1d9494ba3f26f4da421cfb3d3ef05",
+                      "category":  "operator_map_stage"
+                  },
+                  {
+                      "file":  "docs/technotes/assets/smart-intersection-generated-screenshots/unreal-operator-map-stage3-proof.png",
+                      "source":  "artifacts/unreal-operator-map-stage3-proof.png",
+                      "bytes":  732573,
+                      "sha256":  "ace1603e7bf1850e5693ba1b8561d4811f6ec8b524012374f8da051c9d7dcaa4",
+                      "category":  "operator_map_stage"
+                  },
+                  {
+                      "file":  "docs/technotes/assets/smart-intersection-generated-screenshots/unreal-paris-photoreal-pass.png",
+                      "source":  "artifacts/unreal-paris-photoreal-pass.png",
+                      "bytes":  184362,
+                      "sha256":  "fe3069980d96b79586ac70e83b5af1bf3d08c03b292435bee6255058763da3c3",
+                      "category":  "photoreal_renderer"
+                  },
+                  {
+                      "file":  "docs/technotes/assets/smart-intersection-generated-screenshots/unreal-paris-window-proof.png",
+                      "source":  "artifacts/unreal-paris-window-proof.png",
+                      "bytes":  1859604,
+                      "sha256":  "4d025a7aec66db9b321d54e7cd6a749cc87793ba0083aa25b4dd97f914dc0819",
+                      "category":  "other"
+                  },
+                  {
+                      "file":  "docs/technotes/assets/smart-intersection-generated-screenshots/unreal-pixel-streaming-player.png",
+                      "source":  "artifacts/unreal-pixel-streaming-player.png",
+                      "bytes":  19260,
+                      "sha256":  "5efa0a35bcbd4d0a154008ea07aea3ad9b0805c307dcd5c409c1085100200cad",
+                      "category":  "dashboard"
+                  },
+                  {
+                      "file":  "docs/technotes/assets/smart-intersection-generated-screenshots/unreal-pixel-streaming-player-debug.png",
+                      "source":  "artifacts/unreal-pixel-streaming-player-debug.png",
+                      "bytes":  19260,
+                      "sha256":  "5efa0a35bcbd4d0a154008ea07aea3ad9b0805c307dcd5c409c1085100200cad",
+                      "category":  "dashboard"
+                  },
+                  {
+                      "file":  "docs/technotes/assets/smart-intersection-generated-screenshots/unreal-road-only-london.png",
+                      "source":  "artifacts/unreal-road-only-london.png",
+                      "bytes":  113232,
+                      "sha256":  "154d37e4029ae24a1267e03c9444239caa16774d715cde3ba34437ae10ba0557",
+                      "category":  "road_only_renderer"
+                  },
+                  {
+                      "file":  "docs/technotes/assets/smart-intersection-generated-screenshots/unreal-road-only-london-current-layout.png",
+                      "source":  "artifacts/unreal-road-only-london-current-layout.png",
+                      "bytes":  157982,
+                      "sha256":  "77d82d30c58bc886e689bc669cb23985a8bbd8b588839456d77790b5fb9eda90",
+                      "category":  "road_only_renderer"
+                  },
+                  {
+                      "file":  "docs/technotes/assets/smart-intersection-generated-screenshots/unreal-road-only-london-current-lit-oblique.png",
+                      "source":  "artifacts/unreal-road-only-london-current-lit-oblique.png",
+                      "bytes":  2244875,
+                      "sha256":  "f1aeb81c70633d53fd317d34e2ff362f0e051bf9b2d13541f210dd5813959323",
+                      "category":  "road_only_renderer"
+                  },
+                  {
+                      "file":  "docs/technotes/assets/smart-intersection-generated-screenshots/unreal-road-only-london-current-oblique.png",
+                      "source":  "artifacts/unreal-road-only-london-current-oblique.png",
+                      "bytes":  846093,
+                      "sha256":  "128921d13e3f6ab0f38d1a9a0102c5b409c61c8dd6defd5fa1ccdde6724cf7e3",
+                      "category":  "road_only_renderer"
+                  },
+                  {
+                      "file":  "docs/technotes/assets/smart-intersection-generated-screenshots/unreal-road-only-london-hero6-only.png",
+                      "source":  "artifacts/unreal-road-only-london-hero6-only.png",
+                      "bytes":  315909,
+                      "sha256":  "195b80528c4c8d424e51693d8042487b6b88e6ccb591f3addcfa3d058fa1fff4",
+                      "category":  "road_only_renderer"
+                  },
+                  {
+                      "file":  "docs/technotes/assets/smart-intersection-generated-screenshots/unreal-road-only-london-internal.png",
+                      "source":  "artifacts/unreal-road-only-london-internal.png",
+                      "bytes":  27184,
+                      "sha256":  "0c0d6c93eefbd6c95f75f07c94168bbc31fa35a36e6ab568f44ed7f72e67f0d1",
+                      "category":  "road_only_renderer"
+                  },
+                  {
+                      "file":  "docs/technotes/assets/smart-intersection-generated-screenshots/unreal-road-only-london-lit-oblique-atlasfix.png",
+                      "source":  "artifacts/unreal-road-only-london-lit-oblique-atlasfix.png",
+                      "bytes":  2244875,
+                      "sha256":  "783631ee61ff9cedab27da0d6269d87e9bc2310528b57b6c82cb8b144cf99339",
+                      "category":  "road_only_renderer"
+                  },
+                  {
+                      "file":  "docs/technotes/assets/smart-intersection-generated-screenshots/unreal-road-only-london-lit-oblique-backplate-filter2.png",
+                      "source":  "artifacts/unreal-road-only-london-lit-oblique-backplate-filter2.png",
+                      "bytes":  3090912,
+                      "sha256":  "67ad2213fcff0bc79af8c2713d3fb4c699c983d78a5a1cdc15ef37c4ef664fef",
+                      "category":  "road_only_renderer"
+                  },
+                  {
+                      "file":  "docs/technotes/assets/smart-intersection-generated-screenshots/unreal-road-only-london-lit-oblique-backplate-lowered.png",
+                      "source":  "artifacts/unreal-road-only-london-lit-oblique-backplate-lowered.png",
+                      "bytes":  2244875,
+                      "sha256":  "cf1aba38d225320761636988423efc10b0c325b9899323839e1d8a7ad3a74f37",
+                      "category":  "road_only_renderer"
+                  },
+                  {
+                      "file":  "docs/technotes/assets/smart-intersection-generated-screenshots/unreal-road-only-london-lit-oblique-camerafix.png",
+                      "source":  "artifacts/unreal-road-only-london-lit-oblique-camerafix.png",
+                      "bytes":  2244875,
+                      "sha256":  "948526ecdf0c96cd47909ae1a47a22f322b159af16a7cc090f68eb8bf6e3f942",
+                      "category":  "road_only_renderer"
+                  },
+                  {
+                      "file":  "docs/technotes/assets/smart-intersection-generated-screenshots/unreal-road-only-london-lit-oblique-cropped-backplate.png",
+                      "source":  "artifacts/unreal-road-only-london-lit-oblique-cropped-backplate.png",
+                      "bytes":  2244875,
+                      "sha256":  "0b95f56af0cdbfdede002f545293ad6fc7cc999fed80d17d5e3080f972b929b0",
+                      "category":  "road_only_renderer"
+                  },
+                  {
+                      "file":  "docs/technotes/assets/smart-intersection-generated-screenshots/unreal-road-only-london-lit-oblique-final-nonparis.png",
+                      "source":  "artifacts/unreal-road-only-london-lit-oblique-final-nonparis.png",
+                      "bytes":  3090912,
+                      "sha256":  "ca9c10c0223748d9564babe8289fef0d32022172de7e013bb3ace072a6e5cc68",
+                      "category":  "road_only_renderer"
+                  },
+                  {
+                      "file":  "docs/technotes/assets/smart-intersection-generated-screenshots/unreal-road-only-london-lit-oblique-final-visible.png",
+                      "source":  "artifacts/unreal-road-only-london-lit-oblique-final-visible.png",
+                      "bytes":  3073819,
+                      "sha256":  "2af2f7fcf4e965ab06f364eb90ddf5e7981c631b8f2d1668882c6044de5aa1c3",
+                      "category":  "road_only_renderer"
+                  },
+                  {
+                      "file":  "docs/technotes/assets/smart-intersection-generated-screenshots/unreal-road-only-london-lit-oblique-fresh.png",
+                      "source":  "artifacts/unreal-road-only-london-lit-oblique-fresh.png",
+                      "bytes":  2244875,
+                      "sha256":  "b412cb76fdefeaec4f17b5aa2714f47284e2d5ea94d5bd1e5726f9c480a04e21",
+                      "category":  "road_only_renderer"
+                  },
+                  {
+                      "file":  "docs/technotes/assets/smart-intersection-generated-screenshots/unreal-road-only-london-lit-oblique-imagegen.png",
+                      "source":  "artifacts/unreal-road-only-london-lit-oblique-imagegen.png",
+                      "bytes":  2244875,
+                      "sha256":  "82b8e7c9bcffa775475e3787c094f15ceb680a43dfb800d10f0a3936523069d1",
+                      "category":  "road_only_renderer"
+                  },
+                  {
+                      "file":  "docs/technotes/assets/smart-intersection-generated-screenshots/unreal-road-only-london-lit-oblique-imagegen-backplate.png",
+                      "source":  "artifacts/unreal-road-only-london-lit-oblique-imagegen-backplate.png",
+                      "bytes":  2244875,
+                      "sha256":  "075b8f75859d08c15a8175b8b60bf17fb54ca93188846d59bb0daacd978a2dd0",
+                      "category":  "road_only_renderer"
+                  },
+                  {
+                      "file":  "docs/technotes/assets/smart-intersection-generated-screenshots/unreal-road-only-london-lit-oblique-imagegen-cleaned.png",
+                      "source":  "artifacts/unreal-road-only-london-lit-oblique-imagegen-cleaned.png",
+                      "bytes":  3090912,
+                      "sha256":  "2100343899a6c8108de01ef02bb30074f6bfb023fe4e756630a8a25ef7605db0",
+                      "category":  "road_only_renderer"
+                  },
+                  {
+                      "file":  "docs/technotes/assets/smart-intersection-generated-screenshots/unreal-road-only-london-lit-oblique-imagegen-cleaner2.png",
+                      "source":  "artifacts/unreal-road-only-london-lit-oblique-imagegen-cleaner2.png",
+                      "bytes":  3090912,
+                      "sha256":  "642bbdbce0f17d2ff283dc98882eea831ffb90391b6d146830f0dac2f4ddac06",
+                      "category":  "road_only_renderer"
+                  },
+                  {
+                      "file":  "docs/technotes/assets/smart-intersection-generated-screenshots/unreal-road-only-london-lit-oblique-imagegen-filtered.png",
+                      "source":  "artifacts/unreal-road-only-london-lit-oblique-imagegen-filtered.png",
+                      "bytes":  2244875,
+                      "sha256":  "d8578b9563f0147224ba831b6f1516d73456aa66f9f64cd8374d648140e00d70",
+                      "category":  "road_only_renderer"
+                  },
+                  {
+                      "file":  "docs/technotes/assets/smart-intersection-generated-screenshots/unreal-road-only-london-lit-oblique-imagegen-finalcandidate.png",
+                      "source":  "artifacts/unreal-road-only-london-lit-oblique-imagegen-finalcandidate.png",
+                      "bytes":  3090912,
+                      "sha256":  "a285f516e96a06f2c204df50ceca03355f77a6d361843ebda314b7a003518b1e",
+                      "category":  "road_only_renderer"
+                  },
+                  {
+                      "file":  "docs/technotes/assets/smart-intersection-generated-screenshots/unreal-road-only-london-lit-oblique-imagegen-finalcandidate2.png",
+                      "source":  "artifacts/unreal-road-only-london-lit-oblique-imagegen-finalcandidate2.png",
+                      "bytes":  3090912,
+                      "sha256":  "a754bc146a6a8ce90c2f63f776dc1d1b679b52051276621ba4c6846a731d0b80",
+                      "category":  "road_only_renderer"
+                  },
+                  {
+                      "file":  "docs/technotes/assets/smart-intersection-generated-screenshots/unreal-road-only-london-lit-oblique-imagegen-fov18.png",
+                      "source":  "artifacts/unreal-road-only-london-lit-oblique-imagegen-fov18.png",
+                      "bytes":  3090912,
+                      "sha256":  "1e69d0e1f59c2ccae37ff2e3c3380a2a4a834a6c82916d743a1ea83a92b49f46",
+                      "category":  "road_only_renderer"
+                  },
+                  {
+                      "file":  "docs/technotes/assets/smart-intersection-generated-screenshots/unreal-road-only-london-lit-oblique-imagegen-fov24.png",
+                      "source":  "artifacts/unreal-road-only-london-lit-oblique-imagegen-fov24.png",
+                      "bytes":  3090912,
+                      "sha256":  "fc3b2fe48d1027a120528bb041d162d24daa740ee6eb80a96f923a88bc349c69",
+                      "category":  "road_only_renderer"
+                  },
+                  {
+                      "file":  "docs/technotes/assets/smart-intersection-generated-screenshots/unreal-road-only-london-lit-oblique-imagegen-fov32.png",
+                      "source":  "artifacts/unreal-road-only-london-lit-oblique-imagegen-fov32.png",
+                      "bytes":  3090912,
+                      "sha256":  "e97ac73de0cc315974ef54143cd7d76f9ba24335aa0d41a29e3521dfdff3ab13",
+                      "category":  "road_only_renderer"
+                  },
+                  {
+                      "file":  "docs/technotes/assets/smart-intersection-generated-screenshots/unreal-road-only-london-lit-oblique-imagegen-framed.png",
+                      "source":  "artifacts/unreal-road-only-london-lit-oblique-imagegen-framed.png",
+                      "bytes":  2244875,
+                      "sha256":  "b177313fae48a188421fa8086df94f226451a2559739ba5f33fe75d9c73fc28f",
+                      "category":  "road_only_renderer"
+                  },
+                  {
+                      "file":  "docs/technotes/assets/smart-intersection-generated-screenshots/unreal-road-only-london-lit-oblique-imagegen-framed-lefttarget.png",
+                      "source":  "artifacts/unreal-road-only-london-lit-oblique-imagegen-framed-lefttarget.png",
+                      "bytes":  3090912,
+                      "sha256":  "05ee4cceffea23a8405a7ced0832b5d7634612d10b558afea9ab4219cc417c9c",
+                      "category":  "road_only_renderer"
+                  },
+                  {
+                      "file":  "docs/technotes/assets/smart-intersection-generated-screenshots/unreal-road-only-london-lit-oblique-imagegen-leftfill.png",
+                      "source":  "artifacts/unreal-road-only-london-lit-oblique-imagegen-leftfill.png",
+                      "bytes":  3090912,
+                      "sha256":  "423a7215704c1bd74d011ca70c5c7106ab77685945b79415294c13e0fc57aecc",
+                      "category":  "road_only_renderer"
+                  },
+                  {
+                      "file":  "docs/technotes/assets/smart-intersection-generated-screenshots/unreal-road-only-london-lit-oblique-imagegen-london-candidate.png",
+                      "source":  "artifacts/unreal-road-only-london-lit-oblique-imagegen-london-candidate.png",
+                      "bytes":  3090912,
+                      "sha256":  "28424005319a3541b795586034a9237399d8d830593cc31cc1207031a6b095b2",
+                      "category":  "road_only_renderer"
+                  },
+                  {
+                      "file":  "docs/technotes/assets/smart-intersection-generated-screenshots/unreal-road-only-london-lit-oblique-imagegen-london-candidate-exposure275.png",
+                      "source":  "artifacts/unreal-road-only-london-lit-oblique-imagegen-london-candidate-exposure275.png",
+                      "bytes":  3090912,
+                      "sha256":  "88595d33fe080da2314d8e4528142c72f999bf2a0264ae65bb6f1f9bcdf36afa",
+                      "category":  "road_only_renderer"
+                  },
+                  {
+                      "file":  "docs/technotes/assets/smart-intersection-generated-screenshots/unreal-road-only-london-material-swatches.png",
+                      "source":  "artifacts/unreal-road-only-london-material-swatches.png",
+                      "bytes":  439995,
+                      "sha256":  "ddbc282b6888972b30a6d4fb28309a2e282875fa1ac1050081d77ade1b6d7f1b",
+                      "category":  "road_only_renderer"
+                  },
+                  {
+                      "file":  "docs/technotes/assets/smart-intersection-generated-screenshots/unreal-road-only-london-photoreal-layout.png",
+                      "source":  "artifacts/unreal-road-only-london-photoreal-layout.png",
+                      "bytes":  225665,
+                      "sha256":  "dd4c3db8c2022cd1b6526ab0e43fc93e747f0758d61fdaec5f3b382eb7f13c07",
+                      "category":  "road_only_renderer"
+                  },
+                  {
+                      "file":  "docs/technotes/assets/smart-intersection-generated-screenshots/unreal-road-only-london-photoreal-oblique.png",
+                      "source":  "artifacts/unreal-road-only-london-photoreal-oblique.png",
+                      "bytes":  439995,
+                      "sha256":  "36c96ad2043fa216240cf18a59392bc831333cbdcdc5cea09ee0f77938e7a341",
+                      "category":  "road_only_renderer"
+                  },
+                  {
+                      "file":  "docs/technotes/assets/smart-intersection-generated-screenshots/unreal-road-only-london-rendertarget.png",
+                      "source":  "artifacts/unreal-road-only-london-rendertarget.png",
+                      "bytes":  33897,
+                      "sha256":  "9e0476aa913d89cf31a34de9446c66441cf31a1c94c92249abe4b1b04424e058",
+                      "category":  "road_only_renderer"
+                  },
+                  {
+                      "file":  "docs/technotes/assets/smart-intersection-generated-screenshots/unreal-road-only-london-telegram-readable-proof.png",
+                      "source":  "artifacts/unreal-road-only-london-telegram-readable-proof.png",
+                      "bytes":  516141,
+                      "sha256":  "e18cf6b04001e2373a4b7ce6913f76f5991d03fcce33170e3fd05040c1d56a1c",
+                      "category":  "road_only_renderer"
+                  },
+                  {
+                      "file":  "docs/technotes/assets/smart-intersection-generated-screenshots/unreal-road-only-london-viewport.png",
+                      "source":  "artifacts/unreal-road-only-london-viewport.png",
+                      "bytes":  120,
+                      "sha256":  "1d7028efd3187543a649ebeb66eb62b1270a43de0f7944947784aa2b71ee847a",
+                      "category":  "road_only_renderer"
+                  },
+                  {
+                      "file":  "docs/technotes/assets/smart-intersection-generated-screenshots/unreal-road-only-new_york-lit-oblique-final-visible.png",
+                      "source":  "artifacts/unreal-road-only-new_york-lit-oblique-final-visible.png",
+                      "bytes":  3090912,
+                      "sha256":  "e96f0f19837bf0a89fc44b9ad7fa64fcff905b6abb0634907f127d416ccb2f69",
+                      "category":  "road_only_renderer"
+                  },
+                  {
+                      "file":  "docs/technotes/assets/smart-intersection-generated-screenshots/unreal-road-only-new_york-rendertarget.png",
+                      "source":  "artifacts/unreal-road-only-new_york-rendertarget.png",
+                      "bytes":  33897,
+                      "sha256":  "2a1079adc1576cfea9370285c5dcc7019e0ee12a903f6a9d0d98fa993258d69a",
+                      "category":  "road_only_renderer"
+                  },
+                  {
+                      "file":  "docs/technotes/assets/smart-intersection-generated-screenshots/unreal-road-only-new-york-lit-oblique-balanced-backplate-v3.png",
+                      "source":  "artifacts/unreal-road-only-new-york-lit-oblique-balanced-backplate-v3.png",
+                      "bytes":  3090912,
+                      "sha256":  "30e443b10289190e279d5973343176566a193c48fb7e368db5a5ca6d1e69680e",
+                      "category":  "road_only_renderer"
+                  },
+                  {
+                      "file":  "docs/technotes/assets/smart-intersection-generated-screenshots/unreal-road-only-new-york-lit-oblique-balanced-camera-v2.png",
+                      "source":  "artifacts/unreal-road-only-new-york-lit-oblique-balanced-camera-v2.png",
+                      "bytes":  3090912,
+                      "sha256":  "b241132fa17df8a1ff9c3ca063d8e482cb9f5a0b24ebcac944652df6f88407ec",
+                      "category":  "road_only_renderer"
+                  },
+                  {
+                      "file":  "docs/technotes/assets/smart-intersection-generated-screenshots/unreal-road-only-new-york-lit-oblique-balanced-default.png",
+                      "source":  "artifacts/unreal-road-only-new-york-lit-oblique-balanced-default.png",
+                      "bytes":  3090912,
+                      "sha256":  "fb56cf89d321d842c7a673345b7b3cc367e7f7a827ab789a405cea1ab68d1e47",
+                      "category":  "road_only_renderer"
+                  },
+                  {
+                      "file":  "docs/technotes/assets/smart-intersection-generated-screenshots/unreal-road-only-new-york-lit-oblique-final-visible.png",
+                      "source":  "artifacts/unreal-road-only-new-york-lit-oblique-final-visible.png",
+                      "bytes":  3017128,
+                      "sha256":  "3d8eecec3d904feac9c80e70b60d0fe77e377db5cf010ac9879b5a042fb9164c",
+                      "category":  "road_only_renderer"
+                  },
+                  {
+                      "file":  "docs/technotes/assets/smart-intersection-generated-screenshots/unreal-road-only-new-york-lit-oblique-fresh.png",
+                      "source":  "artifacts/unreal-road-only-new-york-lit-oblique-fresh.png",
+                      "bytes":  1624447,
+                      "sha256":  "753b5e49770b0838c72bd6a0111e81b012d47a162a53bd1525d7d247d4fd0e06",
+                      "category":  "road_only_renderer"
+                  },
+                  {
+                      "file":  "docs/technotes/assets/smart-intersection-generated-screenshots/unreal-road-only-new-york-lit-oblique-geometry-pass.png",
+                      "source":  "artifacts/unreal-road-only-new-york-lit-oblique-geometry-pass.png",
+                      "bytes":  1173227,
+                      "sha256":  "4605d8a1dea9bc3a75fa06814f0903a1586434be20e07f3fcf9d91f60cb5e3fa",
+                      "category":  "road_only_renderer"
+                  },
+                  {
+                      "file":  "docs/technotes/assets/smart-intersection-generated-screenshots/unreal-road-only-new-york-lit-oblique-imagegen.png",
+                      "source":  "artifacts/unreal-road-only-new-york-lit-oblique-imagegen.png",
+                      "bytes":  3090912,
+                      "sha256":  "5e4e0adee0b855d38f36ec39193e97650ed605d773b42bedf074138d08074206",
+                      "category":  "road_only_renderer"
+                  },
+                  {
+                      "file":  "docs/technotes/assets/smart-intersection-generated-screenshots/unreal-road-only-new-york-lit-oblique-imagegen-filtered-default.png",
+                      "source":  "artifacts/unreal-road-only-new-york-lit-oblique-imagegen-filtered-default.png",
+                      "bytes":  2244875,
+                      "sha256":  "be921403dbd46e8e0e586dacced972ada2ff373e28a0845234041a2c1f1bff80",
+                      "category":  "road_only_renderer"
+                  },
+                  {
+                      "file":  "docs/technotes/assets/smart-intersection-generated-screenshots/unreal-road-only-new-york-lit-oblique-imagegen-filtered-fov18.png",
+                      "source":  "artifacts/unreal-road-only-new-york-lit-oblique-imagegen-filtered-fov18.png",
+                      "bytes":  2244875,
+                      "sha256":  "f7e3700c182df85eefb2dbed85de03da4a24d5c19c9ed21551891c5375ae9fd2",
+                      "category":  "road_only_renderer"
+                  },
+                  {
+                      "file":  "docs/technotes/assets/smart-intersection-generated-screenshots/unreal-road-only-new-york-lit-oblique-imagegen-fov24.png",
+                      "source":  "artifacts/unreal-road-only-new-york-lit-oblique-imagegen-fov24.png",
+                      "bytes":  2244875,
+                      "sha256":  "ad5d7cdfe403f302d5b576852d774160ba126298626b02494611857844072eb8",
+                      "category":  "road_only_renderer"
+                  },
+                  {
+                      "file":  "docs/technotes/assets/smart-intersection-generated-screenshots/unreal-road-only-new-york-lit-oblique-imagegen-fov24-fillboost.png",
+                      "source":  "artifacts/unreal-road-only-new-york-lit-oblique-imagegen-fov24-fillboost.png",
+                      "bytes":  3090912,
+                      "sha256":  "479fe139037e82b15facb429b86ad9bf159b074134c6ea8badf2e7a52404dd67",
+                      "category":  "road_only_renderer"
+                  },
+                  {
+                      "file":  "docs/technotes/assets/smart-intersection-generated-screenshots/unreal-road-only-new-york-lit-oblique-imagegen-fov24-postprocess.png",
+                      "source":  "artifacts/unreal-road-only-new-york-lit-oblique-imagegen-fov24-postprocess.png",
+                      "bytes":  315909,
+                      "sha256":  "bdd69ef2cf3436c45c1aa261e287b3598c1510ab03fd2d65574e0dbe5e0e2eea",
+                      "category":  "road_only_renderer"
+                  },
+                  {
+                      "file":  "docs/technotes/assets/smart-intersection-generated-screenshots/unreal-road-only-new-york-lit-oblique-imagegen-framed.png",
+                      "source":  "artifacts/unreal-road-only-new-york-lit-oblique-imagegen-framed.png",
+                      "bytes":  3090912,
+                      "sha256":  "3bcbdbf2468d0bed5a373dda7ab2c5fedf387c74b09ae5c1721e0516b8618652",
+                      "category":  "road_only_renderer"
+                  },
+                  {
+                      "file":  "docs/technotes/assets/smart-intersection-generated-screenshots/unreal-road-only-new-york-lit-oblique-imagegen-widebackplate.png",
+                      "source":  "artifacts/unreal-road-only-new-york-lit-oblique-imagegen-widebackplate.png",
+                      "bytes":  2244875,
+                      "sha256":  "408da870cef4c8ffb282d9b81bb11af620ca23b49b005a283c4bc2a5c6800653",
+                      "category":  "road_only_renderer"
+                  },
+                  {
+                      "file":  "docs/technotes/assets/smart-intersection-generated-screenshots/unreal-road-only-paris-after-material-base-oblique.png",
+                      "source":  "artifacts/unreal-road-only-paris-after-material-base-oblique.png",
+                      "bytes":  225665,
+                      "sha256":  "c06417c45dac00c91ece7cee1d9e5693153c15894b9e1c88c8b46c1c60d4a6aa",
+                      "category":  "road_only_renderer"
+                  },
+                  {
+                      "file":  "docs/technotes/assets/smart-intersection-generated-screenshots/unreal-road-only-paris-base-oblique.png",
+                      "source":  "artifacts/unreal-road-only-paris-base-oblique.png",
+                      "bytes":  225665,
+                      "sha256":  "96941307562086c98a718ffac8c3b0812091cdad7c4ab99303cbab20c9663fd7",
+                      "category":  "road_only_renderer"
+                  },
+                  {
+                      "file":  "docs/technotes/assets/smart-intersection-generated-screenshots/unreal-road-only-paris-color-probe-debug.png",
+                      "source":  "artifacts/unreal-road-only-paris-color-probe-debug.png",
+                      "bytes":  225665,
+                      "sha256":  "3d7ef558a450b88cd6ce1074c91fd5f212361b1642f91a26f4f358ecc974606d",
+                      "category":  "road_only_renderer"
+                  },
+                  {
+                      "file":  "docs/technotes/assets/smart-intersection-generated-screenshots/unreal-road-only-paris-layout.png",
+                      "source":  "artifacts/unreal-road-only-paris-layout.png",
+                      "bytes":  225665,
+                      "sha256":  "c45f99d7e46c8555f544805850f3c8bde403de238e0005723e528a40848ce171",
+                      "category":  "road_only_renderer"
+                  },
+                  {
+                      "file":  "docs/technotes/assets/smart-intersection-generated-screenshots/unreal-road-only-paris-layout-debug.png",
+                      "source":  "artifacts/unreal-road-only-paris-layout-debug.png",
+                      "bytes":  225665,
+                      "sha256":  "53a7d2f193d8e86222a772b1d775a53a26e78b1f396b130acdc80c99a0282224",
+                      "category":  "road_only_renderer"
+                  },
+                  {
+                      "file":  "docs/technotes/assets/smart-intersection-generated-screenshots/unreal-road-only-paris-lit-oblique.png",
+                      "source":  "artifacts/unreal-road-only-paris-lit-oblique.png",
+                      "bytes":  3090912,
+                      "sha256":  "d38712b5fb26408ce6cc2c83250f246a738bc2a6557dc16bf995e389e84fada6",
+                      "category":  "road_only_renderer"
+                  },
+                  {
+                      "file":  "docs/technotes/assets/smart-intersection-generated-screenshots/unreal-road-only-paris-lit-oblique-final-visible.png",
+                      "source":  "artifacts/unreal-road-only-paris-lit-oblique-final-visible.png",
+                      "bytes":  2601395,
+                      "sha256":  "9d4dd6c6487f8192287dded92ce8a5dcf4db0c0f42bc5a0739375d4733b144e7",
+                      "category":  "road_only_renderer"
+                  },
+                  {
+                      "file":  "docs/technotes/assets/smart-intersection-generated-screenshots/unreal-road-only-paris-lit-oblique-fresh.png",
+                      "source":  "artifacts/unreal-road-only-paris-lit-oblique-fresh.png",
+                      "bytes":  315909,
+                      "sha256":  "4206f72cdd4aa5afae20038ba653748c7243955d09ab1dba47e14428e18b267e",
+                      "category":  "road_only_renderer"
+                  },
+                  {
+                      "file":  "docs/technotes/assets/smart-intersection-generated-screenshots/unreal-road-only-paris-lit-oblique-fresh-nopp.png",
+                      "source":  "artifacts/unreal-road-only-paris-lit-oblique-fresh-nopp.png",
+                      "bytes":  3090912,
+                      "sha256":  "10d5403a8aa2c991558bb14281e3296bef5f9fb5a76bc29aea55390156688cd6",
+                      "category":  "road_only_renderer"
+                  },
+                  {
+                      "file":  "docs/technotes/assets/smart-intersection-generated-screenshots/unreal-road-only-paris-rendertarget.png",
+                      "source":  "artifacts/unreal-road-only-paris-rendertarget.png",
+                      "bytes":  33897,
+                      "sha256":  "3324ba60d51092c1366ab5f35a11f0ba6449e56ac6fdfed4e89a2f8bde45be27",
+                      "category":  "road_only_renderer"
+                  },
+                  {
+                      "file":  "docs/technotes/assets/smart-intersection-generated-screenshots/unreal-road-only-proof-contact-sheet.png",
+                      "source":  "artifacts/unreal-road-only-proof-contact-sheet.png",
+                      "bytes":  208102,
+                      "sha256":  "8ce5b1b9d7b2034bfc2de8f3bff675c2ef46785636865d6b402d9f08258ef361",
+                      "category":  "road_only_renderer"
+                  },
+                  {
+                      "file":  "docs/technotes/assets/smart-intersection-generated-screenshots/unreal-road-only-seoul-lit-oblique-final-visible.png",
+                      "source":  "artifacts/unreal-road-only-seoul-lit-oblique-final-visible.png",
+                      "bytes":  2938282,
+                      "sha256":  "5e0c1b1246d6f79315d82f4d0fd128a53ee5ee0e84ca3197234b3a9c5563456b",
+                      "category":  "road_only_renderer"
+                  },
+                  {
+                      "file":  "docs/technotes/assets/smart-intersection-generated-screenshots/unreal-road-only-seoul-lit-oblique-fresh-baseline.png",
+                      "source":  "artifacts/unreal-road-only-seoul-lit-oblique-fresh-baseline.png",
+                      "bytes":  1624447,
+                      "sha256":  "aabff94adda64391aa33adc24cb24171521a2d126b9808d631bb7a70bfdac704",
+                      "category":  "road_only_renderer"
+                  },
+                  {
+                      "file":  "docs/technotes/assets/smart-intersection-generated-screenshots/unreal-road-only-seoul-lit-oblique-geometry-pass.png",
+                      "source":  "artifacts/unreal-road-only-seoul-lit-oblique-geometry-pass.png",
+                      "bytes":  846093,
+                      "sha256":  "9b40cb19b5ab786e1d7b1ffcb37d7baa06cf5587a1b89ade49596d6ddddc7d98",
+                      "category":  "road_only_renderer"
+                  },
+                  {
+                      "file":  "docs/technotes/assets/smart-intersection-generated-screenshots/unreal-road-only-seoul-lit-oblique-imagegen-finalcandidate.png",
+                      "source":  "artifacts/unreal-road-only-seoul-lit-oblique-imagegen-finalcandidate.png",
+                      "bytes":  2244875,
+                      "sha256":  "7d8425c5ff6334e983aa11afea233609fe00124feac26b897f04a00b04d50d9a",
+                      "category":  "road_only_renderer"
+                  },
+                  {
+                      "file":  "docs/technotes/assets/smart-intersection-generated-screenshots/unreal-road-only-seoul-rendertarget.png",
+                      "source":  "artifacts/unreal-road-only-seoul-rendertarget.png",
+                      "bytes":  33897,
+                      "sha256":  "5e936602d5acc50120e7bc287d2964fe4bad3d553b034a97b2de9d3f2cc49e14",
+                      "category":  "road_only_renderer"
+                  },
+                  {
+                      "file":  "docs/technotes/assets/smart-intersection-generated-screenshots/unreal-road-only-visible-proof-contact-sheet.png",
+                      "source":  "artifacts/unreal-road-only-visible-proof-contact-sheet.png",
+                      "bytes":  26580,
+                      "sha256":  "4f812fff478d66d829fd56d3c8095117bebd85e25d17753445af3a63f16a7628",
+                      "category":  "road_only_renderer"
+                  },
+                  {
+                      "file":  "docs/technotes/assets/smart-intersection-generated-screenshots/unreal-seoul-editor-live.png",
+                      "source":  "artifacts/unreal-seoul-editor-live.png",
+                      "bytes":  511633,
+                      "sha256":  "4c44187b363567698b84e9f039c0eebfd9beae0aa9d8a8bc381fe5772741398d",
+                      "category":  "other"
+                  },
+                  {
+                      "file":  "docs/technotes/assets/smart-intersection-generated-screenshots/unreal-seoul-photoreal-pass.png",
+                      "source":  "artifacts/unreal-seoul-photoreal-pass.png",
+                      "bytes":  120593,
+                      "sha256":  "751f9d1bb92bb9a528ccfab6aad0529e1bdbbc9f9da2d93ffcf064d72a908daf",
+                      "category":  "photoreal_renderer"
+                  },
+                  {
+                      "file":  "docs/technotes/assets/smart-intersection-generated-screenshots/unreal-seoul-window-proof.png",
+                      "source":  "artifacts/unreal-seoul-window-proof.png",
+                      "bytes":  1873588,
+                      "sha256":  "91efefc3d7486eea75c6ab1501fdbf8b218b3c7fcd7cb63a9b3cebd55416ce6a",
+                      "category":  "other"
+                  },
+                  {
+                      "file":  "docs/technotes/assets/smart-intersection-generated-screenshots/unreal-simulation-state-london-layout.png",
+                      "source":  "artifacts/unreal-simulation-state-london-layout.png",
+                      "bytes":  439995,
+                      "sha256":  "d12285e21efca1c9ce54ce8e1e913a071206eeb940580db8698f21db521e47f2",
+                      "category":  "other"
+                  },
+                  {
+                      "file":  "docs/technotes/assets/smart-intersection-generated-screenshots/unreal-simulation-state-london-state-layout.png",
+                      "source":  "artifacts/unreal-simulation-state-london-state-layout.png",
+                      "bytes":  315909,
+                      "sha256":  "4e1e4545797434cdb9a5e4c2faf1b7d5f6204bd5b9e2a2d8a8acf5e8a4d079f5",
+                      "category":  "other"
+                  }
+              ]
+}
