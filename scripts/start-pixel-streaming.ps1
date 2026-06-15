@@ -102,9 +102,9 @@ if (-not $Script) {
 Write-Output "Starting Pixel Streaming signalling server: $Script"
 Set-Location $ServerRoot
 if ($Script.EndsWith('.bat')) {
-  Start-Process -FilePath $Script -WorkingDirectory $ServerRoot
+  Start-Process -FilePath $Script -WorkingDirectory $ServerRoot -WindowStyle Hidden
 } else {
-  Start-Process -FilePath 'powershell.exe' -WorkingDirectory $ServerRoot -ArgumentList @('-NoProfile', '-ExecutionPolicy', 'Bypass', '-File', "`"$Script`"")
+  Start-Process -FilePath 'powershell.exe' -WorkingDirectory $ServerRoot -WindowStyle Hidden -ArgumentList @('-NoProfile', '-ExecutionPolicy', 'Bypass', '-File', "`"$Script`"")
 }
 Write-Output 'Expected dashboard stream URL: http://127.0.0.1'
 exit 0

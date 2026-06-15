@@ -129,8 +129,8 @@ For actual Stage 5+ implementation work, use subagents when the current tool sur
 - Stage 3 is implemented and verified with `SUMO_READY_OPERATOR_STAGE3_PASS`.
 - Stage 4 fixture mode is implemented and verified with `SUMO_READY_OPERATOR_STAGE4_PASS`.
 - Live SUMO/TraCI remains open until `traci`, `sumolib`, `sumo`, `netconvert`, a real SUMO config, and `SUMO_SIMULATION_MODE=sumo_traci` are available and a local run produces `simulation_source=sumo_traci`.
-- Stage 5 is the next planned slice: Pixel Streaming plus dashboard proof for the Stage 4 operator viewport. It must not claim live SUMO or real traffic-control authority.
-- Stage 6 is the photoreal first-city realism pass after Stage 5. It may use Image Gen-derived texture/decal/atlas sources, but it must make the Unreal-rendered operator viewport itself look real; reference images or generated textures alone are not completion evidence.
+- Stage 5 Pixel Streaming plus dashboard proof is implemented and verified with `SUMO_READY_OPERATOR_STAGE5_PASS` for the Stage 4 fixture-backed operator viewport. The exact `npm run launch:local` path remains blocked by local Docker/WSL availability, so browser proof used manually started local API/web surfaces; Stage 5 still must not claim live SUMO or real traffic-control authority.
+- Stage 6 is the next planned slice: the photoreal first-city realism pass after Stage 5. It may use Image Gen-derived texture/decal/atlas sources, but it must make the Unreal-rendered operator viewport itself look real; reference images or generated textures alone are not completion evidence.
 - Stage 7 remains future multi-city expansion after Stage 6 passes on one map.
 
 ## Cookbook Goal Source

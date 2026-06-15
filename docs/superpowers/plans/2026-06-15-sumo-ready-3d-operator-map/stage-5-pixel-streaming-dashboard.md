@@ -89,7 +89,7 @@ Stage 5 does **not**:
 - Read: this Stage 5 plan
 - Validate: current git state, Stage 1/2/3/4 verifier state, dashboard tests, Pixel Streaming scripts
 
-- [ ] **Step 1: Confirm branch and dirty scope**
+- [x] **Step 1: Confirm branch and dirty scope**
 
 Run:
 
@@ -101,7 +101,7 @@ git status --short --branch
 
 Expected: all existing dirty files are identified before Stage 5 edits. Do not stage `.env.local`, `apps/web/.env.local`, `tmp/PixelStreamingInfrastructure`, Unreal `Saved/`, Unreal `Intermediate/`, generated UE security tokens, or unrelated local files.
 
-- [ ] **Step 2: Re-run Stage 1-4 baseline checks**
+- [x] **Step 2: Re-run Stage 1-4 baseline checks**
 
 Run:
 
@@ -121,7 +121,7 @@ git diff --check
 
 Expected: Stage 1-4 remain green. If `npm run runtime:readiness` still reports `simulation ready=False mode=fixture`, copy that into Stage 5 status and keep live SUMO unchecked.
 
-- [ ] **Step 3: Record Pixel Streaming baseline assumptions**
+- [x] **Step 3: Record Pixel Streaming baseline assumptions**
 
 Document in this file whether:
 
@@ -142,7 +142,7 @@ Expected: Stage 5 status distinguishes "dashboard stream slot proof", "Pixel Str
 - Read/modify: `scripts/unreal-at-home.ps1`
 - Read/modify: `package.json`
 
-- [ ] **Step 1: Verify signalling server startup path**
+- [x] **Step 1: Verify signalling server startup path**
 
 Run:
 
@@ -159,7 +159,7 @@ Expected:
 
 If this command opens a persistent background server window, record that behavior and do not assume a browser connection until Task 25 verifies it.
 
-- [ ] **Step 2: Verify Unreal launch flags**
+- [x] **Step 2: Verify Unreal launch flags**
 
 Run:
 
@@ -176,7 +176,7 @@ Pixel Streaming launch flags enabled: -PixelStreamingURL=ws://127.0.0.1:8888 -Re
 
 If Unreal fails to launch, record the exact exit code and blocker. Do not mark Stage 5 complete from script text alone.
 
-- [ ] **Step 3: Keep env writes local and uncommitted**
+- [x] **Step 3: Keep env writes local and uncommitted**
 
 Run:
 
@@ -196,7 +196,7 @@ Expected: `unreal:home` ensures `NEXT_PUBLIC_SIMULATION_STREAM_URL=http://127.0.
 - Read/modify: `apps/web/app/unreal-runtime.test.ts`
 - Read/modify if needed: `apps/web/app/globals.css`
 
-- [ ] **Step 1: Keep `NEXT_PUBLIC_SIMULATION_STREAM_URL` ahead of the legacy alias**
+- [x] **Step 1: Keep `NEXT_PUBLIC_SIMULATION_STREAM_URL` ahead of the legacy alias**
 
 Existing behavior should stay:
 
@@ -208,7 +208,7 @@ const simulationStreamUrl = genericStreamUrl || legacyStreamUrl;
 
 Expected: Stage 5 does not remove the legacy alias, but the Unreal stream URL wins whenever present.
 
-- [ ] **Step 2: Test the dashboard iframe contract**
+- [x] **Step 2: Test the dashboard iframe contract**
 
 Add or preserve Vitest coverage that stubs:
 
@@ -235,7 +235,7 @@ npm --workspace apps/web run test -- DashboardShell.test.tsx
 
 Expected: dashboard tests pass.
 
-- [ ] **Step 3: Preserve no-real-control copy and fixture honesty**
+- [x] **Step 3: Preserve no-real-control copy and fixture honesty**
 
 Verify the dashboard still renders:
 
@@ -256,7 +256,7 @@ Expected: the dashboard can show a Pixel Streaming player without implying real 
 - Read: `scripts/verify-sumo-ready-operator-map-stage4.py`
 - Read: `scripts/verify-complete-simulation-renderer.py`
 
-- [ ] **Step 1: Add a focused verifier command**
+- [x] **Step 1: Add a focused verifier command**
 
 Add:
 
@@ -266,7 +266,7 @@ Add:
 
 Expected: Stage 5 can be validated independently.
 
-- [ ] **Step 2: Verify Pixel Streaming and dashboard source tokens**
+- [x] **Step 2: Verify Pixel Streaming and dashboard source tokens**
 
 The Stage 5 verifier should check:
 
@@ -280,7 +280,7 @@ The Stage 5 verifier should check:
 
 Expected: verifier fails if Stage 5 is only a dashboard mock or if Pixel Streaming launch flags disappear.
 
-- [ ] **Step 3: Verify proof artifacts after capture**
+- [x] **Step 3: Verify proof artifacts after capture**
 
 After Task 25, the verifier should check:
 
@@ -326,7 +326,7 @@ Expected:
 - API and web app are reachable.
 - `.env.local` and `apps/web/.env.local` are local-only and unstaged.
 
-- [ ] **Step 2: Open the dashboard in a real browser**
+- [x] **Step 2: Open the dashboard in a real browser**
 
 Use Browser or Playwright to open:
 
@@ -342,7 +342,7 @@ Expected DOM evidence:
 - `SUMO/TraCI Renderer` is visible.
 - the dashboard does not show a landing page.
 
-- [ ] **Step 3: Capture proof screenshot and details JSON**
+- [x] **Step 3: Capture proof screenshot and details JSON**
 
 Capture:
 
@@ -376,7 +376,7 @@ Expected: proof can be reviewed without committing secrets or local env files.
 - Inspect: `artifacts/unreal-operator-map-stage5-dashboard-stream-proof.png`
 - Inspect: `artifacts/unreal-operator-map-stage5-dashboard-stream-details.json`
 
-- [ ] **Step 1: Inspect the dashboard proof**
+- [x] **Step 1: Inspect the dashboard proof**
 
 Reject Stage 5 proof if any condition is true:
 
@@ -390,7 +390,7 @@ Reject Stage 5 proof if any condition is true:
 
 Expected: the screenshot shows the operator dashboard with the Unreal Pixel Streaming frame visible and the safety boundary intact.
 
-- [ ] **Step 2: Record visual verdict**
+- [x] **Step 2: Record visual verdict**
 
 Add a `Stage 5 Verification Status - YYYY-MM-DD` block to this file with:
 
@@ -410,7 +410,7 @@ Expected: checkboxes are only changed to `- [x]` after file, command, browser, o
 
 - Validate: Stage 1-5 verifiers, dashboard tests, Pixel Streaming scripts, proof artifacts, generated manifest, this plan
 
-- [ ] **Step 1: Run focused checks**
+- [x] **Step 1: Run focused checks**
 
 Run:
 
@@ -431,7 +431,7 @@ git diff --check
 
 Expected: focused checks pass. If live SUMO remains missing, Stage 5 may still pass as Pixel Streaming dashboard proof but live SUMO remains explicitly open.
 
-- [ ] **Step 2: Run full repo validation**
+- [x] **Step 2: Run full repo validation**
 
 Run:
 
@@ -441,7 +441,7 @@ npm run verify
 
 Expected: API tests, web tests, web build, and `git diff --check` pass.
 
-- [ ] **Step 3: Run final secret/local-artifact scan**
+- [x] **Step 3: Run final secret/local-artifact scan**
 
 Run:
 
@@ -451,6 +451,56 @@ rg -n "SecurityToken|PixelStreaming\\.SecurityToken|OPENAI_API_KEY|BEGIN RSA|PRI
 ```
 
 Expected: no secret material is staged or committed. Any benign verifier string should be documented before commit.
+
+## Stage 5 Verification Status - 2026-06-16
+
+### Verdict
+
+- Stage 5 Pixel Streaming dashboard proof is implemented and verified for the Stage 4 fixture-backed operator viewport.
+- Live SUMO/TraCI remains open. `npm run runtime:readiness` still reports `simulation ready=False mode=fixture` with missing `traci`, `sumolib`, `sumo`, and `netconvert`; no artifact claims `simulation_source=sumo_traci`.
+- Pixel Streaming remains transport only: SUMO/TraCI is truth, FastAPI orchestrates renderer snapshots, Unreal renders, and Pixel Streaming transports rendered frames.
+
+### Launch Evidence
+
+- Branch and scope were checked on `codex/sumo-stage5-pixel-streaming`; `git fetch origin main` completed before edits.
+- `npm run unreal:precheck` passed with UE 5.7 editor found at `C:\Program Files\Epic Games\UE_5.7\Engine\Binaries\Win64\UnrealEditor.exe`.
+- `npm run unreal:pixel-streaming` exited `0`, selected the fallback server under `tmp\PixelStreamingInfrastructure\SignallingWebServer`, and printed `Expected dashboard stream URL: http://127.0.0.1`.
+- `powershell.exe -NoProfile -ExecutionPolicy Bypass -File scripts/open-unreal-project.ps1 -PixelStreaming -Game` printed `Unreal runtime mode enabled: -game` and `Pixel Streaming launch flags enabled: -PixelStreamingURL=ws://127.0.0.1:8888 -RenderOffscreen -AudioMixer`.
+- `npm run unreal:home` exited `0`, wrote local-only `NEXT_PUBLIC_SIMULATION_STREAM_URL=http://127.0.0.1` into `.env.local` and `apps\web\.env.local`, and launched the Pixel Streaming server plus Unreal.
+- `git status --short -- .env.local apps/web/.env.local tmp renderer/unreal/SmartIntersection/Saved renderer/unreal/SmartIntersection/Intermediate artifacts` returned no tracked local runtime artifacts.
+
+### Browser Proof
+
+- Exact `npm run launch:local` did not pass because Docker was unavailable in WSL and Docker Desktop's Windows daemon was not running. The local proof used an ignored SQLite database, WSL FastAPI on `http://127.0.0.1:8000/api`, and Next.js on `http://127.0.0.1:3000` with `NEXT_PUBLIC_SIMULATION_STREAM_URL=http://127.0.0.1`.
+- `npm run unreal:capture:operator-stage5` passed and wrote:
+  - `artifacts/unreal-operator-map-stage5-dashboard-stream-proof.png`
+  - `artifacts/unreal-operator-map-stage5-dashboard-stream-details.json`
+  - `renderer/unreal/SmartIntersection/GeneratedProof/smart_intersection_rebuild_operator_stage5_pixel_streaming_manifest.json`
+- Browser details recorded `dashboard_url=http://127.0.0.1:3000/dashboard`, `stream_url=http://127.0.0.1`, `iframe_src=http://127.0.0.1`, `pixel_streaming_started=true`, `selected_streamer=DefaultStreamer`, `video_resolution=1280x720`, `frames_decoded=321`, `framerate=58`, and `video_codec=H264`.
+- Human visual inspection confirmed the `/dashboard` screenshot shows the active Unreal Pixel Streaming iframe, not a landing page or fallback canvas; the safety copy and `SUMO/TraCI Renderer` copy are visible; the proof does not imply real signal control.
+- Screenshot image check recorded size `(1440, 1000)`, `463393` bytes, mean brightness `20.14`, and contrast stddev `34.23`.
+
+### Verifier Evidence
+
+- `npm run verify:operator-map-stage1` printed `SUMO_READY_OPERATOR_STAGE1_PASS`.
+- `npm run verify:operator-map-stage2` printed `SUMO_READY_OPERATOR_STAGE2_PASS`.
+- `npm run verify:operator-map-stage3` printed `SUMO_READY_OPERATOR_STAGE3_PASS`.
+- `npm run verify:operator-map-stage4` printed `SUMO_READY_OPERATOR_STAGE4_PASS`.
+- `npm run verify:operator-map-stage5` printed `SUMO_READY_OPERATOR_STAGE5_PASS`.
+- `npm run unreal:runtime-smoke` passed and refreshed `artifacts\unreal-runtime-snapshot-smoke.json`.
+- `npm run unreal:http-smoke` passed and refreshed `artifacts\unreal-http-snapshot-smoke.json`.
+- Bundled Python `scripts/verify-simulator-builder-agent.py` printed `SIMULATOR_BUILDER_AGENT_PASS`.
+- Bundled Python `scripts/verify-complete-simulation-renderer.py` passed all simulator-builder and complete-renderer checks.
+- `npm --workspace apps/web run test -- DashboardShell.test.tsx` passed with 32 tests, including the Stage 5 URL-priority iframe test.
+- `npm run runtime:readiness` exited `0` and honestly reported missing live gates: vision fixture dependencies, SUMO/TraCI dependencies, OpenAI API/module gate, and pgvector/PostgreSQL vector extension.
+- `npm run verify` passed API tests, web tests, Next.js build, and final `git diff --check`.
+- Final secret/local scan found no active UE `SecurityToken`, Pixel Streaming token, RSA key, or private key in the changed runtime/config files. Remaining `OPENAI_API_KEY`, `password`, or `secret` matches are documented test, verifier, or plan text, not credentials.
+
+### Open Gates
+
+- [ ] `npm run launch:local` still needs local Docker/WSL integration or Docker Desktop daemon availability to pass exactly; Stage 5 browser proof used manual local API/web startup instead.
+- [ ] Live SUMO/TraCI remains deferred until a real local `sumo_traci` run produces runtime metadata with `simulation_source=sumo_traci`.
+- [ ] Stage 6 photoreal first-city realism and Stage 7 multi-city rollout remain future stages.
 
 ### Stage 5 Goal Mode Prompt
 

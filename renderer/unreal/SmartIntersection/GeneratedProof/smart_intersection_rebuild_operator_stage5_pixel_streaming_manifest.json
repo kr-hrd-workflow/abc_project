@@ -1,0 +1,23 @@
+{
+  "schema": "operator-stage5-pixel-streaming-dashboard-proof-v1",
+  "mode": "OperatorStage5",
+  "base_stage": "OperatorStage4Fixture",
+  "dashboard_url": "http://127.0.0.1:3000/dashboard",
+  "stream_url": "http://127.0.0.1",
+  "proof_image": "artifacts/unreal-operator-map-stage5-dashboard-stream-proof.png",
+  "details_json": "artifacts/unreal-operator-map-stage5-dashboard-stream-details.json",
+  "renderer_policy": "SUMO/TraCI is truth, FastAPI orchestrates, Unreal renders, Pixel Streaming transports frames.",
+  "transport_boundary": "Pixel Streaming transports rendered frames only.",
+  "simulation_source_claim": "fixture_or_live_as_reported_by_runtime_readiness",
+  "live_sumo_status": "deferred_unless_real_sumo_traci_run_passes",
+  "no_real_control": true,
+  "pixel_streaming_launch_flags": [
+    "-PixelStreamingURL=ws://127.0.0.1:8888",
+    "-RenderOffscreen",
+    "-AudioMixer"
+  ],
+  "unreal_launch_command": "powershell.exe -NoProfile -ExecutionPolicy Bypass -File scripts/open-unreal-project.ps1 -PixelStreaming -Game",
+  "signalling_command": "npm run unreal:pixel-streaming",
+  "dashboard_home_command": "npm run unreal:home",
+  "captured_at": "2026-06-15T16:22:47.318Z"
+}

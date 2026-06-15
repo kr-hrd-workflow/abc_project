@@ -418,6 +418,23 @@ describe("DashboardShell", () => {
     expect(screen.getByText("Unreal Pixel Streaming")).toBeTruthy();
   });
 
+  test("mounts the local Stage 5 Pixel Streaming iframe before the legacy alias", () => {
+    vi.stubEnv("NEXT_PUBLIC_SIMULATION_STREAM_URL", "http://127.0.0.1");
+    vi.stubEnv("NEXT_PUBLIC_UNITY_WEBGL_URL", "/unity/index.html");
+
+    const { container } = renderDashboard();
+    const streamFrame = container.querySelector("iframe.simulation-stream-frame");
+
+    expect(streamFrame?.getAttribute("src")).toBe("http://127.0.0.1");
+    expect(streamFrame?.className).toContain("simulation-stream-frame");
+    expect(streamFrame?.className).toContain("unreal-pixel-streaming-frame");
+    expect(streamFrame?.getAttribute("allow")).toContain("fullscreen");
+    expect(screen.getByText("Unreal Pixel Streaming")).toBeTruthy();
+    expect(screen.queryByText("Legacy stream alias")).toBeNull();
+    expect(screen.getByText("Simulation only / No real signal control")).toBeTruthy();
+    expect(screen.getByText("SUMO/TraCI Renderer")).toBeTruthy();
+  });
+
   test("keeps NEXT_PUBLIC_UNITY_WEBGL_URL as a legacy stream fallback alias", () => {
     vi.stubEnv("NEXT_PUBLIC_UNITY_WEBGL_URL", "/unity/index.html");
 
