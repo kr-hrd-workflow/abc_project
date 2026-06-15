@@ -92,6 +92,10 @@ MATERIAL_COLORS = {
     "target_wet_asphalt_dark": (0.165, 0.180, 0.182, 1.0),
     "custom_imagegen_seoul_wet_bus_lane_atlas": (0.25, 0.26, 0.25, 1.0),
     "custom_imagegen_seoul_rainy_intersection_backplate": (0.46, 0.49, 0.48, 1.0),
+    "stage6_seoul_photoreal_target": (0.32, 0.35, 0.34, 1.0),
+    "stage6_seoul_material_study": (0.28, 0.29, 0.27, 1.0),
+    "stage6_seoul_road_atlas": (0.19, 0.20, 0.195, 1.0),
+    "stage6_seoul_surface_overlays": (0.16, 0.15, 0.135, 1.0),
     "operator_context_ground": (0.30, 0.34, 0.31, 1.0),
     "operator_asphalt": (0.44, 0.47, 0.43, 1.0),
     "operator_asphalt_patch": (0.36, 0.39, 0.36, 1.0),
@@ -186,6 +190,10 @@ PARIS_TEXTURE_MATERIALS = SHARED_ROAD_TEXTURE_MATERIALS | {
 SEOUL_TEXTURE_MATERIALS = SHARED_ROAD_TEXTURE_MATERIALS | {
     "custom_imagegen_seoul_wet_bus_lane_atlas": "/Game/PhotorealRoadKit/Textures/T_custom_imagegen_seoul_wet_bus_lane_atlas",
     "custom_imagegen_seoul_rainy_intersection_backplate": "/Game/PhotorealRoadKit/Textures/T_custom_imagegen_seoul_rainy_intersection_backplate",
+    "stage6_seoul_photoreal_target": "/Game/PhotorealRoadKit/Textures/T_stage6_seoul_photoreal_target",
+    "stage6_seoul_material_study": "/Game/PhotorealRoadKit/Textures/T_stage6_seoul_material_study",
+    "stage6_seoul_road_atlas": "/Game/PhotorealRoadKit/Textures/T_stage6_seoul_road_atlas",
+    "stage6_seoul_surface_overlays": "/Game/PhotorealRoadKit/Textures/T_stage6_seoul_surface_overlays",
     "photoreal_brick": "/Game/PhotorealRoadKit/Textures/T_london_brick_facade",
     "photoreal_glass": "/Game/PhotorealRoadKit/Textures/T_london_glass_windows",
 }
@@ -315,6 +323,47 @@ OPERATOR_STAGE3_FORBIDDEN_MAP_TOKENS = [
     "foreground plinth",
 ]
 
+OPERATOR_STAGE6_PROFILE_SCHEMA = "operator-stage6-photoreal-seoul-profile-v1"
+OPERATOR_STAGE6_REQUIRED_TOKENS = [
+    "OperatorStage6",
+    "SUMOReadyOperatorMapPhotoreal",
+    "Stage6PhotorealSurface",
+    "Stage6GeneratedTextureApplied",
+    "Stage6DecalAtlasApplied",
+    "Stage4ReadableRuntimeState",
+    "NoImageCardTrafficZone",
+]
+OPERATOR_STAGE6_FORBIDDEN_MAP_TOKENS = [
+    "proof_plinth",
+    "foreground proof",
+    "foreground plinth",
+    "traffic_zone_image_card",
+    "dominant traffic-zone image card",
+]
+OPERATOR_STAGE6_SURFACE_PATCHES = [
+    ("main_east_west_mesh_uv_asphalt", (0, 0, 18), (58.0, 9.2, 1.0), "photoreal_asphalt", (0, 0, 0)),
+    ("main_north_south_mesh_uv_asphalt", (0, 0, 20), (9.2, 58.0, 1.0), "photoreal_asphalt", (0, 0, 0)),
+    ("red_bus_lane_northbound_uv_strip", (-520, 0, 26), (1.10, 55.0, 1.0), "custom_imagegen_seoul_wet_bus_lane_atlas", (0, 0, 0)),
+    ("red_bus_lane_southbound_uv_strip", (520, 0, 27), (1.10, 55.0, 1.0), "custom_imagegen_seoul_wet_bus_lane_atlas", (0, 0, 0)),
+    ("road_atlas_repair_patch_eastbound", (820, -310, 31), (3.2, 1.1, 1.0), "stage6_seoul_road_atlas", (0, 0, 0)),
+    ("road_atlas_repair_patch_westbound", (-840, 310, 32), (3.0, 1.0, 1.0), "stage6_seoul_road_atlas", (0, 0, 180)),
+    ("road_atlas_repair_patch_center_lane", (210, 140, 33), (2.1, 1.4, 1.0), "stage6_seoul_road_atlas", (0, 0, 8)),
+    ("material_study_wet_puddle_patch", (-420, -180, 34), (1.8, 0.92, 1.0), "stage6_seoul_material_study", (0, 0, -6)),
+]
+
+OPERATOR_STAGE6_DECAL_PATCHES = [
+    ("tire_polish_east_queue", (1130, 270, 36), (8.2, 0.42, 1.0), 0),
+    ("tire_polish_west_queue", (-1130, -270, 37), (8.2, 0.42, 1.0), 180),
+    ("tire_polish_north_queue", (-270, 1130, 38), (0.42, 8.2, 1.0), 90),
+    ("tire_polish_south_queue", (270, -1130, 39), (0.42, 8.2, 1.0), -90),
+    ("crosswalk_grime_north_edge", (0, 1220, 40), (12.8, 0.26, 1.0), 0),
+    ("crosswalk_grime_south_edge", (0, -1220, 41), (12.8, 0.26, 1.0), 0),
+    ("curb_grime_north", (0, 3050, 78), (56.0, 0.22, 1.0), 0),
+    ("curb_grime_south", (0, -3050, 79), (56.0, 0.22, 1.0), 0),
+    ("tar_crack_center_a", (-160, 0, 44), (0.06, 8.8, 1.0), 8),
+    ("tar_crack_center_b", (170, 0, 45), (0.06, 8.8, 1.0), -7),
+]
+
 OPERATOR_STAGE3_VEHICLE_SLOTS = [
     ("north", "passenger_car", 0, -275, 1960, 90),
     ("north", "taxi", 1, -95, 2220, 90),
@@ -377,6 +426,13 @@ SEOUL_MATERIAL_NAMES = GENERIC_MATERIAL_NAMES | {
     "target_shadow_grime",
     "custom_imagegen_seoul_wet_bus_lane_atlas",
     "custom_imagegen_seoul_rainy_intersection_backplate",
+}
+
+OPERATOR_STAGE6_MATERIAL_NAMES = OPERATOR_STAGE3_MATERIAL_NAMES | SEOUL_MATERIAL_NAMES | {
+    "stage6_seoul_photoreal_target",
+    "stage6_seoul_material_study",
+    "stage6_seoul_road_atlas",
+    "stage6_seoul_surface_overlays",
 }
 
 NEW_YORK_MATERIAL_NAMES = GENERIC_MATERIAL_NAMES | {
@@ -458,6 +514,7 @@ class RoadOnlyRenderer:
         self.operator_stage1 = os.environ.get("SMART_INTERSECTION_OPERATOR_STAGE1") == "1"
         self.operator_stage2 = os.environ.get("SMART_INTERSECTION_OPERATOR_STAGE2") == "1"
         self.operator_stage3 = os.environ.get("SMART_INTERSECTION_OPERATOR_STAGE3") == "1"
+        self.operator_stage6 = os.environ.get("SMART_INTERSECTION_OPERATOR_STAGE6") == "1"
         self.project_root = self.profile_path.parents[2]
         self.generated_dir = self.project_root / "GeneratedProof"
         self.generated_dir.mkdir(parents=True, exist_ok=True)
@@ -466,6 +523,8 @@ class RoadOnlyRenderer:
 
     @property
     def package_path(self) -> str:
+        if self.operator_stage6:
+            return "/Game/Maps/Generated/smart_intersection_rebuild_operator_stage6"
         if self.operator_stage3:
             return "/Game/Maps/Generated/smart_intersection_rebuild_stage3"
         if self.operator_stage2:
@@ -475,6 +534,53 @@ class RoadOnlyRenderer:
         return f"/Game/Maps/Generated/{self.city}_RoadOnly"
 
     def build_manifest(self) -> dict:
+        if self.operator_stage6:
+            stage6_profile = self._load_operator_stage6_profile()
+            return {
+                "generator": "RoadOnlyRenderer",
+                "schema": "operator-stage6-photoreal-proof-v1",
+                "mode": "OperatorStage6",
+                "city": self.city,
+                "display_name": "SUMO-ready Seoul operator viewport with image-derived photoreal road materials",
+                "simulation_truth_source": "SUMO/TraCI is truth",
+                "future_bridge": "TraCI bridge via FastAPI renderer snapshots",
+                "renderer_role": "Unreal renders only",
+                "scope": "Stage 6 fixture-backed renderer realism proof; no live SUMO motion and no real traffic-control integration",
+                "unreal_map": self.package_path,
+                "base_stage": "OperatorStage3",
+                "base_motion_stage": "OperatorStage4 fixture renderer snapshots",
+                "transport_stage": "OperatorStage5 Pixel Streaming dashboard transport remains frame-only",
+                "profile_schema": stage6_profile.get("schema"),
+                "profile_path": "renderer/unreal/SmartIntersection/SceneProfiles/operator_stage6_photoreal_profile.json",
+                "imagegen_targets": stage6_profile.get("imagegen_targets", []),
+                "source_textures": stage6_profile.get("source_textures", []),
+                "applied_materials": [
+                    "stage6_seoul_photoreal_target",
+                    "stage6_seoul_material_study",
+                    "stage6_seoul_road_atlas",
+                    "stage6_seoul_surface_overlays",
+                    "custom_imagegen_seoul_wet_bus_lane_atlas",
+                    "photoreal_curb",
+                    "photoreal_white_worn",
+                    "photoreal_metal",
+                ],
+                "actor_evidence": [
+                    *OPERATOR_STAGE6_REQUIRED_TOKENS,
+                    "OperatorStage1",
+                    "TrafficReadableQueueZone",
+                    "OperatorStage2",
+                    "NoTrafficZoneBackplate",
+                    "OperatorStage3",
+                    "Stage3CityAssetKit",
+                    "Stage3SignalKit",
+                    "Stage3VehicleKit",
+                    "SUMOReadyAssetPivot",
+                ],
+                "forbidden_map_tokens": OPERATOR_STAGE6_FORBIDDEN_MAP_TOKENS,
+                "renderer_policy": "SUMO/TraCI is truth; FastAPI orchestrates state; Unreal renders; Pixel Streaming transports frames only.",
+                "live_sumo_status": "deferred_until_real_sumo_traci_runtime_metadata_proves_simulation_source_sumo_traci",
+                "runtime_controller": f"TrafficSimulationController SmartIntersectionRuntime {self.city}",
+            }
         if self.operator_stage3:
             kit_profile = self._load_operator_stage3_asset_kits()
             return {
@@ -573,6 +679,10 @@ class RoadOnlyRenderer:
         }
 
     def write_manifest(self) -> Path:
+        if self.operator_stage6:
+            path = self.generated_dir / "smart_intersection_rebuild_operator_stage6_photoreal_manifest.json"
+            path.write_text(json.dumps(self.build_manifest(), indent=2) + "\n", encoding="utf-8")
+            return path
         if self.operator_stage3:
             path = self.generated_dir / "smart_intersection_rebuild_operator_stage3_manifest.json"
             path.write_text(json.dumps(self.build_manifest(), indent=2) + "\n", encoding="utf-8")
@@ -601,6 +711,9 @@ class RoadOnlyRenderer:
         self._create_materials()
         self._build_scene()
         self._save_level()
+        if self.operator_stage6:
+            print(f"OPERATOR_STAGE6_UNREAL_GENERATED city={self.city} package={self.package_path}")
+            return
         if self.operator_stage3:
             print(f"OPERATOR_STAGE3_UNREAL_GENERATED city={self.city} package={self.package_path}")
             return
@@ -700,7 +813,9 @@ class RoadOnlyRenderer:
         asset_tools = unreal.AssetToolsHelpers.get_asset_tools()
         material_dir = "/Game/Materials/RoadOnlyRenderer"
         unreal.EditorAssetLibrary.make_directory(material_dir)
-        if self.operator_stage3:
+        if self.operator_stage6:
+            city_material_names = OPERATOR_STAGE6_MATERIAL_NAMES
+        elif self.operator_stage3:
             city_material_names = OPERATOR_STAGE3_MATERIAL_NAMES
         elif self.operator_stage2:
             city_material_names = OPERATOR_STAGE2_MATERIAL_NAMES
@@ -719,8 +834,10 @@ class RoadOnlyRenderer:
             asset_path = f"{material_dir}/{asset_name}"
             mat = unreal.EditorAssetLibrary.load_asset(asset_path)
             rebuilt = False
-            operator_mode = self.operator_stage1 or self.operator_stage2 or self.operator_stage3
-            if self.operator_stage3:
+            operator_mode = self.operator_stage1 or self.operator_stage2 or self.operator_stage3 or self.operator_stage6
+            if self.operator_stage6:
+                recreate_operator_material = name.startswith("stage6_")
+            elif self.operator_stage3:
                 recreate_operator_material = name.startswith("operator_stage3_")
             else:
                 recreate_operator_material = (self.operator_stage1 or self.operator_stage2) and name.startswith("operator_")
@@ -821,7 +938,7 @@ class RoadOnlyRenderer:
                 unreal.MaterialEditingLibrary.connect_material_property(facade_tone, "", unreal.MaterialProperty.MP_BASE_COLOR)
             else:
                 unreal.MaterialEditingLibrary.connect_material_property(sample, "RGB", unreal.MaterialProperty.MP_BASE_COLOR)
-            if "custom_imagegen" in mat_name:
+            if "custom_imagegen" in mat_name or "stage6_seoul" in mat_name:
                 try:
                     mat.set_editor_property("two_sided", True)
                 except Exception:
@@ -833,7 +950,13 @@ class RoadOnlyRenderer:
                 black.set_editor_property("constant", unreal.LinearColor(0.0, 0.0, 0.0, 1.0))
                 unreal.MaterialEditingLibrary.connect_material_property(black, "RGB", unreal.MaterialProperty.MP_EMISSIVE_COLOR)
             rough = unreal.MaterialEditingLibrary.create_material_expression(mat, unreal.MaterialExpressionConstant, -740, 320)
-            if "custom_imagegen" in mat_name and ("wet_intersection_atlas" in mat_name or "wet_yellow_box_atlas" in mat_name):
+            if "stage6_seoul_road_atlas" in mat_name:
+                rough_value = 0.28
+            elif "stage6_seoul_surface_overlays" in mat_name:
+                rough_value = 0.40
+            elif "stage6_seoul_material_study" in mat_name:
+                rough_value = 0.36
+            elif "custom_imagegen" in mat_name and ("wet_intersection_atlas" in mat_name or "wet_yellow_box_atlas" in mat_name or "wet_bus_lane_atlas" in mat_name):
                 rough_value = 0.34
             elif "target_full_road_atlas" in mat_name:
                 rough_value = 0.22
@@ -846,7 +969,15 @@ class RoadOnlyRenderer:
             rough.set_editor_property("r", rough_value)
             unreal.MaterialEditingLibrary.connect_material_property(rough, "", unreal.MaterialProperty.MP_ROUGHNESS)
             spec = unreal.MaterialEditingLibrary.create_material_expression(mat, unreal.MaterialExpressionConstant, -740, 430)
-            spec.set_editor_property("r", 0.48 if ("custom_imagegen" in mat_name and ("wet_intersection_atlas" in mat_name or "wet_yellow_box_atlas" in mat_name)) else (0.62 if "target_full_road_atlas" in mat_name else 0.22))
+            spec.set_editor_property(
+                "r",
+                0.56 if "stage6_seoul_road_atlas" in mat_name else (
+                    0.46 if "stage6_seoul" in mat_name else (
+                        0.48 if ("custom_imagegen" in mat_name and ("wet_intersection_atlas" in mat_name or "wet_yellow_box_atlas" in mat_name or "wet_bus_lane_atlas" in mat_name))
+                        else (0.62 if "target_full_road_atlas" in mat_name else 0.22)
+                    )
+                ),
+            )
             unreal.MaterialEditingLibrary.connect_material_property(spec, "", unreal.MaterialProperty.MP_SPECULAR)
             if "T_london_text_" in texture.get_name():
                 try:
@@ -1483,6 +1614,28 @@ class RoadOnlyRenderer:
                 raise RuntimeError(f"Stage 3 asset-kit profile {city} missing variants: {missing_variants}")
         return data
 
+    def _load_operator_stage6_profile(self) -> dict:
+        path = self.project_root / "SceneProfiles" / "operator_stage6_photoreal_profile.json"
+        data = json.loads(path.read_text(encoding="utf-8"))
+        if data.get("schema") != OPERATOR_STAGE6_PROFILE_SCHEMA:
+            raise RuntimeError(f"Unexpected Stage 6 profile schema: {data.get('schema')}")
+        if data.get("city") != "seoul":
+            raise RuntimeError(f"Stage 6 profile must target seoul: {data.get('city')}")
+        texture_materials = {item.get("material") for item in data.get("source_textures", []) if isinstance(item, dict)}
+        missing_materials = [
+            material
+            for material in (
+                "stage6_seoul_photoreal_target",
+                "stage6_seoul_material_study",
+                "stage6_seoul_road_atlas",
+                "stage6_seoul_surface_overlays",
+            )
+            if material not in texture_materials
+        ]
+        if missing_materials:
+            raise RuntimeError(f"Stage 6 profile missing source texture material evidence: {missing_materials}")
+        return data
+
     def _tag_operator_stage3_asset(self, actor, city: str, kit: str, *extra_tags: str) -> None:
         self._set_actor_property(
             actor,
@@ -1595,7 +1748,172 @@ class RoadOnlyRenderer:
             self._spawn_operator_stage3_signal_assembly(label, city, x, y, yaw, style)
         self.stage3_asset_kit_profile = kit_profile
 
+    def _tag_operator_stage6_asset(self, actor, *extra_tags: str) -> None:
+        self._set_actor_property(
+            actor,
+            "Tags",
+            ["OperatorStage6", "SUMOReadyOperatorMapPhotoreal", "Stage6GeneratedTextureApplied", *extra_tags],
+        )
+
+    def _build_operator_stage6_surface_materials(self) -> None:
+        for label, loc, scale, material, rotation in OPERATOR_STAGE6_SURFACE_PATCHES:
+            actor = self._plane_actor(
+                f"OperatorStage6_SUMOReadyOperatorMapPhotoreal_Stage6PhotorealSurface_{label}",
+                loc,
+                scale,
+                material,
+                rotation=rotation,
+            )
+            self._tag_operator_stage6_asset(actor, "Stage6PhotorealSurface", "mesh_uv_material", material)
+        for label, loc, scale, yaw in OPERATOR_STAGE6_DECAL_PATCHES:
+            actor = self._plane_actor(
+                f"OperatorStage6_Stage6DecalAtlasApplied_{label}",
+                loc,
+                scale,
+                "stage6_seoul_surface_overlays",
+                rotation=(0, 0, yaw),
+            )
+            self._tag_operator_stage6_asset(actor, "Stage6DecalAtlasApplied", "surface_overlay_decal")
+
+    def _build_operator_stage6_geometry_details(self) -> None:
+        for idx, (x, y) in enumerate([(-1095, 1095), (1095, 1095), (-1095, -1095), (1095, -1095)]):
+            curb = self._cube(
+                f"OperatorStage6_reality_like_curbs_tactile_corner_{idx}",
+                (x, y, 78),
+                (1.05, 0.30, 0.070),
+                "photoreal_curb",
+            )
+            tactile = self._cube(
+                f"OperatorStage6_reality_like_tactile_paving_corner_{idx}",
+                (x - (80 if x > 0 else -80), y, 84),
+                (0.46, 0.30, 0.018),
+                "tactile",
+            )
+            for actor in (curb, tactile):
+                self._tag_operator_stage6_asset(actor, "reality_like_curbs", "tactile_paving")
+        for idx, (x, y) in enumerate([(-780, -330), (780, 330), (-330, 780), (330, -780)]):
+            cover = self._cube(
+                f"OperatorStage6_reality_like_utility_cover_drain_grime_{idx}",
+                (x, y, 58),
+                (0.34, 0.24, 0.010),
+                "photoreal_metal",
+            )
+            self._tag_operator_stage6_asset(cover, "utility_cover", "road_furniture")
+        for idx, (x, y, yaw) in enumerate([(-1140, 1120, 0), (1140, 1120, 180), (-1140, -1120, 0), (1140, -1120, 180)]):
+            hood = self._rotated_cube(
+                f"OperatorStage6_reality_like_signal_head_hood_shadow_{idx}",
+                (x + (430 if yaw == 0 else -430), y - 11, 390),
+                (0.24, 0.022, 0.38),
+                "operator_stage3_signal_black",
+                rotation=(0, 0, yaw),
+            )
+            self._tag_operator_stage6_asset(hood, "reality_like_signals", "Stage3SignalKit")
+        for idx, (x, y, sx, sy) in enumerate([
+            (-275, 1960, 0.86, 0.20),
+            (110, 2580, 1.65, 0.32),
+            (275, -1960, 0.86, 0.20),
+            (1960, 275, 0.86, 0.20),
+            (-1960, -275, 0.86, 0.20),
+        ]):
+            shadow = self._rotated_cube(
+                f"OperatorStage6_reality_like_vehicle_wet_contact_shadow_{idx}",
+                (x, y, 57),
+                (sx, sy, 0.008),
+                "stage6_seoul_surface_overlays",
+                rotation=(0, 0, 90 if abs(y) > abs(x) else 0),
+            )
+            self._tag_operator_stage6_asset(shadow, "reality_like_vehicles", "wet_contact_shadow")
+
+    def _configure_operator_stage6_lighting_camera(self) -> None:
+        world = unreal.EditorLevelLibrary.get_editor_world()
+        if world is not None:
+            for command in ("DisableAllScreenMessages", "r.DefaultFeature.AutoExposure 0", "r.EyeAdaptationQuality 0"):
+                try:
+                    unreal.SystemLibrary.execute_console_command(world, command)
+                except Exception:
+                    pass
+        sun = unreal.EditorLevelLibrary.spawn_actor_from_class(
+            unreal.DirectionalLight,
+            unreal.Vector(-2500, -3150, 4200),
+            unreal.Rotator(-48, -40, 0),
+        )
+        sun.set_actor_label("OperatorStage6_late_afternoon_overcast_key_light")
+        sun_comp = sun.get_component_by_class(unreal.DirectionalLightComponent)
+        if sun_comp:
+            sun_comp.set_editor_property("intensity", 1.45)
+            self._set_actor_property(sun_comp, "cast_shadows", True)
+            self._set_actor_property(sun_comp, "light_source_angle", 7.5)
+            try:
+                sun_comp.set_mobility(unreal.ComponentMobility.MOVABLE)
+            except Exception:
+                pass
+        sky = unreal.EditorLevelLibrary.spawn_actor_from_class(
+            unreal.SkyLight,
+            unreal.Vector(0, 0, 1700),
+            unreal.Rotator(0, 0, 0),
+        )
+        sky.set_actor_label("OperatorStage6_soft_overcast_skylight")
+        sky_comp = sky.get_component_by_class(unreal.SkyLightComponent)
+        if sky_comp:
+            sky_comp.set_editor_property("intensity", 1.4)
+            try:
+                sky_comp.set_mobility(unreal.ComponentMobility.MOVABLE)
+                sky_comp.recapture_sky()
+            except Exception:
+                pass
+        pp = unreal.EditorLevelLibrary.spawn_actor_from_class(
+            unreal.PostProcessVolume,
+            unreal.Vector(0, 0, 900),
+            unreal.Rotator(0, 0, 0),
+        )
+        pp.set_actor_label("OperatorStage6_unbound_postprocess_traffic_camera_tone")
+        self._set_actor_property(pp, "b_unbound", True)
+        self._set_actor_property(pp, "blend_weight", 1.0)
+        try:
+            settings = pp.get_editor_property("settings")
+            for name, value in (
+                ("override_auto_exposure_bias", True),
+                ("auto_exposure_bias", -0.10),
+                ("override_bloom_intensity", True),
+                ("bloom_intensity", 0.06),
+                ("override_vignette_intensity", True),
+                ("vignette_intensity", 0.04),
+                ("override_color_saturation", True),
+                ("color_saturation", unreal.Vector4(0.92, 0.94, 0.96, 1.0)),
+            ):
+                self._set_actor_property(settings, name, value)
+            pp.set_editor_property("settings", settings)
+        except Exception as exc:
+            print(f"OPERATOR_STAGE6_POSTPROCESS_FALLBACK error={exc}")
+        camera = unreal.EditorLevelLibrary.spawn_actor_from_class(
+            unreal.CineCameraActor,
+            unreal.Vector(-2450, -4300, 2650),
+            unreal.Rotator(0, -33, 58),
+        )
+        camera.set_actor_label("OperatorStage6_CineCamera_reality_like_operator_view")
+        unreal.EditorLevelLibrary.set_level_viewport_camera_info(camera.get_actor_location(), camera.get_actor_rotation())
+
+    def _build_operator_stage6_scene(self) -> None:
+        if self.city != "seoul":
+            raise RuntimeError(f"Operator Stage 6 is locked to seoul, got {self.city}")
+        self._load_operator_stage6_profile()
+        self._build_operator_stage3_scene()
+        self._build_operator_stage6_surface_materials()
+        self._build_operator_stage6_geometry_details()
+        self._spawn_renderer_snapshot_visual_layer()
+        marker = self._cube(
+            "OperatorStage6_Stage4ReadableRuntimeState_NoImageCardTrafficZone_fixture_state_marker",
+            (0, -172, 156),
+            (1.20, 0.055, 0.022),
+            "green_signal",
+        )
+        self._tag_operator_stage6_asset(marker, "Stage4ReadableRuntimeState", "NoImageCardTrafficZone")
+        self._configure_operator_stage6_lighting_camera()
+
     def _build_scene(self) -> None:
+        if self.operator_stage6:
+            self._build_operator_stage6_scene()
+            return
         if self.operator_stage3:
             self._build_operator_stage3_scene()
             return

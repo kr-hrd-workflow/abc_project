@@ -1,0 +1,290 @@
+{
+  "generator": "RoadOnlyRenderer",
+  "schema": "operator-stage6-photoreal-proof-v1",
+  "mode": "OperatorStage6",
+  "city": "seoul",
+  "display_name": "SUMO-ready Seoul operator viewport with image-derived photoreal road materials",
+  "simulation_truth_source": "SUMO/TraCI is truth",
+  "future_bridge": "TraCI bridge via FastAPI renderer snapshots",
+  "renderer_role": "Unreal renders only",
+  "scope": "Stage 6 fixture-backed renderer realism proof; no live SUMO motion and no real traffic-control integration",
+  "unreal_map": "/Game/Maps/Generated/smart_intersection_rebuild_operator_stage6",
+  "base_stage": "OperatorStage3",
+  "base_motion_stage": "OperatorStage4 fixture renderer snapshots",
+  "transport_stage": "OperatorStage5 Pixel Streaming dashboard transport remains frame-only",
+  "profile_schema": "operator-stage6-photoreal-seoul-profile-v1",
+  "profile_path": "renderer/unreal/SmartIntersection/SceneProfiles/operator_stage6_photoreal_profile.json",
+  "imagegen_targets": [
+    {
+      "id": "photoreal_operator_target",
+      "prompt": "Create a synthetic, photoreal reference plate for a smart-intersection operator viewport in Seoul, South Korea. View: elevated fixed traffic-camera / Unreal operator-map angle looking down at a four-way urban arterial intersection, readable lanes and queues preserved. Scene details: wet dark asphalt with realistic aggregate and tire polish, worn zebra crosswalks, stop bars, red bus-priority lane, concrete curbs with grime, tactile paving at corners, median bus platform, traffic signal mast arms and heads, ordinary buses/taxis/sedans, a few pedestrians waiting safely, overcast late afternoon lighting, subtle lens exposure, realistic shadows and puddle glints. No dashboard UI, no floating cards, no labels, no logos, no readable license plates, no text overlay, no exaggerated cinematic blur. Purpose: final visual target for a SUMO-backed Unreal operator map, balancing realism with simulation readability.",
+      "original_imagegen_path": "C:/Users/100ri/.codex/generated_images/019ecc2b-082d-7170-84c7-7e3eb35efbed/ig_03d63523327f02b4016a302ee4acf4819195dedb4225ec5844.png",
+      "artifact_path": "artifacts/imagegen/stage6/operator_stage6_photoreal_target.png",
+      "source_texture_path": "renderer/unreal/SmartIntersection/SourceAssets/PhotorealRoadKit/Textures/T_stage6_seoul_photoreal_target.png",
+      "material": "stage6_seoul_photoreal_target",
+      "use": "visual target and non-traffic-zone reference texture evidence; not used as a dominant traffic-zone image card"
+    },
+    {
+      "id": "material_study",
+      "prompt": "Create a synthetic photoreal material study plate for an Unreal road kit, Seoul rainy arterial intersection. Orthographic/top-down and macro swatches only, no full scene and no UI. Include distinct tileable-looking patches: wet dark asphalt aggregate, older faded asphalt repair patch, red bus-lane coating with worn tire polish, white road-paint stripe edges with chipped grime, yellow curb paint, concrete curb face, tactile yellow paving, granite sidewalk pavers, circular utility/manhole cover, storm-drain grate, tar seam, puddle reflection streak, oil/tire scuff decal. Arrange as a clean 4x4 texture/decal atlas on neutral background. No logos, no readable words, no commercial marks, no license plates.",
+      "original_imagegen_path": "C:/Users/100ri/.codex/generated_images/019ecc2b-082d-7170-84c7-7e3eb35efbed/ig_03d63523327f02b4016a302f26e7e881918cbc2d9b2bb66314.png",
+      "artifact_path": "artifacts/imagegen/stage6/operator_stage6_material_study.png",
+      "source_texture_path": "renderer/unreal/SmartIntersection/SourceAssets/PhotorealRoadKit/Textures/T_stage6_seoul_material_study.png",
+      "material": "stage6_seoul_material_study",
+      "use": "wet-center and small surface-detail material evidence"
+    },
+    {
+      "id": "road_atlas_source",
+      "prompt": "Create a synthetic top-down road texture atlas for a SUMO-ready Unreal traffic operator map, Seoul rainy intersection. Make it useful as source texture/decal material, not a beauty render. Orthographic top-down atlas with separate reusable patches: dark wet asphalt base, subtle aggregate variation, tire-polished wheel paths, lane divider dash with worn white paint, stop-bar chunk, zebra-crosswalk stripe segment with chipped edge, red bus-lane strip, yellow curb strip, gray curb corner, concrete island slab, drain grate, circular utility cover, tactile paving strip, puddle glint streak, grime/oil spill, tar crack seam. High detail, physically plausible roughness/specular cues, neutral atlas gutters, no text, no logos, no UI, no perspective scene.",
+      "original_imagegen_path": "C:/Users/100ri/.codex/generated_images/019ecc2b-082d-7170-84c7-7e3eb35efbed/ig_03d63523327f02b4016a302f6b9e688191b73b94a0b654bcd1.png",
+      "artifact_path": "artifacts/imagegen/stage6/operator_stage6_road_atlas_source.png",
+      "source_texture_path": "renderer/unreal/SmartIntersection/SourceAssets/PhotorealRoadKit/Textures/T_stage6_seoul_road_atlas.png",
+      "material": "stage6_seoul_road_atlas",
+      "use": "main road mesh UV material for wet asphalt, bus-lane strips, and worn markings"
+    },
+    {
+      "id": "surface_overlay_source",
+      "prompt": "Create a synthetic decal and overlay source atlas for an Unreal photoreal road material, top-down orthographic, high contrast reusable decals on a neutral dark/gray background. Include separate patches: chipped white road paint edges, worn crosswalk corner dirt, thin tar crack lines, black tire scuffs and skid arcs, wet puddle reflection streaks, curb dirt/grime bands, oil rainbow stain, small asphalt aggregate speckles, drain-edge dirt, tactile-paving grime, red bus-lane paint wear, yellow curb paint chips. Make each patch isolated with clear gutters for cropping into decals. No full road scene, no UI, no labels, no logos, no readable words.",
+      "original_imagegen_path": "C:/Users/100ri/.codex/generated_images/019ecc2b-082d-7170-84c7-7e3eb35efbed/ig_03d63523327f02b4016a302fb222e881919c90496bd9cc3a04.png",
+      "artifact_path": "artifacts/imagegen/stage6/operator_stage6_surface_overlays_source.png",
+      "source_texture_path": "renderer/unreal/SmartIntersection/SourceAssets/PhotorealRoadKit/Textures/T_stage6_seoul_surface_overlays.png",
+      "material": "stage6_seoul_surface_overlays",
+      "use": "decal/overlay actors for tire polish, tar cracks, curb grime, paint wear, and wet vehicle contact shadows"
+    }
+  ],
+  "source_textures": [
+    {
+      "source_texture_path": "renderer/unreal/SmartIntersection/SourceAssets/PhotorealRoadKit/Textures/T_stage6_seoul_photoreal_target.png",
+      "unreal_texture": "/Game/PhotorealRoadKit/Textures/T_stage6_seoul_photoreal_target",
+      "material": "stage6_seoul_photoreal_target",
+      "consuming_actors": []
+    },
+    {
+      "source_texture_path": "renderer/unreal/SmartIntersection/SourceAssets/PhotorealRoadKit/Textures/T_stage6_seoul_material_study.png",
+      "unreal_texture": "/Game/PhotorealRoadKit/Textures/T_stage6_seoul_material_study",
+      "material": "stage6_seoul_material_study",
+      "consuming_actors": [
+        "OperatorStage6_SUMOReadyOperatorMapPhotoreal_Stage6PhotorealSurface_material_study_wet_puddle_patch"
+      ]
+    },
+    {
+      "source_texture_path": "renderer/unreal/SmartIntersection/SourceAssets/PhotorealRoadKit/Textures/T_stage6_seoul_road_atlas.png",
+      "unreal_texture": "/Game/PhotorealRoadKit/Textures/T_stage6_seoul_road_atlas",
+      "material": "stage6_seoul_road_atlas",
+      "consuming_actors": [
+        "OperatorStage6_SUMOReadyOperatorMapPhotoreal_Stage6PhotorealSurface_road_atlas_repair_patch_eastbound",
+        "OperatorStage6_SUMOReadyOperatorMapPhotoreal_Stage6PhotorealSurface_road_atlas_repair_patch_westbound",
+        "OperatorStage6_SUMOReadyOperatorMapPhotoreal_Stage6PhotorealSurface_road_atlas_repair_patch_center_lane"
+      ]
+    },
+    {
+      "source_texture_path": "renderer/unreal/SmartIntersection/SourceAssets/PhotorealRoadKit/Textures/T_stage6_seoul_surface_overlays.png",
+      "unreal_texture": "/Game/PhotorealRoadKit/Textures/T_stage6_seoul_surface_overlays",
+      "material": "stage6_seoul_surface_overlays",
+      "consuming_actors": [
+        "OperatorStage6_Stage6DecalAtlasApplied_tire_polish_east_queue",
+        "OperatorStage6_Stage6DecalAtlasApplied_crosswalk_grime_north_edge",
+        "OperatorStage6_reality_like_vehicle_wet_contact_shadow_0"
+      ]
+    }
+  ],
+  "applied_materials": [
+    "stage6_seoul_photoreal_target",
+    "stage6_seoul_material_study",
+    "stage6_seoul_road_atlas",
+    "stage6_seoul_surface_overlays",
+    "custom_imagegen_seoul_wet_bus_lane_atlas",
+    "photoreal_curb",
+    "photoreal_white_worn",
+    "photoreal_metal"
+  ],
+  "actor_evidence": [
+    "OperatorStage6",
+    "SUMOReadyOperatorMapPhotoreal",
+    "Stage6PhotorealSurface",
+    "Stage6GeneratedTextureApplied",
+    "Stage6DecalAtlasApplied",
+    "Stage4ReadableRuntimeState",
+    "NoImageCardTrafficZone",
+    "OperatorStage1",
+    "TrafficReadableQueueZone",
+    "OperatorStage2",
+    "NoTrafficZoneBackplate",
+    "OperatorStage3",
+    "Stage3CityAssetKit",
+    "Stage3SignalKit",
+    "Stage3VehicleKit",
+    "SUMOReadyAssetPivot"
+  ],
+  "forbidden_map_tokens": [
+    "proof_plinth",
+    "foreground proof",
+    "foreground plinth",
+    "traffic_zone_image_card",
+    "dominant traffic-zone image card"
+  ],
+  "renderer_policy": "SUMO/TraCI is truth; FastAPI orchestrates state; Unreal renders; Pixel Streaming transports frames only.",
+  "live_sumo_status": "deferred_until_real_sumo_traci_runtime_metadata_proves_simulation_source_sumo_traci",
+  "runtime_controller": "TrafficSimulationController SmartIntersectionRuntime seoul",
+  "capture_schema": "operator-stage6-unreal-before-after-proof-v1",
+  "simulation_source": "sumo_traci_fixture",
+  "fixture_snapshot_path": "apps/api/app/fixtures/stage4_renderer_snapshots.json",
+  "proof_before_image": "artifacts/unreal-operator-map-stage6-before.png",
+  "proof_after_image": "artifacts/unreal-operator-map-stage6-photoreal-proof.png",
+  "proof_contact_sheet": "artifacts/unreal-operator-map-stage6-before-after-contact-sheet.png",
+  "capture_camera": {
+    "origin_cm": [
+      -2450,
+      -4300,
+      2650
+    ],
+    "target_cm": [
+      120,
+      120,
+      0
+    ],
+    "fov_degrees": 44.0
+  },
+  "captures": [
+    {
+      "map": "/Game/Maps/Generated/smart_intersection_rebuild_stage3",
+      "proof_image": "artifacts/unreal-operator-map-stage6-before.png",
+      "snapshot": {
+        "snapshot_id": "stage4-fixture-a",
+        "activeSignalGroup": "east_west_priority",
+        "cycleSecond": 12,
+        "queues": {
+          "north": 28,
+          "south": 14,
+          "east": 6,
+          "west": 4
+        },
+        "pedestrianRequest": true,
+        "emergencyVehicleDirection": "east",
+        "vehicles": [
+          {
+            "actor_label": "OperatorStage3_Stage3VehicleKit_SUMOReadyAssetPivot_seoul_north_passenger_car_00",
+            "vehicle_id": "veh-north-00",
+            "to_cm": [
+              -44.0,
+              1540.0,
+              86.0
+            ],
+            "heading_deg": 180.0
+          },
+          {
+            "actor_label": "OperatorStage3_Stage3VehicleKit_SUMOReadyAssetPivot_seoul_east_passenger_car_00",
+            "vehicle_id": "veh-east-00",
+            "to_cm": [
+              1180.0,
+              -44.0,
+              86.0
+            ],
+            "heading_deg": 270.0
+          },
+          {
+            "actor_label": "OperatorStage3_Stage3VehicleKit_SUMOReadyAssetPivot_seoul_south_emergency_vehicle_01",
+            "vehicle_id": "veh-south-emergency-01",
+            "to_cm": [
+              54.0,
+              -1380.0,
+              86.0
+            ],
+            "heading_deg": 0.0
+          },
+          {
+            "actor_label": "OperatorStage3_Stage3VehicleKit_SUMOReadyAssetPivot_seoul_west_taxi_00",
+            "vehicle_id": "veh-west-taxi-00",
+            "to_cm": [
+              -1320.0,
+              44.0,
+              86.0
+            ],
+            "heading_deg": 90.0
+          }
+        ],
+        "signals": [
+          {
+            "actor_label": "OperatorStage3_Stage3SignalKit_SUMOReadyAssetPivot_seoul_northwest_pole",
+            "state": "red"
+          },
+          {
+            "actor_label": "OperatorStage3_Stage3SignalKit_SUMOReadyAssetPivot_seoul_southwest_pole",
+            "state": "green"
+          }
+        ]
+      }
+    },
+    {
+      "map": "/Game/Maps/Generated/smart_intersection_rebuild_operator_stage6",
+      "proof_image": "artifacts/unreal-operator-map-stage6-photoreal-proof.png",
+      "snapshot": {
+        "snapshot_id": "stage4-fixture-a",
+        "activeSignalGroup": "east_west_priority",
+        "cycleSecond": 12,
+        "queues": {
+          "north": 28,
+          "south": 14,
+          "east": 6,
+          "west": 4
+        },
+        "pedestrianRequest": true,
+        "emergencyVehicleDirection": "east",
+        "vehicles": [
+          {
+            "actor_label": "OperatorStage3_Stage3VehicleKit_SUMOReadyAssetPivot_seoul_north_passenger_car_00",
+            "vehicle_id": "veh-north-00",
+            "to_cm": [
+              -44.0,
+              1540.0,
+              86.0
+            ],
+            "heading_deg": 180.0
+          },
+          {
+            "actor_label": "OperatorStage3_Stage3VehicleKit_SUMOReadyAssetPivot_seoul_east_passenger_car_00",
+            "vehicle_id": "veh-east-00",
+            "to_cm": [
+              1180.0,
+              -44.0,
+              86.0
+            ],
+            "heading_deg": 270.0
+          },
+          {
+            "actor_label": "OperatorStage3_Stage3VehicleKit_SUMOReadyAssetPivot_seoul_south_emergency_vehicle_01",
+            "vehicle_id": "veh-south-emergency-01",
+            "to_cm": [
+              54.0,
+              -1380.0,
+              86.0
+            ],
+            "heading_deg": 0.0
+          },
+          {
+            "actor_label": "OperatorStage3_Stage3VehicleKit_SUMOReadyAssetPivot_seoul_west_taxi_00",
+            "vehicle_id": "veh-west-taxi-00",
+            "to_cm": [
+              -1320.0,
+              44.0,
+              86.0
+            ],
+            "heading_deg": 90.0
+          }
+        ],
+        "signals": [
+          {
+            "actor_label": "OperatorStage3_Stage3SignalKit_SUMOReadyAssetPivot_seoul_northwest_pole",
+            "state": "red"
+          },
+          {
+            "actor_label": "OperatorStage3_Stage3SignalKit_SUMOReadyAssetPivot_seoul_southwest_pole",
+            "state": "green"
+          }
+        ]
+      }
+    }
+  ],
+  "runtime_readiness_command": "npm run runtime:readiness",
+  "human_visual_inspection": "recorded in artifacts/unreal-operator-map-stage6-visual-verdict.json"
+}

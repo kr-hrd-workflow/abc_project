@@ -14,6 +14,45 @@ Back to [SUMO-Ready 3D Operator Map Implementation Plan](../2026-06-15-sumo-read
 
 ---
 
+### Stage 6 Execution Evidence - 2026-06-16
+
+- Execution mode: inline primary-agent implementation using Superpowers execution/TDD/verification workflows and `karpathy-guidelines`. Worker agents were not dispatched because the exposed spawn tool is constrained to explicit user subagent requests in this session.
+- Branch/worktree: started clean on `main...origin/main`, then switched to `codex/stage6-operator-map` before implementation.
+- First city and mode: `seoul`; fixture-backed renderer realism proof. Live SUMO remains open until real runtime metadata proves `simulation_source=sumo_traci`.
+- Image Gen source evidence:
+  - Original generated folder: `C:/Users/100ri/.codex/generated_images/019ecc2b-082d-7170-84c7-7e3eb35efbed/`
+  - Artifact copies: `artifacts/imagegen/stage6/operator_stage6_photoreal_target.png`, `operator_stage6_material_study.png`, `operator_stage6_road_atlas_source.png`, `operator_stage6_surface_overlays_source.png`, and `operator_stage6_imagegen_contact_sheet.png`
+  - Unreal source copies: `renderer/unreal/SmartIntersection/SourceAssets/PhotorealRoadKit/Textures/T_stage6_seoul_photoreal_target.png`, `T_stage6_seoul_material_study.png`, `T_stage6_seoul_road_atlas.png`, `T_stage6_seoul_surface_overlays.png`
+  - Prompt/path/material/consumer evidence: `renderer/unreal/SmartIntersection/SceneProfiles/operator_stage6_photoreal_profile.json`
+- Unreal-rendered proof evidence:
+  - Map: `renderer/unreal/SmartIntersection/Content/Maps/Generated/smart_intersection_rebuild_operator_stage6.umap` (`1055575` bytes in verifier output)
+  - Manifest: `renderer/unreal/SmartIntersection/GeneratedProof/smart_intersection_rebuild_operator_stage6_photoreal_manifest.json`
+  - Imported generated texture assets: `renderer/unreal/SmartIntersection/Content/PhotorealRoadKit/Textures/T_stage6_seoul_*.uasset`
+  - Generated material assets: `renderer/unreal/SmartIntersection/Content/Materials/RoadOnlyRenderer/M_seoul_stage6_seoul_*.uasset`
+  - Before proof: `artifacts/unreal-operator-map-stage6-before.png` (`1600x900`, `909510` bytes, mean `152.48`, stddev `84.15`)
+  - After proof: `artifacts/unreal-operator-map-stage6-photoreal-proof.png` (`1600x900`, `878893` bytes, mean `96.42`, stddev `94.18`)
+  - Contact sheet: `artifacts/unreal-operator-map-stage6-before-after-contact-sheet.png` (`3200x900`, `1900442` bytes, mean `124.45`, stddev `93.60`)
+  - Human visual verdict: `artifacts/unreal-operator-map-stage6-visual-verdict.json`
+- Visual inspection result: approved after a second iteration. The first after-frame used the generated road atlas too broadly and read as tile patches; the accepted version uses photoreal asphalt as the dominant road material while generated road-atlas/material-study/overlay sources remain visibly applied through Unreal material and decal-like actors.
+- Focused validation:
+  - `npm run unreal:precheck` passed before implementation.
+  - `npm run verify:operator-map-stage1` -> `SUMO_READY_OPERATOR_STAGE1_PASS`
+  - `npm run verify:operator-map-stage2` -> `SUMO_READY_OPERATOR_STAGE2_PASS`
+  - `npm run verify:operator-map-stage3` -> `SUMO_READY_OPERATOR_STAGE3_PASS`
+  - `npm run verify:operator-map-stage4` -> `SUMO_READY_OPERATOR_STAGE4_PASS`
+  - `npm run verify:operator-map-stage5` -> `SUMO_READY_OPERATOR_STAGE5_PASS`
+  - `npm run verify:operator-map-stage6` -> `SUMO_READY_OPERATOR_STAGE6_PASS`
+  - `npm run unreal:runtime-smoke` -> `RUNTIME_SNAPSHOT_SMOKE_ARTIFACT=C:\Users\100ri\abc_project\artifacts\unreal-runtime-snapshot-smoke.json`
+  - `npm run unreal:http-smoke` -> `HTTP_SNAPSHOT_SMOKE_ARTIFACT=C:\Users\100ri\abc_project\artifacts\unreal-http-snapshot-smoke.json`
+  - Bundled simulator checks passed: `SIMULATOR_BUILDER_AGENT_PASS`, `SOURCE_CHECK_PASS`, `LANDING_CHECK_PASS`, `MAP_CHECK_PASS`, `RENDERER_SNAPSHOT_VISUAL_LAYER_CHECK_PASS`, `RENDERER_SNAPSHOT_CAPTURE_VIEW_CHECK_PASS`, `FASTAPI_RENDERER_SNAPSHOT_CHECK_PASS`, `UNREAL_RUNTIME_SMOKE_ARTIFACTS_CHECK_PASS`, `UNREAL_HTTP_SMOKE_ARTIFACTS_CHECK_PASS`
+  - `git diff --check` passed with CRLF warnings only.
+- Runtime readiness evidence: `npm run runtime:readiness` still reports `vision ready=False mode=fixture`, `simulation ready=False mode=fixture`, `openai ready=False mode=gpt-5.5`, and `pgvector ready=False mode=database`. Missing live gates include `cv2`, `ultralytics`, `models/yolov8n.pt`, `traci`, `sumolib`, `sumo`, `netconvert`, `openai`, `OPENAI_API_KEY`, `pgvector`, and PostgreSQL vector extension.
+- Repo-wide validation: `npm run verify` passed after Stage 6 implementation: API tests `71 passed`, web tests `47 passed`, Next.js build passed, and `git diff --check` passed.
+- Local artifact and secret scan:
+  - `git status --short -- .env.local apps/web/.env.local tmp renderer/unreal/SmartIntersection/Saved renderer/unreal/SmartIntersection/Intermediate` output was empty.
+  - Secret grep found only expected policy, test, UI-label, and verifier guard strings. No active UE `SecurityToken=`, Pixel Streaming security token, RSA/private key, or real credential value remains in the changed config/runtime files.
+  - Unreal generated `SecurityToken=` during editor runs; each generated token line was removed before validation.
+
 ### Stage 6 Answer To "Is Reference Enough?"
 
 No. Reference alone is not enough.
@@ -52,7 +91,7 @@ Stage 6 does **not**:
 
 - claim live SUMO/TraCI unless a real local `sumo_traci` run proves `simulation_source=sumo_traci`
 - change the simulation truth source, FastAPI snapshot contract, or controller authority boundary
-- expand to all cities; Stage 7 owns multi-city rollout
+- expand to all cities; Stage 8 owns multi-city rollout
 - modify landing-page imagery, landing layout, or marketing sections
 - use Image Gen plates as traffic-zone proof cards, proof strips, plinths, or dominant backplates
 - treat a generated texture or atlas as proof before it is applied to Unreal geometry/materials and captured in the operator viewport
@@ -65,7 +104,7 @@ Stage 6 is large enough that the primary agent should not implement it alone whe
 
 Use one worker owner per scope:
 
-- **Worker A, image-derived texture source owner:** Task 28 only. Own `artifacts/imagegen/sumo-ready-operator-map-stage6-*`, any prompt/source notes added to this plan, and any `renderer/unreal/SmartIntersection/SourceAssets/PhotorealRoadKit/Textures/T_stage6_seoul_*` source files. Do not edit Unreal generation code.
+- **Worker A, image-derived texture source owner:** Task 28 only. Own `artifacts/imagegen/stage6/operator_stage6_*`, any prompt/source notes added to this plan, and any `renderer/unreal/SmartIntersection/SourceAssets/PhotorealRoadKit/Textures/T_stage6_seoul_*` source files. Do not edit Unreal generation code.
 - **Worker B, Unreal photoreal integration owner:** Tasks 29-31. Own `generate_road_intersection.py`, `operator_stage6_photoreal_profile.json`, Stage 6 manifest creation, and material/geometry/camera/post-process wiring. Do not edit dashboard files or FastAPI snapshot contracts.
 - **Worker C, capture and verifier owner:** Tasks 30, 32, and 33 after Worker B has a manifest shape. Own `capture_operator_map_stage6.py`, `capture-unreal-operator-map-stage6.ps1`, `verify-sumo-ready-operator-map-stage6.py`, package script aliases, and visual-verdict JSON shape.
 - **Reviewer D, spec-compliance reviewer:** Review Stage 6 diffs against this plan, especially the rule that Image Gen-derived sources are allowed as material/decal/atlas inputs but are not completion evidence alone.
@@ -114,14 +153,15 @@ Primary-agent responsibilities:
 
 **Generated proof artifacts:**
 
-- `artifacts/imagegen/sumo-ready-operator-map-stage6-photoreal-target.png`
-- `artifacts/imagegen/sumo-ready-operator-map-stage6-material-study.png`
-- `artifacts/imagegen/sumo-ready-operator-map-stage6-road-atlas-source.png`
-- `artifacts/imagegen/sumo-ready-operator-map-stage6-surface-overlays-source.png`
+- `artifacts/imagegen/stage6/operator_stage6_photoreal_target.png`
+- `artifacts/imagegen/stage6/operator_stage6_material_study.png`
+- `artifacts/imagegen/stage6/operator_stage6_road_atlas_source.png`
+- `artifacts/imagegen/stage6/operator_stage6_surface_overlays_source.png`
+- `artifacts/imagegen/stage6/operator_stage6_imagegen_contact_sheet.png`
 - `renderer/unreal/SmartIntersection/SourceAssets/PhotorealRoadKit/Textures/T_stage6_seoul_*`
 - `artifacts/unreal-operator-map-stage6-before.png`
 - `artifacts/unreal-operator-map-stage6-photoreal-proof.png`
-- `artifacts/unreal-operator-map-stage6-contact-sheet.png`
+- `artifacts/unreal-operator-map-stage6-before-after-contact-sheet.png`
 - `artifacts/unreal-operator-map-stage6-visual-verdict.json`
 
 ### Task 27: Baseline And Realism Target Lock
@@ -132,7 +172,7 @@ Primary-agent responsibilities:
 - Read: `PhotorealRoadKit` manifest and existing photoreal verifiers
 - Validate: Stage 1-5 checks and current photoreal asset state
 
-- [ ] **Step 1: Confirm branch, cleanliness, and Stage 5 status**
+- [x] **Step 1: Confirm branch, cleanliness, and Stage 5 status**
 
 Run:
 
@@ -149,7 +189,7 @@ npm run runtime:readiness
 
 Expected: Stage 1-5 are green before Stage 6 starts. If Stage 5 is not implemented yet, stop and run Stage 5 first. If runtime readiness still reports fixture mode, record that Stage 6 is a fixture/renderer visual proof and leave live SUMO open.
 
-- [ ] **Step 2: Run current photoreal asset checks**
+- [x] **Step 2: Run current photoreal asset checks**
 
 Run:
 
@@ -161,7 +201,7 @@ python3 scripts/verify-road-proof-capture-readability.py
 
 Expected: existing road photoreal proof checks either pass or produce exact blockers that Stage 6 must address. Do not skip these checks because Stage 6 is operator-map-specific.
 
-- [ ] **Step 3: Lock the first-city target**
+- [x] **Step 3: Lock the first-city target**
 
 Record in this file:
 
@@ -181,14 +221,14 @@ Expected: the visual target is explicit before any materials, lights, or camera 
 
 **Files:**
 
-- Create: `artifacts/imagegen/sumo-ready-operator-map-stage6-photoreal-target.png`
-- Create: `artifacts/imagegen/sumo-ready-operator-map-stage6-material-study.png`
-- Create: `artifacts/imagegen/sumo-ready-operator-map-stage6-road-atlas-source.png`
-- Create: `artifacts/imagegen/sumo-ready-operator-map-stage6-surface-overlays-source.png`
+- Create: `artifacts/imagegen/stage6/operator_stage6_photoreal_target.png`
+- Create: `artifacts/imagegen/stage6/operator_stage6_material_study.png`
+- Create: `artifacts/imagegen/stage6/operator_stage6_road_atlas_source.png`
+- Create: `artifacts/imagegen/stage6/operator_stage6_surface_overlays_source.png`
 - Create if used in Unreal source assets: `renderer/unreal/SmartIntersection/SourceAssets/PhotorealRoadKit/Textures/T_stage6_seoul_*`
 - Update: this Stage 6 plan with selected reference paths, texture-source paths, prompt text, and usage notes
 
-- [ ] **Step 1: Generate the operator-view reference plate with `imagegen`**
+- [x] **Step 1: Generate the operator-view reference plate with `imagegen`**
 
 Use the built-in image generation path unless the user explicitly asks for CLI/API mode.
 
@@ -208,7 +248,7 @@ Avoid: stylized game art, miniature toy look, empty roads, excessive motion blur
 
 Expected: a reference image that establishes what "real" means for the first-city operator view. It is not imported into the traffic-reading zone as a proof card.
 
-- [ ] **Step 2: Generate or select material-study source imagery**
+- [x] **Step 2: Generate or select material-study source imagery**
 
 Prompt:
 
@@ -225,7 +265,7 @@ Constraints: no text, no logos, no watermark, no stylized texture sheet grid, no
 
 Expected: source imagery helps author Unreal material instances, decals, roughness, and normal detail. It may become a Stage 6 source texture only after it is saved in the workspace, named, recorded with prompt evidence, and connected through Unreal material/decal/mesh usage rather than displayed as a flat proof card.
 
-- [ ] **Step 3: Generate road-atlas and overlay sources**
+- [x] **Step 3: Generate road-atlas and overlay sources**
 
 Generate one or two image-derived texture source assets. These are not UI mockups and not proof screenshots; they are source plates for Unreal material/decal work.
 
@@ -259,7 +299,7 @@ Avoid: obvious collage borders, synthetic brush strokes, neon colors, decorative
 
 Expected: selected atlas/overlay files can be cropped or assigned into Unreal material instances, decals, or mesh UVs. They do not count as Stage 6 completion until the Unreal-rendered operator proof shows them in context.
 
-- [ ] **Step 4: Record reference and source limits**
+- [x] **Step 4: Record reference and source limits**
 
 Add a short evidence block:
 
@@ -289,7 +329,7 @@ Expected: every future Stage 6 change can be compared to concrete visual and tex
 - Read/modify: `renderer/unreal/SmartIntersection/Content/Python/generate_road_intersection.py`
 - Create: `renderer/unreal/SmartIntersection/SceneProfiles/operator_stage6_photoreal_profile.json`
 
-- [ ] **Step 1: Inventory reusable realism assets**
+- [x] **Step 1: Inventory reusable realism assets**
 
 Run:
 
@@ -299,13 +339,13 @@ git ls-files renderer/unreal/SmartIntersection/SourceAssets/PhotorealRoadKit ren
 
 Expected: identify existing asphalt, marking, curb, signal, streetlight, railing, storefront, vehicle, wet reflection, grime, and crack assets before adding new ones.
 
-- [ ] **Step 2: Create the Stage 6 photoreal profile**
+- [x] **Step 2: Create the Stage 6 photoreal profile**
 
 Create `operator_stage6_photoreal_profile.json`:
 
 ```json
 {
-  "schema": "operator-stage6-photoreal-profile-v1",
+  "schema": "operator-stage6-photoreal-seoul-profile-v1",
   "city": "seoul",
   "base_stage": "OperatorStage5",
   "renderer_policy": "SUMO/TraCI is truth, FastAPI orchestrates, Unreal renders. Photoreal assets are visual only.",
@@ -313,8 +353,10 @@ Create `operator_stage6_photoreal_profile.json`:
   "texture_source_policy": "Generated image sources may be used as material, decal, mask, or atlas inputs only after prompt/path evidence is recorded and the source is applied through Unreal materials or mesh UVs. Do not use them as dominant traffic-zone proof cards.",
   "required_actor_tags": [
     "OperatorStage6",
-    "Stage6Photoreal",
-    "SUMOReadyPhotorealSurface",
+    "SUMOReadyOperatorMapPhotoreal",
+    "Stage6PhotorealSurface",
+    "Stage6GeneratedTextureApplied",
+    "Stage6DecalAtlasApplied",
     "NoImageCardTrafficZone",
     "Stage4ReadableRuntimeState"
   ],
@@ -328,9 +370,9 @@ Create `operator_stage6_photoreal_profile.json`:
     "grime_overlay"
   ],
   "generated_texture_sources": [
-    "stage6_seoul_road_atlas_source",
-    "stage6_seoul_surface_overlays_source",
-    "stage6_seoul_material_study_source"
+    "stage6_seoul_road_atlas",
+    "stage6_seoul_surface_overlays",
+    "stage6_seoul_material_study"
   ],
   "readability_requirements": [
     "lanes_readable",
@@ -344,7 +386,7 @@ Create `operator_stage6_photoreal_profile.json`:
 
 Expected: the profile gives verifiers a stable contract without changing simulation truth.
 
-- [ ] **Step 3: Allow texture sources, reject traffic-zone image cards**
+- [x] **Step 3: Allow texture sources, reject traffic-zone image cards**
 
 Audit new Stage 6 additions against these rules:
 
@@ -367,7 +409,7 @@ Expected: Stage 6 realism can use generated image-derived material sources, but 
 - Modify: `package.json`
 - Create: `renderer/unreal/SmartIntersection/GeneratedProof/smart_intersection_rebuild_operator_stage6_photoreal_manifest.json`
 
-- [ ] **Step 1: Add generation and capture commands**
+- [x] **Step 1: Add generation and capture commands**
 
 Add package scripts:
 
@@ -379,7 +421,7 @@ Add package scripts:
 
 Expected: Stage 6 can be generated, captured, and verified independently.
 
-- [ ] **Step 2: Add `OperatorStage6` generation mode**
+- [x] **Step 2: Add `OperatorStage6` generation mode**
 
 Extend the generator so `-OperatorStage6`:
 
@@ -387,20 +429,20 @@ Extend the generator so `-OperatorStage6`:
 - imports or references Stage 6 generated texture/decal/atlas sources through `PhotorealRoadKit` or `T_stage6_seoul_*` source assets
 - applies Stage 6 photoreal material instances, decals, mesh UV textures, and geometry layers
 - preserves all Stage 3 actor labels used by Stage 4 snapshot binding
-- adds `OperatorStage6`, `Stage6Photoreal`, `SUMOReadyPhotorealSurface`, `NoImageCardTrafficZone`, and `Stage4ReadableRuntimeState` tokens to the map/manifest
+- adds `OperatorStage6`, `SUMOReadyOperatorMapPhotoreal`, `Stage6PhotorealSurface`, `Stage6GeneratedTextureApplied`, `Stage6DecalAtlasApplied`, `NoImageCardTrafficZone`, and `Stage4ReadableRuntimeState` tokens to the map/manifest
 - records each generated texture source path, target material, and consuming actor/decal in the Stage 6 manifest
 - writes `smart_intersection_rebuild_operator_stage6_photoreal_manifest.json`
 
 Expected: the same traffic state can still bind through `ATrafficSimulationController`, but the viewport looks materially richer.
 
-- [ ] **Step 3: Capture before/after proof**
+- [x] **Step 3: Capture before/after proof**
 
 Create capture automation that writes:
 
 ```text
 artifacts/unreal-operator-map-stage6-before.png
 artifacts/unreal-operator-map-stage6-photoreal-proof.png
-artifacts/unreal-operator-map-stage6-contact-sheet.png
+artifacts/unreal-operator-map-stage6-before-after-contact-sheet.png
 ```
 
 Expected: the before capture uses the accepted Stage 5/Stage 4 visual baseline, and the after capture uses the same camera framing so realism changes are comparable.
@@ -415,7 +457,7 @@ Expected: the before capture uses the accepted Stage 5/Stage 4 visual baseline, 
 - Read: `docs/technotes/ue57-doc-digest/post_process.txt`
 - Read: `docs/technotes/ue57-doc-digest/cinematic_cameras.txt`
 
-- [ ] **Step 1: Add physically plausible lighting**
+- [x] **Step 1: Add physically plausible lighting**
 
 Use:
 
@@ -426,7 +468,7 @@ Use:
 
 Expected: the scene has realistic grounding and shadow contact without losing lane readability.
 
-- [ ] **Step 2: Add operator-camera post-process**
+- [x] **Step 2: Add operator-camera post-process**
 
 Use an unbound PostProcessVolume or camera settings to stabilize:
 
@@ -439,7 +481,7 @@ Use an unbound PostProcessVolume or camera settings to stabilize:
 
 Expected: proof looks like a real fixed traffic-operations camera, not a cinematic hero shot or a stylized game render.
 
-- [ ] **Step 3: Preserve simulation-state readability**
+- [x] **Step 3: Preserve simulation-state readability**
 
 Reject any visual tuning that makes these unreadable:
 
@@ -457,10 +499,10 @@ Expected: photorealism improves trust without hiding the simulation state.
 
 - Inspect: `artifacts/unreal-operator-map-stage6-before.png`
 - Inspect: `artifacts/unreal-operator-map-stage6-photoreal-proof.png`
-- Inspect: `artifacts/unreal-operator-map-stage6-contact-sheet.png`
+- Inspect: `artifacts/unreal-operator-map-stage6-before-after-contact-sheet.png`
 - Create: `artifacts/unreal-operator-map-stage6-visual-verdict.json`
 
-- [ ] **Step 1: Perform human visual inspection**
+- [x] **Step 1: Perform human visual inspection**
 
 Reject Stage 6 proof if any condition is true:
 
@@ -474,13 +516,13 @@ Reject Stage 6 proof if any condition is true:
 
 Expected: a human can say the Unreal proof plausibly resembles a real traffic-camera/operator view.
 
-- [ ] **Step 2: Write visual verdict JSON**
+- [x] **Step 2: Write visual verdict JSON**
 
 Create:
 
 ```json
 {
-  "schema": "operator-stage6-photoreal-visual-verdict-v1",
+  "schema": "operator-stage6-human-visual-verdict-v1",
   "city": "seoul",
   "mode": "OperatorStage6",
   "reference_is_completion_evidence": false,
@@ -489,11 +531,11 @@ Create:
   "proof_paths": {
     "before": "artifacts/unreal-operator-map-stage6-before.png",
     "after": "artifacts/unreal-operator-map-stage6-photoreal-proof.png",
-    "contact_sheet": "artifacts/unreal-operator-map-stage6-contact-sheet.png"
+    "contact_sheet": "artifacts/unreal-operator-map-stage6-before-after-contact-sheet.png"
   },
   "generated_texture_sources": [
-    "artifacts/imagegen/sumo-ready-operator-map-stage6-road-atlas-source.png",
-    "artifacts/imagegen/sumo-ready-operator-map-stage6-surface-overlays-source.png"
+    "artifacts/imagegen/stage6/operator_stage6_road_atlas_source.png",
+    "artifacts/imagegen/stage6/operator_stage6_surface_overlays_source.png"
   ],
   "visual_checks": {
     "photoreal_materials": "pass_or_fail",
@@ -517,20 +559,20 @@ Expected: the verifier can read the JSON and fail if visual verdict remains unre
 - Read: `scripts/verify-sumo-ready-operator-map-stage4.py`
 - Read: `scripts/verify-road-photoreal-fidelity.py`
 
-- [ ] **Step 1: Verify Stage 6 source tokens**
+- [x] **Step 1: Verify Stage 6 source tokens**
 
 The verifier should check:
 
 - `operator_stage6_photoreal_profile.json` exists and names `seoul`
 - Stage 6 manifest exists and says photoreal assets are visual only
 - Stage 6 manifest records any generated texture/decal/atlas source paths, prompts or prompt-file references, and consuming Unreal materials/actors
-- Stage 6 map or manifest includes `OperatorStage6`, `Stage6Photoreal`, `SUMOReadyPhotorealSurface`, `NoImageCardTrafficZone`, and `Stage4ReadableRuntimeState`
+- Stage 6 map or manifest includes `OperatorStage6`, `SUMOReadyOperatorMapPhotoreal`, `Stage6PhotorealSurface`, `Stage6GeneratedTextureApplied`, `Stage6DecalAtlasApplied`, `NoImageCardTrafficZone`, and `Stage4ReadableRuntimeState`
 - `package.json` contains `verify:operator-map-stage1` through `verify:operator-map-stage6`
 - `scripts/verify-road-photoreal-fidelity.py` still exists
 
 Expected: verifier fails if Stage 6 is only a reference image, only loose generated textures, only a dashboard screenshot, or only a road-only beauty pass.
 
-- [ ] **Step 2: Verify proof images and verdict JSON**
+- [x] **Step 2: Verify proof images and verdict JSON**
 
 The verifier should check:
 
@@ -555,7 +597,7 @@ SUMO_READY_OPERATOR_STAGE6_PASS
 
 - Validate: Stage 1-6 verifiers, photoreal scripts, renderer smoke scripts, proof artifacts, generated manifest, this plan
 
-- [ ] **Step 1: Run focused checks**
+- [x] **Step 1: Run focused checks**
 
 Run:
 
@@ -578,7 +620,7 @@ git diff --check
 
 Expected: focused checks pass. If live SUMO remains missing, Stage 6 may still pass as a fixture-backed renderer realism proof, but live SUMO remains explicitly open.
 
-- [ ] **Step 2: Run full repo validation**
+- [x] **Step 2: Run full repo validation**
 
 Run:
 
@@ -588,7 +630,7 @@ npm run verify
 
 Expected: API tests, web tests, web build, and `git diff --check` pass.
 
-- [ ] **Step 3: Run final local-artifact and secret scan**
+- [x] **Step 3: Run final local-artifact and secret scan**
 
 Run:
 

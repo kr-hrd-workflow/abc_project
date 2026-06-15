@@ -98,9 +98,19 @@ Make the first streamed operator viewport look like reality while preserving tra
 
 Reference or generated texture files alone are not enough for Stage 6 success. Success means the Unreal-rendered scene itself uses those sources through materials/decals/meshes, looks plausibly real under human inspection, and still passes Stage 1/2/3/4/5 readability and runtime boundaries.
 
-### Stage 7: Multi-City Expansion
+### Stage 7: Production Photoreal Operator View
 
-After Stage 1-6 pass on one map:
+After Stage 6 proves that image-derived sources can be applied in the Unreal operator viewport, rebuild the Seoul viewport as a production-quality photoreal scene rather than a procedural proof scene:
+
+- replace cube/plane-looking road, curb, sidewalk, signal, vehicle, and street-furniture geometry with believable mesh assets or purpose-built procedural mesh assets
+- use proper UVs, layered PBR materials, decals, trim sheets, roughness/specular tuning, contact shadows, reflections, and camera/post-process to make the Unreal proof look like a real traffic-camera/operator frame
+- keep the Stage 1-6 semantic readability and SUMO/FastAPI/Unreal/Pixel Streaming boundaries unchanged
+- iterate on Unreal-rendered before/after captures until human visual inspection says the result is photorealistic enough, not merely improved
+- produce a new `SUMO_READY_OPERATOR_STAGE7_PASS` verifier and exact proof evidence
+
+### Stage 8: Multi-City Expansion
+
+After Stage 1-7 pass on one production-quality Seoul map:
 
 - expand profiles to Seoul, New York, Paris, and London
 - keep shared SUMO lane semantics stable
@@ -117,6 +127,7 @@ The original plan grew large enough to make retrieval and review noisy. Detailed
 - [Stage 4: SUMO/TraCI Motion Binding](2026-06-15-sumo-ready-3d-operator-map/stage-4-sumo-traci-motion-binding.md)
 - [Stage 5: Pixel Streaming And Dashboard Integration](2026-06-15-sumo-ready-3d-operator-map/stage-5-pixel-streaming-dashboard.md)
 - [Stage 6: Photoreal First-City Realism Pass](2026-06-15-sumo-ready-3d-operator-map/stage-6-photoreal-first-city.md)
+- [Stage 7: Production Photoreal Operator View](2026-06-15-sumo-ready-3d-operator-map/stage-7-production-photoreal-operator-view.md)
 
 ## Execution Policy
 
@@ -130,8 +141,9 @@ For actual Stage 5+ implementation work, use subagents when the current tool sur
 - Stage 4 fixture mode is implemented and verified with `SUMO_READY_OPERATOR_STAGE4_PASS`.
 - Live SUMO/TraCI remains open until `traci`, `sumolib`, `sumo`, `netconvert`, a real SUMO config, and `SUMO_SIMULATION_MODE=sumo_traci` are available and a local run produces `simulation_source=sumo_traci`.
 - Stage 5 Pixel Streaming plus dashboard proof is implemented and verified with `SUMO_READY_OPERATOR_STAGE5_PASS` for the Stage 4 fixture-backed operator viewport. The exact `npm run launch:local` path remains blocked by local Docker/WSL availability, so browser proof used manually started local API/web surfaces; Stage 5 still must not claim live SUMO or real traffic-control authority.
-- Stage 6 is the next planned slice: the photoreal first-city realism pass after Stage 5. It may use Image Gen-derived texture/decal/atlas sources, but it must make the Unreal-rendered operator viewport itself look real; reference images or generated textures alone are not completion evidence.
-- Stage 7 remains future multi-city expansion after Stage 6 passes on one map.
+- Stage 6 is implemented and verified with `SUMO_READY_OPERATOR_STAGE6_PASS` on the fixture-backed Seoul operator viewport.
+- Stage 7 is the next planned slice: production photoreal rebuild of the Seoul operator viewport. It must make the Unreal-rendered proof itself look photo-realistic to human inspection while preserving Stage 1-6 readability and simulation boundaries.
+- Stage 8 remains future multi-city expansion after Stage 7 passes on one production-quality Seoul map.
 
 ## Cookbook Goal Source
 
