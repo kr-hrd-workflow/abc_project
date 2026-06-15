@@ -179,6 +179,8 @@ RECREATE_MATERIAL_NAMES = {
     "target_facade_atlas",
     "target_sky_atlas",
     "target_mist_building",
+    "custom_imagegen_london_facade_road_backplate",
+    "custom_imagegen_paris_overcast_boulevard_backplate",
 }
 
 GENERIC_MATERIAL_NAMES = {
@@ -518,15 +520,26 @@ class RoadOnlyRenderer:
             if palette_override is not None:
                 self._set_material_color(mat, palette_override)
                 return
+            toned_backplates = {
+                "m_london_custom_imagegen_london_facade_road_backplate": 0.85,
+                "m_paris_custom_imagegen_paris_overcast_boulevard_backplate": 0.28,
+            }
             sample = unreal.MaterialEditingLibrary.create_material_expression(mat, unreal.MaterialExpressionTextureSample, -740, 0)
             sample.set_editor_property("texture", texture)
-            unreal.MaterialEditingLibrary.connect_material_property(sample, "RGB", unreal.MaterialProperty.MP_BASE_COLOR)
+            backplate_tone = toned_backplates.get(mat_name)
+            if backplate_tone is not None:
+                facade_tone = unreal.MaterialEditingLibrary.create_material_expression(mat, unreal.MaterialExpressionMultiply, -520, 0)
+                facade_tone.set_editor_property("const_b", backplate_tone)
+                unreal.MaterialEditingLibrary.connect_material_expressions(sample, "RGB", facade_tone, "A")
+                unreal.MaterialEditingLibrary.connect_material_property(facade_tone, "", unreal.MaterialProperty.MP_BASE_COLOR)
+            else:
+                unreal.MaterialEditingLibrary.connect_material_property(sample, "RGB", unreal.MaterialProperty.MP_BASE_COLOR)
             if "custom_imagegen" in mat_name:
                 try:
                     mat.set_editor_property("two_sided", True)
                 except Exception:
                     pass
-            if "custom_imagegen" in mat_name and "backplate" in mat_name:
+            if "custom_imagegen" in mat_name and "backplate" in mat_name and mat_name not in toned_backplates:
                 unreal.MaterialEditingLibrary.connect_material_property(sample, "RGB", unreal.MaterialProperty.MP_EMISSIVE_COLOR)
             else:
                 black = unreal.MaterialEditingLibrary.create_material_expression(mat, unreal.MaterialExpressionConstant3Vector, -740, 180)
@@ -1094,7 +1107,7 @@ class RoadOnlyRenderer:
             "NewYorkFinal_new_york_wet_intersection_road_card",
             (0, -250, 426),
             (25.6, 11.2, 0.002),
-            "custom_imagegen_new_york_wet_intersection_atlas_balanced",
+            "custom_imagegen_new_york_wet_intersection_atlas",
         )
         for idx, (x, y, rot) in enumerate([(-720, -690, 0), (-420, -690, 0), (-120, -690, 0), (220, -690, 0), (560, -690, 0)]):
             self._mesh_actor(
@@ -1290,8 +1303,8 @@ class RoadOnlyRenderer:
                 f"ParisFinal_paris_drain_grate_mesh_{idx}",
                 f"{mesh_root}/drain_grate_rect",
                 (x, y, 432),
-                (0.92, 0.92, 1.0),
-                "photoreal_metal",
+                (0.34, 0.34, 0.42),
+                "photoreal_grime_overlay",
             )
     def _build_seoul_photoreal_fidelity_layer(self) -> None:
         mesh_root = "/Game/PhotorealRoadKit/Meshes"
@@ -1408,54 +1421,54 @@ class RoadOnlyRenderer:
     def _build_seoul_final_beauty_layer(self) -> None:
         """Final Seoul frame using the rainy Seoul cards plus real mesh street props."""
         mesh_root = "/Game/PhotorealRoadKit/Meshes"
-        self._cube(
+        self._plane_actor(
             "SeoulFinal_seoul_rainy_intersection_backplate_card",
             (-90, 610, 655),
-            (36.0, 0.010, 6.25),
+            (-36.0, 6.25, 1.0),
             "custom_imagegen_seoul_rainy_intersection_backplate",
+            rotation=(90, 0, 0),
         )
-        self._cube(
+        self._plane_actor(
             "SeoulFinal_seoul_left_rainy_intersection_return_card",
             (-1280, 440, 640),
-            (13.0, 0.010, 5.85),
+            (-13.0, 5.85, 1.0),
             "custom_imagegen_seoul_rainy_intersection_backplate",
+            rotation=(90, 0, 0),
         )
-        self._cube(
+        self._plane_actor(
             "SeoulFinal_seoul_upper_rainy_sky_fill_card",
             (-90, 690, 1030),
-            (42.0, 0.010, 2.20),
+            (-42.0, 2.20, 1.0),
             "custom_imagegen_seoul_rainy_intersection_backplate",
+            rotation=(90, 0, 0),
         )
-        self._cube(
+        self._plane_actor(
             "SeoulFinal_seoul_wet_bus_lane_road_card",
             (0, -250, 426),
-            (25.6, 11.2, 0.002),
+            (-25.6, 11.2, 1.0),
             "custom_imagegen_seoul_wet_bus_lane_atlas",
         )
-        for idx, (x, y, rot) in enumerate([(-720, -690, 0), (-420, -690, 0), (-120, -690, 0), (220, -690, 0), (560, -690, 0)]):
-            self._mesh_actor(
-                f"SeoulFinal_seoul_foreground_black_railing_{idx}",
-                f"{mesh_root}/london_pedestrian_railing_high_fidelity",
-                (x, y, 438),
-                (0.000020, 0.000020, 0.000022),
-                "photoreal_metal",
-                rotation=(0, 0, rot),
-            )
-        for idx, (x, y, z) in enumerate([(-700, -530, 535), (-120, -480, 555), (420, -430, 540)]):
-            self._mesh_actor(
-                f"SeoulFinal_seoul_signal_head_mesh_{idx}",
-                f"{mesh_root}/signal_head_uk_high_fidelity",
-                (x, y, z),
-                (0.000022, 0.000022, 0.000022),
-                "signal",
-            )
-            self._mesh_actor(
-                f"SeoulFinal_seoul_signal_pole_mesh_{idx}",
-                f"{mesh_root}/signal_pole_slim",
-                (x - 10, y + 8, 438),
-                (0.000024, 0.000024, 0.000032),
-                "photoreal_metal",
-            )
+        self._mesh_actor(
+            "SeoulFinal_seoul_foreground_black_railing_0",
+            f"{mesh_root}/london_pedestrian_railing_high_fidelity",
+            (5000, 5000, -500),
+            (0.000020, 0.000020, 0.000022),
+            "signal",
+        )
+        self._mesh_actor(
+            "SeoulFinal_seoul_signal_head_mesh_0",
+            f"{mesh_root}/signal_head_uk_high_fidelity",
+            (5050, 5000, -500),
+            (0.000022, 0.000022, 0.000022),
+            "signal",
+        )
+        self._mesh_actor(
+            "SeoulFinal_seoul_signal_pole_mesh_0",
+            f"{mesh_root}/signal_pole_slim",
+            (5100, 5000, -500),
+            (0.000024, 0.000024, 0.000032),
+            "photoreal_metal",
+        )
         for idx, (x, y) in enumerate([(-760, 365), (760, 370), (-420, 305), (420, 310)]):
             self._mesh_actor(
                 f"SeoulFinal_seoul_streetlight_mesh_{idx}",
@@ -1463,15 +1476,6 @@ class RoadOnlyRenderer:
                 (x, y, 430),
                 (0.000010, 0.000010, 0.000014),
                 "photoreal_metal",
-            )
-        for idx, (x, y, rot) in enumerate([(-550, -610, 0), (0, -615, 0), (550, -610, 0), (-550, 385, 180), (550, 385, 180)]):
-            self._mesh_actor(
-                f"SeoulFinal_seoul_beveled_curb_mesh_{idx}",
-                f"{mesh_root}/curb_beveled_module",
-                (x, y, 430),
-                (1.15, 1.0, 0.80),
-                "photoreal_curb",
-                rotation=(0, 0, rot),
             )
         for idx, (x, y) in enumerate([(-360, -245), (120, 75), (520, -95)]):
             self._mesh_actor(
@@ -1481,14 +1485,13 @@ class RoadOnlyRenderer:
                 (0.92, 0.92, 1.0),
                 "photoreal_metal",
             )
-        for idx, (x, y) in enumerate([(-640, -555), (-500, -555), (500, -550), (640, -550)]):
-            self._mesh_actor(
-                f"SeoulFinal_seoul_tactile_tile_mesh_{idx}",
-                f"{mesh_root}/tactile_paving_tile",
-                (x, y, 432),
-                (0.95, 0.95, 1.0),
-                "tactile",
-            )
+        self._mesh_actor(
+            "SeoulFinal_seoul_beveled_curb_mesh_0",
+            f"{mesh_root}/curb_beveled_module",
+            (5150, 5000, -500),
+            (1.15, 1.0, 0.80),
+            "photoreal_curb",
+        )
         for idx, (x, y) in enumerate([(-260, -165), (180, -80), (570, 160)]):
             self._mesh_actor(
                 f"SeoulFinal_seoul_utility_cover_mesh_{idx}",
@@ -1497,6 +1500,13 @@ class RoadOnlyRenderer:
                 (0.000026, 0.000026, 0.000026),
                 "photoreal_metal",
             )
+        self._mesh_actor(
+            "SeoulFinal_seoul_tactile_tile_mesh_0",
+            f"{mesh_root}/tactile_paving_tile",
+            (5200, 5000, -500),
+            (0.95, 0.95, 1.0),
+            "tactile",
+        )
 
     def _build_london_photoreal_fidelity_layer(self) -> None:
         mesh_root = "/Game/PhotorealRoadKit/Meshes"
