@@ -92,6 +92,15 @@ MATERIAL_COLORS = {
     "target_wet_asphalt_dark": (0.165, 0.180, 0.182, 1.0),
     "custom_imagegen_seoul_wet_bus_lane_atlas": (0.25, 0.26, 0.25, 1.0),
     "custom_imagegen_seoul_rainy_intersection_backplate": (0.46, 0.49, 0.48, 1.0),
+    "operator_context_ground": (0.30, 0.34, 0.31, 1.0),
+    "operator_asphalt": (0.44, 0.47, 0.43, 1.0),
+    "operator_asphalt_patch": (0.36, 0.39, 0.36, 1.0),
+    "operator_marking_white": (0.98, 0.96, 0.84, 1.0),
+    "operator_marking_yellow": (1.00, 0.82, 0.10, 1.0),
+    "operator_sidewalk": (0.61, 0.60, 0.54, 1.0),
+    "operator_vehicle_body": (0.17, 0.19, 0.19, 1.0),
+    "operator_vehicle_glass": (0.07, 0.12, 0.15, 1.0),
+    "operator_signal_metal": (0.10, 0.11, 0.11, 1.0),
 }
 
 
@@ -203,6 +212,18 @@ GENERIC_MATERIAL_NAMES = {
     "emergency_vehicle_blue",
 }
 
+OPERATOR_STAGE1_MATERIAL_NAMES = GENERIC_MATERIAL_NAMES | {
+    "operator_context_ground",
+    "operator_asphalt",
+    "operator_asphalt_patch",
+    "operator_marking_white",
+    "operator_marking_yellow",
+    "operator_sidewalk",
+    "operator_vehicle_body",
+    "operator_vehicle_glass",
+    "operator_signal_metal",
+}
+
 SEOUL_MATERIAL_NAMES = GENERIC_MATERIAL_NAMES | {
     "photoreal_asphalt",
     "photoreal_curb",
@@ -302,6 +323,7 @@ class RoadOnlyRenderer:
         self.profile = json.loads(self.profile_path.read_text(encoding="utf-8"))
         self.city = self.profile["city"]
         self.display_name = self.profile["display_name"]
+        self.operator_stage1 = os.environ.get("SMART_INTERSECTION_OPERATOR_STAGE1") == "1"
         self.project_root = self.profile_path.parents[2]
         self.generated_dir = self.project_root / "GeneratedProof"
         self.generated_dir.mkdir(parents=True, exist_ok=True)
@@ -309,9 +331,38 @@ class RoadOnlyRenderer:
 
     @property
     def package_path(self) -> str:
+        if self.operator_stage1:
+            return "/Game/Maps/Generated/smart_intersection_rebuild"
         return f"/Game/Maps/Generated/{self.city}_RoadOnly"
 
     def build_manifest(self) -> dict:
+        if self.operator_stage1:
+            return {
+                "generator": "RoadOnlyRenderer",
+                "mode": "OperatorStage1",
+                "city": self.city,
+                "display_name": "SUMO-ready large operator intersection map",
+                "simulation_truth_source": "SUMO truth source",
+                "future_bridge": "TraCI bridge via FastAPI renderer snapshots",
+                "renderer_role": "Unreal renderer only",
+                "scope": "Stage 1 large operator map; no live SUMO motion and no real traffic-control integration",
+                "imagegen_reference": "artifacts/imagegen/sumo-ready-operator-map-stage1-reference.png",
+                "unreal_map": self.package_path,
+                "actor_evidence": [
+                    "OperatorStage1",
+                    "SUMOReadyLargeIntersection",
+                    "TrafficReadableQueueZone",
+                    "SUMOPlaceholderVehicleQueue",
+                    "QueueCapacity_40",
+                ],
+                "queue_capacity_visible": 40,
+                "traffic_readable_queue_zone": {
+                    "approaches": ["north", "south", "east", "west"],
+                    "queue_markers_per_approach": 10,
+                    "road_markings": "separate Unreal cube/decal-like geometry layers",
+                },
+                "runtime_controller": f"TrafficSimulationController SmartIntersectionRuntime {self.city}",
+            }
         return {
             "generator": "RoadOnlyRenderer",
             "city": self.city,
@@ -331,6 +382,10 @@ class RoadOnlyRenderer:
         }
 
     def write_manifest(self) -> Path:
+        if self.operator_stage1:
+            path = self.generated_dir / "smart_intersection_rebuild_operator_stage1_manifest.json"
+            path.write_text(json.dumps(self.build_manifest(), indent=2) + "\n", encoding="utf-8")
+            return path
         path = self.generated_dir / f"{self.city}_road_only_manifest.json"
         path.write_text(json.dumps(self.build_manifest(), indent=2) + "\n", encoding="utf-8")
         return path
@@ -347,6 +402,9 @@ class RoadOnlyRenderer:
         self._create_materials()
         self._build_scene()
         self._save_level()
+        if self.operator_stage1:
+            print(f"OPERATOR_STAGE1_UNREAL_GENERATED city={self.city} package={self.package_path}")
+            return
         print(f"ROAD_ONLY_UNREAL_GENERATED city={self.city} package={self.package_path}")
 
     def _import_photoreal_roadkit(self) -> None:
@@ -437,7 +495,7 @@ class RoadOnlyRenderer:
         asset_tools = unreal.AssetToolsHelpers.get_asset_tools()
         material_dir = "/Game/Materials/RoadOnlyRenderer"
         unreal.EditorAssetLibrary.make_directory(material_dir)
-        city_material_names = CITY_MATERIAL_NAMES.get(self.city)
+        city_material_names = OPERATOR_STAGE1_MATERIAL_NAMES if self.operator_stage1 else CITY_MATERIAL_NAMES.get(self.city)
         rebuilt_material_names = set()
         for name, rgba in MATERIAL_COLORS.items():
             if city_material_names is not None:
@@ -449,7 +507,8 @@ class RoadOnlyRenderer:
             asset_path = f"{material_dir}/{asset_name}"
             mat = unreal.EditorAssetLibrary.load_asset(asset_path)
             rebuilt = False
-            if mat is not None and name in RECREATE_MATERIAL_NAMES:
+            recreate_operator_material = self.operator_stage1 and name.startswith("operator_")
+            if mat is not None and ((name in RECREATE_MATERIAL_NAMES and not self.operator_stage1) or recreate_operator_material):
                 try:
                     if unreal.EditorAssetLibrary.delete_asset(asset_path):
                         mat = None
@@ -485,18 +544,30 @@ class RoadOnlyRenderer:
         try:
             if clear_expressions:
                 self._clear_material_expressions(mat)
+            def connect_constant_property(expression, property_name, property_value) -> bool:
+                for output_name in ("", "RGB"):
+                    try:
+                        if unreal.MaterialEditingLibrary.connect_material_property(expression, output_name, property_value):
+                            return True
+                    except Exception:
+                        pass
+                print(f"ROAD_ONLY_MATERIAL_CONNECT_FAILED material={mat.get_name()} property={property_name}")
+                return False
+
             color = unreal.MaterialEditingLibrary.create_material_expression(mat, unreal.MaterialExpressionConstant3Vector, -420, 0)
             color.set_editor_property("constant", unreal.LinearColor(*rgba))
-            unreal.MaterialEditingLibrary.connect_material_property(color, "RGB", unreal.MaterialProperty.MP_BASE_COLOR)
+            connect_constant_property(color, "base_color", unreal.MaterialProperty.MP_BASE_COLOR)
             # Sky and mist cards behave like atmospheric background, not road props.
             material_key = mat.get_name().lower()
-            if any(key in material_key for key in ("target_sky_atlas", "target_mist_building", "target_fog_plane_soft")):
+            if "_operator_" in material_key:
+                emissive_rgba = rgba
+            elif any(key in material_key for key in ("target_sky_atlas", "target_mist_building", "target_fog_plane_soft")):
                 emissive_rgba = rgba
             else:
                 emissive_rgba = (0.0, 0.0, 0.0, 1.0)
             black = unreal.MaterialEditingLibrary.create_material_expression(mat, unreal.MaterialExpressionConstant3Vector, -420, 180)
             black.set_editor_property("constant", unreal.LinearColor(*emissive_rgba))
-            unreal.MaterialEditingLibrary.connect_material_property(black, "RGB", unreal.MaterialProperty.MP_EMISSIVE_COLOR)
+            connect_constant_property(black, "emissive_color", unreal.MaterialProperty.MP_EMISSIVE_COLOR)
             rough = unreal.MaterialEditingLibrary.create_material_expression(mat, unreal.MaterialExpressionConstant, -420, 320)
             rough.set_editor_property("r", 0.62)
             unreal.MaterialEditingLibrary.connect_material_property(rough, "", unreal.MaterialProperty.MP_ROUGHNESS)
@@ -578,6 +649,23 @@ class RoadOnlyRenderer:
             unreal.StaticMeshActor,
             unreal.Vector(float(loc[0]), float(loc[1]), float(loc[2])),
             unreal.Rotator(0, 0, 0),
+        )
+        actor.set_actor_label(label)
+        actor.set_actor_scale3d(unreal.Vector(float(scale[0]), float(scale[1]), float(scale[2])))
+        mesh = unreal.EditorAssetLibrary.load_asset("/Engine/BasicShapes/Cube.Cube")
+        comp = actor.get_component_by_class(unreal.StaticMeshComponent)
+        if comp and mesh:
+            comp.set_static_mesh(mesh)
+            mat = self.materials.get(material_name)
+            if mat:
+                comp.set_material(0, mat)
+        return actor
+
+    def _rotated_cube(self, label: str, loc, scale, material_name: str, rotation=(0, 0, 0)):
+        actor = unreal.EditorLevelLibrary.spawn_actor_from_class(
+            unreal.StaticMeshActor,
+            unreal.Vector(float(loc[0]), float(loc[1]), float(loc[2])),
+            unreal.Rotator(float(rotation[0]), float(rotation[1]), float(rotation[2])),
         )
         actor.set_actor_label(label)
         actor.set_actor_scale3d(unreal.Vector(float(scale[0]), float(scale[1]), float(scale[2])))
@@ -877,7 +965,172 @@ class RoadOnlyRenderer:
         )
         self._tag_renderer_snapshot_actor(stream, "pixel_stream_status", stream_status)
 
+    def _spawn_operator_stage1_lane_dashes(self) -> None:
+        for y in [-640, -320, 320, 640]:
+            for idx, x in enumerate(range(-2600, 2800, 360)):
+                self._cube(f"OperatorStage1_lane_dash_east_west_{y}_{idx}", (x, y, 25), (0.72, 0.030, 0.010), "operator_marking_white")
+        for x in [-640, -320, 320, 640]:
+            for idx, y in enumerate(range(-2600, 2800, 360)):
+                self._cube(f"OperatorStage1_lane_dash_north_south_{x}_{idx}", (x, y, 26), (0.030, 0.72, 0.010), "operator_marking_white")
+        self._cube("OperatorStage1_major_double_yellow_east_west_a", (0, -55, 29), (56.0, 0.030, 0.012), "operator_marking_yellow")
+        self._cube("OperatorStage1_major_double_yellow_east_west_b", (0, 55, 30), (56.0, 0.030, 0.012), "operator_marking_yellow")
+        self._cube("OperatorStage1_major_double_yellow_north_south_a", (-55, 0, 31), (0.030, 56.0, 0.012), "operator_marking_yellow")
+        self._cube("OperatorStage1_major_double_yellow_north_south_b", (55, 0, 32), (0.030, 56.0, 0.012), "operator_marking_yellow")
+
+    def _spawn_operator_stage1_crosswalk(self, label: str, loc, orientation: str) -> None:
+        base_x, base_y, base_z = loc
+        for idx in range(-8, 9):
+            if orientation == "east_west":
+                self._cube(f"OperatorStage1_{label}_crosswalk_bar_{idx}", (base_x + idx * 82, base_y, base_z), (0.28, 1.45, 0.012), "operator_marking_white")
+            else:
+                self._cube(f"OperatorStage1_{label}_crosswalk_bar_{idx}", (base_x, base_y + idx * 82, base_z), (1.45, 0.28, 0.012), "operator_marking_white")
+
+    def _spawn_operator_stage1_arrow(self, label: str, loc, direction: str) -> None:
+        x, y, z = loc
+        if direction in {"north", "south"}:
+            sign = 1 if direction == "north" else -1
+            self._cube(f"OperatorStage1_{label}_arrow_shaft", (x, y, z), (0.055, 0.78, 0.012), "operator_marking_white")
+            self._rotated_cube(f"OperatorStage1_{label}_arrow_head_left", (x - 34, y + sign * 58, z + 1), (0.045, 0.42, 0.012), "operator_marking_white", rotation=(0, 0, 35 * sign))
+            self._rotated_cube(f"OperatorStage1_{label}_arrow_head_right", (x + 34, y + sign * 58, z + 2), (0.045, 0.42, 0.012), "operator_marking_white", rotation=(0, 0, -35 * sign))
+        else:
+            sign = 1 if direction == "east" else -1
+            self._cube(f"OperatorStage1_{label}_arrow_shaft", (x, y, z), (0.78, 0.055, 0.012), "operator_marking_white")
+            self._rotated_cube(f"OperatorStage1_{label}_arrow_head_left", (x + sign * 58, y - 34, z + 1), (0.42, 0.045, 0.012), "operator_marking_white", rotation=(0, 0, -35 * sign))
+            self._rotated_cube(f"OperatorStage1_{label}_arrow_head_right", (x + sign * 58, y + 34, z + 2), (0.42, 0.045, 0.012), "operator_marking_white", rotation=(0, 0, 35 * sign))
+
+    def _spawn_operator_stage1_signal_set(self) -> None:
+        signal_specs = [
+            ("northwest", -1080, 1080, 1),
+            ("northeast", 1080, 1080, -1),
+            ("southwest", -1080, -1080, 1),
+            ("southeast", 1080, -1080, -1),
+        ]
+        for label, x, y, arm_sign in signal_specs:
+            self._cube(f"OperatorStage1_signal_pole_{label}", (x, y, 210), (0.060, 0.060, 2.10), "operator_signal_metal")
+            self._cube(f"OperatorStage1_signal_mast_arm_{label}", (x + arm_sign * 260, y, 405), (2.65, 0.035, 0.045), "operator_signal_metal")
+            for idx, offset in enumerate([120, 260, 400]):
+                self._cube(f"OperatorStage1_signal_head_{label}_{idx}", (x + arm_sign * offset, y, 365), (0.16, 0.060, 0.30), "signal")
+                self._cube(f"OperatorStage1_signal_lens_red_{label}_{idx}", (x + arm_sign * offset, y - 4, 405), (0.055, 0.012, 0.055), "red_signal")
+                self._cube(f"OperatorStage1_signal_lens_green_{label}_{idx}", (x + arm_sign * offset, y - 4, 330), (0.055, 0.012, 0.055), "green_signal")
+        self._cube("OperatorStage1_CCTV_pole_operator_view", (-1420, -1260, 295), (0.065, 0.065, 2.95), "metal")
+        self._cube("OperatorStage1_CCTV_camera_operator_view", (-1360, -1200, 570), (0.30, 0.10, 0.095), "metal")
+
+    def _spawn_operator_stage1_queue(self) -> None:
+        """Place 40 SUMO-placeholder vehicle actors with stable lane alignment."""
+        specs = {
+            "north": {"lane_x": [-520, -200, 200, 520], "start_y": 1480, "step": -360, "scale": (0.34, 0.74, 0.15), "glass": (0.22, 0.22, 0.050)},
+            "south": {"lane_x": [-520, -200, 200, 520], "start_y": -1480, "step": 360, "scale": (0.34, 0.74, 0.15), "glass": (0.22, 0.22, 0.050)},
+            "east": {"lane_y": [-520, -200, 200, 520], "start_x": 1480, "step": -360, "scale": (0.74, 0.34, 0.15), "glass": (0.22, 0.22, 0.050)},
+            "west": {"lane_y": [-520, -200, 200, 520], "start_x": -1480, "step": 360, "scale": (0.74, 0.34, 0.15), "glass": (0.22, 0.22, 0.050)},
+        }
+        for direction, spec in specs.items():
+            for idx in range(10):
+                lane_index = idx % 4
+                queue_index = idx // 4
+                if direction in {"north", "south"}:
+                    x = spec["lane_x"][lane_index]
+                    y = spec["start_y"] + spec["step"] * queue_index
+                else:
+                    x = spec["start_x"] + spec["step"] * queue_index
+                    y = spec["lane_y"][lane_index]
+                z = 68 + idx * 0.25
+                body = self._cube(
+                    f"OperatorStage1_SUMOPlaceholderVehicleQueue_{direction}_{idx:02d}_QueueCapacity_40_body",
+                    (x, y, z),
+                    spec["scale"],
+                "operator_vehicle_body",
+                )
+                self._set_actor_property(body, "Tags", ["OperatorStage1", "SUMOPlaceholderVehicleQueue", direction, "QueueCapacity_40"])
+                self._cube(
+                    f"OperatorStage1_SUMOPlaceholderVehicleQueue_{direction}_{idx:02d}_QueueCapacity_40_glass",
+                    (x, y, z + 20),
+                    spec["glass"],
+                    "operator_vehicle_glass",
+                )
+
+    def _build_operator_stage1_context(self) -> None:
+        for idx, (x, y, sx, sy, floors) in enumerate([
+            (-2100, 1850, 5.8, 1.8, 3),
+            (-1180, 2260, 4.2, 1.4, 2),
+            (1980, 1840, 5.2, 1.7, 3),
+            (2260, -1680, 3.8, 1.5, 2),
+            (-2180, -1750, 4.6, 1.6, 2),
+        ]):
+            self._cube(f"OperatorStage1_context_low_rise_geometry_{idx}", (x, y, 245 + floors * 55), (sx, sy, 2.4 + floors * 0.55), "curb")
+            self._cube(f"OperatorStage1_context_window_band_{idx}", (x, y - 4, 390 + floors * 55), (sx * 0.82, 0.030, 0.16), "photoreal_glass")
+        for idx, (x, y) in enumerate([(-1740, -980), (-1540, 1020), (1650, -1040), (1740, 920)]):
+            self._cube(f"OperatorStage1_traffic_cabinet_{idx}", (x, y, 96), (0.34, 0.22, 0.54), "metal")
+        for idx, (x, y) in enumerate([(-1850, -1180), (-1820, 1180), (1850, -1180), (1820, 1180), (-430, 1900), (430, -1900)]):
+            self._cube(f"OperatorStage1_street_light_pole_{idx}", (x, y, 245), (0.045, 0.045, 2.45), "metal")
+            self._cube(f"OperatorStage1_street_light_head_{idx}", (x + 70, y, 475), (0.28, 0.055, 0.050), "photoreal_sign_plate")
+
+    def _build_operator_stage1_scene(self) -> None:
+        # Image Gen is reference only: layout grammar came from the saved bitmap,
+        # while this traffic-reading zone is built from Unreal geometry actors.
+        self._cube("OperatorStage1_context_ground_slab", (0, 0, -52), (72.0, 72.0, 0.050), "operator_context_ground")
+        self._cube("OperatorStage1_SUMOReadyLargeIntersection_major_arterial_asphalt", (0, 0, 0), (58.0, 9.2, 0.055), "operator_asphalt")
+        self._cube("OperatorStage1_SUMOReadyLargeIntersection_cross_arterial_asphalt", (0, 0, 2), (9.2, 58.0, 0.055), "operator_asphalt")
+        self._cube("OperatorStage1_SUMOReadyLargeIntersection_center_wear_patch", (0, 0, 12), (10.4, 10.4, 0.018), "operator_asphalt_patch")
+        self._cube("TrafficReadableQueueZone_OperatorStage1_north_boundary", (0, 1840, 38), (10.6, 0.060, 0.035), "operator_marking_yellow")
+        self._cube("TrafficReadableQueueZone_OperatorStage1_south_boundary", (0, -1840, 38), (10.6, 0.060, 0.035), "operator_marking_yellow")
+        self._cube("TrafficReadableQueueZone_OperatorStage1_east_boundary", (1840, 0, 39), (0.060, 10.6, 0.035), "operator_marking_yellow")
+        self._cube("TrafficReadableQueueZone_OperatorStage1_west_boundary", (-1840, 0, 39), (0.060, 10.6, 0.035), "operator_marking_yellow")
+
+        for y in [-1040, 1040]:
+            self._cube(f"OperatorStage1_stop_bar_east_west_{y}", (0, y, 42), (9.6, 0.080, 0.012), "operator_marking_white")
+        for x in [-1040, 1040]:
+            self._cube(f"OperatorStage1_stop_bar_north_south_{x}", (x, 0, 43), (0.080, 9.6, 0.012), "operator_marking_white")
+        self._spawn_operator_stage1_crosswalk("north", (0, 1220, 48), "east_west")
+        self._spawn_operator_stage1_crosswalk("south", (0, -1220, 49), "east_west")
+        self._spawn_operator_stage1_crosswalk("east", (1220, 0, 50), "north_south")
+        self._spawn_operator_stage1_crosswalk("west", (-1220, 0, 51), "north_south")
+        self._spawn_operator_stage1_lane_dashes()
+
+        for idx, x in enumerate([-520, -200, 200, 520]):
+            self._spawn_operator_stage1_arrow(f"southbound_lane_{idx}", (x, -720, 60 + idx), "north")
+            self._spawn_operator_stage1_arrow(f"northbound_lane_{idx}", (x, 720, 64 + idx), "south")
+        for idx, y in enumerate([-520, -200, 200, 520]):
+            self._spawn_operator_stage1_arrow(f"westbound_lane_{idx}", (-720, y, 68 + idx), "east")
+            self._spawn_operator_stage1_arrow(f"eastbound_lane_{idx}", (720, y, 72 + idx), "west")
+
+        self._cube("OperatorStage1_median_bus_island_north_south", (0, 0, 72), (0.78, 58.0, 0.16), "island")
+        self._cube("OperatorStage1_median_bus_island_east_west", (0, 0, 74), (58.0, 0.78, 0.16), "island")
+        self._cube("OperatorStage1_sidewalk_north", (0, 3300, 34), (64.0, 4.0, 0.12), "operator_sidewalk")
+        self._cube("OperatorStage1_sidewalk_south", (0, -3300, 34), (64.0, 4.0, 0.12), "operator_sidewalk")
+        self._cube("OperatorStage1_sidewalk_east", (3300, 0, 35), (4.0, 64.0, 0.12), "operator_sidewalk")
+        self._cube("OperatorStage1_sidewalk_west", (-3300, 0, 35), (4.0, 64.0, 0.12), "operator_sidewalk")
+
+        self._spawn_operator_stage1_queue()
+        self._spawn_operator_stage1_signal_set()
+        self._build_operator_stage1_context()
+
+        light = unreal.EditorLevelLibrary.spawn_actor_from_class(unreal.DirectionalLight, unreal.Vector(-1800, -2200, 3000), unreal.Rotator(-52, -35, 0))
+        light.set_actor_label("OperatorStage1_daylight_controlled_exposure")
+        light_comp = light.get_component_by_class(unreal.DirectionalLightComponent)
+        if light_comp:
+            light_comp.set_editor_property("intensity", 4.4)
+            try:
+                light_comp.set_editor_property("cast_shadows", False)
+                light_comp.set_editor_property("light_source_angle", 5.0)
+            except Exception:
+                pass
+            light_comp.set_mobility(unreal.ComponentMobility.MOVABLE)
+        sky = unreal.EditorLevelLibrary.spawn_actor_from_class(unreal.SkyLight, unreal.Vector(0, 0, 900), unreal.Rotator(0, 0, 0))
+        sky.set_actor_label("OperatorStage1_movable_skylight")
+        sky_comp = sky.get_component_by_class(unreal.SkyLightComponent)
+        if sky_comp:
+            sky_comp.set_editor_property("intensity", 3.8)
+            sky_comp.set_mobility(unreal.ComponentMobility.MOVABLE)
+        camera = unreal.EditorLevelLibrary.spawn_actor_from_class(unreal.CineCameraActor, unreal.Vector(-2600, -4200, 2600), unreal.Rotator(0, -34, 58))
+        camera.set_actor_label("OperatorStage1_CineCamera_operator_proof")
+        unreal.EditorLevelLibrary.set_level_viewport_camera_info(camera.get_actor_location(), camera.get_actor_rotation())
+        self._spawn_runtime_controller()
+
     def _build_scene(self) -> None:
+        if self.operator_stage1:
+            self._build_operator_stage1_scene()
+            return
+
         features = set(self.profile["road_features"])
         # Proof background plate prevents the road from disappearing into a black editor clear color.
         self._cube(f"RoadOnlyRenderer_{self.city}_mobile_visible_proof_background", (0, 0, -35), (22, 18, 0.035), "background")

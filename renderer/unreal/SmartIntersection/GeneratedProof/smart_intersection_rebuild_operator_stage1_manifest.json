@@ -1,0 +1,31 @@
+{
+  "generator": "RoadOnlyRenderer",
+  "mode": "OperatorStage1",
+  "city": "seoul",
+  "display_name": "SUMO-ready large operator intersection map",
+  "simulation_truth_source": "SUMO truth source",
+  "future_bridge": "TraCI bridge via FastAPI renderer snapshots",
+  "renderer_role": "Unreal renderer only",
+  "scope": "Stage 1 large operator map; no live SUMO motion and no real traffic-control integration",
+  "imagegen_reference": "artifacts/imagegen/sumo-ready-operator-map-stage1-reference.png",
+  "unreal_map": "/Game/Maps/Generated/smart_intersection_rebuild",
+  "actor_evidence": [
+    "OperatorStage1",
+    "SUMOReadyLargeIntersection",
+    "TrafficReadableQueueZone",
+    "SUMOPlaceholderVehicleQueue",
+    "QueueCapacity_40"
+  ],
+  "queue_capacity_visible": 40,
+  "traffic_readable_queue_zone": {
+    "approaches": [
+      "north",
+      "south",
+      "east",
+      "west"
+    ],
+    "queue_markers_per_approach": 10,
+    "road_markings": "separate Unreal cube/decal-like geometry layers"
+  },
+  "runtime_controller": "TrafficSimulationController SmartIntersectionRuntime seoul"
+}
