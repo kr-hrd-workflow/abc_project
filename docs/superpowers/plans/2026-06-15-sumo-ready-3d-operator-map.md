@@ -6,7 +6,7 @@
 
 **Architecture:** SUMO/TraCI remains the traffic truth source, FastAPI exposes normalized renderer snapshots, and Unreal renders the operator viewport through `ATrafficSimulationController` and Pixel Streaming. The first implementation slice must prove scale and lane readability in one map before adding city variants, generated vehicle/signal asset packs, or full multi-city motion.
 
-**Tech Stack:** Unreal Engine 5.7, UE Editor Python, C++ `SmartIntersectionRuntime`, SUMO/TraCI, FastAPI renderer snapshots, Next.js dashboard Pixel Streaming iframe, Image Gen for reference/texture direction only.
+**Tech Stack:** Unreal Engine 5.7, UE Editor Python, C++ `SmartIntersectionRuntime`, SUMO/TraCI, FastAPI renderer snapshots, Next.js dashboard Pixel Streaming iframe, `PhotorealRoadKit`, PBR material instances, Lumen/post-process tuning, Image Gen and Creative Production for reference plates plus generated texture/decal/atlas sources that are converted into Unreal material inputs.
 
 ---
 
@@ -19,6 +19,7 @@ The current road-only city renders are useful visual proof, but they are still t
 - Backplates still carry too much visual responsibility and should be replaced near the traffic-reading area with real 3D context.
 - City-specific signals and vehicles are needed, but they should become normalized 3D assets that SUMO can drive, not flat image cards.
 - The next product risk is motion and simulation truth, not another static screenshot polish pass.
+- After Pixel Streaming works, the next visual risk is realism: the first streamed city should look like a real traffic-camera/operator view before the style is multiplied across every city.
 
 ## Non-Negotiable Boundaries
 
@@ -27,7 +28,7 @@ The current road-only city renders are useful visual proof, but they are still t
 - Do not modify landing-page imagery or landing layout unless explicitly requested.
 - Do not add proof strips, plinths, asset lineups, or debug props to production maps.
 - Do not treat script success as visual success. Human visual inspection remains a hard gate.
-- Image Gen outputs may guide city-specific vehicles, signal heads, textures, and reference sheets, but moving simulation objects must be 3D meshes/actors with stable pivots, bounds, and lane alignment.
+- Image Gen outputs may guide city-specific vehicles, signal heads, textures, and reference sheets, and may be used as project-bound texture/decal/atlas source material after prompt/path/license evidence is recorded. Moving simulation objects must still be 3D meshes/actors with stable pivots, bounds, and lane alignment.
 - Build one believable operator map first; only then expand to all cities.
 
 ## Implementation Stages
@@ -85,9 +86,21 @@ Expose the working operator viewport through the existing dashboard stream slot:
 - `/dashboard` iframe shows the Unreal stream
 - simulation state is inspectable without claiming real-world control
 
-### Stage 6: Multi-City Expansion
+### Stage 6: Photoreal First-City Realism Pass
 
-After Stage 1-5 pass on one map:
+Make the first streamed operator viewport look like reality while preserving traffic readability and simulation truth:
+
+- use Image Gen and Creative Production for reference plates, material studies, and generated texture/decal/atlas source assets
+- convert generated image sources into Unreal PBR material inputs, decals, mesh UV textures, real mesh geometry, lighting, shadows, reflections, camera settings, and post-process
+- reuse and harden `PhotorealRoadKit` assets instead of adding flat photo cards in the traffic-reading zone
+- keep `ATrafficSimulationController`, FastAPI snapshots, and SUMO/TraCI truth untouched
+- produce before/after proof captures and a `SUMO_READY_OPERATOR_STAGE6_PASS` verifier
+
+Reference or generated texture files alone are not enough for Stage 6 success. Success means the Unreal-rendered scene itself uses those sources through materials/decals/meshes, looks plausibly real under human inspection, and still passes Stage 1/2/3/4/5 readability and runtime boundaries.
+
+### Stage 7: Multi-City Expansion
+
+After Stage 1-6 pass on one map:
 
 - expand profiles to Seoul, New York, Paris, and London
 - keep shared SUMO lane semantics stable
@@ -103,6 +116,11 @@ The original plan grew large enough to make retrieval and review noisy. Detailed
 - [Stage 3: City-Specific Signal And Vehicle Asset Pipeline](2026-06-15-sumo-ready-3d-operator-map/stage-3-city-asset-pipeline.md)
 - [Stage 4: SUMO/TraCI Motion Binding](2026-06-15-sumo-ready-3d-operator-map/stage-4-sumo-traci-motion-binding.md)
 - [Stage 5: Pixel Streaming And Dashboard Integration](2026-06-15-sumo-ready-3d-operator-map/stage-5-pixel-streaming-dashboard.md)
+- [Stage 6: Photoreal First-City Realism Pass](2026-06-15-sumo-ready-3d-operator-map/stage-6-photoreal-first-city.md)
+
+## Execution Policy
+
+For actual Stage 5+ implementation work, use subagents when the current tool surface supports them. The stage files require `superpowers:subagent-driven-development` or `superpowers:executing-plans`; prefer subagent-driven execution for independent implementation, verification, and review scopes. Inline execution is acceptable only for small tightly coupled doc edits, unavailable subagent tooling, or work where splitting would create file conflicts.
 
 ## Current Status
 
@@ -112,7 +130,8 @@ The original plan grew large enough to make retrieval and review noisy. Detailed
 - Stage 4 fixture mode is implemented and verified with `SUMO_READY_OPERATOR_STAGE4_PASS`.
 - Live SUMO/TraCI remains open until `traci`, `sumolib`, `sumo`, `netconvert`, a real SUMO config, and `SUMO_SIMULATION_MODE=sumo_traci` are available and a local run produces `simulation_source=sumo_traci`.
 - Stage 5 is the next planned slice: Pixel Streaming plus dashboard proof for the Stage 4 operator viewport. It must not claim live SUMO or real traffic-control authority.
-- Stage 6 remains future scope after Stage 5 passes on one map.
+- Stage 6 is the photoreal first-city realism pass after Stage 5. It may use Image Gen-derived texture/decal/atlas sources, but it must make the Unreal-rendered operator viewport itself look real; reference images or generated textures alone are not completion evidence.
+- Stage 7 remains future multi-city expansion after Stage 6 passes on one map.
 
 ## Cookbook Goal Source
 
@@ -122,7 +141,7 @@ The Stage goal prompts follow the OpenAI Cookbook `Using Goals in Codex` shape: 
 
 - Spec coverage: covers map scale, broken line/marking concerns, 3D backplate replacement direction, Image Gen vehicle/signal direction, SUMO-driven vehicle motion, and next-session Stage 1 execution.
 - Scope check: Stage 1 is intentionally limited to one large operator map and proof capture. Vehicle asset generation and live SUMO motion are later stages.
-- Ambiguity check: Image Gen is constrained to reference/texture direction until normalized 3D assets exist.
+- Ambiguity check: Image Gen can provide references and generated texture/decal/atlas source material, but normalized runtime objects remain Unreal actors/meshes/materials and completion proof remains Unreal-rendered evidence.
 - Verification check: Stage 1 has script, visual, git diff, and honest remaining-gate requirements.
 - Stage 1 verification update: semantic checks pass through the bundled Python runtime and npm verifier alias; the Stage 1 proof was recaptured with acceptable exposure and central-median readability.
 - Stage 2 coverage: plan covers Image Gen reference direction, generation mode, real 3D context geometry, no-traffic-zone-backplate policy, capture, semantic verifier, and visual inspection gates.

@@ -32,7 +32,8 @@ Stage 5 does **not**:
 - add real traffic-signal controller integration
 - modify landing-page imagery, landing layout, or marketing sections
 - commit `.env.local`, UE generated security tokens, Pixel Streaming auth material, or local infrastructure checkouts
-- expand to all cities; Stage 6 owns multi-city rollout
+- run the photoreal Unreal realism pass; Stage 6 owns first-city realism
+- expand to all cities; Stage 7 owns multi-city rollout
 
 ### Stage 5 File Map
 
@@ -473,7 +474,7 @@ Verify the baseline first with `npm run unreal:precheck`, `npm run verify:operat
 
 Preserve constraints: SUMO/TraCI is truth, FastAPI orchestrates, Unreal renders, Pixel Streaming transports rendered frames only, no real traffic-controller integration, no live SUMO claim without a real local `sumo_traci` run, no landing-page changes, no proof strips/plinths/cards, no committed `.env.local`, no `tmp/PixelStreamingInfrastructure` commit, and no UE security tokens or secrets in commits.
 
-Between iterations inspect Pixel Streaming startup output, Unreal launch output, dashboard DOM, screenshot proof, Stage 5 verifier output, readiness output, and checkbox state. Choose the smallest next change that makes the stream slot, launch contract, proof capture, or verifier more truthful and testable without expanding into Stage 6 multi-city work.
+Between iterations inspect Pixel Streaming startup output, Unreal launch output, dashboard DOM, screenshot proof, Stage 5 verifier output, readiness output, and checkbox state. Choose the smallest next change that makes the stream slot, launch contract, proof capture, or verifier more truthful and testable without expanding into Stage 6 photoreal work or Stage 7 multi-city work.
 
 Completion means the dashboard stream proof exists, `verify:operator-map-stage5` prints `SUMO_READY_OPERATOR_STAGE5_PASS`, Stage 1/2/3/4 verifiers still pass, runtime/HTTP smoke coverage still passes, `npm run verify` passes, human visual inspection confirms the streamed dashboard proof, and this Stage 5 plan records exact evidence. Live SUMO mode is complete only if a real local `sumo_traci` runtime run passes and source metadata prove `simulation_source=sumo_traci`.
 
