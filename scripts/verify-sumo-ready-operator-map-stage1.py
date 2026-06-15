@@ -59,7 +59,13 @@ def fail(message: str) -> None:
     sys.exit(1)
 
 
-def check_image(path: Path, label: str, min_bytes: int, require_opaque: bool = False) -> None:
+def check_image(
+    path: Path,
+    label: str,
+    min_bytes: int,
+    require_opaque: bool = False,
+    max_mean: float | None = None,
+) -> None:
     if not path.exists():
         fail(f"missing {label}: {path.relative_to(ROOT)}")
     if path.stat().st_size < min_bytes:
@@ -81,6 +87,8 @@ def check_image(path: Path, label: str, min_bytes: int, require_opaque: bool = F
     stddev = sum(stat.stddev) / 3.0
     if mean < 35.0:
         fail(f"{label} is too dark: mean={mean:.2f}")
+    if max_mean is not None and mean > max_mean:
+        fail(f"{label} is overexposed: mean={mean:.2f} max={max_mean:.2f}")
     if stddev < 20.0:
         fail(f"{label} lacks visual variation: stddev={stddev:.2f}")
     print(f"{label.upper()}_CHECK_PASS size={image.size} bytes={path.stat().st_size} mean={mean:.2f} stddev={stddev:.2f}")
@@ -127,7 +135,7 @@ def main() -> None:
     check_image(REFERENCE, "imagegen reference", MIN_REFERENCE_BYTES)
     check_generator()
     check_map()
-    check_image(PROOF, "operator proof", MIN_PROOF_BYTES, require_opaque=True)
+    check_image(PROOF, "operator proof", MIN_PROOF_BYTES, require_opaque=True, max_mean=190.0)
     print("SUMO_READY_OPERATOR_STAGE1_PASS")
 
 

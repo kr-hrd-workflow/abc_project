@@ -277,14 +277,14 @@ Do not mark these complete in Stage 1 unless actually implemented and verified:
 
 ## Stage 1 Verification Status - 2026-06-15
 
-**Verdict:** `DONE_WITH_CONCERNS`, not perfect.
+**Verdict:** Stage 1 carryover is closed for Stage 2 entry; later-stage simulator gates remain open.
 
-Stage 1 has real implementation artifacts, but it is not clean enough to call "perfectly complete" because one documented npm verifier path fails on this Windows checkout and the human visual gate still finds operator-readability issues in the proof capture.
+Stage 1 has real implementation artifacts and the carryover blockers for Stage 2 entry have current passing evidence.
 
 Evidence that passed:
 
-- Generated map exists: `renderer/unreal/SmartIntersection/Content/Maps/Generated/smart_intersection_rebuild.umap`, 688729 bytes.
-- Fresh proof exists: `artifacts/unreal-operator-map-stage1-proof.png`, 1600x900, 408795 bytes.
+- Generated map exists: `renderer/unreal/SmartIntersection/Content/Maps/Generated/smart_intersection_rebuild.umap`, 693531 bytes.
+- Fresh proof exists: `artifacts/unreal-operator-map-stage1-proof.png`, 1600x900, 644459 bytes.
 - Image reference exists: `artifacts/imagegen/sumo-ready-operator-map-stage1-reference.png`, 1536x1024, 2899322 bytes.
 - Manifest exists: `renderer/unreal/SmartIntersection/GeneratedProof/smart_intersection_rebuild_operator_stage1_manifest.json`.
 - Generator contains Stage 1 mode and actor/token evidence: `SMART_INTERSECTION_OPERATOR_STAGE1`, `OperatorStage1`, `SUMOReadyLargeIntersection`, `TrafficReadableQueueZone`, `QueueCapacity_40`, and runtime-controller evidence.
@@ -300,8 +300,8 @@ Observed output:
 ```text
 IMAGEGEN REFERENCE_CHECK_PASS size=(1536, 1024) bytes=2899322 mean=73.55 stddev=37.88
 GENERATOR_STAGE1_TOKEN_CHECK_PASS
-MAP_STAGE1_TOKEN_CHECK_PASS bytes=688729 manifest=renderer\unreal\SmartIntersection\GeneratedProof\smart_intersection_rebuild_operator_stage1_manifest.json
-OPERATOR PROOF_CHECK_PASS size=(1600, 900) bytes=408795 mean=205.60 stddev=92.41
+MAP_STAGE1_TOKEN_CHECK_PASS bytes=693531 manifest=renderer\unreal\SmartIntersection\GeneratedProof\smart_intersection_rebuild_operator_stage1_manifest.json
+OPERATOR PROOF_CHECK_PASS size=(1600, 900) bytes=644459 mean=167.15 stddev=71.21
 SUMO_READY_OPERATOR_STAGE1_PASS
 ```
 
@@ -309,22 +309,17 @@ SUMO_READY_OPERATOR_STAGE1_PASS
 - `verify-complete-simulation-renderer.py` passed with the same fallback Python runtime.
 - `git diff --check` passed.
 
-Evidence that blocks a perfect Stage 1 verdict:
+Resolved Stage 1 carryover evidence:
 
-- `npm run verify:operator-map-stage1` fails because the package script invokes `python3`, and this Windows checkout resolves `python3` to an unusable launcher that exits with only:
+- `npm run verify:operator-map-stage1` now routes through `C:\Users\100ri\.cache\codex-runtimes\codex-primary-runtime\dependencies\python\python.exe` and passes.
+- Human visual inspection of `artifacts/unreal-operator-map-stage1-proof.png` now finds the central black obstruction bars removed; lane markings, stop bars, queue placeholders, and all four approaches remain readable. The proof image is no longer overexposed by the verifier bound: mean `167.15`, stddev `71.21`.
 
-```text
-Python
-```
+Stage 1 carryover closed before Stage 2 execution:
 
-- Human visual inspection of `artifacts/unreal-operator-map-stage1-proof.png` finds a readability issue: the proof is heavily overexposed and the central median/island geometry reads as thick black bars crossing the operator view. The map proves broad scale and queue placeholders, but it does not yet satisfy the plan's "human visual inspection remains a hard gate" standard at final-quality level.
-
-Stage 1 carryover required before Stage 2 execution:
-
-- Fix or bypass the broken `python3` npm verifier path.
-- Reduce proof overexposure and make the central median/island geometry read as realistic lane/median infrastructure, not black obstruction bars.
-- Recapture `artifacts/unreal-operator-map-stage1-proof.png`.
-- Re-run the Stage 1 semantic verifier and repeat human visual inspection.
+- Fixed the broken `python3` npm verifier path.
+- Reduced proof overexposure and made the central median/island geometry read as realistic lane/median infrastructure, not black obstruction bars.
+- Recaptured `artifacts/unreal-operator-map-stage1-proof.png`.
+- Re-ran the Stage 1 semantic verifier and repeated human visual inspection.
 
 ## Stage 2 Detailed Task Plan
 
@@ -383,7 +378,7 @@ Stage 1 carryover required before Stage 2 execution:
 - Modify if needed: `scripts/verify-sumo-ready-operator-map-stage1.py`
 - Modify if needed: `package.json`
 
-- [ ] **Step 1: Re-run the exact current Stage 1 checks**
+- [x] **Step 1: Re-run the exact current Stage 1 checks**
 
 Run:
 
@@ -397,7 +392,7 @@ git diff --check
 
 Expected: all pass. If any fails, fix Stage 1 before touching Stage 2.
 
-- [ ] **Step 2: Fix the broken npm verifier path**
+- [x] **Step 2: Fix the broken npm verifier path**
 
 Current failing command:
 
@@ -413,7 +408,7 @@ Python
 
 Acceptable fix: change `verify:operator-map-stage1` to invoke a working repo-level Python runner or document the fallback command in `package.json` comments is not enough. The final validation command for Stage 1 must run from npm or the plan must explicitly mark the npm alias unsupported on Windows.
 
-- [ ] **Step 3: Fix the Stage 1 visual proof before Stage 2**
+- [x] **Step 3: Fix the Stage 1 visual proof before Stage 2**
 
 Use the current visual failure as the acceptance target:
 
@@ -430,6 +425,8 @@ npm run unreal:capture:operator-stage1
 
 Expected: `artifacts/unreal-operator-map-stage1-proof.png` is recaptured and passes human visual inspection.
 
+Evidence: `npm run unreal:capture:operator-stage1` regenerated `artifacts/unreal-operator-map-stage1-proof.png`; `npm run verify:operator-map-stage1` passed with proof mean `167.15`, stddev `71.21`, 1600x900, 644459 bytes. Human inspection confirmed the central median no longer reads as black obstruction bars.
+
 ### Task 1: Add A Stage 2 Generation Mode
 
 **Files:**
@@ -437,7 +434,7 @@ Expected: `artifacts/unreal-operator-map-stage1-proof.png` is recaptured and pas
 - Modify: `package.json`
 - Modify: `renderer/unreal/SmartIntersection/Content/Python/generate_road_intersection.py`
 
-- [ ] **Step 1: Add the PowerShell switch**
+- [x] **Step 1: Add the PowerShell switch**
 
 Add a switch next to `OperatorStage1`:
 
@@ -457,7 +454,7 @@ if ($OperatorStage2) {
 
 Expected: Stage 2 can be generated without changing the existing city-profile path.
 
-- [ ] **Step 2: Add npm scripts**
+- [x] **Step 2: Add npm scripts**
 
 Add scripts:
 
@@ -469,7 +466,7 @@ Add scripts:
 
 If `python3` is still broken on Windows after Task 0, use the same fixed repo-level Python runner for both Stage 1 and Stage 2 verifier scripts.
 
-- [ ] **Step 3: Add generator mode detection**
+- [x] **Step 3: Add generator mode detection**
 
 In `RoadOnlyRenderer.__init__`, add:
 
@@ -493,7 +490,7 @@ Expected: Stage 2 writes to a separate map until visually accepted, avoiding acc
 **Files:**
 - Modify: `renderer/unreal/SmartIntersection/Content/Python/generate_road_intersection.py`
 
-- [ ] **Step 1: Add explicit zone constants**
+- [x] **Step 1: Add explicit zone constants**
 
 Add constants near the Stage 1 material/layout constants:
 
@@ -519,7 +516,7 @@ OPERATOR_STAGE2_FORBIDDEN_MAP_TOKENS = [
 
 Expected: the generator and verifier share the same naming intent.
 
-- [ ] **Step 2: Define what may enter the traffic-reading zone**
+- [x] **Step 2: Define what may enter the traffic-reading zone**
 
 Use this rule in function comments and verifier text:
 
@@ -537,7 +534,7 @@ Expected: Stage 2 context cannot hide lanes, queues, or signal heads.
 - Generated: `artifacts/imagegen/sumo-ready-operator-map-stage2-context-reference.png`
 - Reference only: `docs/superpowers/plans/2026-06-15-sumo-ready-3d-operator-map.md`
 
-- [ ] **Step 1: Generate one Stage 2 reference board before geometry work**
+- [x] **Step 1: Generate one Stage 2 reference board before geometry work**
 
 Use Image Gen to create a practical reference board for the Stage 2 foreground/context pass. The board should show:
 
@@ -554,7 +551,9 @@ artifacts/imagegen/sumo-ready-operator-map-stage2-context-reference.png
 
 Expected: the reference board guides shapes, proportions, colors, and material direction for Stage 2 context geometry.
 
-- [ ] **Step 2: Keep Image Gen out of runtime map objects**
+Evidence: Image Gen created `artifacts/imagegen/sumo-ready-operator-map-stage2-context-reference.png`, 1672x941, 2512230 bytes, mean `79.49`, stddev `42.22`. It is reference only and has not been imported into the Unreal map.
+
+- [x] **Step 2: Keep Image Gen out of runtime map objects**
 
 Image Gen output is reference/input only for Stage 2. Do not import the generated image as a road card, facade card, billboard, sky card, backplate, or texture plane in the generated `.umap`.
 
@@ -573,7 +572,7 @@ Expected: Image Gen influences the 3D context design, but runtime map objects re
 **Files:**
 - Modify: `renderer/unreal/SmartIntersection/Content/Python/generate_road_intersection.py`
 
-- [ ] **Step 1: Add material names**
+- [x] **Step 1: Add material names**
 
 Add Stage 2 materials to the operator material set:
 
@@ -605,7 +604,7 @@ else:
 
 Expected: Stage 2 can add geometry with stable reusable materials and without new image-card materials.
 
-- [ ] **Step 2: Keep material creation scalar and reusable**
+- [x] **Step 2: Keep material creation scalar and reusable**
 
 Use existing material helper paths for constant/vector materials. Do not import new texture cards for Stage 2. If texture variation is needed, use material color/roughness variation only in this stage.
 
@@ -616,7 +615,7 @@ Expected: no `custom_imagegen_*_backplate` material is required by Stage 2.
 **Files:**
 - Modify: `renderer/unreal/SmartIntersection/Content/Python/generate_road_intersection.py`
 
-- [ ] **Step 1: Add deterministic context placement data**
+- [x] **Step 1: Add deterministic context placement data**
 
 Add data tables near the Stage 2 constants:
 
@@ -643,7 +642,7 @@ OPERATOR_STAGE2_STREET_FURNITURE = [
 
 Expected: Stage 2 context is deterministic and reviewable in source.
 
-- [ ] **Step 2: Add facade geometry function**
+- [x] **Step 2: Add facade geometry function**
 
 Add:
 
@@ -666,7 +665,7 @@ def _spawn_operator_stage2_facade_blocks(self) -> None:
 
 Expected: low-rise facades are real geometry and start outside the traffic-reading zone.
 
-- [ ] **Step 3: Add curb, guardrail, and sidewalk reinforcement**
+- [x] **Step 3: Add curb, guardrail, and sidewalk reinforcement**
 
 Add:
 
@@ -693,7 +692,7 @@ def _spawn_operator_stage2_curbs_guardrails(self) -> None:
 
 Expected: context edges are 3D infrastructure, not painted or card-like backgrounds.
 
-- [ ] **Step 4: Add street furniture function**
+- [x] **Step 4: Add street furniture function**
 
 Add:
 
@@ -717,7 +716,7 @@ Expected: operator context includes cabinets, CCTV, and lighting hardware while 
 **Files:**
 - Modify: `renderer/unreal/SmartIntersection/Content/Python/generate_road_intersection.py`
 
-- [ ] **Step 1: Add the scene composer**
+- [x] **Step 1: Add the scene composer**
 
 Add:
 
@@ -731,7 +730,7 @@ def _build_operator_stage2_scene(self) -> None:
 
 Expected: Stage 2 inherits Stage 1 road/queue/signal semantics and only adds context geometry.
 
-- [ ] **Step 2: Route generation**
+- [x] **Step 2: Route generation**
 
 In the main generation branch:
 
@@ -746,7 +745,7 @@ else:
 
 Expected: Stage 2 does not accidentally run city backplate generation paths.
 
-- [ ] **Step 3: Write a Stage 2 manifest**
+- [x] **Step 3: Write a Stage 2 manifest**
 
 Manifest must include:
 
@@ -774,7 +773,7 @@ Expected: the verifier can check that Stage 2 is not a renamed Stage 1 artifact.
 - Create: `renderer/unreal/SmartIntersection/Content/Python/capture_operator_map_stage2.py`
 - Create: `scripts/capture-unreal-operator-map-stage2.ps1`
 
-- [ ] **Step 1: Copy Stage 1 capture structure and change the map/output**
+- [x] **Step 1: Copy Stage 1 capture structure and change the map/output**
 
 Use:
 
@@ -796,7 +795,7 @@ $env:SMART_INTERSECTION_OPERATOR_STAGE2_PROOF_OUTPUT = "artifacts\unreal-operato
 
 Expected: capture fails if Stage 2 context labels are missing.
 
-- [ ] **Step 2: Use a less blown-out proof target**
+- [x] **Step 2: Use a less blown-out proof target**
 
 Capture acceptance:
 
@@ -813,7 +812,7 @@ Expected: Stage 2 proof fixes the Stage 1 overexposure problem instead of carryi
 **Files:**
 - Create: `scripts/verify-sumo-ready-operator-map-stage2.py`
 
-- [ ] **Step 1: Check required files and sizes**
+- [x] **Step 1: Check required files and sizes**
 
 Use these minimums:
 
@@ -829,7 +828,7 @@ PROOF = ROOT / "artifacts" / "unreal-operator-map-stage2-proof.png"
 
 Expected: Stage 2 must include a readable Image Gen reference board and be measurably more than Stage 1's semantic map artifact.
 
-- [ ] **Step 1A: Check the Stage 2 Image Gen reference image**
+- [x] **Step 1A: Check the Stage 2 Image Gen reference image**
 
 Mirror the Stage 1 verifier pattern:
 
@@ -839,7 +838,7 @@ check_image(REFERENCE, "stage2 imagegen reference", MIN_STAGE2_REFERENCE_BYTES)
 
 Expected: the Stage 2 verifier fails if `artifacts/imagegen/sumo-ready-operator-map-stage2-context-reference.png` is missing, too small, unreadable, too dark, or visually flat.
 
-- [ ] **Step 2: Check required map tokens**
+- [x] **Step 2: Check required map tokens**
 
 Required tokens:
 
@@ -857,7 +856,7 @@ REQUIRED_MAP_TOKENS = [
 
 Expected: Stage 2 preserves Stage 1 road/queue semantics.
 
-- [ ] **Step 3: Check forbidden tokens**
+- [x] **Step 3: Check forbidden tokens**
 
 Forbidden tokens:
 
@@ -874,7 +873,7 @@ FORBIDDEN_STAGE2_TOKENS = [
 
 Expected: verifier fails if image-card or proof-strip artifacts leak into Stage 2 map bytes.
 
-- [ ] **Step 4: Check proof image**
+- [x] **Step 4: Check proof image**
 
 Reuse the Stage 1 image check, but tighten brightness:
 
@@ -894,7 +893,7 @@ Expected: semantic verification catches the current Stage 1 overexposure failure
 - Generated: `renderer/unreal/SmartIntersection/GeneratedProof/smart_intersection_rebuild_operator_stage2_manifest.json`
 - Generated: `artifacts/unreal-operator-map-stage2-proof.png`
 
-- [ ] **Step 1: Generate Stage 2**
+- [x] **Step 1: Generate Stage 2**
 
 Run:
 
@@ -909,7 +908,7 @@ Expected:
 - generated map exists at `smart_intersection_rebuild_stage2.umap`
 - Stage 2 manifest exists
 
-- [ ] **Step 2: Capture Stage 2**
+- [x] **Step 2: Capture Stage 2**
 
 Run:
 
@@ -919,7 +918,7 @@ npm run unreal:capture:operator-stage2
 
 Expected: proof PNG exists at `artifacts/unreal-operator-map-stage2-proof.png`.
 
-- [ ] **Step 3: Human visual inspection**
+- [x] **Step 3: Human visual inspection**
 
 Reject the capture if any condition is true:
 
@@ -937,7 +936,7 @@ Expected: the operator can read the intersection without seeing billboard/card c
 **Files:**
 - Validate: changed source, generated map, proof image, manifest, package scripts, this plan
 
-- [ ] **Step 1: Run focused checks**
+- [x] **Step 1: Run focused checks**
 
 Run:
 
@@ -957,9 +956,33 @@ npm run verify:operator-map-stage1
 npm run verify:operator-map-stage2
 ```
 
-- [ ] **Step 2: Report remaining non-Stage-2 gates honestly**
+- [x] **Step 2: Report remaining non-Stage-2 gates honestly**
 
 Do not mark these complete unless actually implemented and verified:
+
+- city-specific signal and vehicle asset pipeline
+- live SUMO/TraCI motion binding
+- Pixel Streaming dashboard proof
+- multi-city expansion
+- real traffic-controller integration
+
+## Stage 2 Verification Status - 2026-06-15
+
+**Verdict:** Stage 2 deliverable is implemented and verified for the requested scope.
+
+Current evidence:
+
+- Stage 2 reference image: `artifacts/imagegen/sumo-ready-operator-map-stage2-context-reference.png`, 1672x941, 2512230 bytes, mean `79.49`, stddev `42.22`.
+- Stage 2 generated map: `renderer/unreal/SmartIntersection/Content/Maps/Generated/smart_intersection_rebuild_stage2.umap`, 807759 bytes.
+- Stage 2 manifest: `renderer/unreal/SmartIntersection/GeneratedProof/smart_intersection_rebuild_operator_stage2_manifest.json`, mode `OperatorStage2`, base stage `OperatorStage1`, `traffic_zone_half_extent_cm` `1840`.
+- Stage 2 proof: `artifacts/unreal-operator-map-stage2-proof.png`, 1600x900, 691520 bytes, mean `166.22`, stddev `74.09`.
+- Stage 2 verifier output: `SUMO_READY_OPERATOR_STAGE2_PASS`.
+- Stage 1 carryover verifier output: `SUMO_READY_OPERATOR_STAGE1_PASS`.
+- `npm run verify:operator-map-stage1` and `npm run verify:operator-map-stage2` both pass through the bundled Python route.
+- Human visual inspection of the Stage 2 proof found readable all-approach traffic/queues, no traffic-zone card/backplate composition, no central black median obstruction bars, visible 3D context geometry, and acceptable exposure.
+- Final focused checks passed: `npm run unreal:precheck`, bundled-Python `verify-simulator-builder-agent.py`, bundled-Python `verify-complete-simulation-renderer.py`, bundled-Python Stage 1 verifier, bundled-Python Stage 2 verifier, and `git diff --check`.
+
+Remaining non-Stage-2 gates, intentionally not marked complete:
 
 - city-specific signal and vehicle asset pipeline
 - live SUMO/TraCI motion binding
@@ -1046,6 +1069,6 @@ If blocked or no defensible path remains, stop and report the exact blocker, the
 - Scope check: Stage 1 is intentionally limited to one large operator map and proof capture. Vehicle asset generation and live SUMO motion are later stages.
 - Ambiguity check: Image Gen is constrained to reference/texture direction until normalized 3D assets exist.
 - Verification check: Stage 1 has script, visual, git diff, and honest remaining-gate requirements.
-- Stage 1 verification update: semantic checks pass through the fallback Python runtime, but npm verifier routing and visual proof quality still block a perfect verdict.
+- Stage 1 verification update: semantic checks pass through the bundled Python runtime and npm verifier alias; the Stage 1 proof was recaptured with acceptable exposure and central-median readability.
 - Stage 2 coverage: plan covers Image Gen reference direction, generation mode, real 3D context geometry, no-traffic-zone-backplate policy, capture, semantic verifier, and visual inspection gates.
 - Stage 2 Goal prompt update: explicitly requires live checkbox tracking with `- [ ]` and `- [x]` in this plan document.

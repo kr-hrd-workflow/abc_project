@@ -1,0 +1,33 @@
+{
+  "generator": "RoadOnlyRenderer",
+  "mode": "OperatorStage2",
+  "city": "seoul",
+  "display_name": "SUMO-ready operator intersection with 3D context geometry",
+  "simulation_truth_source": "SUMO truth source",
+  "future_bridge": "TraCI bridge via FastAPI renderer snapshots",
+  "renderer_role": "Unreal renderer only",
+  "scope": "Stage 2 context geometry pass; no live SUMO motion and no real traffic-control integration",
+  "imagegen_reference": "artifacts/imagegen/sumo-ready-operator-map-stage2-context-reference.png",
+  "unreal_map": "/Game/Maps/Generated/smart_intersection_rebuild_stage2",
+  "base_stage": "OperatorStage1",
+  "context_policy": "3D geometry in and near traffic-reading zone; no traffic-zone backplates",
+  "traffic_zone_half_extent_cm": 1840,
+  "context_ring_inner_cm": 2100,
+  "context_ring_outer_cm": 5200,
+  "actor_evidence": [
+    "OperatorStage2",
+    "Stage2ContextGeometry",
+    "NoTrafficZoneBackplate",
+    "TrafficReadableQueueZone"
+  ],
+  "forbidden_map_tokens": [
+    "photo_backplate",
+    "road_card",
+    "ImageGen",
+    "foreground proof",
+    "foreground plinth",
+    "PolyHaven CC0 VISIBLE"
+  ],
+  "queue_capacity_visible": 40,
+  "runtime_controller": "TrafficSimulationController SmartIntersectionRuntime seoul"
+}

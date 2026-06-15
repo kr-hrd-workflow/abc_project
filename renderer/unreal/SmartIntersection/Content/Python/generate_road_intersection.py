@@ -101,6 +101,17 @@ MATERIAL_COLORS = {
     "operator_vehicle_body": (0.17, 0.19, 0.19, 1.0),
     "operator_vehicle_glass": (0.07, 0.12, 0.15, 1.0),
     "operator_signal_metal": (0.10, 0.11, 0.11, 1.0),
+    "operator_median_concrete": (0.68, 0.66, 0.58, 1.0),
+    "operator_context_concrete": (0.54, 0.56, 0.52, 1.0),
+    "operator_context_curb": (0.76, 0.74, 0.66, 1.0),
+    "operator_context_guardrail": (0.48, 0.50, 0.48, 1.0),
+    "operator_context_facade_warm_gray": (0.46, 0.43, 0.38, 1.0),
+    "operator_context_facade_cool_gray": (0.38, 0.42, 0.43, 1.0),
+    "operator_context_window_dark": (0.075, 0.110, 0.130, 1.0),
+    "operator_context_sign_blue": (0.045, 0.160, 0.420, 1.0),
+    "operator_context_sign_green": (0.040, 0.300, 0.170, 1.0),
+    "operator_context_traffic_cabinet": (0.40, 0.43, 0.38, 1.0),
+    "operator_context_streetlight": (0.30, 0.31, 0.30, 1.0),
 }
 
 
@@ -222,7 +233,60 @@ OPERATOR_STAGE1_MATERIAL_NAMES = GENERIC_MATERIAL_NAMES | {
     "operator_vehicle_body",
     "operator_vehicle_glass",
     "operator_signal_metal",
+    "operator_median_concrete",
 }
+
+OPERATOR_STAGE2_MATERIAL_NAMES = OPERATOR_STAGE1_MATERIAL_NAMES | {
+    "operator_context_concrete",
+    "operator_context_curb",
+    "operator_context_guardrail",
+    "operator_context_facade_warm_gray",
+    "operator_context_facade_cool_gray",
+    "operator_context_window_dark",
+    "operator_context_sign_blue",
+    "operator_context_sign_green",
+    "operator_context_traffic_cabinet",
+    "operator_context_streetlight",
+}
+
+OPERATOR_STAGE2_TRAFFIC_ZONE_HALF_EXTENT = 1840
+OPERATOR_STAGE2_CONTEXT_RING_INNER = 2100
+OPERATOR_STAGE2_CONTEXT_RING_OUTER = 5200
+OPERATOR_STAGE2_REQUIRED_TOKENS = [
+    "OperatorStage2",
+    "Stage2ContextGeometry",
+    "NoTrafficZoneBackplate",
+    "TrafficReadableQueueZone",
+]
+OPERATOR_STAGE2_FORBIDDEN_MAP_TOKENS = [
+    "photo_backplate",
+    "road_card",
+    "ImageGen",
+    "foreground proof",
+    "foreground plinth",
+    "PolyHaven CC0 VISIBLE",
+]
+
+OPERATOR_STAGE2_FACADE_BLOCKS = [
+    ("northwest_block", -3200, 3900, 920, 520, 560, "operator_context_facade_warm_gray"),
+    ("northeast_block", 3100, 3820, 860, 480, 620, "operator_context_facade_cool_gray"),
+    ("southwest_block", -3450, -3920, 980, 540, 520, "operator_context_facade_cool_gray"),
+    ("southeast_block", 3300, -3760, 900, 500, 580, "operator_context_facade_warm_gray"),
+    ("east_mid_block", 4550, 1750, 760, 420, 460, "operator_context_facade_warm_gray"),
+    ("west_mid_block", -4520, -1700, 760, 420, 460, "operator_context_facade_cool_gray"),
+]
+
+OPERATOR_STAGE2_STREET_FURNITURE = [
+    ("cabinet_nw", -1540, 1560, "traffic_cabinet"),
+    ("cabinet_se", 1560, -1540, "traffic_cabinet"),
+    ("cctv_ne", 1660, 1520, "cctv"),
+    ("streetlight_north_1", -900, 2140, "streetlight"),
+    ("streetlight_north_2", 900, 2140, "streetlight"),
+    ("streetlight_south_1", -900, -2140, "streetlight"),
+    ("streetlight_south_2", 900, -2140, "streetlight"),
+    ("guide_sign_east", 2140, 920, "sign_green"),
+    ("guide_sign_west", -2140, -920, "sign_blue"),
+]
 
 SEOUL_MATERIAL_NAMES = GENERIC_MATERIAL_NAMES | {
     "photoreal_asphalt",
@@ -324,6 +388,7 @@ class RoadOnlyRenderer:
         self.city = self.profile["city"]
         self.display_name = self.profile["display_name"]
         self.operator_stage1 = os.environ.get("SMART_INTERSECTION_OPERATOR_STAGE1") == "1"
+        self.operator_stage2 = os.environ.get("SMART_INTERSECTION_OPERATOR_STAGE2") == "1"
         self.project_root = self.profile_path.parents[2]
         self.generated_dir = self.project_root / "GeneratedProof"
         self.generated_dir.mkdir(parents=True, exist_ok=True)
@@ -331,11 +396,35 @@ class RoadOnlyRenderer:
 
     @property
     def package_path(self) -> str:
+        if self.operator_stage2:
+            return "/Game/Maps/Generated/smart_intersection_rebuild_stage2"
         if self.operator_stage1:
             return "/Game/Maps/Generated/smart_intersection_rebuild"
         return f"/Game/Maps/Generated/{self.city}_RoadOnly"
 
     def build_manifest(self) -> dict:
+        if self.operator_stage2:
+            return {
+                "generator": "RoadOnlyRenderer",
+                "mode": "OperatorStage2",
+                "city": self.city,
+                "display_name": "SUMO-ready operator intersection with 3D context geometry",
+                "simulation_truth_source": "SUMO truth source",
+                "future_bridge": "TraCI bridge via FastAPI renderer snapshots",
+                "renderer_role": "Unreal renderer only",
+                "scope": "Stage 2 context geometry pass; no live SUMO motion and no real traffic-control integration",
+                "imagegen_reference": "artifacts/imagegen/sumo-ready-operator-map-stage2-context-reference.png",
+                "unreal_map": self.package_path,
+                "base_stage": "OperatorStage1",
+                "context_policy": "3D geometry in and near traffic-reading zone; no traffic-zone backplates",
+                "traffic_zone_half_extent_cm": OPERATOR_STAGE2_TRAFFIC_ZONE_HALF_EXTENT,
+                "context_ring_inner_cm": OPERATOR_STAGE2_CONTEXT_RING_INNER,
+                "context_ring_outer_cm": OPERATOR_STAGE2_CONTEXT_RING_OUTER,
+                "actor_evidence": OPERATOR_STAGE2_REQUIRED_TOKENS,
+                "forbidden_map_tokens": OPERATOR_STAGE2_FORBIDDEN_MAP_TOKENS,
+                "queue_capacity_visible": 40,
+                "runtime_controller": f"TrafficSimulationController SmartIntersectionRuntime {self.city}",
+            }
         if self.operator_stage1:
             return {
                 "generator": "RoadOnlyRenderer",
@@ -382,6 +471,10 @@ class RoadOnlyRenderer:
         }
 
     def write_manifest(self) -> Path:
+        if self.operator_stage2:
+            path = self.generated_dir / "smart_intersection_rebuild_operator_stage2_manifest.json"
+            path.write_text(json.dumps(self.build_manifest(), indent=2) + "\n", encoding="utf-8")
+            return path
         if self.operator_stage1:
             path = self.generated_dir / "smart_intersection_rebuild_operator_stage1_manifest.json"
             path.write_text(json.dumps(self.build_manifest(), indent=2) + "\n", encoding="utf-8")
@@ -402,6 +495,9 @@ class RoadOnlyRenderer:
         self._create_materials()
         self._build_scene()
         self._save_level()
+        if self.operator_stage2:
+            print(f"OPERATOR_STAGE2_UNREAL_GENERATED city={self.city} package={self.package_path}")
+            return
         if self.operator_stage1:
             print(f"OPERATOR_STAGE1_UNREAL_GENERATED city={self.city} package={self.package_path}")
             return
@@ -495,7 +591,12 @@ class RoadOnlyRenderer:
         asset_tools = unreal.AssetToolsHelpers.get_asset_tools()
         material_dir = "/Game/Materials/RoadOnlyRenderer"
         unreal.EditorAssetLibrary.make_directory(material_dir)
-        city_material_names = OPERATOR_STAGE1_MATERIAL_NAMES if self.operator_stage1 else CITY_MATERIAL_NAMES.get(self.city)
+        if self.operator_stage2:
+            city_material_names = OPERATOR_STAGE2_MATERIAL_NAMES
+        elif self.operator_stage1:
+            city_material_names = OPERATOR_STAGE1_MATERIAL_NAMES
+        else:
+            city_material_names = CITY_MATERIAL_NAMES.get(self.city)
         rebuilt_material_names = set()
         for name, rgba in MATERIAL_COLORS.items():
             if city_material_names is not None:
@@ -507,8 +608,8 @@ class RoadOnlyRenderer:
             asset_path = f"{material_dir}/{asset_name}"
             mat = unreal.EditorAssetLibrary.load_asset(asset_path)
             rebuilt = False
-            recreate_operator_material = self.operator_stage1 and name.startswith("operator_")
-            if mat is not None and ((name in RECREATE_MATERIAL_NAMES and not self.operator_stage1) or recreate_operator_material):
+            recreate_operator_material = (self.operator_stage1 or self.operator_stage2) and name.startswith("operator_")
+            if mat is not None and ((name in RECREATE_MATERIAL_NAMES and not (self.operator_stage1 or self.operator_stage2)) or recreate_operator_material):
                 try:
                     if unreal.EditorAssetLibrary.delete_asset(asset_path):
                         mat = None
@@ -1093,8 +1194,19 @@ class RoadOnlyRenderer:
             self._spawn_operator_stage1_arrow(f"westbound_lane_{idx}", (-720, y, 68 + idx), "east")
             self._spawn_operator_stage1_arrow(f"eastbound_lane_{idx}", (720, y, 72 + idx), "west")
 
-        self._cube("OperatorStage1_median_bus_island_north_south", (0, 0, 72), (0.78, 58.0, 0.16), "island")
-        self._cube("OperatorStage1_median_bus_island_east_west", (0, 0, 74), (58.0, 0.78, 0.16), "island")
+        for label, x, y, sx, sy in [
+            ("north_approach", 0, 2220, 0.24, 14.6),
+            ("south_approach", 0, -2220, 0.24, 14.6),
+            ("east_approach", 2220, 0, 14.6, 0.24),
+            ("west_approach", -2220, 0, 14.6, 0.24),
+        ]:
+            self._cube(
+                f"OperatorStage1_median_bus_island_{label}",
+                (x, y, 62),
+                (sx, sy, 0.055),
+                "operator_median_concrete",
+            )
+        self._cube("OperatorStage1_median_center_splitter_marker", (0, 0, 59), (0.32, 0.32, 0.040), "operator_median_concrete")
         self._cube("OperatorStage1_sidewalk_north", (0, 3300, 34), (64.0, 4.0, 0.12), "operator_sidewalk")
         self._cube("OperatorStage1_sidewalk_south", (0, -3300, 34), (64.0, 4.0, 0.12), "operator_sidewalk")
         self._cube("OperatorStage1_sidewalk_east", (3300, 0, 35), (4.0, 64.0, 0.12), "operator_sidewalk")
@@ -1126,7 +1238,126 @@ class RoadOnlyRenderer:
         unreal.EditorLevelLibrary.set_level_viewport_camera_info(camera.get_actor_location(), camera.get_actor_rotation())
         self._spawn_runtime_controller()
 
+    def _tag_operator_stage2_context(self, actor, *extra_tags: str) -> None:
+        self._set_actor_property(
+            actor,
+            "Tags",
+            ["OperatorStage2", "Stage2ContextGeometry", "NoTrafficZoneBackplate", *extra_tags],
+        )
+
+    def _spawn_operator_stage2_facade_blocks(self) -> None:
+        for label, x, y, sx, sy, height, material in OPERATOR_STAGE2_FACADE_BLOCKS:
+            self._tag_operator_stage2_context(
+                self._cube(
+                    f"OperatorStage2_Stage2ContextGeometry_facade_{label}",
+                    (x, y, height / 2),
+                    (sx / 100.0, sy / 100.0, height / 100.0),
+                    material,
+                ),
+                "facade",
+            )
+            for floor, z_factor in enumerate([0.42, 0.62, 0.82]):
+                self._tag_operator_stage2_context(
+                    self._cube(
+                        f"OperatorStage2_Stage2ContextGeometry_window_band_{label}_{floor}",
+                        (x, y - 8, height * z_factor),
+                        (sx * 0.0075, 0.035, 0.16),
+                        "operator_context_window_dark",
+                    ),
+                    "facade_window",
+                )
+            self._tag_operator_stage2_context(
+                self._cube(
+                    f"OperatorStage2_Stage2ContextGeometry_roofline_{label}",
+                    (x, y, height + 16),
+                    (sx / 98.0, sy / 98.0, 0.070),
+                    "operator_context_curb",
+                ),
+                "facade_roofline",
+            )
+
+    def _spawn_operator_stage2_curbs_guardrails(self) -> None:
+        curb_specs = [
+            ("north_inner", 0, 1960, 42, 38.0, 0.10, 0.10),
+            ("south_inner", 0, -1960, 42, 38.0, 0.10, 0.10),
+            ("east_inner", 1960, 0, 43, 0.10, 38.0, 0.10),
+            ("west_inner", -1960, 0, 43, 0.10, 38.0, 0.10),
+        ]
+        for label, x, y, z, sx, sy, sz in curb_specs:
+            self._tag_operator_stage2_context(
+                self._cube(f"OperatorStage2_Stage2ContextGeometry_curb_{label}", (x, y, z), (sx, sy, sz), "operator_context_curb"),
+                "curb",
+            )
+
+        guardrails = [
+            ("northwest", -1420, 2140, 120, 5.0, 0.045, 0.28),
+            ("northeast", 1420, 2140, 120, 5.0, 0.045, 0.28),
+            ("southwest", -1420, -2140, 120, 5.0, 0.045, 0.28),
+            ("southeast", 1420, -2140, 120, 5.0, 0.045, 0.28),
+        ]
+        for label, x, y, z, sx, sy, sz in guardrails:
+            self._tag_operator_stage2_context(
+                self._cube(f"OperatorStage2_Stage2ContextGeometry_guardrail_{label}", (x, y, z), (sx, sy, sz), "operator_context_guardrail"),
+                "guardrail",
+            )
+
+        for label, x, y, sx, sy in [
+            ("north_context_walk", 0, 2820, 42.0, 2.80),
+            ("south_context_walk", 0, -2820, 42.0, 2.80),
+            ("east_context_walk", 2820, 0, 2.80, 42.0),
+            ("west_context_walk", -2820, 0, 2.80, 42.0),
+        ]:
+            self._tag_operator_stage2_context(
+                self._cube(f"OperatorStage2_Stage2ContextGeometry_sidewalk_{label}", (x, y, 36), (sx, sy, 0.075), "operator_context_concrete"),
+                "sidewalk",
+            )
+
+    def _spawn_operator_stage2_street_furniture(self) -> None:
+        for label, x, y, kind in OPERATOR_STAGE2_STREET_FURNITURE:
+            if kind == "traffic_cabinet":
+                self._tag_operator_stage2_context(
+                    self._cube(f"OperatorStage2_Stage2ContextGeometry_traffic_cabinet_{label}", (x, y, 92), (0.42, 0.26, 0.58), "operator_context_traffic_cabinet"),
+                    "traffic_cabinet",
+                )
+            elif kind == "cctv":
+                self._tag_operator_stage2_context(
+                    self._cube(f"OperatorStage2_Stage2ContextGeometry_cctv_pole_{label}", (x, y, 300), (0.055, 0.055, 3.00), "operator_context_streetlight"),
+                    "cctv",
+                )
+                self._tag_operator_stage2_context(
+                    self._cube(f"OperatorStage2_Stage2ContextGeometry_cctv_head_{label}", (x - 70, y + 45, 585), (0.30, 0.10, 0.10), "operator_context_streetlight"),
+                    "cctv",
+                )
+            elif kind == "streetlight":
+                self._tag_operator_stage2_context(
+                    self._cube(f"OperatorStage2_Stage2ContextGeometry_streetlight_pole_{label}", (x, y, 285), (0.050, 0.050, 2.85), "operator_context_streetlight"),
+                    "streetlight",
+                )
+                self._tag_operator_stage2_context(
+                    self._cube(f"OperatorStage2_Stage2ContextGeometry_streetlight_head_{label}", (x + 70, y, 540), (0.34, 0.060, 0.055), "operator_context_streetlight"),
+                    "streetlight",
+                )
+            elif kind in {"sign_blue", "sign_green"}:
+                material = "operator_context_sign_blue" if kind == "sign_blue" else "operator_context_sign_green"
+                self._tag_operator_stage2_context(
+                    self._cube(f"OperatorStage2_Stage2ContextGeometry_sign_pole_{label}", (x, y, 185), (0.040, 0.040, 1.85), "operator_context_streetlight"),
+                    "road_sign",
+                )
+                self._tag_operator_stage2_context(
+                    self._cube(f"OperatorStage2_Stage2ContextGeometry_sign_plate_{label}", (x, y, 335), (0.50, 0.045, 0.26), material),
+                    "road_sign",
+                )
+
+    def _build_operator_stage2_scene(self) -> None:
+        self._build_operator_stage1_scene()
+        self._spawn_operator_stage2_curbs_guardrails()
+        self._spawn_operator_stage2_facade_blocks()
+        self._spawn_operator_stage2_street_furniture()
+
     def _build_scene(self) -> None:
+        if self.operator_stage2:
+            self._build_operator_stage2_scene()
+            return
         if self.operator_stage1:
             self._build_operator_stage1_scene()
             return
