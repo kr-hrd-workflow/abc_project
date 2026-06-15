@@ -25,6 +25,7 @@
     "unreal:capture:operator-stage2": "powershell.exe -NoProfile -ExecutionPolicy Bypass -File scripts/capture-unreal-operator-map-stage2.ps1",
     "unreal:generate:operator-stage3": "npm run unreal:generate-city -- -Profile seoul -OperatorStage3",
     "unreal:capture:operator-stage3": "powershell.exe -NoProfile -ExecutionPolicy Bypass -File scripts/capture-unreal-operator-map-stage3.ps1",
+    "unreal:capture:operator-stage4": "powershell.exe -NoProfile -ExecutionPolicy Bypass -File scripts/capture-unreal-operator-map-stage4.ps1",
     "unreal:runtime-smoke": "powershell.exe -NoProfile -ExecutionPolicy Bypass -File scripts/smoke-unreal-runtime-snapshot.ps1",
     "unreal:http-smoke": "powershell.exe -NoProfile -ExecutionPolicy Bypass -File scripts/smoke-unreal-http-snapshot.ps1",
     "simulator:agent": "python3 scripts/run-simulator-builder-agent.py",
@@ -33,6 +34,7 @@
     "verify:operator-map-stage1": "powershell.exe -NoProfile -ExecutionPolicy Bypass -Command \"& \\\"$env:USERPROFILE\\.cache\\codex-runtimes\\codex-primary-runtime\\dependencies\\python\\python.exe\\\" scripts/verify-sumo-ready-operator-map-stage1.py\"",
     "verify:operator-map-stage2": "powershell.exe -NoProfile -ExecutionPolicy Bypass -Command \"& \\\"$env:USERPROFILE\\.cache\\codex-runtimes\\codex-primary-runtime\\dependencies\\python\\python.exe\\\" scripts/verify-sumo-ready-operator-map-stage2.py\"",
     "verify:operator-map-stage3": "powershell.exe -NoProfile -ExecutionPolicy Bypass -Command \"& \\\"$env:USERPROFILE\\.cache\\codex-runtimes\\codex-primary-runtime\\dependencies\\python\\python.exe\\\" scripts/verify-sumo-ready-operator-map-stage3.py\"",
+    "verify:operator-map-stage4": "powershell.exe -NoProfile -ExecutionPolicy Bypass -Command \"& \\\"$env:USERPROFILE\\.cache\\codex-runtimes\\codex-primary-runtime\\dependencies\\python\\python.exe\\\" scripts/verify-sumo-ready-operator-map-stage4.py\"",
     "verify:road-only-renderer": "python3 scripts/verify-road-only-ue-renderer.py",
     "verify": "npm run test:api && npm run test:web && npm run build:web && git diff --check"
   },

@@ -42,6 +42,26 @@ FVector EmergencyBeaconLocationForDirection(const FString& Direction)
 
     return FVector::ZeroVector;
 }
+
+FString StringFieldOrEmpty(const TSharedPtr<FJsonObject>& Object, const TCHAR* FieldName)
+{
+    FString Value;
+    if (Object.IsValid())
+    {
+        Object->TryGetStringField(FieldName, Value);
+    }
+    return Value;
+}
+
+float NumberFieldOrZero(const TSharedPtr<FJsonObject>& Object, const TCHAR* FieldName)
+{
+    double Value = 0.0;
+    if (Object.IsValid())
+    {
+        Object->TryGetNumberField(FieldName, Value);
+    }
+    return static_cast<float>(Value);
+}
 }
 
 ATrafficSimulationController::ATrafficSimulationController()
@@ -209,6 +229,10 @@ void ATrafficSimulationController::ApplySimulationSnapshotJson(const FString& Sn
         ActiveSignalGroup = TEXT("unknown");
         CurrentTiming.ActivePhase = ETrafficSimulationPhase::Unknown;
         DirectionalQueues.Empty();
+        LastStage4SnapshotId = TEXT("none");
+        Stage4MotionBindingVersion = TEXT("none");
+        LastVehicleBindings.Empty();
+        LastSignalBindings.Empty();
         bPedestrianRequestActive = false;
         bEmergencyVehicleApproaching = false;
         EmergencyVehicleDirection = TEXT("none");
@@ -220,6 +244,11 @@ void ATrafficSimulationController::ApplySimulationSnapshotJson(const FString& Sn
     }
 
     bLastSnapshotParsed = true;
+
+    LastStage4SnapshotId = TEXT("none");
+    Root->TryGetStringField(TEXT("snapshot_id"), LastStage4SnapshotId);
+    Stage4MotionBindingVersion = TEXT("none");
+    Root->TryGetStringField(TEXT("motion_binding_version"), Stage4MotionBindingVersion);
 
     FString City;
     if (Root->TryGetStringField(TEXT("cityProfileId"), City) || Root->TryGetStringField(TEXT("city_profile"), City) || Root->TryGetStringField(TEXT("city"), City))
@@ -314,6 +343,59 @@ void ATrafficSimulationController::ApplySimulationSnapshotJson(const FString& Sn
         Root->TryGetStringField(TEXT("pixel_stream_url"), SignallingUrl))
     {
         PixelStreamSignallingUrl = SignallingUrl;
+    }
+
+    LastVehicleBindings.Empty();
+    const TArray<TSharedPtr<FJsonValue>>* Vehicles = nullptr;
+    if (Root->TryGetArrayField(TEXT("vehicles"), Vehicles) && Vehicles)
+    {
+        for (const TSharedPtr<FJsonValue>& VehicleValue : *Vehicles)
+        {
+            const TSharedPtr<FJsonObject> VehicleObject = VehicleValue.IsValid()
+                ? VehicleValue->AsObject()
+                : nullptr;
+            if (!VehicleObject.IsValid())
+            {
+                continue;
+            }
+
+            FTrafficVehicleBindingState VehicleBinding;
+            VehicleBinding.ActorLabel = StringFieldOrEmpty(VehicleObject, TEXT("actor_label"));
+            VehicleBinding.VehicleId = StringFieldOrEmpty(VehicleObject, TEXT("vehicle_id"));
+            VehicleBinding.LaneId = StringFieldOrEmpty(VehicleObject, TEXT("lane_id"));
+            VehicleBinding.Direction = StringFieldOrEmpty(VehicleObject, TEXT("direction"));
+            VehicleBinding.LocationCm = FVector(
+                NumberFieldOrZero(VehicleObject, TEXT("x_cm")),
+                NumberFieldOrZero(VehicleObject, TEXT("y_cm")),
+                NumberFieldOrZero(VehicleObject, TEXT("z_cm"))
+            );
+            VehicleBinding.HeadingDegrees = NumberFieldOrZero(VehicleObject, TEXT("heading_deg"));
+            VehicleBinding.SpeedMetersPerSecond = NumberFieldOrZero(VehicleObject, TEXT("speed_mps"));
+            VehicleBinding.VehicleClass = StringFieldOrEmpty(VehicleObject, TEXT("class"));
+            LastVehicleBindings.Add(VehicleBinding);
+        }
+    }
+
+    LastSignalBindings.Empty();
+    const TArray<TSharedPtr<FJsonValue>>* Signals = nullptr;
+    if (Root->TryGetArrayField(TEXT("signals"), Signals) && Signals)
+    {
+        for (const TSharedPtr<FJsonValue>& SignalValue : *Signals)
+        {
+            const TSharedPtr<FJsonObject> SignalObject = SignalValue.IsValid()
+                ? SignalValue->AsObject()
+                : nullptr;
+            if (!SignalObject.IsValid())
+            {
+                continue;
+            }
+
+            FTrafficSignalBindingState SignalBinding;
+            SignalBinding.ActorLabel = StringFieldOrEmpty(SignalObject, TEXT("actor_label"));
+            SignalBinding.SignalGroup = StringFieldOrEmpty(SignalObject, TEXT("signal_group"));
+            SignalBinding.State = StringFieldOrEmpty(SignalObject, TEXT("state"));
+            LastSignalBindings.Add(SignalBinding);
+        }
     }
 
     UpdateRuntimeVisualState();
@@ -479,6 +561,40 @@ void ATrafficSimulationController::UpdateRuntimeVisualState()
         PixelStreamReadyVisual,
         bRuntimeVisualPixelStreamReadyVisible
     );
+    UpdateStage4BindingVisualState();
+}
+
+void ATrafficSimulationController::UpdateStage4BindingVisualState()
+{
+    RuntimeVisualVehicleBindingCount = LastVehicleBindings.Num();
+    if (LastVehicleBindings.Num() > 0)
+    {
+        const FTrafficVehicleBindingState& FirstVehicle = LastVehicleBindings[0];
+        RuntimeVisualFirstVehicleActorLabel = FirstVehicle.ActorLabel;
+        RuntimeVisualFirstVehicleLocationCm = FirstVehicle.LocationCm;
+        RuntimeVisualFirstVehicleHeadingDegrees = FirstVehicle.HeadingDegrees;
+        RuntimeVisualFirstVehicleClass = FirstVehicle.VehicleClass;
+    }
+    else
+    {
+        RuntimeVisualFirstVehicleActorLabel = TEXT("none");
+        RuntimeVisualFirstVehicleLocationCm = FVector::ZeroVector;
+        RuntimeVisualFirstVehicleHeadingDegrees = 0.0f;
+        RuntimeVisualFirstVehicleClass = TEXT("none");
+    }
+
+    RuntimeVisualSignalBindingCount = LastSignalBindings.Num();
+    if (LastSignalBindings.Num() > 0)
+    {
+        const FTrafficSignalBindingState& FirstSignal = LastSignalBindings[0];
+        RuntimeVisualFirstSignalActorLabel = FirstSignal.ActorLabel;
+        RuntimeVisualFirstSignalState = FirstSignal.State;
+    }
+    else
+    {
+        RuntimeVisualFirstSignalActorLabel = TEXT("none");
+        RuntimeVisualFirstSignalState = TEXT("none");
+    }
 }
 
 void ATrafficSimulationController::SetRuntimeQueueMarkerVisibility(

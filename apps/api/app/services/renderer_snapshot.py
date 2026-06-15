@@ -1,8 +1,17 @@
+import copy
+import json
+from pathlib import Path
+
 from app.db import models
 from app.domain.schemas import VisionObservation
 from app.services.persistence import SAFETY_BOUNDARY
 
 CONNECTED_STREAM_STATUSES = frozenset({"connected", "ready", "streaming"})
+STAGE4_FIXTURE_PATH = (
+    Path(__file__).resolve().parents[1]
+    / "fixtures"
+    / "stage4_renderer_snapshots.json"
+)
 
 
 def build_unreal_renderer_snapshot(
@@ -54,3 +63,30 @@ def build_unreal_renderer_snapshot(
         "pixel_stream_signalling_url": pixel_stream_signalling_url,
         "safety_boundary": SAFETY_BOUNDARY,
     }
+
+
+def build_stage4_unreal_renderer_snapshot(
+    *,
+    fixture_id: str,
+    city_profile_id: str,
+    pixel_stream_signalling_url: str,
+) -> dict[str, object]:
+    fixture = _load_stage4_fixture_snapshot(fixture_id)
+    snapshot = copy.deepcopy(fixture)
+    snapshot["cityProfileId"] = city_profile_id
+    snapshot["city_profile"] = city_profile_id
+    snapshot["pixelStreamSignallingUrl"] = pixel_stream_signalling_url
+    snapshot["pixel_stream_signalling_url"] = pixel_stream_signalling_url
+    snapshot["safety_boundary"] = SAFETY_BOUNDARY
+    return snapshot
+
+
+def _load_stage4_fixture_snapshot(fixture_id: str) -> dict[str, object]:
+    data = json.loads(STAGE4_FIXTURE_PATH.read_text(encoding="utf-8"))
+    snapshots = data.get("snapshots", {})
+    if not isinstance(snapshots, dict):
+        raise KeyError(fixture_id)
+    snapshot = snapshots[fixture_id]
+    if not isinstance(snapshot, dict):
+        raise KeyError(fixture_id)
+    return snapshot

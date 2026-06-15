@@ -33,6 +33,51 @@ struct FTrafficSignalTiming
     FString Source = TEXT("SUMO truth source via future Python TraCI bridge");
 };
 
+USTRUCT(BlueprintType)
+struct FTrafficVehicleBindingState
+{
+    GENERATED_BODY()
+
+    UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "SUMO TraCI Snapshot|Motion Binding")
+    FString ActorLabel;
+
+    UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "SUMO TraCI Snapshot|Motion Binding")
+    FString VehicleId;
+
+    UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "SUMO TraCI Snapshot|Motion Binding")
+    FString LaneId;
+
+    UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "SUMO TraCI Snapshot|Motion Binding")
+    FString Direction;
+
+    UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "SUMO TraCI Snapshot|Motion Binding")
+    FVector LocationCm = FVector::ZeroVector;
+
+    UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "SUMO TraCI Snapshot|Motion Binding")
+    float HeadingDegrees = 0.0f;
+
+    UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "SUMO TraCI Snapshot|Motion Binding")
+    float SpeedMetersPerSecond = 0.0f;
+
+    UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "SUMO TraCI Snapshot|Motion Binding")
+    FString VehicleClass;
+};
+
+USTRUCT(BlueprintType)
+struct FTrafficSignalBindingState
+{
+    GENERATED_BODY()
+
+    UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "SUMO TraCI Snapshot|Motion Binding")
+    FString ActorLabel;
+
+    UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "SUMO TraCI Snapshot|Motion Binding")
+    FString SignalGroup;
+
+    UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "SUMO TraCI Snapshot|Motion Binding")
+    FString State;
+};
+
 /**
  * Renderer-side receiver shell for future SUMO/TraCI snapshots.
  * This actor does not simulate traffic, spawn vehicles, or own signal truth.
@@ -59,6 +104,18 @@ public:
 
     UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "SUMO TraCI Snapshot")
     FTrafficSignalTiming CurrentTiming;
+
+    UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "SUMO TraCI Snapshot|Motion Binding")
+    FString LastStage4SnapshotId = TEXT("none");
+
+    UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "SUMO TraCI Snapshot|Motion Binding")
+    FString Stage4MotionBindingVersion = TEXT("none");
+
+    UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "SUMO TraCI Snapshot|Motion Binding")
+    TArray<FTrafficVehicleBindingState> LastVehicleBindings;
+
+    UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "SUMO TraCI Snapshot|Motion Binding")
+    TArray<FTrafficSignalBindingState> LastSignalBindings;
 
     UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "SUMO TraCI Snapshot")
     TMap<FString, int32> DirectionalQueues;
@@ -201,6 +258,30 @@ public:
     UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "SUMO TraCI Snapshot|Runtime Visuals")
     bool bRuntimeVisualPixelStreamReadyVisible = false;
 
+    UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "SUMO TraCI Snapshot|Runtime Visuals")
+    int32 RuntimeVisualVehicleBindingCount = 0;
+
+    UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "SUMO TraCI Snapshot|Runtime Visuals")
+    FString RuntimeVisualFirstVehicleActorLabel = TEXT("none");
+
+    UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "SUMO TraCI Snapshot|Runtime Visuals")
+    FVector RuntimeVisualFirstVehicleLocationCm = FVector::ZeroVector;
+
+    UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "SUMO TraCI Snapshot|Runtime Visuals")
+    float RuntimeVisualFirstVehicleHeadingDegrees = 0.0f;
+
+    UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "SUMO TraCI Snapshot|Runtime Visuals")
+    FString RuntimeVisualFirstVehicleClass = TEXT("none");
+
+    UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "SUMO TraCI Snapshot|Runtime Visuals")
+    int32 RuntimeVisualSignalBindingCount = 0;
+
+    UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "SUMO TraCI Snapshot|Runtime Visuals")
+    FString RuntimeVisualFirstSignalActorLabel = TEXT("none");
+
+    UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "SUMO TraCI Snapshot|Runtime Visuals")
+    FString RuntimeVisualFirstSignalState = TEXT("none");
+
     UFUNCTION(BlueprintCallable, Category = "SUMO TraCI Snapshot")
     void ApplySimulationSnapshotJson(const FString& SnapshotJson);
 
@@ -218,6 +299,7 @@ private:
     );
 
     void UpdateRuntimeVisualState();
+    void UpdateStage4BindingVisualState();
     void SetRuntimeQueueMarkerVisibility(
         const TArray<UStaticMeshComponent*>& Markers,
         int32 VisibleCount

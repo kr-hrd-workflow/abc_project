@@ -1,0 +1,201 @@
+{
+  "schema": "operator-stage4-motion-proof-v1",
+  "mode": "OperatorStage4",
+  "base_stage": "OperatorStage3",
+  "unreal_map": "/Game/Maps/Generated/smart_intersection_rebuild_stage3",
+  "fixture_snapshot_path": "apps/api/app/fixtures/stage4_renderer_snapshots.json",
+  "binding_profile": "renderer/unreal/SmartIntersection/SceneProfiles/operator_stage4_motion_bindings.json",
+  "simulation_source": "sumo_traci_fixture",
+  "live_sumo_status": "deferred_until_real_sumo_traci_run_passes",
+  "renderer_policy": "SUMO/TraCI is truth, FastAPI orchestrates, Unreal renders received state.",
+  "controller": "ATrafficSimulationController",
+  "motion_binding_version": "operator-stage4-motion-v1",
+  "snapshots": [
+    {
+      "snapshot_id": "stage4-fixture-a",
+      "activeSignalGroup": "east_west_priority",
+      "cycleSecond": 12,
+      "queues": {
+        "north": 28,
+        "south": 14,
+        "east": 6,
+        "west": 4
+      },
+      "pedestrianRequest": true,
+      "emergencyVehicleDirection": "east",
+      "vehicles": [
+        {
+          "actor_label": "OperatorStage3_Stage3VehicleKit_SUMOReadyAssetPivot_seoul_north_passenger_car_00",
+          "vehicle_id": "veh-north-00",
+          "from_cm": [
+            -275.0,
+            1960.0,
+            86.0
+          ],
+          "to_cm": [
+            -44.0,
+            1540.0,
+            86.0
+          ],
+          "heading_deg": 180.0
+        },
+        {
+          "actor_label": "OperatorStage3_Stage3VehicleKit_SUMOReadyAssetPivot_seoul_east_passenger_car_00",
+          "vehicle_id": "veh-east-00",
+          "from_cm": [
+            1960.0,
+            275.0,
+            86.0
+          ],
+          "to_cm": [
+            1180.0,
+            -44.0,
+            86.0
+          ],
+          "heading_deg": 270.0
+        },
+        {
+          "actor_label": "OperatorStage3_Stage3VehicleKit_SUMOReadyAssetPivot_seoul_south_emergency_vehicle_01",
+          "vehicle_id": "veh-south-emergency-01",
+          "from_cm": [
+            95.0,
+            -2300.0,
+            86.0
+          ],
+          "to_cm": [
+            54.0,
+            -1380.0,
+            86.0
+          ],
+          "heading_deg": 0.0
+        },
+        {
+          "actor_label": "OperatorStage3_Stage3VehicleKit_SUMOReadyAssetPivot_seoul_west_taxi_00",
+          "vehicle_id": "veh-west-taxi-00",
+          "from_cm": [
+            -1960.0,
+            -275.0,
+            86.0
+          ],
+          "to_cm": [
+            -1320.0,
+            44.0,
+            86.0
+          ],
+          "heading_deg": 90.0
+        }
+      ],
+      "signals": [
+        {
+          "actor_label": "OperatorStage3_Stage3SignalKit_SUMOReadyAssetPivot_seoul_northwest_pole",
+          "state": "red"
+        },
+        {
+          "actor_label": "OperatorStage3_Stage3SignalKit_SUMOReadyAssetPivot_seoul_southwest_pole",
+          "state": "green"
+        }
+      ]
+    },
+    {
+      "snapshot_id": "stage4-fixture-b",
+      "activeSignalGroup": "north_south_priority",
+      "cycleSecond": 36,
+      "queues": {
+        "north": 8,
+        "south": 5,
+        "east": 24,
+        "west": 19
+      },
+      "pedestrianRequest": false,
+      "emergencyVehicleDirection": "north",
+      "vehicles": [
+        {
+          "actor_label": "OperatorStage3_Stage3VehicleKit_SUMOReadyAssetPivot_seoul_north_passenger_car_00",
+          "vehicle_id": "veh-north-00",
+          "from_cm": [
+            -44.0,
+            1540.0,
+            86.0
+          ],
+          "to_cm": [
+            -44.0,
+            980.0,
+            86.0
+          ],
+          "heading_deg": 168.0
+        },
+        {
+          "actor_label": "OperatorStage3_Stage3VehicleKit_SUMOReadyAssetPivot_seoul_east_passenger_car_00",
+          "vehicle_id": "veh-east-00",
+          "from_cm": [
+            1180.0,
+            -44.0,
+            86.0
+          ],
+          "to_cm": [
+            1520.0,
+            -44.0,
+            86.0
+          ],
+          "heading_deg": 270.0
+        },
+        {
+          "actor_label": "OperatorStage3_Stage3VehicleKit_SUMOReadyAssetPivot_seoul_south_emergency_vehicle_01",
+          "vehicle_id": "veh-south-emergency-01",
+          "from_cm": [
+            54.0,
+            -1380.0,
+            86.0
+          ],
+          "to_cm": [
+            54.0,
+            -760.0,
+            86.0
+          ],
+          "heading_deg": 0.0
+        },
+        {
+          "actor_label": "OperatorStage3_Stage3VehicleKit_SUMOReadyAssetPivot_seoul_west_taxi_00",
+          "vehicle_id": "veh-west-taxi-00",
+          "from_cm": [
+            -1320.0,
+            44.0,
+            86.0
+          ],
+          "to_cm": [
+            -1660.0,
+            44.0,
+            86.0
+          ],
+          "heading_deg": 90.0
+        }
+      ],
+      "signals": [
+        {
+          "actor_label": "OperatorStage3_Stage3SignalKit_SUMOReadyAssetPivot_seoul_northwest_pole",
+          "state": "green"
+        },
+        {
+          "actor_label": "OperatorStage3_Stage3SignalKit_SUMOReadyAssetPivot_seoul_southwest_pole",
+          "state": "red"
+        }
+      ]
+    }
+  ],
+  "proof_images": [
+    "artifacts/unreal-operator-map-stage4-snapshot-a.png",
+    "artifacts/unreal-operator-map-stage4-snapshot-b.png"
+  ],
+  "contact_sheet": "artifacts/unreal-operator-map-stage4-motion-contact-sheet.png",
+  "preserved_stage_tokens": [
+    "OperatorStage1",
+    "SUMOReadyLargeIntersection",
+    "TrafficReadableQueueZone",
+    "OperatorStage2",
+    "NoTrafficZoneBackplate",
+    "OperatorStage3",
+    "Stage3VehicleKit",
+    "Stage3SignalKit",
+    "SUMOReadyAssetPivot"
+  ]
+}

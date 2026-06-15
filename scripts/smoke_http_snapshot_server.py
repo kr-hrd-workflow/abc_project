@@ -8,12 +8,17 @@ import sys
 
 SNAPSHOT = {
     "snapshot_type": "unreal_renderer_snapshot",
+    "snapshot_id": "stage4-fixture-a",
+    "source": "stage4_renderer_fixture",
+    "simulation_source": "sumo_traci_fixture",
     "cityProfileId": "paris",
     "city_profile": "paris",
     "activeSignalGroup": "east_priority",
     "signal_phase": "east_priority",
     "cycleSecond": 24,
     "cycle_second": 24,
+    "simulation_time_seconds": 12.0,
+    "motion_binding_version": "operator-stage4-motion-v1",
     "queues": {
         "north": 32,
         "south": 11,
@@ -33,6 +38,33 @@ SNAPSHOT = {
     "pixelStreamSignallingUrl": "ws://127.0.0.1:8888",
     "pixel_stream_signalling_url": "ws://127.0.0.1:8888",
     "safety_boundary": "Recommendation and simulation only. No real traffic signal control is performed.",
+    "vehicles": [
+        {
+            "actor_label": (
+                "OperatorStage3_Stage3VehicleKit_SUMOReadyAssetPivot_"
+                "seoul_north_passenger_car_00"
+            ),
+            "vehicle_id": "veh-north-00",
+            "lane_id": "north_inbound_0",
+            "direction": "north",
+            "x_cm": -44.0,
+            "y_cm": 1540.0,
+            "z_cm": 86.0,
+            "heading_deg": 180.0,
+            "speed_mps": 2.8,
+            "class": "passenger_car",
+        }
+    ],
+    "signals": [
+        {
+            "actor_label": (
+                "OperatorStage3_Stage3SignalKit_SUMOReadyAssetPivot_"
+                "seoul_northwest_pole"
+            ),
+            "signal_group": "north_south",
+            "state": "red",
+        }
+    ],
 }
 
 

@@ -1,0 +1,29 @@
+{
+  "schema": "operator-stage4-motion-bindings-v1",
+  "base_stage": "OperatorStage3",
+  "motion_binding_version": "operator-stage4-motion-v1",
+  "fixture_snapshot_path": "apps/api/app/fixtures/stage4_renderer_snapshots.json",
+  "simulation_source": "sumo_traci_fixture",
+  "live_sumo_status": "deferred_until_real_sumo_traci_run_passes",
+  "renderer_policy": "SUMO/TraCI is truth, FastAPI orchestrates, Unreal renders received state.",
+  "snapshot_ids": [
+    "stage4-fixture-a",
+    "stage4-fixture-b"
+  ],
+  "vehicle_actor_labels": [
+    "OperatorStage3_Stage3VehicleKit_SUMOReadyAssetPivot_seoul_north_passenger_car_00",
+    "OperatorStage3_Stage3VehicleKit_SUMOReadyAssetPivot_seoul_east_passenger_car_00",
+    "OperatorStage3_Stage3VehicleKit_SUMOReadyAssetPivot_seoul_south_emergency_vehicle_01",
+    "OperatorStage3_Stage3VehicleKit_SUMOReadyAssetPivot_seoul_west_taxi_00"
+  ],
+  "signal_actor_labels": [
+    "OperatorStage3_Stage3SignalKit_SUMOReadyAssetPivot_seoul_northwest_pole",
+    "OperatorStage3_Stage3SignalKit_SUMOReadyAssetPivot_seoul_southwest_pole"
+  ],
+  "proof_artifacts": {
+    "snapshot_a": "artifacts/unreal-operator-map-stage4-snapshot-a.png",
+    "snapshot_b": "artifacts/unreal-operator-map-stage4-snapshot-b.png",
+    "contact_sheet": "artifacts/unreal-operator-map-stage4-motion-contact-sheet.png",
+    "manifest": "renderer/unreal/SmartIntersection/GeneratedProof/smart_intersection_rebuild_operator_stage4_motion_manifest.json"
+  }
+}

@@ -35,6 +35,36 @@ THIRD_SNAPSHOT = (
     '"pixelStreamStatus":"connected","pixelStreamSignallingUrl":"ws://127.0.0.1:8888"}'
 )
 
+STAGE4_SNAPSHOT_A = (
+    '{"snapshot_id":"stage4-fixture-a","cityProfileId":"seoul",'
+    '"activeSignalGroup":"east_west_priority","cycleSecond":12,'
+    '"motion_binding_version":"operator-stage4-motion-v1",'
+    '"queues":{"north":28,"south":14,"east":6,"west":4},'
+    '"pedestrian_request":true,'
+    '"emergency_vehicle_approach":true,"emergency_direction":"east",'
+    '"vehicles":[{"actor_label":"OperatorStage3_Stage3VehicleKit_SUMOReadyAssetPivot_seoul_north_passenger_car_00",'
+    '"vehicle_id":"veh-north-00","lane_id":"north_inbound_0","direction":"north",'
+    '"x_cm":-44.0,"y_cm":1540.0,"z_cm":86.0,"heading_deg":180.0,'
+    '"speed_mps":2.8,"class":"passenger_car"}],'
+    '"signals":[{"actor_label":"OperatorStage3_Stage3SignalKit_SUMOReadyAssetPivot_seoul_northwest_pole",'
+    '"signal_group":"north_south","state":"red"}]}'
+)
+
+STAGE4_SNAPSHOT_B = (
+    '{"snapshot_id":"stage4-fixture-b","cityProfileId":"seoul",'
+    '"activeSignalGroup":"north_south_priority","cycleSecond":36,'
+    '"motion_binding_version":"operator-stage4-motion-v1",'
+    '"queues":{"north":8,"south":5,"east":24,"west":19},'
+    '"pedestrian_request":false,'
+    '"emergency_vehicle_approach":true,"emergency_direction":"north",'
+    '"vehicles":[{"actor_label":"OperatorStage3_Stage3VehicleKit_SUMOReadyAssetPivot_seoul_north_passenger_car_00",'
+    '"vehicle_id":"veh-north-00","lane_id":"north_inbound_0","direction":"north",'
+    '"x_cm":-44.0,"y_cm":980.0,"z_cm":86.0,"heading_deg":168.0,'
+    '"speed_mps":9.1,"class":"passenger_car"}],'
+    '"signals":[{"actor_label":"OperatorStage3_Stage3SignalKit_SUMOReadyAssetPivot_seoul_northwest_pole",'
+    '"signal_group":"north_south","state":"green"}]}'
+)
+
 EXPECTED_SIGNAL_HEAD_MESH_PATH = (
     "/Game/PhotorealRoadKit/Meshes/"
     "signal_head_uk_high_fidelity.signal_head_uk_high_fidelity"
@@ -283,6 +313,66 @@ def main() -> None:
         (-210.0, 0.0, 105.0),
     )
 
+    actor.apply_simulation_snapshot_json(STAGE4_SNAPSHOT_A)
+    if get_property(actor, "last_stage4_snapshot_id") != "stage4-fixture-a":
+        fail(f"stage4_a_snapshot_id={get_property(actor, 'last_stage4_snapshot_id')}")
+    if get_property(actor, "stage4_motion_binding_version") != "operator-stage4-motion-v1":
+        fail(
+            "stage4_motion_binding_version="
+            f"{get_property(actor, 'stage4_motion_binding_version')}"
+        )
+    if int(get_property(actor, "runtime_visual_vehicle_binding_count")) != 1:
+        fail(
+            "stage4_a_vehicle_binding_count="
+            f"{get_property(actor, 'runtime_visual_vehicle_binding_count')}"
+        )
+    if get_property(actor, "runtime_visual_first_vehicle_actor_label") != (
+        "OperatorStage3_Stage3VehicleKit_SUMOReadyAssetPivot_seoul_north_passenger_car_00"
+    ):
+        fail(
+            "stage4_a_first_vehicle_actor_label="
+            f"{get_property(actor, 'runtime_visual_first_vehicle_actor_label')}"
+        )
+    assert_vector_property(
+        actor,
+        "runtime_visual_first_vehicle_location_cm",
+        (-44.0, 1540.0, 86.0),
+    )
+    if round(float(get_property(actor, "runtime_visual_first_vehicle_heading_degrees")), 1) != 180.0:
+        fail(
+            "stage4_a_first_vehicle_heading="
+            f"{get_property(actor, 'runtime_visual_first_vehicle_heading_degrees')}"
+        )
+    if int(get_property(actor, "runtime_visual_signal_binding_count")) != 1:
+        fail(
+            "stage4_a_signal_binding_count="
+            f"{get_property(actor, 'runtime_visual_signal_binding_count')}"
+        )
+    if get_property(actor, "runtime_visual_first_signal_state") != "red":
+        fail(
+            "stage4_a_first_signal_state="
+            f"{get_property(actor, 'runtime_visual_first_signal_state')}"
+        )
+
+    actor.apply_simulation_snapshot_json(STAGE4_SNAPSHOT_B)
+    if get_property(actor, "last_stage4_snapshot_id") != "stage4-fixture-b":
+        fail(f"stage4_b_snapshot_id={get_property(actor, 'last_stage4_snapshot_id')}")
+    assert_vector_property(
+        actor,
+        "runtime_visual_first_vehicle_location_cm",
+        (-44.0, 980.0, 86.0),
+    )
+    if round(float(get_property(actor, "runtime_visual_first_vehicle_heading_degrees")), 1) != 168.0:
+        fail(
+            "stage4_b_first_vehicle_heading="
+            f"{get_property(actor, 'runtime_visual_first_vehicle_heading_degrees')}"
+        )
+    if get_property(actor, "runtime_visual_first_signal_state") != "green":
+        fail(
+            "stage4_b_first_signal_state="
+            f"{get_property(actor, 'runtime_visual_first_signal_state')}"
+        )
+
     write_result(
         True,
         city="paris",
@@ -302,6 +392,16 @@ def main() -> None:
         emergency_direction_state="east",
         third_emergency_direction_state="west",
         third_emergency_beacon_location=[-210.0, 0.0, 105.0],
+        stage4_snapshot_id="stage4-fixture-b",
+        stage4_motion_binding_version="operator-stage4-motion-v1",
+        stage4_vehicle_binding_count=1,
+        stage4_first_vehicle_actor_label=(
+            "OperatorStage3_Stage3VehicleKit_SUMOReadyAssetPivot_seoul_north_passenger_car_00"
+        ),
+        stage4_first_vehicle_location_cm=[-44.0, 980.0, 86.0],
+        stage4_first_vehicle_heading_degrees=168.0,
+        stage4_signal_binding_count=1,
+        stage4_first_signal_state="green",
         runtime_visual_asset_set="photoreal_roadkit_runtime_assets",
         **runtime_component_assets,
     )

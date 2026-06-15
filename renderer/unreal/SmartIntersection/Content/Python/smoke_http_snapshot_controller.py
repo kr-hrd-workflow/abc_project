@@ -167,6 +167,40 @@ def finish_if_ready(actor, tick_handle: object | None) -> bool:
         "runtime_visual_emergency_beacon_location",
         (210.0, 0.0, 105.0),
     )
+    if get_property(actor, "last_stage4_snapshot_id") != "stage4-fixture-a":
+        fail(f"last_stage4_snapshot_id={get_property(actor, 'last_stage4_snapshot_id')}")
+    if get_property(actor, "stage4_motion_binding_version") != "operator-stage4-motion-v1":
+        fail(
+            "stage4_motion_binding_version="
+            f"{get_property(actor, 'stage4_motion_binding_version')}"
+        )
+    if int(get_property(actor, "runtime_visual_vehicle_binding_count")) != 1:
+        fail(
+            "runtime_visual_vehicle_binding_count="
+            f"{get_property(actor, 'runtime_visual_vehicle_binding_count')}"
+        )
+    if get_property(actor, "runtime_visual_first_vehicle_actor_label") != (
+        "OperatorStage3_Stage3VehicleKit_SUMOReadyAssetPivot_seoul_north_passenger_car_00"
+    ):
+        fail(
+            "runtime_visual_first_vehicle_actor_label="
+            f"{get_property(actor, 'runtime_visual_first_vehicle_actor_label')}"
+        )
+    assert_vector_property(
+        actor,
+        "runtime_visual_first_vehicle_location_cm",
+        (-44.0, 1540.0, 86.0),
+    )
+    if int(get_property(actor, "runtime_visual_signal_binding_count")) != 1:
+        fail(
+            "runtime_visual_signal_binding_count="
+            f"{get_property(actor, 'runtime_visual_signal_binding_count')}"
+        )
+    if get_property(actor, "runtime_visual_first_signal_state") != "red":
+        fail(
+            "runtime_visual_first_signal_state="
+            f"{get_property(actor, 'runtime_visual_first_signal_state')}"
+        )
 
     write_result(
         True,
@@ -182,6 +216,15 @@ def finish_if_ready(actor, tick_handle: object | None) -> bool:
         pedestrian_request_active=True,
         emergency_direction_state="east",
         emergency_beacon_location=[210.0, 0.0, 105.0],
+        stage4_snapshot_id="stage4-fixture-a",
+        stage4_motion_binding_version="operator-stage4-motion-v1",
+        stage4_vehicle_binding_count=1,
+        stage4_first_vehicle_actor_label=(
+            "OperatorStage3_Stage3VehicleKit_SUMOReadyAssetPivot_seoul_north_passenger_car_00"
+        ),
+        stage4_first_vehicle_location_cm=[-44.0, 1540.0, 86.0],
+        stage4_signal_binding_count=1,
+        stage4_first_signal_state="red",
         runtime_visual_asset_set="photoreal_roadkit_runtime_assets",
         **runtime_component_assets,
     )
