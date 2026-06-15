@@ -1,0 +1,71 @@
+{
+  "generator": "RoadOnlyRenderer",
+  "mode": "OperatorStage3",
+  "city": "seoul",
+  "display_name": "SUMO-ready operator intersection with city signal and vehicle asset kit",
+  "simulation_truth_source": "SUMO truth source",
+  "future_bridge": "TraCI bridge via FastAPI renderer snapshots",
+  "renderer_role": "Unreal renderer only",
+  "scope": "Stage 3 city asset-kit pass; no live SUMO motion and no real traffic-control integration",
+  "imagegen_reference": "artifacts/imagegen/sumo-ready-operator-map-stage3-asset-reference.png",
+  "unreal_map": "/Game/Maps/Generated/smart_intersection_rebuild_stage3",
+  "base_stage": "OperatorStage2",
+  "asset_kit_schema": "operator-stage3-city-asset-kit-v1",
+  "active_city": "seoul",
+  "city_kits": [
+    "seoul",
+    "new_york",
+    "paris",
+    "london"
+  ],
+  "required_variants": [
+    "passenger_car",
+    "bus",
+    "taxi",
+    "emergency_vehicle"
+  ],
+  "lane_fit_cm": {
+    "passenger_car": {
+      "length": 430,
+      "width": 185,
+      "height": 145
+    },
+    "taxi": {
+      "length": 455,
+      "width": 188,
+      "height": 150
+    },
+    "bus": {
+      "length": 1180,
+      "width": 255,
+      "height": 320
+    },
+    "emergency_vehicle": {
+      "length": 520,
+      "width": 205,
+      "height": 230
+    }
+  },
+  "runtime_policy": "SUMO and FastAPI provide future state; Unreal actors provide normalized renderable assets only.",
+  "actor_evidence": [
+    "OperatorStage3",
+    "Stage3CityAssetKit",
+    "Stage3SignalKit",
+    "Stage3VehicleKit",
+    "SUMOReadyAssetPivot",
+    "OperatorStage2",
+    "NoTrafficZoneBackplate",
+    "TrafficReadableQueueZone"
+  ],
+  "forbidden_map_tokens": [
+    "photo_backplate",
+    "road_card",
+    "ImageGen",
+    "asset_lineup",
+    "proof_plinth",
+    "foreground proof",
+    "foreground plinth"
+  ],
+  "queue_capacity_visible": 40,
+  "runtime_controller": "TrafficSimulationController SmartIntersectionRuntime seoul"
+}

@@ -112,6 +112,18 @@ MATERIAL_COLORS = {
     "operator_context_sign_green": (0.040, 0.300, 0.170, 1.0),
     "operator_context_traffic_cabinet": (0.40, 0.43, 0.38, 1.0),
     "operator_context_streetlight": (0.30, 0.31, 0.30, 1.0),
+    "operator_stage3_signal_yellow": (0.95, 0.66, 0.08, 1.0),
+    "operator_stage3_signal_black": (0.065, 0.072, 0.072, 1.0),
+    "operator_stage3_signal_lens_red": (0.90, 0.025, 0.020, 1.0),
+    "operator_stage3_signal_lens_green": (0.015, 0.72, 0.18, 1.0),
+    "operator_stage3_vehicle_dark": (0.075, 0.088, 0.092, 1.0),
+    "operator_stage3_vehicle_white": (0.86, 0.86, 0.78, 1.0),
+    "operator_stage3_vehicle_taxi_yellow": (0.96, 0.72, 0.07, 1.0),
+    "operator_stage3_vehicle_bus_green": (0.08, 0.44, 0.22, 1.0),
+    "operator_stage3_vehicle_bus_red": (0.72, 0.06, 0.04, 1.0),
+    "operator_stage3_vehicle_emergency_blue": (0.025, 0.19, 0.78, 1.0),
+    "operator_stage3_vehicle_emergency_red": (0.90, 0.045, 0.035, 1.0),
+    "operator_stage3_vehicle_glass": (0.045, 0.095, 0.120, 1.0),
 }
 
 
@@ -249,6 +261,21 @@ OPERATOR_STAGE2_MATERIAL_NAMES = OPERATOR_STAGE1_MATERIAL_NAMES | {
     "operator_context_streetlight",
 }
 
+OPERATOR_STAGE3_MATERIAL_NAMES = OPERATOR_STAGE2_MATERIAL_NAMES | {
+    "operator_stage3_signal_yellow",
+    "operator_stage3_signal_black",
+    "operator_stage3_signal_lens_red",
+    "operator_stage3_signal_lens_green",
+    "operator_stage3_vehicle_dark",
+    "operator_stage3_vehicle_white",
+    "operator_stage3_vehicle_taxi_yellow",
+    "operator_stage3_vehicle_bus_green",
+    "operator_stage3_vehicle_bus_red",
+    "operator_stage3_vehicle_emergency_blue",
+    "operator_stage3_vehicle_emergency_red",
+    "operator_stage3_vehicle_glass",
+}
+
 OPERATOR_STAGE2_TRAFFIC_ZONE_HALF_EXTENT = 1840
 OPERATOR_STAGE2_CONTEXT_RING_INNER = 2100
 OPERATOR_STAGE2_CONTEXT_RING_OUTER = 5200
@@ -265,6 +292,47 @@ OPERATOR_STAGE2_FORBIDDEN_MAP_TOKENS = [
     "foreground proof",
     "foreground plinth",
     "PolyHaven CC0 VISIBLE",
+]
+
+OPERATOR_STAGE3_ACTIVE_CITY = "seoul"
+OPERATOR_STAGE3_ASSET_KIT_SCHEMA = "operator-stage3-city-asset-kit-v1"
+OPERATOR_STAGE3_CITY_KEYS = ["seoul", "new_york", "paris", "london"]
+OPERATOR_STAGE3_REQUIRED_VARIANTS = ["passenger_car", "bus", "taxi", "emergency_vehicle"]
+OPERATOR_STAGE3_REQUIRED_TOKENS = [
+    "OperatorStage3",
+    "Stage3CityAssetKit",
+    "Stage3SignalKit",
+    "Stage3VehicleKit",
+    "SUMOReadyAssetPivot",
+]
+OPERATOR_STAGE3_FORBIDDEN_MAP_TOKENS = [
+    "photo_backplate",
+    "road_card",
+    "ImageGen",
+    "asset_lineup",
+    "proof_plinth",
+    "foreground proof",
+    "foreground plinth",
+]
+
+OPERATOR_STAGE3_VEHICLE_SLOTS = [
+    ("north", "passenger_car", 0, -275, 1960, 90),
+    ("north", "taxi", 1, -95, 2220, 90),
+    ("north", "bus", 2, 110, 2580, 90),
+    ("south", "passenger_car", 0, 275, -1960, -90),
+    ("south", "emergency_vehicle", 1, 95, -2300, -90),
+    ("east", "passenger_car", 0, 1960, 275, 180),
+    ("east", "bus", 1, 2380, 95, 180),
+    ("west", "taxi", 0, -1960, -275, 0),
+    ("west", "passenger_car", 1, -2220, -95, 0),
+    ("west", "emergency_vehicle", 2, -2580, 110, 0),
+]
+
+OPERATOR_STAGE3_SIGNAL_ASSEMBLIES = [
+    ("seoul_northwest", "seoul", -1140, 1120, 0, "overhead_mast_arm_compact"),
+    ("seoul_northeast", "seoul", 1140, 1120, 180, "overhead_mast_arm_compact"),
+    ("seoul_southwest", "seoul", -1140, -1120, 0, "overhead_mast_arm_compact"),
+    ("seoul_southeast", "seoul", 1140, -1120, 180, "overhead_mast_arm_compact"),
 ]
 
 OPERATOR_STAGE2_FACADE_BLOCKS = [
@@ -389,13 +457,17 @@ class RoadOnlyRenderer:
         self.display_name = self.profile["display_name"]
         self.operator_stage1 = os.environ.get("SMART_INTERSECTION_OPERATOR_STAGE1") == "1"
         self.operator_stage2 = os.environ.get("SMART_INTERSECTION_OPERATOR_STAGE2") == "1"
+        self.operator_stage3 = os.environ.get("SMART_INTERSECTION_OPERATOR_STAGE3") == "1"
         self.project_root = self.profile_path.parents[2]
         self.generated_dir = self.project_root / "GeneratedProof"
         self.generated_dir.mkdir(parents=True, exist_ok=True)
         self.materials = {}
+        self.stage3_asset_kit_profile = None
 
     @property
     def package_path(self) -> str:
+        if self.operator_stage3:
+            return "/Game/Maps/Generated/smart_intersection_rebuild_stage3"
         if self.operator_stage2:
             return "/Game/Maps/Generated/smart_intersection_rebuild_stage2"
         if self.operator_stage1:
@@ -403,6 +475,36 @@ class RoadOnlyRenderer:
         return f"/Game/Maps/Generated/{self.city}_RoadOnly"
 
     def build_manifest(self) -> dict:
+        if self.operator_stage3:
+            kit_profile = self._load_operator_stage3_asset_kits()
+            return {
+                "generator": "RoadOnlyRenderer",
+                "mode": "OperatorStage3",
+                "city": self.city,
+                "display_name": "SUMO-ready operator intersection with city signal and vehicle asset kit",
+                "simulation_truth_source": "SUMO truth source",
+                "future_bridge": "TraCI bridge via FastAPI renderer snapshots",
+                "renderer_role": "Unreal renderer only",
+                "scope": "Stage 3 city asset-kit pass; no live SUMO motion and no real traffic-control integration",
+                "imagegen_reference": "artifacts/imagegen/sumo-ready-operator-map-stage3-asset-reference.png",
+                "unreal_map": self.package_path,
+                "base_stage": "OperatorStage2",
+                "asset_kit_schema": OPERATOR_STAGE3_ASSET_KIT_SCHEMA,
+                "active_city": OPERATOR_STAGE3_ACTIVE_CITY,
+                "city_kits": OPERATOR_STAGE3_CITY_KEYS,
+                "required_variants": OPERATOR_STAGE3_REQUIRED_VARIANTS,
+                "lane_fit_cm": kit_profile.get("lane_fit_cm", {}),
+                "runtime_policy": kit_profile.get("runtime_policy"),
+                "actor_evidence": [
+                    *OPERATOR_STAGE3_REQUIRED_TOKENS,
+                    "OperatorStage2",
+                    "NoTrafficZoneBackplate",
+                    "TrafficReadableQueueZone",
+                ],
+                "forbidden_map_tokens": OPERATOR_STAGE3_FORBIDDEN_MAP_TOKENS,
+                "queue_capacity_visible": 40,
+                "runtime_controller": f"TrafficSimulationController SmartIntersectionRuntime {self.city}",
+            }
         if self.operator_stage2:
             return {
                 "generator": "RoadOnlyRenderer",
@@ -471,6 +573,10 @@ class RoadOnlyRenderer:
         }
 
     def write_manifest(self) -> Path:
+        if self.operator_stage3:
+            path = self.generated_dir / "smart_intersection_rebuild_operator_stage3_manifest.json"
+            path.write_text(json.dumps(self.build_manifest(), indent=2) + "\n", encoding="utf-8")
+            return path
         if self.operator_stage2:
             path = self.generated_dir / "smart_intersection_rebuild_operator_stage2_manifest.json"
             path.write_text(json.dumps(self.build_manifest(), indent=2) + "\n", encoding="utf-8")
@@ -495,6 +601,9 @@ class RoadOnlyRenderer:
         self._create_materials()
         self._build_scene()
         self._save_level()
+        if self.operator_stage3:
+            print(f"OPERATOR_STAGE3_UNREAL_GENERATED city={self.city} package={self.package_path}")
+            return
         if self.operator_stage2:
             print(f"OPERATOR_STAGE2_UNREAL_GENERATED city={self.city} package={self.package_path}")
             return
@@ -591,7 +700,9 @@ class RoadOnlyRenderer:
         asset_tools = unreal.AssetToolsHelpers.get_asset_tools()
         material_dir = "/Game/Materials/RoadOnlyRenderer"
         unreal.EditorAssetLibrary.make_directory(material_dir)
-        if self.operator_stage2:
+        if self.operator_stage3:
+            city_material_names = OPERATOR_STAGE3_MATERIAL_NAMES
+        elif self.operator_stage2:
             city_material_names = OPERATOR_STAGE2_MATERIAL_NAMES
         elif self.operator_stage1:
             city_material_names = OPERATOR_STAGE1_MATERIAL_NAMES
@@ -608,8 +719,12 @@ class RoadOnlyRenderer:
             asset_path = f"{material_dir}/{asset_name}"
             mat = unreal.EditorAssetLibrary.load_asset(asset_path)
             rebuilt = False
-            recreate_operator_material = (self.operator_stage1 or self.operator_stage2) and name.startswith("operator_")
-            if mat is not None and ((name in RECREATE_MATERIAL_NAMES and not (self.operator_stage1 or self.operator_stage2)) or recreate_operator_material):
+            operator_mode = self.operator_stage1 or self.operator_stage2 or self.operator_stage3
+            if self.operator_stage3:
+                recreate_operator_material = name.startswith("operator_stage3_")
+            else:
+                recreate_operator_material = (self.operator_stage1 or self.operator_stage2) and name.startswith("operator_")
+            if mat is not None and ((name in RECREATE_MATERIAL_NAMES and not operator_mode) or recreate_operator_material):
                 try:
                     if unreal.EditorAssetLibrary.delete_asset(asset_path):
                         mat = None
@@ -1348,13 +1463,142 @@ class RoadOnlyRenderer:
                     "road_sign",
                 )
 
+    def _load_operator_stage3_asset_kits(self) -> dict:
+        path = self.project_root / "SceneProfiles" / "operator_stage3_asset_kits.json"
+        data = json.loads(path.read_text(encoding="utf-8"))
+        if data.get("schema") != OPERATOR_STAGE3_ASSET_KIT_SCHEMA:
+            raise RuntimeError(f"Unexpected Stage 3 asset-kit schema: {data.get('schema')}")
+        cities = data.get("cities", {})
+        missing_cities = [city for city in OPERATOR_STAGE3_CITY_KEYS if city not in cities]
+        if missing_cities:
+            raise RuntimeError(f"Stage 3 asset-kit profile missing cities: {missing_cities}")
+        lane_fit = data.get("lane_fit_cm", {})
+        missing_dimensions = [variant for variant in OPERATOR_STAGE3_REQUIRED_VARIANTS if variant not in lane_fit]
+        if missing_dimensions:
+            raise RuntimeError(f"Stage 3 asset-kit profile missing lane-fit dimensions: {missing_dimensions}")
+        for city, kit in cities.items():
+            variants = kit.get("variants", [])
+            missing_variants = [variant for variant in OPERATOR_STAGE3_REQUIRED_VARIANTS if variant not in variants]
+            if missing_variants:
+                raise RuntimeError(f"Stage 3 asset-kit profile {city} missing variants: {missing_variants}")
+        return data
+
+    def _tag_operator_stage3_asset(self, actor, city: str, kit: str, *extra_tags: str) -> None:
+        self._set_actor_property(
+            actor,
+            "Tags",
+            ["OperatorStage3", "Stage3CityAssetKit", kit, "SUMOReadyAssetPivot", city, *extra_tags],
+        )
+
+    def _spawn_operator_stage3_vehicle(self, city: str, direction: str, variant: str, slot: int, x: float, y: float, yaw: float) -> None:
+        dimensions = {
+            "passenger_car": (4.30, 1.85, 1.45),
+            "taxi": (4.55, 1.88, 1.50),
+            "bus": (11.80, 2.55, 3.20),
+            "emergency_vehicle": (5.20, 2.05, 2.30),
+        }[variant]
+        material = {
+            "passenger_car": "operator_stage3_vehicle_dark",
+            "taxi": "operator_stage3_vehicle_taxi_yellow",
+            "bus": "operator_stage3_vehicle_bus_green" if city == "seoul" else "operator_stage3_vehicle_bus_red",
+            "emergency_vehicle": "operator_stage3_vehicle_emergency_blue",
+        }[variant]
+        label = f"OperatorStage3_Stage3VehicleKit_SUMOReadyAssetPivot_{city}_{direction}_{variant}_{slot:02d}"
+        body = self._rotated_cube(
+            label,
+            (x, y, 86),
+            (dimensions[0] / 2.0, dimensions[1] / 2.0, dimensions[2] / 2.0),
+            material,
+            rotation=(0, 0, yaw),
+        )
+        glass = self._rotated_cube(
+            f"{label}_glass",
+            (x, y, 178),
+            (dimensions[0] * 0.24, dimensions[1] * 0.38, 0.28),
+            "operator_stage3_vehicle_glass",
+            rotation=(0, 0, yaw),
+        )
+        for actor in (body, glass):
+            self._tag_operator_stage3_asset(actor, city, "Stage3VehicleKit", direction, variant)
+        if variant == "taxi":
+            roof_light = self._rotated_cube(
+                f"{label}_taxi_roof_light",
+                (x, y, 234),
+                (0.34, 0.12, 0.055),
+                "operator_stage3_vehicle_white",
+                rotation=(0, 0, yaw),
+            )
+            self._tag_operator_stage3_asset(roof_light, city, "Stage3VehicleKit", direction, variant, "taxi_roof_light")
+        if variant == "emergency_vehicle":
+            beacon = self._rotated_cube(
+                f"{label}_emergency_beacon",
+                (x, y, 246),
+                (0.52, 0.16, 0.075),
+                "operator_stage3_vehicle_emergency_red",
+                rotation=(0, 0, yaw),
+            )
+            self._tag_operator_stage3_asset(beacon, city, "Stage3VehicleKit", direction, variant, "emergency_beacon")
+
+    def _spawn_operator_stage3_signal_assembly(self, label: str, city: str, x: float, y: float, yaw: float, style: str) -> None:
+        metal = "operator_stage3_signal_yellow" if city == "new_york" else "operator_stage3_signal_black"
+        pole = self._cube(
+            f"OperatorStage3_Stage3SignalKit_SUMOReadyAssetPivot_{label}_pole",
+            (x, y, 245),
+            (0.060, 0.060, 2.45),
+            metal,
+        )
+        arm = self._rotated_cube(
+            f"OperatorStage3_Stage3SignalKit_{label}_mast_arm",
+            (x + (230 if yaw == 0 else -230), y, 430),
+            (2.35, 0.040, 0.045),
+            metal,
+            rotation=(0, 0, yaw),
+        )
+        head_x = x + (430 if yaw == 0 else -430)
+        head = self._rotated_cube(
+            f"OperatorStage3_Stage3SignalKit_{city}_{style}_{label}_head",
+            (head_x, y, 390),
+            (0.20, 0.070, 0.34),
+            metal,
+            rotation=(0, 0, yaw),
+        )
+        red = self._rotated_cube(
+            f"OperatorStage3_Stage3SignalKit_{label}_lens_red",
+            (head_x, y - 7, 430),
+            (0.058, 0.018, 0.058),
+            "operator_stage3_signal_lens_red",
+            rotation=(0, 0, yaw),
+        )
+        green = self._rotated_cube(
+            f"OperatorStage3_Stage3SignalKit_{label}_lens_green",
+            (head_x, y - 7, 348),
+            (0.058, 0.018, 0.058),
+            "operator_stage3_signal_lens_green",
+            rotation=(0, 0, yaw),
+        )
+        for actor in (pole, arm, head, red, green):
+            self._tag_operator_stage3_asset(actor, city, "Stage3SignalKit", style)
+
     def _build_operator_stage2_scene(self) -> None:
         self._build_operator_stage1_scene()
         self._spawn_operator_stage2_curbs_guardrails()
         self._spawn_operator_stage2_facade_blocks()
         self._spawn_operator_stage2_street_furniture()
 
+    def _build_operator_stage3_scene(self) -> None:
+        self._build_operator_stage2_scene()
+        kit_profile = self._load_operator_stage3_asset_kits()
+        active_city = OPERATOR_STAGE3_ACTIVE_CITY
+        for direction, variant, slot, x, y, yaw in OPERATOR_STAGE3_VEHICLE_SLOTS:
+            self._spawn_operator_stage3_vehicle(active_city, direction, variant, slot, x, y, yaw)
+        for label, city, x, y, yaw, style in OPERATOR_STAGE3_SIGNAL_ASSEMBLIES:
+            self._spawn_operator_stage3_signal_assembly(label, city, x, y, yaw, style)
+        self.stage3_asset_kit_profile = kit_profile
+
     def _build_scene(self) -> None:
+        if self.operator_stage3:
+            self._build_operator_stage3_scene()
+            return
         if self.operator_stage2:
             self._build_operator_stage2_scene()
             return

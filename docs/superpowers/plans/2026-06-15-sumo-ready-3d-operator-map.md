@@ -1066,7 +1066,7 @@ Stage 3 does **not**:
 - Read: `docs/superpowers/plans/2026-06-15-sumo-ready-3d-operator-map.md`
 - Validate: current git state and Stage 1/2 artifacts
 
-- [ ] **Step 1: Confirm current branch and dirty state**
+- [x] **Step 1: Confirm current branch and dirty state**
 
 Run:
 
@@ -1077,7 +1077,7 @@ git log -1 --oneline --decorate
 
 Expected: current branch is `main`, `HEAD` is at or after `385ca20a feat: add sumo operator map stage 2`, and any unrelated dirty files are reported before editing. Do not stage unrelated files.
 
-- [ ] **Step 2: Re-run Stage 2 baseline checks before Stage 3 edits**
+- [x] **Step 2: Re-run Stage 2 baseline checks before Stage 3 edits**
 
 Run:
 
@@ -1098,7 +1098,7 @@ Expected: all pass before Stage 3 implementation. If a baseline fails, fix or do
 - Generated: `artifacts/imagegen/sumo-ready-operator-map-stage3-asset-reference.png`
 - Reference only: `docs/superpowers/plans/2026-06-15-sumo-ready-3d-operator-map.md`
 
-- [ ] **Step 1: Generate one city asset-kit reference board**
+- [x] **Step 1: Generate one city asset-kit reference board**
 
 Use Image Gen to create a practical reference board with four labeled columns:
 
@@ -1117,7 +1117,7 @@ artifacts/imagegen/sumo-ready-operator-map-stage3-asset-reference.png
 
 Expected: the reference board guides proportions, color/material direction, and city distinctions only. It must not be imported into the Unreal map.
 
-- [ ] **Step 2: Record reference-only constraints in the plan**
+- [x] **Step 2: Record reference-only constraints in the plan**
 
 When implementation completes, add evidence under the Stage 3 verification status:
 
@@ -1134,7 +1134,7 @@ Expected: Stage 3 keeps generated images out of runtime map objects.
 - Create: `renderer/unreal/SmartIntersection/SceneProfiles/operator_stage3_asset_kits.json`
 - Modify: `renderer/unreal/SmartIntersection/Content/Python/generate_road_intersection.py`
 
-- [ ] **Step 1: Create the asset-kit profile JSON**
+- [x] **Step 1: Create the asset-kit profile JSON**
 
 Create `renderer/unreal/SmartIntersection/SceneProfiles/operator_stage3_asset_kits.json` with this structure:
 
@@ -1176,7 +1176,7 @@ Create `renderer/unreal/SmartIntersection/SceneProfiles/operator_stage3_asset_ki
 
 Expected: all four city kits have the same variant keys and normalized dimensions, so Stage 4 can map SUMO vehicle classes without branching on visual quirks.
 
-- [ ] **Step 2: Add Stage 3 constants to the generator**
+- [x] **Step 2: Add Stage 3 constants to the generator**
 
 Add near the Stage 2 constants:
 
@@ -1212,7 +1212,7 @@ Expected: the Stage 3 verifier can prove the pipeline is present and that proof-
 - Modify: `package.json`
 - Modify: `renderer/unreal/SmartIntersection/Content/Python/generate_road_intersection.py`
 
-- [ ] **Step 1: Add the PowerShell switch**
+- [x] **Step 1: Add the PowerShell switch**
 
 Add a switch next to `OperatorStage2`:
 
@@ -1232,7 +1232,7 @@ if ($OperatorStage3) {
 
 Expected: Stage 3 generation can be invoked without changing the normal city-profile or Stage 1/2 paths.
 
-- [ ] **Step 2: Add npm scripts**
+- [x] **Step 2: Add npm scripts**
 
 Add scripts:
 
@@ -1244,7 +1244,7 @@ Add scripts:
 
 Expected: Stage 3 has the same Windows-safe verification route as Stage 1 and Stage 2.
 
-- [ ] **Step 3: Add generator mode detection and map naming**
+- [x] **Step 3: Add generator mode detection and map naming**
 
 In `RoadOnlyRenderer.__init__`, add:
 
@@ -1271,7 +1271,7 @@ Expected: Stage 3 writes a separate `.umap` and does not overwrite Stage 1 or St
 - Modify: `renderer/unreal/SmartIntersection/Content/Python/generate_road_intersection.py`
 - Read: `renderer/unreal/SmartIntersection/SceneProfiles/operator_stage3_asset_kits.json`
 
-- [ ] **Step 1: Add reusable Stage 3 material names**
+- [x] **Step 1: Add reusable Stage 3 material names**
 
 Add material keys:
 
@@ -1303,7 +1303,7 @@ elif self.operator_stage2:
 
 Expected: Stage 3 uses material instances/colors, not imported image textures.
 
-- [ ] **Step 2: Load and validate the asset-kit profile**
+- [x] **Step 2: Load and validate the asset-kit profile**
 
 Add a helper:
 
@@ -1332,7 +1332,7 @@ Expected: generation fails loudly if a city kit is incomplete.
 **Files:**
 - Modify: `renderer/unreal/SmartIntersection/Content/Python/generate_road_intersection.py`
 
-- [ ] **Step 1: Add vehicle slot data for the active operator map**
+- [x] **Step 1: Add vehicle slot data for the active operator map**
 
 Add deterministic lane slots that reuse Stage 1 queue semantics:
 
@@ -1353,7 +1353,7 @@ OPERATOR_STAGE3_VEHICLE_SLOTS = [
 
 Expected: Stage 3 proves all required variants in real queue lanes without becoming an all-city asset lineup.
 
-- [ ] **Step 2: Add a normalized vehicle spawn helper**
+- [x] **Step 2: Add a normalized vehicle spawn helper**
 
 Add:
 
@@ -1380,7 +1380,7 @@ def _spawn_operator_stage3_vehicle(self, city: str, direction: str, variant: str
 
 Expected: each vehicle actor has stable label/tag evidence for city, direction, variant, and future SUMO heading updates.
 
-- [ ] **Step 3: Add emergency beacon geometry**
+- [x] **Step 3: Add emergency beacon geometry**
 
 Extend the helper for `emergency_vehicle`:
 
@@ -1397,7 +1397,7 @@ Expected: emergency vehicles are visually distinct but still normalized geometry
 **Files:**
 - Modify: `renderer/unreal/SmartIntersection/Content/Python/generate_road_intersection.py`
 
-- [ ] **Step 1: Add signal assembly data**
+- [x] **Step 1: Add signal assembly data**
 
 Add Seoul active-map assemblies:
 
@@ -1412,7 +1412,7 @@ OPERATOR_STAGE3_SIGNAL_ASSEMBLIES = [
 
 Expected: the active Stage 3 map proves one city-specific signal kit in real intersection positions.
 
-- [ ] **Step 2: Add a normalized signal spawn helper**
+- [x] **Step 2: Add a normalized signal spawn helper**
 
 Add:
 
@@ -1438,7 +1438,7 @@ Expected: signal actors have stable pivots/tags and readable red/green lens geom
 - Generated: `renderer/unreal/SmartIntersection/Content/Maps/Generated/smart_intersection_rebuild_stage3.umap`
 - Generated: `renderer/unreal/SmartIntersection/GeneratedProof/smart_intersection_rebuild_operator_stage3_manifest.json`
 
-- [ ] **Step 1: Add the Stage 3 scene composer**
+- [x] **Step 1: Add the Stage 3 scene composer**
 
 Add:
 
@@ -1456,7 +1456,7 @@ def _build_operator_stage3_scene(self) -> None:
 
 Expected: Stage 3 inherits Stage 2 map/context and adds normalized vehicle/signal actors.
 
-- [ ] **Step 2: Route generation**
+- [x] **Step 2: Route generation**
 
 In the main generation branch:
 
@@ -1473,7 +1473,7 @@ else:
 
 Expected: Stage 3 does not use the legacy city backplate generation path.
 
-- [ ] **Step 3: Write a Stage 3 manifest**
+- [x] **Step 3: Write a Stage 3 manifest**
 
 Manifest must include:
 
@@ -1507,7 +1507,7 @@ Expected: verifier can prove Stage 3 is an asset pipeline on top of Stage 2, not
 - Create: `renderer/unreal/SmartIntersection/Content/Python/capture_operator_map_stage3.py`
 - Create: `scripts/capture-unreal-operator-map-stage3.ps1`
 
-- [ ] **Step 1: Copy Stage 2 capture structure and change map/output labels**
+- [x] **Step 1: Copy Stage 2 capture structure and change map/output labels**
 
 Use:
 
@@ -1530,7 +1530,7 @@ $env:SMART_INTERSECTION_OPERATOR_STAGE3_PROOF_OUTPUT = "artifacts\unreal-operato
 
 Expected: capture fails if Stage 3 vehicles/signals or inherited Stage 2 context are missing.
 
-- [ ] **Step 2: Keep the proof operator-readable**
+- [x] **Step 2: Keep the proof operator-readable**
 
 Capture acceptance:
 
@@ -1548,7 +1548,7 @@ Expected: proof shows the asset pipeline in the real operator map, not an asset 
 **Files:**
 - Create: `scripts/verify-sumo-ready-operator-map-stage3.py`
 
-- [ ] **Step 1: Check required files and sizes**
+- [x] **Step 1: Check required files and sizes**
 
 Use these minimums:
 
@@ -1565,7 +1565,7 @@ PROOF = ROOT / "artifacts" / "unreal-operator-map-stage3-proof.png"
 
 Expected: Stage 3 cannot pass without the reference, profile, map, manifest, and proof artifact.
 
-- [ ] **Step 2: Check kit profile schema and city coverage**
+- [x] **Step 2: Check kit profile schema and city coverage**
 
 Required JSON checks:
 
@@ -1581,7 +1581,7 @@ for city in required_cities:
 
 Expected: each city has the same normalized visual variants before Stage 6 expands maps.
 
-- [ ] **Step 3: Check generator, manifest, and map tokens**
+- [x] **Step 3: Check generator, manifest, and map tokens**
 
 Required generator tokens:
 
@@ -1630,7 +1630,7 @@ FORBIDDEN_STAGE3_TOKENS = [
 
 Expected: Stage 3 proves asset-kit semantics while preserving Stage 1/2 operator-map constraints.
 
-- [ ] **Step 4: Check proof image**
+- [x] **Step 4: Check proof image**
 
 Reuse the Stage 2 image check:
 
@@ -1659,7 +1659,7 @@ SUMO_READY_OPERATOR_STAGE3_PASS
 - Generated: `renderer/unreal/SmartIntersection/GeneratedProof/smart_intersection_rebuild_operator_stage3_manifest.json`
 - Generated: `artifacts/unreal-operator-map-stage3-proof.png`
 
-- [ ] **Step 1: Generate Stage 3**
+- [x] **Step 1: Generate Stage 3**
 
 Run:
 
@@ -1674,7 +1674,7 @@ Expected:
 - generated map exists at `smart_intersection_rebuild_stage3.umap`
 - Stage 3 manifest exists and has mode `OperatorStage3`
 
-- [ ] **Step 2: Capture Stage 3**
+- [x] **Step 2: Capture Stage 3**
 
 Run:
 
@@ -1684,7 +1684,7 @@ npm run unreal:capture:operator-stage3
 
 Expected: proof PNG exists at `artifacts/unreal-operator-map-stage3-proof.png`.
 
-- [ ] **Step 3: Human visual inspection**
+- [x] **Step 3: Human visual inspection**
 
 Reject the capture if any condition is true:
 
@@ -1704,7 +1704,7 @@ Expected: the operator can read lanes and queues while also seeing normalized ci
 - Validate: changed source, generated map, kit profile, manifest, proof image, package scripts, this plan
 - Modify after evidence: `docs/superpowers/plans/2026-06-15-sumo-ready-3d-operator-map.md`
 
-- [ ] **Step 1: Run focused Stage 3 checks**
+- [x] **Step 1: Run focused Stage 3 checks**
 
 Run:
 
@@ -1720,7 +1720,7 @@ git diff --check
 
 Expected: all pass before any Stage 3 completion claim.
 
-- [ ] **Step 2: Run full repo validation before commit or push**
+- [x] **Step 2: Run full repo validation before commit or push**
 
 Run:
 
@@ -1730,25 +1730,24 @@ npm run verify
 
 Expected: API tests, web tests, web build, and `git diff --check` pass. If unrelated environment gates fail, document the exact failure and still keep Stage 3 checkboxes open unless the Stage 3 verifier and visual inspection pass.
 
-- [ ] **Step 3: Update Stage 3 verification status**
+- [x] **Step 3: Update Stage 3 verification status**
 
-After evidence exists, add:
-
-```markdown
 ## Stage 3 Verification Status - 2026-06-15
 
 **Verdict:** Stage 3 deliverable is implemented and verified for the requested scope.
 
 Current evidence:
 
-- Stage 3 reference image: copy the exact `STAGE3 IMAGEGEN REFERENCE_CHECK_PASS` verifier line.
-- Stage 3 asset-kit profile: `renderer/unreal/SmartIntersection/SceneProfiles/operator_stage3_asset_kits.json`, schema `operator-stage3-city-asset-kit-v1`, cities `seoul`, `new_york`, `paris`, `london`.
-- Stage 3 generated map: copy the exact `MAP_STAGE3_TOKEN_CHECK_PASS` verifier line.
+- Stage 3 reference image: `STAGE3 IMAGEGEN REFERENCE_CHECK_PASS size=(1672, 941) bytes=1759815 mean=178.24 stddev=84.22`.
+- Stage 3 asset-kit profile: `renderer/unreal/SmartIntersection/SceneProfiles/operator_stage3_asset_kits.json`, schema `operator-stage3-city-asset-kit-v1`, cities `seoul`, `new_york`, `paris`, `london`, variants `passenger_car`, `bus`, `taxi`, `emergency_vehicle`.
+- Stage 3 generated map: `MAP_STAGE3_TOKEN_CHECK_PASS bytes=896916`.
 - Stage 3 manifest: `renderer/unreal/SmartIntersection/GeneratedProof/smart_intersection_rebuild_operator_stage3_manifest.json`, mode `OperatorStage3`, base stage `OperatorStage2`.
-- Stage 3 proof: copy the exact `OPERATOR STAGE3 PROOF_CHECK_PASS` verifier line.
+- Stage 3 proof: `OPERATOR STAGE3 PROOF_CHECK_PASS size=(1600, 900) bytes=732573 mean=160.99 stddev=75.18`.
 - Stage 3 verifier output: `SUMO_READY_OPERATOR_STAGE3_PASS`.
-- Stage 1 and Stage 2 verifier outputs still pass.
-- Human visual inspection found normalized city-specific vehicle/signal assets in real lane/signal positions, no asset lineup/proof strip, no traffic-zone cards/backplates, and preserved queue readability.
+- Stage 1 and Stage 2 verifier outputs still pass: `SUMO_READY_OPERATOR_STAGE1_PASS` and `SUMO_READY_OPERATOR_STAGE2_PASS`.
+- Focused checks passed: `npm run unreal:precheck`, bundled-Python `verify-simulator-builder-agent.py` with `SIMULATOR_BUILDER_AGENT_PASS`, bundled-Python `verify-complete-simulation-renderer.py` through `UNREAL_HTTP_SMOKE_ARTIFACTS_CHECK_PASS`, and `git diff --check`.
+- Full repo validation passed: `npm run verify` completed API tests (`70 passed`), web tests (`46 passed`), Next.js build, and final `git diff --check`; only Windows LF-to-CRLF warnings were emitted.
+- Human visual inspection of `artifacts/unreal-operator-map-stage3-proof.png` found normalized city-specific vehicle/signal assets in real lane/signal positions, no asset lineup/proof strip, no traffic-zone cards/backplates, and preserved queue readability.
 
 Remaining non-Stage-3 gates, intentionally not marked complete:
 
@@ -1756,9 +1755,6 @@ Remaining non-Stage-3 gates, intentionally not marked complete:
 - Pixel Streaming dashboard proof
 - multi-city operator-map expansion
 - real traffic-controller integration
-```
-
-Expected: progress is recorded in the Superpowers plan, not only in chat.
 
 ### Stage 3 Goal Mode Prompt
 

@@ -1,0 +1,89 @@
+{
+  "schema": "operator-stage3-city-asset-kit-v1",
+  "base_stage": "OperatorStage2",
+  "runtime_policy": "SUMO and FastAPI provide future state; Unreal actors provide normalized renderable assets only.",
+  "lane_fit_cm": {
+    "passenger_car": {
+      "length": 430,
+      "width": 185,
+      "height": 145
+    },
+    "taxi": {
+      "length": 455,
+      "width": 188,
+      "height": 150
+    },
+    "bus": {
+      "length": 1180,
+      "width": 255,
+      "height": 320
+    },
+    "emergency_vehicle": {
+      "length": 520,
+      "width": 205,
+      "height": 230
+    }
+  },
+  "cities": {
+    "seoul": {
+      "signal_style": "overhead_mast_arm_compact",
+      "vehicle_palette": [
+        "deep_gray",
+        "green_bus",
+        "white_taxi",
+        "blue_emergency"
+      ],
+      "variants": [
+        "passenger_car",
+        "bus",
+        "taxi",
+        "emergency_vehicle"
+      ]
+    },
+    "new_york": {
+      "signal_style": "yellow_box_side_mounted",
+      "vehicle_palette": [
+        "dark_sedan",
+        "yellow_taxi",
+        "white_blue_bus",
+        "red_blue_emergency"
+      ],
+      "variants": [
+        "passenger_car",
+        "bus",
+        "taxi",
+        "emergency_vehicle"
+      ]
+    },
+    "paris": {
+      "signal_style": "slim_black_low_profile",
+      "vehicle_palette": [
+        "silver_hatchback",
+        "white_bus",
+        "dark_taxi",
+        "blue_emergency"
+      ],
+      "variants": [
+        "passenger_car",
+        "bus",
+        "taxi",
+        "emergency_vehicle"
+      ]
+    },
+    "london": {
+      "signal_style": "black_signal_cluster",
+      "vehicle_palette": [
+        "black_cab",
+        "red_bus",
+        "dark_private_car",
+        "yellow_green_emergency"
+      ],
+      "variants": [
+        "passenger_car",
+        "bus",
+        "taxi",
+        "emergency_vehicle"
+      ]
+    }
+  }
+}
