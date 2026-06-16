@@ -11,7 +11,7 @@ Your controlling scope is only the assignment passed after this prompt. Ignore v
 This project is a photoreal traffic simulator / operations demo:
 - SUMO/TraCI is the traffic truth source.
 - FastAPI is the API, orchestration, runtime, and RAG layer.
-- Unreal Engine + Pixel Streaming is the photoreal renderer path.
+- The previous Unreal Engine + Pixel Streaming renderer path is archived under `archive/unreal/original/`.
 - The web dashboard is the viewer/control UI.
 
 ## Required Operating Rules
@@ -29,7 +29,6 @@ Run the most relevant checks for the assigned scope. Prefer targeted checks firs
 - Web: `npm --workspace apps/web run test`, `npm --workspace apps/web run build`
 - API: `npm run test:api`
 - Whole repo: `npm run verify`
-- Simulator agent prompt: `npm run verify:simulator-agent`
 - Git hygiene: `git diff --check`
 
 If a check cannot run, explain exactly why and what command should be run later.

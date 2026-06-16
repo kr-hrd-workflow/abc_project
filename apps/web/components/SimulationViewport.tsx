@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import type { CSSProperties } from "react";
 import { useEffect, useMemo, useRef } from "react";
@@ -49,7 +49,7 @@ export function SimulationViewport({
   const simulationStreamUrl = genericStreamUrl || legacyStreamUrl;
   const renderMode = simulationStreamUrl
     ? genericStreamUrl
-      ? "Unreal Pixel Streaming"
+      ? "Hosted simulation stream"
       : "Legacy stream alias"
     : "Digital twin fallback";
 
@@ -57,7 +57,7 @@ export function SimulationViewport({
     <div className="simulation-viewport">
       {simulationStreamUrl ? (
         <iframe
-          className="simulation-stream-frame unreal-pixel-streaming-frame"
+          className="simulation-stream-frame hosted-simulation-stream-frame"
           src={simulationStreamUrl}
           title={locale === "ko" ? "시뮬레이션 스트림" : "Simulation stream"}
           allow="fullscreen; autoplay; xr-spatial-tracking"
@@ -69,7 +69,7 @@ export function SimulationViewport({
         <span className="rain-sheen" />
         <span className="camera-vignette" />
       </div>
-      <div className="unreal-depth-field" aria-hidden="true">
+      <div className="simulation-depth-field" aria-hidden="true">
         <span className="depth-building depth-left" />
         <span className="depth-building depth-right" />
         <span className="streetlight streetlight-a" />
@@ -85,16 +85,16 @@ export function SimulationViewport({
         <span>{renderMode}</span>
       </div>
       <section
-        className="unreal-cctv-surface"
+        className="simulation-cctv-surface"
         aria-label={locale === "ko" ? "시뮬레이션 스트림 뷰어" : "Simulation stream viewer"}
       >
         <div>
-          <span>{locale === "ko" ? "Unreal-ready Render Slot" : "Unreal-ready Render Slot"}</span>
+          <span>{locale === "ko" ? "Stream-ready Render Slot" : "Stream-ready Render Slot"}</span>
           <strong>{locale === "ko" ? "실사형 가상 CCTV / 디지털 트윈" : "Photoreal virtual CCTV / digital twin"}</strong>
           <small>
             {locale === "ko"
-              ? "NEXT_PUBLIC_SIMULATION_STREAM_URL로 Unreal Pixel Streaming 플레이어 연결 / legacy stream alias도 임시 호환"
-              : "Connects to the Unreal Pixel Streaming player from NEXT_PUBLIC_SIMULATION_STREAM_URL; legacy stream alias remains temporarily supported"}
+              ? "NEXT_PUBLIC_SIMULATION_STREAM_URL로 Hosted simulation stream 플레이어 연결 / legacy stream alias도 임시 호환"
+              : "Connects to the Hosted simulation stream player from NEXT_PUBLIC_SIMULATION_STREAM_URL; legacy stream alias remains temporarily supported"}
           </small>
         </div>
         <div className="cctv-frame-lines" aria-hidden="true">

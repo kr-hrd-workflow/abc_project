@@ -1,4 +1,4 @@
-// @vitest-environment jsdom
+﻿// @vitest-environment jsdom
 
 import { cleanup, render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
@@ -135,14 +135,14 @@ const fixtures: AnalysisFixture[] = [
     safety_note: "Sample analysis only. No real CCTV stream or traffic signal control."
   },
   {
-    fixture_id: "unreal-virtual-cctv-east",
+    fixture_id: "hosted-virtual-cctv-east",
     scenario_id: "emergency",
     media_type: "virtual_cctv",
-    filename: "unreal-virtual-cctv-east.mp4",
-    description: "Unreal Pixel Streaming virtual CCTV presentation feed for the east emergency approach scenario.",
-    source: "unreal_pixel_streaming_cctv",
-    renderer: "unreal_pixel_streaming",
-    safety_note: "Unreal is used for presentation visualization only; SUMO/TraCI remains the traffic validation engine."
+    filename: "hosted-virtual-cctv-east.mp4",
+    description: "Hosted simulation stream virtual CCTV presentation feed for the east emergency approach scenario.",
+    source: "hosted_simulation_cctv",
+    renderer: "hosted_simulation_stream",
+    safety_note: "Hosted visualization is presentation-only; SUMO/TraCI remains the traffic validation engine."
   }
 ];
 
@@ -396,7 +396,7 @@ describe("DashboardShell", () => {
     expect(screen.getByText("실사형 가상 CCTV")).toBeTruthy();
     expect(screen.getByText("Digital twin fallback")).toBeTruthy();
     expect(screen.getByText("실사형 가상 CCTV / 디지털 트윈")).toBeTruthy();
-    expect(screen.getByText("NEXT_PUBLIC_SIMULATION_STREAM_URL로 Unreal Pixel Streaming 플레이어 연결 / legacy stream alias도 임시 호환")).toBeTruthy();
+    expect(screen.getByText("NEXT_PUBLIC_SIMULATION_STREAM_URL로 Hosted simulation stream 플레이어 연결 / legacy stream alias도 임시 호환")).toBeTruthy();
     expect(screen.getByText("주기 22s")).toBeTruthy();
     expect(screen.getByText("대기 72s -> 59s")).toBeTruthy();
     expect(screen.getByText("처리량 +13%")).toBeTruthy();
@@ -406,7 +406,7 @@ describe("DashboardShell", () => {
     expect(screen.getByText("집계 지표 기반")).toBeTruthy();
   });
 
-  test("mounts the Unreal simulation stream URL before the legacy alias", () => {
+  test("mounts the hosted simulation stream URL before the legacy alias", () => {
     vi.stubEnv("NEXT_PUBLIC_SIMULATION_STREAM_URL", "https://pixel.example/stream");
     vi.stubEnv("NEXT_PUBLIC_UNITY_WEBGL_URL", "/unity/index.html");
 
@@ -415,10 +415,10 @@ describe("DashboardShell", () => {
 
     expect(streamFrame?.getAttribute("src")).toBe("https://pixel.example/stream");
     expect(streamFrame?.getAttribute("title")).toBe("시뮬레이션 스트림");
-    expect(screen.getByText("Unreal Pixel Streaming")).toBeTruthy();
+    expect(screen.getByText("Hosted simulation stream")).toBeTruthy();
   });
 
-  test("mounts the local Stage 5 Pixel Streaming iframe before the legacy alias", () => {
+  test("mounts the local hosted simulation iframe before the legacy alias", () => {
     vi.stubEnv("NEXT_PUBLIC_SIMULATION_STREAM_URL", "http://127.0.0.1");
     vi.stubEnv("NEXT_PUBLIC_UNITY_WEBGL_URL", "/unity/index.html");
 
@@ -427,9 +427,9 @@ describe("DashboardShell", () => {
 
     expect(streamFrame?.getAttribute("src")).toBe("http://127.0.0.1");
     expect(streamFrame?.className).toContain("simulation-stream-frame");
-    expect(streamFrame?.className).toContain("unreal-pixel-streaming-frame");
+    expect(streamFrame?.className).toContain("hosted-simulation-stream-frame");
     expect(streamFrame?.getAttribute("allow")).toContain("fullscreen");
-    expect(screen.getByText("Unreal Pixel Streaming")).toBeTruthy();
+    expect(screen.getByText("Hosted simulation stream")).toBeTruthy();
     expect(screen.queryByText("Legacy stream alias")).toBeNull();
     expect(screen.getByText("Simulation only / No real signal control")).toBeTruthy();
     expect(screen.getByText("SUMO/TraCI Renderer")).toBeTruthy();

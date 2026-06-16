@@ -1,4 +1,4 @@
-# 스마트 교차로 의사결정 지원 대시보드
+﻿# 스마트 교차로 의사결정 지원 대시보드
 
 교차로 운영자를 위한 **AI 의사결정 지원 MVP**입니다. 실제 교통 신호를 직접 제어하지 않고, 저장된 시나리오·비전 분석·시뮬레이션·정책 근거를 바탕으로 운영자에게 추천, 비교, 리포트, 채팅 답변을 제공합니다.
 
@@ -16,10 +16,9 @@
 - landing hero의 CSS-only 3D/isometric roadway scene
 - Signal Assembly 섹션의 GSAP sticky scroll + depth ring scene
 - 실사형 WebGL 스타일 가상 CCTV fallback
-- `NEXT_PUBLIC_SIMULATION_STREAM_URL` 설정 시 Unreal Pixel Streaming/시뮬레이션 iframe mount slot
+- `NEXT_PUBLIC_SIMULATION_STREAM_URL` 설정 시 hosted simulation iframe mount slot
 - `NEXT_PUBLIC_UNITY_WEBGL_URL` legacy Unity WebGL 호환 alias
-- Unreal renderer scaffold: `renderer/unreal/SmartIntersection/SmartIntersection.uproject`
-- Epic Launcher/Unreal helper scripts: `npm run unreal:precheck`, `npm run unreal:open`, `npm run unreal:pixel-streaming`, `npm run unreal:home`
+- Archived Unreal renderer scaffold and helper scripts: `archive/unreal/original/`
 - OpenAI live 답변 gateway와 `openai_auto` fallback 모드
 - OpenAI API 키/월 예산 guard 및 secret 미노출 readiness report
 - keyword 기반 로컬 정책 근거 검색과 `KNOWLEDGE_SEARCH_MODE=pgvector` 옵션
@@ -67,28 +66,20 @@ npm run launch:local
 
 세부 런칭 체크리스트는 [`docs/launch-runbook.md`](docs/launch-runbook.md)를 참고하세요.
 
-## Unreal / Pixel Streaming 준비 상태
+## Unreal / Pixel Streaming archive
 
-현재 repo에는 Unreal Engine 프로젝트 shell과 Pixel Streaming 연결 스크립트가 들어 있습니다. 단, Unreal Engine Editor 자체는 Epic Games Launcher에서 로그인 후 GUI로 설치해야 합니다.
+The previous Unreal Engine renderer, Pixel Streaming helpers, UE plans, and proof artifacts are isolated under `archive/unreal/original/`.
 
-현재 완료된 것:
+To resume that path later, restore the archived original paths first:
 
-- Epic Games Launcher 설치 가능 경로 확인
-- Windows Node.js LTS 설치 및 Pixel Streaming script PATH 보강
-- Unreal project scaffold: `renderer/unreal/SmartIntersection/SmartIntersection.uproject`
-- Dashboard stream slot: `NEXT_PUBLIC_SIMULATION_STREAM_URL=http://127.0.0.1`
-- 집에서 이어서 실행할 one-command script: `npm run unreal:home`
-
-Unreal Engine 5.x 설치 후 실행:
-
-```bash
-npm run unreal:precheck
-npm run unreal:home
+```text
+archive/unreal/original/renderer/unreal/
+archive/unreal/original/scripts/
+archive/unreal/original/docs/
+archive/unreal/original/artifacts/
 ```
 
-`npm run unreal:home`은 Unreal Editor 확인, 프로젝트 열기, Pixel Streaming signalling server 시작 시도를 순서대로 수행합니다.
-
-자세한 절차는 [`docs/unreal-pixel-streaming.md`](docs/unreal-pixel-streaming.md)를 참고하세요.
+UE technotes remain in `docs/technotes/` as reference material.
 
 ## 랜딩 페이지 3D 방향
 
@@ -154,7 +145,7 @@ http://127.0.0.1:3000/dashboard
 - `OPENAI_API_KEY`: live OpenAI 답변 활성화용 secret
 - `OPENAI_MONTHLY_BUDGET_USD`: live OpenAI 호출 전 예산 guard
 - `KNOWLEDGE_SEARCH_MODE`: `keyword` 또는 `pgvector`
-- `NEXT_PUBLIC_SIMULATION_STREAM_URL`: Unreal Pixel Streaming 또는 hosted simulation stream mount URL
+- `NEXT_PUBLIC_SIMULATION_STREAM_URL`: hosted simulation stream mount URL
 - `NEXT_PUBLIC_UNITY_WEBGL_URL`: legacy Unity WebGL build mount URL alias
 
 `openai_auto` 동작:
@@ -254,12 +245,11 @@ apps/api/networks/        SUMO network fixture
 apps/web/                 Next.js landing page and frontend
 apps/web/app/page.tsx     Cinematic landing page
 apps/web/components/      Dashboard cockpit, digital twin, simulation viewport components
-renderer/unreal/          Unreal Engine renderer scaffold
 artifacts/                Local QA screenshots and generated evidence, not required for runtime
+archive/unreal/original/  Archived Unreal renderer, scripts, docs, plans, and tracked proof artifacts
 docs/                     Runtime docs, runbooks, design notes
 infra/docker-compose.yml  PostgreSQL/pgvector dev service
 scripts/launch-local.sh   Local launch helper
-scripts/unreal-*.ps1      Windows Unreal/Pixel Streaming helper scripts
 ```
 
 ## 개발 문서
@@ -270,8 +260,8 @@ scripts/unreal-*.ps1      Windows Unreal/Pixel Streaming helper scripts
    - 프로젝트 작업 규칙, Superpowers/Karpathy 사용, 커밋/푸시 규칙
 2. [`docs/launch-runbook.md`](docs/launch-runbook.md)
    - 로컬 런칭, OpenAI live mode, simulation stream mount, production checklist
-3. [`docs/unreal-pixel-streaming.md`](docs/unreal-pixel-streaming.md)
-   - Unreal Engine 5 설치 후 프로젝트 열기와 Pixel Streaming 연결 절차
+3. `archive/unreal/original/docs/unreal-pixel-streaming.md`
+   - Archived Unreal Engine 5 project opening and Pixel Streaming connection procedure
 4. [`docs/landing-3d-references.md`](docs/landing-3d-references.md)
    - 랜딩 페이지 3D/digital-twin 레퍼런스와 이미지 방향
 5. [`docs/runtime-setup.md`](docs/runtime-setup.md)
@@ -289,19 +279,11 @@ scripts/unreal-*.ps1      Windows Unreal/Pixel Streaming helper scripts
 
 우선순위 기준으로 아직 더 개발해야 할 부분은 아래와 같습니다.
 
-### 1. Unreal Engine / Pixel Streaming 연결
+### 1. 3D renderer direction
 
-현재 막힌 지점은 repo 코드가 아니라 Windows GUI 설치입니다.
-
-- Epic Games Launcher에서 Unreal Engine 5.x 설치
-- `npm run unreal:home` 실행
-- Pixel Streaming signalling server가 `http://127.0.0.1`에서 뜨는지 확인
-- dashboard viewport에서 Unreal stream iframe 렌더링 확인
-- Unreal scene에 실제 교차로 mesh, camera, lighting, route overlay actor 추가
-- FastAPI/SUMO state를 Unreal actor transform/material로 반영하는 bridge 설계
+The previous Unreal Engine / Pixel Streaming path is archived under `archive/unreal/original/`. If this path is resumed, restore those files first and use the archived docs/scripts from that directory.
 
 ### 2. SUMO/TraCI live simulation 강화
-
 - fixture comparison에서 실제 TraCI stepping으로 전환
 - scenario별 route file과 detector output 추가
 - queue length, waiting time, emergency priority를 실제 simulation metrics로 계산
@@ -319,7 +301,7 @@ scripts/unreal-*.ps1      Windows Unreal/Pixel Streaming helper scripts
 
 - `docs/superpowers/plans/2026-06-11-phase-b-vite-react-spa-migration.md` 기준으로 Vite React SPA 전환
 - 현재 Next.js page/component를 route 단위로 이동
-- Pixel Streaming viewer를 browser-only SPA island로 단순화
+- Hosted stream viewer를 browser-only SPA island로 단순화
 - Cloudflare Pages/static deploy 기준 env와 build pipeline 정리
 
 ### 5. RAG / policy knowledge 품질 개선
@@ -382,60 +364,25 @@ apps/web/public/landing/operator-proof-room.png          proof / operator valida
 apps/web/public/landing/final-cta-city.png               final CTA background
 ```
 
-대시보드는 차분한 유리 질감의 운영 도구 UI를 지향합니다. 중앙 시뮬레이션 영역은 `apps/web/components/SimulationViewport.tsx`로 분리되어 있으며, 현재는 WebGL-style fallback, Unreal/hosted stream mount slot, legacy Unity WebGL alias를 제공합니다.
+대시보드는 차분한 유리 질감의 운영 도구 UI를 지향합니다. 중앙 시뮬레이션 영역은 `apps/web/components/SimulationViewport.tsx`로 분리되어 있으며, 현재는 WebGL-style fallback, hosted stream mount slot, legacy Unity WebGL alias를 제공합니다.
 
 관련 기록:
 
 ```text
 docs/landing-3d-references.md
-docs/unreal-pixel-streaming.md
+archive/unreal/original/docs/unreal-pixel-streaming.md
 docs/design/assets/dashboard-concept-approved.png
 docs/design/dashboard-concept-notes.md
 ```
 
-## Unreal 도로 렌더 캡처
+## Archived Unreal road render captures
 
-Unreal 도로 전용 렌더는 에디터 뷰포트가 아니라 `SceneCapture2D` 최종 카메라 경로로 캡처합니다. 에디터나 런처에서 보이는 화면은 디버그/원본 맵 상태일 수 있으므로 최종 검수에는 아래 캡처 스크립트의 결과물을 사용합니다.
+The previous Unreal road-render capture workflow and tracked proof images are archived under:
 
-도시별 맵 생성:
-
-```powershell
-npm run unreal:generate-city -- -Profile london
-npm run unreal:generate-city -- -Profile new_york
-npm run unreal:generate-city -- -Profile paris
-npm run unreal:generate-city -- -Profile seoul
+```text
+archive/unreal/original/scripts/
+archive/unreal/original/artifacts/
+archive/unreal/original/docs/
 ```
 
-도시별 최종 렌더 캡처:
-
-```powershell
-powershell.exe -NoProfile -ExecutionPolicy Bypass -File scripts\capture-unreal-road-render-target.ps1 -Profile london -View lit_oblique -Output artifacts\unreal-road-only-london-lit-oblique-final-visible.png
-powershell.exe -NoProfile -ExecutionPolicy Bypass -File scripts\capture-unreal-road-render-target.ps1 -Profile new_york -View lit_oblique -Output artifacts\unreal-road-only-new-york-lit-oblique-final-visible.png
-powershell.exe -NoProfile -ExecutionPolicy Bypass -File scripts\capture-unreal-road-render-target.ps1 -Profile paris -View lit_oblique -Output artifacts\unreal-road-only-paris-lit-oblique-final-visible.png
-powershell.exe -NoProfile -ExecutionPolicy Bypass -File scripts\capture-unreal-road-render-target.ps1 -Profile seoul -View lit_oblique -Output artifacts\unreal-road-only-seoul-lit-oblique-final-visible.png
-```
-
-캡처 결과 열기:
-
-```powershell
-Start-Process "C:\Users\100ri\abc_project\artifacts\unreal-road-only-london-lit-oblique-final-visible.png"
-Start-Process "C:\Users\100ri\abc_project\artifacts\unreal-road-only-new-york-lit-oblique-final-visible.png"
-Start-Process "C:\Users\100ri\abc_project\artifacts\unreal-road-only-paris-lit-oblique-final-visible.png"
-Start-Process "C:\Users\100ri\abc_project\artifacts\unreal-road-only-seoul-lit-oblique-final-visible.png"
-```
-
-최종 PNG 미리보기:
-
-![London Unreal road render](artifacts/unreal-road-only-london-lit-oblique-final-visible.png)
-
-![New York Unreal road render](artifacts/unreal-road-only-new-york-lit-oblique-final-visible.png)
-
-![Paris Unreal road render](artifacts/unreal-road-only-paris-lit-oblique-final-visible.png)
-
-![Seoul Unreal road render](artifacts/unreal-road-only-seoul-lit-oblique-final-visible.png)
-
-참고:
-
-- 지원 도시 프로필은 `london`, `new_york`, `paris`, `seoul`입니다.
-- 캡처 스크립트는 Unreal이 PNG를 내보낸 뒤 불투명 RGB PNG로 다시 저장합니다. 이전 캡처처럼 알파 채널이 전부 `0`이면 Windows 이미지 뷰어에서 정상 RGB 픽셀이 있어도 검은 이미지처럼 보일 수 있기 때문입니다.
-- 최종 품질 판단은 스크립트 통과만으로 하지 않고, 새로 캡처한 PNG를 사람이 직접 확인해야 합니다.
+Ignored local UE proof/cache artifacts were deleted after the tracked checkpoint commit. Restore from commit `4faf3281` or the tracked archive paths if that renderer path is resumed.

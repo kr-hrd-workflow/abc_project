@@ -1,4 +1,4 @@
-@import url("https://api.fontshare.com/v2/css?f[]=satoshi@400,500,700,900&display=swap");
+﻿@import url("https://api.fontshare.com/v2/css?f[]=satoshi@400,500,700,900&display=swap");
 
 :root {
   --bg: #edf4f8;
@@ -9817,8 +9817,8 @@ body {
   }
 }
 
-/* Unreal Pixel Streaming / virtual CCTV presentation surface for simulator demo. */
-.launch-dashboard:is([data-layout="operations-cockpit"], [data-layout="spatial-command-hybrid"]) .unreal-cctv-surface {
+/* Hosted simulation stream / virtual CCTV presentation surface for simulator demo. */
+.launch-dashboard:is([data-layout="operations-cockpit"], [data-layout="spatial-command-hybrid"]) .simulation-cctv-surface {
   position: absolute;
   left: clamp(14px, 2.4vw, 26px);
   right: auto;
@@ -9838,12 +9838,12 @@ body {
   backdrop-filter: blur(14px);
 }
 
-.launch-dashboard:is([data-layout="operations-cockpit"], [data-layout="spatial-command-hybrid"]) .unreal-cctv-surface div:first-child {
+.launch-dashboard:is([data-layout="operations-cockpit"], [data-layout="spatial-command-hybrid"]) .simulation-cctv-surface div:first-child {
   display: grid;
   gap: 3px;
 }
 
-.launch-dashboard:is([data-layout="operations-cockpit"], [data-layout="spatial-command-hybrid"]) .unreal-cctv-surface span {
+.launch-dashboard:is([data-layout="operations-cockpit"], [data-layout="spatial-command-hybrid"]) .simulation-cctv-surface span {
   color: var(--launch-teal);
   font-size: 0.68rem;
   font-weight: 900;
@@ -9851,12 +9851,12 @@ body {
   text-transform: uppercase;
 }
 
-.launch-dashboard:is([data-layout="operations-cockpit"], [data-layout="spatial-command-hybrid"]) .unreal-cctv-surface strong {
+.launch-dashboard:is([data-layout="operations-cockpit"], [data-layout="spatial-command-hybrid"]) .simulation-cctv-surface strong {
   font-size: 0.92rem;
   letter-spacing: -0.01em;
 }
 
-.launch-dashboard:is([data-layout="operations-cockpit"], [data-layout="spatial-command-hybrid"]) .unreal-cctv-surface small {
+.launch-dashboard:is([data-layout="operations-cockpit"], [data-layout="spatial-command-hybrid"]) .simulation-cctv-surface small {
   color: rgba(232, 242, 238, 0.66);
   line-height: 1.35;
 }
@@ -9885,7 +9885,7 @@ body {
 .launch-dashboard:is([data-layout="operations-cockpit"], [data-layout="spatial-command-hybrid"]) .cctv-frame-lines i:nth-child(3) { top: 76%; }
 
 @media (max-width: 860px) {
-  .launch-dashboard:is([data-layout="operations-cockpit"], [data-layout="spatial-command-hybrid"]) .unreal-cctv-surface {
+  .launch-dashboard:is([data-layout="operations-cockpit"], [data-layout="spatial-command-hybrid"]) .simulation-cctv-surface {
     position: relative;
     left: auto;
     bottom: auto;
@@ -9894,8 +9894,8 @@ body {
   }
 }
 
-/* Launch-grade realistic CCTV and Unreal Pixel Streaming mount layer. */
-.launch-dashboard:is([data-layout="operations-cockpit"], [data-layout="spatial-command-hybrid"]) .unreal-pixel-streaming-frame {
+/* Launch-grade realistic CCTV and Hosted simulation stream mount layer. */
+.launch-dashboard:is([data-layout="operations-cockpit"], [data-layout="spatial-command-hybrid"]) .hosted-simulation-stream-frame {
   position: absolute;
   inset: 0;
   z-index: 5;
@@ -9906,7 +9906,7 @@ body {
 }
 
 .launch-dashboard:is([data-layout="operations-cockpit"], [data-layout="spatial-command-hybrid"]) .cctv-atmosphere,
-.launch-dashboard:is([data-layout="operations-cockpit"], [data-layout="spatial-command-hybrid"]) .unreal-depth-field {
+.launch-dashboard:is([data-layout="operations-cockpit"], [data-layout="spatial-command-hybrid"]) .simulation-depth-field {
   position: absolute;
   inset: 0;
   pointer-events: none;
@@ -9917,7 +9917,7 @@ body {
   mix-blend-mode: screen;
 }
 
-.launch-dashboard:is([data-layout="operations-cockpit"], [data-layout="spatial-command-hybrid"]) .unreal-depth-field {
+.launch-dashboard:is([data-layout="operations-cockpit"], [data-layout="spatial-command-hybrid"]) .simulation-depth-field {
   z-index: 4;
   perspective: 900px;
 }
@@ -10341,7 +10341,7 @@ body {
     text-align: center;
   }
 
-  .launch-dashboard[data-layout="spatial-command-hybrid"] .unreal-cctv-surface,
+  .launch-dashboard[data-layout="spatial-command-hybrid"] .simulation-cctv-surface,
   .launch-dashboard[data-layout="spatial-command-hybrid"] .sumo-telemetry,
   .launch-dashboard[data-layout="spatial-command-hybrid"] .lane-pressure-panel,
   .launch-dashboard[data-layout="spatial-command-hybrid"] .launch-readiness-card {
@@ -10555,7 +10555,7 @@ body {
     filter: none !important;
   }
 }
-/* Multi-city Unreal scene controls */
+/* Multi-city simulation scene controls */
 .launch-dashboard:is([data-layout="operations-cockpit"], [data-layout="spatial-command-hybrid"]) .city-profile-card {
   display: grid;
   gap: 4px;

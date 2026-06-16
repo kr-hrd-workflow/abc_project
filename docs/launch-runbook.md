@@ -31,7 +31,7 @@ No endpoint returns the API key value. Readiness reports presence only.
 
 ## 3. Simulation stream mount
 
-The dashboard includes an Unreal-ready render slot that can mount Pixel Streaming or any hosted simulator page.
+The dashboard includes a hosted simulation render slot that can mount any simulator page.
 
 ```env
 NEXT_PUBLIC_SIMULATION_STREAM_URL=http://127.0.0.1

@@ -22,11 +22,10 @@ The live web search backend returned HTTP 429 during this pass, so the implement
 - Useful pattern: camera perspective, transform depth, scene layers, and objects that read as spatial rather than flat overlays.
 - Applied as: `perspective`, `transform-style: preserve-3d`, `translateZ`, tilted route planes, and foreground evidence card.
 
-### 3. Unreal Engine photoreal renderer direction
+### 3. Archived cinematic renderer direction
 
-- URL: https://www.unrealengine.com/en-US/features
 - Useful pattern: dark cinematic lighting, aerial realism, and route overlays as a believable simulation surface.
-- Applied as: darker aerial hero treatment and depth objects that align with the later Pixel Streaming/UE renderer direction.
+- Applied as: darker aerial hero treatment and depth objects that align with a hosted simulation renderer direction.
 
 ### 4. CesiumJS geospatial digital twin language
 
@@ -77,11 +76,11 @@ apps/web/public/landing/final-cta-city.png
 
 Prompts used:
 
-1. `signal-overview-3d.png`: oblique 3D city intersection at night with teal sensor-pressure fields and amber candidate timing paths, photoreal Unreal-style digital twin, no text or logos.
+1. `signal-overview-3d.png`: oblique 3D city intersection at night with teal sensor-pressure fields and amber candidate timing paths, photoreal digital twin, no text or logos.
 2. `signal-assembly-layers.png`: circular layered 3D intersection model with base road, pressure layer, teal current route, amber alternative route, and floating evidence layer, no text or logos.
 3. `operator-proof-room.png`: realistic traffic operations review room with a digital twin intersection wall display, calm municipal control center mood, no readable text or logos.
 4. `final-cta-city.png`: atmospheric urban intersection transitioning from simulation to reviewed decision, teal route light and amber signal glow, no text or logos.
 
 ## Follow-up ideas
 
-When the Unreal install is complete, replace or augment this CSS-only treatment with a captured Pixel Streaming still or a lightweight generated hero render. Until then, this gives the landing page a stronger 3D/digital-twin feel without blocking on UE installation.
+If a new renderer path is chosen, replace or augment this CSS-only treatment with a captured hosted stream still or a lightweight generated hero render. Until then, this gives the landing page a stronger 3D/digital-twin feel without blocking on renderer installation.

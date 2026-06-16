@@ -53,6 +53,12 @@ renderer/unreal/**/Intermediate/
 renderer/unreal/**/Saved/
 renderer/unreal/**/Binaries/
 renderer/unreal/**/.vs/
+archive/unreal/original/renderer/unreal/**/DerivedDataCache/
+archive/unreal/original/renderer/unreal/**/Intermediate/
+archive/unreal/original/renderer/unreal/**/Saved/
+archive/unreal/original/renderer/unreal/**/Binaries/
+archive/unreal/original/renderer/unreal/**/.vs/
+archive/unreal/original/package.json
 
 # Local asset pipeline virtualenv
 tools/asset-pipeline/.venv/

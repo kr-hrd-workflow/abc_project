@@ -50,7 +50,7 @@ export function DigitalTwin({
         </div>
         <div className="viewport-controls">
           <span className="viewport-mode">
-            {locale === "ko" ? "Unreal 스트림 준비" : "Unreal stream ready"}
+            {locale === "ko" ? "시뮬레이션 스트림 준비" : "Simulation stream ready"}
           </span>
           <span className="viewport-mode">
             {locale === "ko" ? "SUMO 검증" : "SUMO validation"}

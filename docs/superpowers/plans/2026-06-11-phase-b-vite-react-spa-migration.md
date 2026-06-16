@@ -2,11 +2,11 @@
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
-**Goal:** Migrate the current Next.js dashboard frontend to a Vite React SPA that keeps the Phase A simulation stream slot and remains ready for Unreal Pixel Streaming.
+**Goal:** Migrate the current Next.js dashboard frontend to a Vite React SPA that keeps the Phase A simulation stream slot and remains ready for a hosted simulator stream.
 
-**Architecture:** Keep FastAPI as the only backend and preserve the existing API contract for status, recommendations, SUMO/TraCI simulation comparisons, OpenAI/RAG answers, reports, runtime readiness, and analysis jobs. Replace the Next.js App Router shell with a browser-only Vite entrypoint so WebRTC/Pixel Streaming integrations stay client-side and deployment can use static hosting. Keep the committed WebGL-style fallback and Phase A stream URL precedence: `NEXT_PUBLIC_SIMULATION_STREAM_URL` first, then `NEXT_PUBLIC_UNITY_WEBGL_URL` during migration, then Vite-prefixed aliases.
+**Architecture:** Keep FastAPI as the only backend and preserve the existing API contract for status, recommendations, SUMO/TraCI simulation comparisons, OpenAI/RAG answers, reports, runtime readiness, and analysis jobs. Replace the Next.js App Router shell with a browser-only Vite entrypoint so hosted stream integrations stay client-side and deployment can use static hosting. Keep the committed WebGL-style fallback and Phase A stream URL precedence: `NEXT_PUBLIC_SIMULATION_STREAM_URL` first, then `NEXT_PUBLIC_UNITY_WEBGL_URL` during migration, then Vite-prefixed aliases.
 
-**Tech Stack:** Vite, React, TypeScript, Vitest, Testing Library, FastAPI, PostgreSQL/pgvector, SUMO/TraCI, OpenAI/RAG, Unreal Pixel Streaming.
+**Tech Stack:** Vite, React, TypeScript, Vitest, Testing Library, FastAPI, PostgreSQL/pgvector, SUMO/TraCI, OpenAI/RAG, hosted simulator stream.
 
 ---
 

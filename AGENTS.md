@@ -62,9 +62,9 @@ Success means:
 
 Use available skills and plugins as the primary operating layer for this project.
 
-Project-local simulator agent:
-- For Unreal traffic simulator/renderer rebuild work, load `docs/agents/simulator-builder-agent.md` or run `npm run simulator:agent` to produce a focused worker prompt.
-- The simulator agent is grounded in local UE 5.7 doc digests under `docs/technotes/ue57-doc-digest/` and enforces: no landing-page changes, no production proof strips, SUMO/TraCI truth source, FastAPI orchestration, Unreal rendering, Pixel Streaming delivery.
+Archived Unreal simulator agent:
+- Unreal simulator/renderer work is isolated under `archive/unreal/original/`.
+- To resume it, restore the archived original paths first, especially `archive/unreal/original/docs/agents/simulator-builder-agent.md`, `archive/unreal/original/renderer/unreal/`, and the archived `scripts/` helpers. The UE doc digests in `docs/technotes/ue57-doc-digest/` remain in place as reference material.
 
 
 When a plugin or skill trigger condition matches, follow that plugin or skill even for simple Q&A, short explanations, one-off command output, reviews, debugging, planning, implementation, verification, or documentation lookup.
