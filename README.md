@@ -81,6 +81,17 @@ archive/unreal/original/artifacts/
 
 UE technotes remain in `docs/technotes/` as reference material.
 
+## Dashboard renderer direction
+
+Renderer precedence for the `/dashboard` simulation viewport:
+
+- External renderer: `NEXT_PUBLIC_SIMULATION_STREAM_URL` iframe remains highest priority.
+- Legacy renderer: `NEXT_PUBLIC_UNITY_WEBGL_URL` is used only when the generic stream URL is absent.
+- Default renderer: internal R3F digital twin when implemented/enabled and WebGL is available.
+- Fallback renderer: existing CSS/canvas virtual CCTV when R3F is disabled, unavailable, or WebGL fails.
+
+Stage 0 records the selected path; it does not mean the R3F runtime is already implemented or enabled. SUMO/TraCI/Tarcl remains simulation truth. Browser rendering may interpolate received state, but it cannot invent traffic truth. Image Gen references are visual targets only, not runtime evidence. Future R3F stages must still meet the photorealistic rendering requirement.
+
 ## 랜딩 페이지 3D 방향
 
 현재 랜딩 페이지는 heavy Three.js runtime을 추가하지 않고 CSS 3D로 3D/digital-twin 느낌을 강화했습니다.

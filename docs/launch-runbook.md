@@ -29,15 +29,24 @@ OPENAI_API_KEY=sk-...
 
 No endpoint returns the API key value. Readiness reports presence only.
 
-## 3. Simulation stream mount
+## 3. Dashboard renderer selection
 
-The dashboard includes a hosted simulation render slot that can mount any simulator page.
+The dashboard simulation viewport chooses renderers in this order:
+
+1. External renderer: `NEXT_PUBLIC_SIMULATION_STREAM_URL` iframe remains highest priority.
+2. Legacy renderer: `NEXT_PUBLIC_UNITY_WEBGL_URL` is used only when the generic stream URL is absent.
+3. Default renderer: internal R3F digital twin when implemented/enabled and WebGL is available.
+4. Fallback renderer: existing CSS/canvas virtual CCTV when R3F is disabled, unavailable, or WebGL fails.
+
+Stage 0 records the selected path; it does not mean the R3F runtime is already implemented or enabled. SUMO/TraCI/Tarcl remains simulation truth. Browser rendering may interpolate received state, but it cannot invent traffic truth. Image Gen references are visual targets only, not runtime evidence.
+
+The hosted simulation render slot can mount any simulator page:
 
 ```env
 NEXT_PUBLIC_SIMULATION_STREAM_URL=http://127.0.0.1
 ```
 
-When this value is set, the dashboard mounts the stream page in the central CCTV viewport. Without it, the committed WebGL-style fallback renders a realistic virtual CCTV scene using the existing simulation data.
+When this value is set, the dashboard mounts the stream page in the central simulation viewport. Without it, the dashboard uses the internal R3F path once implemented/enabled and WebGL is available, otherwise it keeps the committed CSS/canvas virtual CCTV fallback.
 
 Legacy Unity WebGL exports remain supported through a compatibility alias:
 
@@ -80,5 +89,5 @@ Keep the safety copy visible: this is a digital twin and operator decision-suppo
 ## 5. Safety boundaries
 
 - The UI may recommend an operator action, but it never directly changes a real signal controller.
-- The Unity-style viewport is presentation/digital-twin visualization unless a real Unity WebGL export is configured.
+- The dashboard renderer is presentation/digital-twin visualization unless an approved external simulator stream is configured.
 - All OpenAI usage must keep keys in ignored env files or hosting secrets, not committed files.
