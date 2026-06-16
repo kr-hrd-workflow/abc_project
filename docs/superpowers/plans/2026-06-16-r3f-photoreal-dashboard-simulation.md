@@ -476,7 +476,7 @@ Desktop screenshot shows long north/south/east/west roads with visible traffic q
 - Add: `apps/web/public/simulation/r3f/assets/textures/*`
 - Modify: `docs/technotes/r3f-photoreal-dashboard-renderer.md`
 
-- [ ] **Step 1: Asset manifest contract**
+- [x] **Step 1: Asset manifest contract**
 
 Create manifest entries like:
 
@@ -495,7 +495,7 @@ Create manifest entries like:
 }
 ```
 
-- [ ] **Step 2: GLB kit**
+- [x] **Step 2: GLB kit**
 
 Build or import optimized GLB assets for:
 
@@ -513,7 +513,7 @@ curb prop details
 
 Only use project-authored/generated assets or assets with a documented license.
 
-- [ ] **Step 3: Image Gen texture/decal sources**
+- [x] **Step 3: Image Gen texture/decal sources**
 
 Use Image Gen for source references and texture/decal targets, then convert to runtime texture maps:
 
@@ -528,7 +528,7 @@ facade/window emissive sheet
 
 Do not use Image Gen outputs as evidence of real runtime rendering. Runtime proof must come from browser screenshots.
 
-- [ ] **Step 4: Optimize GLB assets**
+- [x] **Step 4: Optimize GLB assets**
 
 Run glTF Transform after assets exist:
 
@@ -538,7 +538,7 @@ npx gltf-transform optimize input.glb output.glb --compress meshopt
 
 Use KTX2/BasisU only after verifying the runtime decoder path works in Next.
 
-- [ ] **Step 5: Asset verifier**
+- [x] **Step 5: Asset verifier**
 
 `scripts/verify-r3f-assets.mjs` must check:
 
@@ -554,7 +554,7 @@ near and hero assets declare pbr=true
 no manifest entry is named placeholder, proxy, blockout, temp, or test-asset
 ```
 
-- [ ] **Step 6: Verification**
+- [x] **Step 6: Verification**
 
 Run:
 
@@ -564,6 +564,288 @@ npm run build:web
 ```
 
 Expected: asset verifier and build pass.
+
+Stage 4 evidence captured 2026-06-17:
+
+- `node scripts/verify-r3f-assets.mjs` passed with concrete manifest, GLB, and texture/decal files.
+- `npm --workspace apps/web run test -- components/DashboardShell.test.tsx` passed with the Stage 4 manifest contract test included.
+- `npm run build:web` passed.
+- `git diff --check` passed with only CRLF warnings.
+- `docs/technotes/r3f-photoreal-dashboard-renderer.md` records source/license notes, GLB optimization assumptions, texture/decal provenance, and the reminder that browser screenshots, not Image Gen outputs, are runtime proof.
+
+## Stage 4.1: Asset Realism Upgrade
+
+**Goal:** Upgrade the Stage 4 asset pipeline from verifier-valid primitives to realism-ready shipped assets before Stage 5 lighting/material/camera polish. Do not accept toy-like vehicles, icon-like street furniture, or blockout-style props as complete.
+
+**Files:**
+- Modify: `apps/web/public/simulation/r3f/assets/manifest.json`
+- Modify: `apps/web/public/simulation/r3f/assets/glb/vehicles/*.glb`
+- Modify: `apps/web/public/simulation/r3f/assets/glb/props/*.glb`
+- Modify: `apps/web/public/simulation/r3f/assets/textures/*`
+- Create: `artifacts/r3f-stage4.1-asset-realism-contact-sheet.png`
+- Create: `artifacts/r3f-stage4.1-glb-turntable-contact-sheet.png`
+- Modify: `scripts/verify-r3f-assets.mjs`
+- Modify: `docs/technotes/r3f-photoreal-dashboard-renderer.md`
+
+**Execution policy:**
+
+Use `superpowers:subagent-driven-development` with sequential, non-overlapping workers. The primary agent owns integration, final visual judgment, and final validation. Do not move to Stage 5 until Stage 4.1 passes both asset verifier checks and visual realism review.
+
+Reject `DONE` from any worker unless it includes concrete evidence:
+
+```text
+files inspected
+files changed
+before/after visual artifact or GLB inspection output
+verifier result
+budget result
+remaining realism risks
+status: DONE, DONE_WITH_CONCERNS, NEEDS_CONTEXT, or BLOCKED
+```
+
+Required worker sequence:
+
+```text
+Worker 1: vehicle GLB realism
+  Owns only apps/web/public/simulation/r3f/assets/glb/vehicles/*.glb and vehicle manifest metadata.
+
+Worker 2: street furniture and curb GLB realism
+  Owns only apps/web/public/simulation/r3f/assets/glb/props/*.glb and prop manifest metadata.
+
+Worker 3: material/decal realism
+  Owns only apps/web/public/simulation/r3f/assets/textures/* and texture/decal manifest metadata.
+
+Worker 4: proof artifact and verifier hardening
+  Owns only artifacts/r3f-stage4.1-*.png and scripts/verify-r3f-assets.mjs.
+
+Reviewer 1: spec compliance
+  Reviews Stage 4.1 requirements against actual files, verifier output, and proof images.
+
+Reviewer 2: visual/code-quality risk
+  Rejects toy-like or blockout assets even if scripts pass.
+```
+
+If any reviewer says `CHANGES_REQUESTED`, send the issue back to the owning worker and repeat review. Continue this loop until both reviewers approve or a real blocker is documented.
+
+- [ ] **Step 1: Tighten the asset realism contract**
+
+Extend the asset manifest and verifier so Stage 4.1 has a measurable realism bar beyond file existence:
+
+```text
+vehicle near/medium assets require realisticSilhouette=true
+vehicle near assets require details.wheels >= 4
+vehicle near assets require details.glassSurfaces >= 1
+vehicle near assets require details.lightEmitters >= 2
+vehicle near assets require details.bodyPanelBreaks >= 3
+vehicle near assets require details.mirrors=true unless documented as intentionally omitted
+vehicle far assets may be simplified but must preserve believable scale, wheels, glass, and light color blocks
+props require details.scaleReferenceMeters and details.functionalParts
+all assets require realismStatus="stage4_1_ready"
+all assets require visualRejectIfToyLike=true
+```
+
+Verifier additions:
+
+```text
+fail if required realism metadata is missing
+fail if near vehicle triangle count is below a minimum realism floor
+fail if far LOD triangle count is greater than or equal to near LOD
+fail if wheel/glass/light/body-panel metadata contradicts GLB node names
+fail if GLB node/material names contain toy, blockout, proxy, placeholder, primitive-only, temp, or test-asset
+fail if Stage 4.1 proof images are missing
+```
+
+Keep budgets practical for web delivery. Raising triangle budgets is allowed only when the updated manifest still keeps first-pass GLB + texture payload under the Stage 5 25 MB guardrail.
+
+- [ ] **Step 2: Upgrade vehicle GLBs**
+
+Replace primitive vehicle bodies with more believable shipped GLBs for:
+
+```text
+passenger car near / medium / far
+taxi near / far
+bus near / far
+truck near / far
+emergency ambulance near / medium
+```
+
+Near and medium vehicle requirements:
+
+```text
+recognizable real-world proportions, not toy scale
+separate named wheels with dark tire material and lighter hub material
+glass material on windshield and side windows
+headlight and taillight emitter materials
+body panel seams or break lines
+front/rear silhouette distinction
+taxi roof sign or taxi-specific material cue
+bus window row and larger massing
+truck cab/cargo separation
+ambulance emergency light bar and red/white emergency markings
+meter-scale pivots and ground contact normalized
+```
+
+Far LOD requirements:
+
+```text
+lower triangle count than near/medium
+still has wheel, glass, and light color blocks
+keeps believable traffic-scale silhouette from the Stage 3/5 long-corridor camera
+eligible for dense fixture traffic without reading as colored cubes
+```
+
+Run after Worker 1:
+
+```bash
+node scripts/verify-r3f-assets.mjs
+```
+
+Expected: verifier passes or fails only on known non-vehicle Stage 4.1 work still pending. No vehicle realism metadata or GLB budget failures.
+
+- [ ] **Step 3: Upgrade street furniture, signals, and curb props**
+
+Upgrade prop GLBs:
+
+```text
+traffic signal pole
+traffic signal heads
+streetlight
+tree cluster
+curb details
+```
+
+Requirements:
+
+```text
+traffic signal pole has mast/arm/base proportions that read as street infrastructure
+traffic signal heads have separate red/yellow/green lens materials and hood geometry
+streetlight has pole, lamp head, and warm emitter material
+tree cluster has varied trunk/canopy silhouettes and does not read as a single icon
+curb details include drains, chips, seams, bollard/edge detail, or grime-receiving geometry
+all props are meter-scale and grounded
+all hero/near props use PBR materials
+```
+
+Run after Worker 2:
+
+```bash
+node scripts/verify-r3f-assets.mjs
+```
+
+Expected: no prop realism metadata or GLB budget failures.
+
+- [ ] **Step 4: Upgrade texture/decal realism**
+
+Upgrade runtime maps so they can support realistic Stage 5 materials:
+
+```text
+wet asphalt albedo has aggregate, tar streaks, oil stains, and nonrepeating patch variation
+wet asphalt roughness has usable grayscale range for puddles/reflection variation
+worn lane markings include cracked paint, tire scuffs, edge erosion, and alpha breakup
+crosswalk wear includes eroded zebra bars and vehicle-worn crossing bands
+curb grime includes road-contact dirt buildup, vertical runoff, and chipped edge variation
+sidewalk paver variation includes seams, slab offsets, stains, and small cracks
+facade/window emissive includes dark mullions and varied warm/cool lit panes
+```
+
+Image Gen may be used for source/target material direction, but runtime maps must be concrete repo assets and runtime proof must still come from browser screenshots later. If Image Gen is used, store source/provenance notes and do not claim Image Gen output as runtime proof.
+
+Run after Worker 3:
+
+```bash
+node scripts/verify-r3f-assets.mjs
+```
+
+Expected: verifier passes for texture dimensions, budgets, source/license/provenance, and Stage 4.1 realism metadata.
+
+- [ ] **Step 5: Generate asset proof images from actual assets**
+
+Create proof artifacts from the actual shipped files, not invented illustrations:
+
+```text
+artifacts/r3f-stage4.1-asset-realism-contact-sheet.png
+artifacts/r3f-stage4.1-glb-turntable-contact-sheet.png
+```
+
+The proof images must show:
+
+```text
+all vehicle LOD families with actual rendered GLB thumbnails
+all prop GLBs with actual rendered GLB thumbnails
+all runtime texture/decal maps as thumbnails
+file size and triangle count next to each GLB
+texture dimensions and file sizes next to each map
+verifier pass/fail result
+explicit note: asset proof only, not Stage 5 browser-rendered scene proof
+```
+
+Reject proof images if:
+
+```text
+they use icon stand-ins instead of actual GLB renders
+vehicles still read as toys, colored boxes, or blockout primitives
+street furniture reads as generic icons
+textures are blank, overly clean, or purely procedural-looking from normal viewing distance
+labels overlap or are unreadable
+```
+
+- [ ] **Step 6: Stage 4.1 visual review gate**
+
+Primary agent and reviewers must inspect the proof artifacts before completion.
+
+Pass criteria:
+
+```text
+vehicle near/medium assets read as plausible traffic assets, not toys
+far LODs remain simplified but traffic-believable
+signal heads, streetlights, curbs, and trees read as infrastructure, not icons
+textures/decals look usable for realistic wet-road and worn-marking materials
+asset scale feels compatible with Stage 3 long corridors
+no placeholder/blockout/proxy/toy-like visual remains in the Stage 4.1 proof image
+```
+
+If any item fails, do not proceed to Stage 5. Return to the owning worker, fix the concrete asset issue, regenerate proof images, and repeat review.
+
+- [ ] **Step 7: Documentation and validation**
+
+Update `docs/technotes/r3f-photoreal-dashboard-renderer.md` with:
+
+```text
+Stage 4.1 source/license notes
+which assets were upgraded
+triangle/file-size budget deltas
+texture/decal provenance changes
+meshopt/decoder assumptions
+proof artifact paths
+explicit reminder that Stage 4.1 proof images are asset proof, while Stage 5/7 browser screenshots are runtime proof
+```
+
+Final Stage 4.1 verification:
+
+```bash
+node scripts/verify-r3f-assets.mjs
+npm --workspace apps/web run test -- components/DashboardShell.test.tsx
+npm run build:web
+git diff --check
+```
+
+Expected:
+
+```text
+asset verifier passes
+DashboardShell test passes
+web build passes
+git diff check passes
+spec-compliance reviewer approves
+visual/code-quality reviewer approves
+Stage 4.1 checkboxes are updated with evidence
+```
+
+Blocked-stop condition:
+
+```text
+If realistic assets require external licensed models, paid asset stores, Blender/DCC tooling not available in the environment, Image Gen API credentials, or dependency installation, stop with exact commands run, files inspected, partial assets completed, and the smallest user approval/input needed.
+```
 
 ## Stage 5: Photoreal Material, Lighting, And Camera Pass
 
@@ -820,9 +1102,10 @@ No UI copy implies real signal control or live CCTV.
 3. Stage 2: snapshot contract.
 4. Stage 3: procedural intersection.
 5. Stage 4: GLB/Image Gen asset kit.
-6. Stage 5: photoreal pass.
-7. Stage 6: live SUMO/Tarcl binding.
-8. Stage 7: full dashboard QA.
+6. Stage 4.1: asset realism upgrade.
+7. Stage 5: photoreal pass.
+8. Stage 6: live SUMO/Tarcl binding.
+9. Stage 7: full dashboard QA.
 
 ## Implementation Notes
 

@@ -1,23 +1,35 @@
 "use client";
 
+import { useMemo } from "react";
+
 import type { SimulationViewportProps } from "../SimulationViewportFallback";
+import { buildFixtureSceneSnapshot } from "./buildSceneSnapshot";
+import { getCorridorLengthDataAttribute } from "./roadGeometry";
 import { SimulationCanvas } from "./SimulationCanvas";
 
 export function R3FSimulationViewport({
+  status,
+  events,
   simulation,
   locale
 }: SimulationViewportProps) {
+  const sceneSnapshot = useMemo(
+    () => buildFixtureSceneSnapshot({ queues: status.queues, events }),
+    [events, status.queues]
+  );
+  const corridorLengthMeters = getCorridorLengthDataAttribute();
+
   return (
     <div
       className="simulation-viewport"
       data-testid="r3f-simulation-viewport"
       data-r3f-simulation-ready="true"
+      data-r3f-snapshot-source={sceneSnapshot.source ?? "none"}
       data-r3f-renderer-mode="r3f_procedural_stage3"
-      data-r3f-snapshot-source="simulation_snapshot_fixture"
-      data-r3f-traffic-density-mode="fixture_queues"
-      data-r3f-corridor-length-meters="north:140,south:120,east:140,west:140"
+      data-r3f-corridor-length-meters={corridorLengthMeters}
+      data-r3f-traffic-density-mode={sceneSnapshot.trafficDensityMode}
     >
-      <SimulationCanvas />
+      <SimulationCanvas sceneSnapshot={sceneSnapshot} />
       <div className="playback-badge">
         <strong>R3F digital twin</strong>
         <span>Browser WebGL renderer</span>

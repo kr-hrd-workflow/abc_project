@@ -11,14 +11,14 @@ export type SceneDensityFillSource =
   | "fixture_mode"
   | "none";
 
+export type ScenePreciseVehicleSource =
+  | "simulation_frame_snapshot"
+  | "none";
+
 export type SceneTrafficDensityMode =
   | "density_segments"
   | "fixture_queues"
   | "snapshot_vehicles"
-  | "none";
-
-export type ScenePreciseVehicleSource =
-  | "simulation_frame_snapshot"
   | "none";
 
 export type SceneSnapshot = {
@@ -40,37 +40,37 @@ export function buildSceneSnapshot(
   const source = typeof frame?.source === "string" ? frame.source : null;
   const vehicles = Array.isArray(frame?.vehicles) ? [...frame.vehicles] : [];
   const densitySegments = Array.isArray(frame?.density_segments)
-    ? frame.density_segments.filter(isKnownDensitySegment)
+    ? frame.density_segments.filter(isExplicitDensityProxy)
     : [];
-  const queues = isQueueMetrics(frame?.queues) ? { ...frame.queues } : null;
   const densityFillSource = resolveDensityFillSource(source, densitySegments);
+  const trafficDensityMode = resolveTrafficDensityMode(
+    source,
+    vehicles,
+    densitySegments,
+    densityFillSource
+  );
 
   return {
     source,
     vehicles,
     densitySegments,
     signals: Array.isArray(frame?.signals) ? [...frame.signals] : [],
-    queues,
+    queues: isQueueMetrics(frame?.queues) ? { ...frame.queues } : null,
     events: Array.isArray(frame?.events) ? [...frame.events] : [],
     preciseVehicleSource:
       vehicles.length > 0 ? "simulation_frame_snapshot" : "none",
     allowsDensityFill: densityFillSource !== "none",
     densityFillSource,
-    trafficDensityMode: resolveTrafficDensityMode(
-      vehicles,
-      densitySegments,
-      densityFillSource,
-      queues
-    )
+    trafficDensityMode
   };
 }
 
 export function buildFixtureSceneSnapshot({
   queues,
-  events = []
+  events
 }: {
   queues: QueueMetrics;
-  events?: TrafficEvent[];
+  events: TrafficEvent[];
 }): SceneSnapshot {
   return {
     source: "simulation_snapshot_fixture",
@@ -96,18 +96,18 @@ function resolveDensityFillSource(
 }
 
 function resolveTrafficDensityMode(
+  source: string | null,
   vehicles: SimulationVehicleSnapshot[],
   densitySegments: SimulationDensitySegment[],
-  densityFillSource: SceneDensityFillSource,
-  queues: QueueMetrics | null
+  densityFillSource: SceneDensityFillSource
 ): SceneTrafficDensityMode {
   if (densitySegments.length > 0) return "density_segments";
-  if (densityFillSource === "fixture_mode" && queues) return "fixture_queues";
   if (vehicles.length > 0) return "snapshot_vehicles";
+  if (source === "simulation_snapshot_fixture") return "fixture_queues";
   return "none";
 }
 
-function isKnownDensitySegment(
+function isExplicitDensityProxy(
   segment: SimulationDensitySegment
 ): segment is SimulationDensitySegment {
   return (

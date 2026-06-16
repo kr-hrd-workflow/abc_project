@@ -6,12 +6,34 @@ import type { ReactNode } from "react";
 import { useState } from "react";
 import { afterEach, describe, expect, test, vi } from "vitest";
 
+const r3fCameraMock = vi.hoisted(() => ({
+  position: { set: vi.fn() },
+  lookAt: vi.fn(),
+  updateProjectionMatrix: vi.fn(),
+  near: 0,
+  far: 0
+}));
+const r3fInvalidateMock = vi.hoisted(() => vi.fn());
+
 vi.mock("@react-three/fiber", () => ({
-  Canvas: (_props: { children?: ReactNode }) => <div data-testid="r3f-canvas" />
+  Canvas: ({ children }: { children?: ReactNode }) => (
+    <div data-testid="r3f-canvas">{children}</div>
+  ),
+  useThree: () => ({
+    camera: r3fCameraMock,
+    invalidate: r3fInvalidateMock
+  })
 }));
 
 import { DashboardShell } from "./DashboardShell";
-import { buildSceneSnapshot } from "./r3f/buildSceneSnapshot";
+import {
+  buildFixtureSceneSnapshot,
+  buildSceneSnapshot
+} from "./r3f/buildSceneSnapshot";
+import { SimulationScene } from "./r3f/SimulationScene";
+import { buildTrafficDensityRenderPlan } from "./r3f/TrafficDensityLayer";
+import { getR3FAssetEntry, listR3FAssetEntries } from "./r3f/assetManifest";
+import { STAGE3_CAMERA, TURN_ARROW_MARKINGS } from "./r3f/roadGeometry";
 import type {
   ChatResponse,
   AnalysisFixture,
@@ -217,6 +239,32 @@ const latestAnalysisJob: AnalysisJob = {
   event_ids: [1, 2],
   size_bytes: 128
 };
+
+const stage4RequiredAssetIds = [
+  "vehicles/passenger_car_near",
+  "vehicles/passenger_car_medium",
+  "vehicles/passenger_car_far",
+  "vehicles/taxi_near",
+  "vehicles/taxi_far",
+  "vehicles/bus_near",
+  "vehicles/bus_far",
+  "vehicles/truck_near",
+  "vehicles/truck_far",
+  "vehicles/emergency_ambulance_near",
+  "vehicles/emergency_ambulance_medium",
+  "props/traffic_signal_pole",
+  "props/traffic_signal_heads",
+  "props/streetlight",
+  "props/tree_cluster",
+  "props/curb_details",
+  "textures/wet_asphalt_albedo",
+  "textures/wet_asphalt_roughness",
+  "decals/worn_lane_markings",
+  "decals/crosswalk_wear",
+  "decals/curb_grime",
+  "textures/sidewalk_paver_variation",
+  "textures/facade_window_emissive"
+];
 
 const runtimeReadiness: RuntimeReadiness = {
   vision: { ready: true, mode: "fixture", missing: [], checks: [] },
@@ -548,6 +596,144 @@ describe("DashboardShell", () => {
     expect(scene.densitySegments).toEqual([]);
     expect(scene.allowsDensityFill).toBe(false);
     expect(scene.densityFillSource).toBe("none");
+    expect(scene.trafficDensityMode).toBe("snapshot_vehicles");
+  });
+
+  test("labels fixture queue density separately from snapshot vehicles", () => {
+    const fixtureScene = buildFixtureSceneSnapshot({
+      queues: status.queues,
+      events
+    });
+    const vehicleScene = buildSceneSnapshot({
+      ...frameSnapshot,
+      density_segments: []
+    });
+
+    expect(fixtureScene.source).toBe("simulation_snapshot_fixture");
+    expect(fixtureScene.preciseVehicleSource).toBe("none");
+    expect(fixtureScene.vehicles).toEqual([]);
+    expect(fixtureScene.allowsDensityFill).toBe(true);
+    expect(fixtureScene.trafficDensityMode).toBe("fixture_queues");
+    expect(vehicleScene.preciseVehicleSource).toBe("simulation_frame_snapshot");
+    expect(vehicleScene.trafficDensityMode).toBe("snapshot_vehicles");
+  });
+
+  test("plans fixture traffic density from QueueMetrics with explicit fixture labels", () => {
+    const scene = buildFixtureSceneSnapshot({
+      queues: status.queues,
+      events
+    });
+    const plan = buildTrafficDensityRenderPlan(scene);
+
+    expect(plan.mode).toBe("fixture_queues");
+    expect(plan.sourceLabel).toBe("fixture");
+    expect(plan.preciseVehicles).toEqual([]);
+    expect(plan.farVehicles.length).toBeGreaterThan(0);
+    expect(new Set(plan.farVehicles.map((vehicle) => vehicle.sourceLabel))).toEqual(
+      new Set(["fixture"])
+    );
+  });
+
+  test("plans snapshot vehicles without synthesizing far corridor fill for sumo_traci", () => {
+    const scene = buildSceneSnapshot({
+      ...frameSnapshot,
+      source: "sumo_traci",
+      density_segments: []
+    });
+    const plan = buildTrafficDensityRenderPlan(scene);
+
+    expect(scene.preciseVehicleSource).toBe("simulation_frame_snapshot");
+    expect(scene.trafficDensityMode).toBe("snapshot_vehicles");
+    expect(plan.mode).toBe("snapshot_vehicles");
+    expect(plan.sourceLabel).toBe("snapshot");
+    expect(plan.preciseVehicles.map((vehicle) => vehicle.id)).toEqual([
+      "east-emergency-1"
+    ]);
+    expect(plan.farVehicles).toEqual([]);
+  });
+
+  test("uses explicit backend density proxies for far-corridor fill without relabeling as sumo_traci", () => {
+    const scene = buildSceneSnapshot({
+      ...frameSnapshot,
+      source: "sumo_traci",
+      vehicles: [],
+      density_segments: [
+        {
+          ...frameSnapshot.density_segments[0],
+          source: "aggregate_density_proxy"
+        }
+      ]
+    });
+    const plan = buildTrafficDensityRenderPlan(scene);
+
+    expect(scene.trafficDensityMode).toBe("density_segments");
+    expect(plan.mode).toBe("density_segments");
+    expect(plan.sourceLabel).toBe("aggregate_density_proxy");
+    expect(plan.preciseVehicles).toEqual([]);
+    expect(plan.farVehicles.length).toBeGreaterThan(0);
+    expect(plan.farVehicles.map((vehicle) => String(vehicle.sourceLabel))).not.toContain("sumo_traci");
+  });
+
+  test("does not invent far vehicles for zero-count explicit density proxies", () => {
+    const scene = buildSceneSnapshot({
+      ...frameSnapshot,
+      source: "sumo_traci",
+      vehicles: [],
+      density_segments: [
+        {
+          ...frameSnapshot.density_segments[0],
+          source: "aggregate_density_proxy",
+          vehicle_count: 0
+        }
+      ]
+    });
+    const plan = buildTrafficDensityRenderPlan(scene);
+
+    expect(scene.trafficDensityMode).toBe("density_segments");
+    expect(plan.mode).toBe("density_segments");
+    expect(plan.sourceLabel).toBe("aggregate_density_proxy");
+    expect(plan.preciseVehicles).toEqual([]);
+    expect(plan.farVehicles).toEqual([]);
+  });
+
+  test("defines Stage 3 turn arrows as arrow-shaped procedural parts", () => {
+    expect(TURN_ARROW_MARKINGS).toHaveLength(4);
+
+    TURN_ARROW_MARKINGS.forEach((arrow) => {
+      const parts =
+        "parts" in arrow && Array.isArray(arrow.parts) ? arrow.parts : [];
+      const partKinds = new Set(parts.map((part) => part.kind));
+
+      expect(partKinds).toEqual(new Set(["shaft", "head_left", "head_right"]));
+      expect(
+        parts.some((part) => part.kind.startsWith("head") && part.rotationY !== 0)
+      ).toBe(true);
+    });
+  });
+
+  test("invalidates demand rendering after applying the Stage 3 camera target", () => {
+    r3fCameraMock.position.set.mockClear();
+    r3fCameraMock.lookAt.mockClear();
+    r3fCameraMock.updateProjectionMatrix.mockClear();
+    r3fInvalidateMock.mockClear();
+
+    render(
+      <SimulationScene
+        sceneSnapshot={buildFixtureSceneSnapshot({
+          queues: status.queues,
+          events
+        })}
+      />
+    );
+
+    expect(r3fCameraMock.position.set).toHaveBeenCalledWith(
+      ...STAGE3_CAMERA.position
+    );
+    expect(r3fCameraMock.near).toBe(STAGE3_CAMERA.near);
+    expect(r3fCameraMock.far).toBe(STAGE3_CAMERA.far);
+    expect(r3fCameraMock.lookAt).toHaveBeenCalledWith(...STAGE3_CAMERA.target);
+    expect(r3fCameraMock.updateProjectionMatrix).toHaveBeenCalled();
+    expect(r3fInvalidateMock).toHaveBeenCalledTimes(1);
   });
 
   test("keeps dashboard aggregate telemetry renderable when frame snapshots are unavailable", () => {
@@ -561,11 +747,61 @@ describe("DashboardShell", () => {
     expect(screen.getByText("집계 지표 기반")).toBeTruthy();
   });
 
+  test("defines the Stage 4 R3F asset manifest contract", () => {
+    const assets = listR3FAssetEntries();
+    const assetIds = new Set(assets.map((asset) => asset.id));
+
+    expect(assetIds).toEqual(new Set(stage4RequiredAssetIds));
+
+    for (const assetId of stage4RequiredAssetIds) {
+      const asset = getR3FAssetEntry(assetId);
+
+      expect(asset.id).toBe(assetId);
+      expect(asset.path).toMatch(/^\/simulation\/r3f\/assets\/(glb|textures)\//);
+      expect(asset.units).toBe("meters");
+      expect(asset.source.length).toBeGreaterThan(0);
+      expect(asset.license.length).toBeGreaterThan(0);
+      expect(typeof asset.pbr).toBe("boolean");
+      expect(asset.maxTextureSize).toBeGreaterThan(0);
+      expect(asset.maxTriangles).toBeGreaterThanOrEqual(0);
+      expect(asset.maxFileSizeBytes).toBeGreaterThan(0);
+      expect(`${asset.id} ${asset.path}`).not.toMatch(
+        /placeholder|proxy|blockout|temp|test-asset/i
+      );
+    }
+
+    expect(getR3FAssetEntry("vehicles/passenger_car_near").lowerDetailId).toBe(
+      "vehicles/passenger_car_medium"
+    );
+    expect(getR3FAssetEntry("vehicles/passenger_car_medium").lowerDetailId).toBe(
+      "vehicles/passenger_car_far"
+    );
+    expect(getR3FAssetEntry("vehicles/taxi_near").lowerDetailId).toBe(
+      "vehicles/taxi_far"
+    );
+    expect(getR3FAssetEntry("vehicles/bus_near").lowerDetailId).toBe(
+      "vehicles/bus_far"
+    );
+    expect(getR3FAssetEntry("vehicles/truck_near").lowerDetailId).toBe(
+      "vehicles/truck_far"
+    );
+    expect(
+      getR3FAssetEntry("vehicles/emergency_ambulance_near").lowerDetailId
+    ).toBe("vehicles/emergency_ambulance_medium");
+
+    const nearOrHeroAssets = assets.filter((asset) =>
+      ["near", "hero"].includes(asset.lod)
+    );
+
+    expect(nearOrHeroAssets.length).toBeGreaterThan(0);
+    expect(nearOrHeroAssets.every((asset) => asset.pbr)).toBe(true);
+  });
+
   test("mounts the browser-only R3F renderer when it is enabled and WebGL is supported", async () => {
     vi.stubEnv("NEXT_PUBLIC_R3F_SIMULATION_ENABLED", "true");
     mockWebGLSupport(true);
 
-    const { container } = renderDashboard();
+    renderDashboard();
 
     const viewport = await screen.findByTestId("r3f-simulation-viewport");
 
@@ -574,7 +810,7 @@ describe("DashboardShell", () => {
     expect(screen.getByText("R3F digital twin")).toBeTruthy();
     expect(screen.queryByText("Digital twin fallback")).toBeNull();
     expect(screen.getByText("Simulation only / No real signal control")).toBeTruthy();
-    expect(container.querySelector("[data-r3f-simulation-ready='true']")).toBeTruthy();
+    expect(viewport.getAttribute("data-r3f-simulation-ready")).toBe("true");
     expect(viewport.getAttribute("data-r3f-renderer-mode")).toBe("r3f_procedural_stage3");
     expect(viewport.getAttribute("data-r3f-snapshot-source")).toBe("simulation_snapshot_fixture");
     expect(viewport.getAttribute("data-r3f-traffic-density-mode")).toBe("fixture_queues");
