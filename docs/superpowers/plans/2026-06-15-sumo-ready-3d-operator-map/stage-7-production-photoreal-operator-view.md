@@ -267,14 +267,14 @@ Photoreal material-source plate for a wet Seoul urban intersection: dark patched
 
 **Steps:**
 
-- [ ] Decide whether Stage 6 source plates are sufficient or Stage 7 needs new Image Gen source plates.
-- [ ] If new plates are needed, generate the Stage 7 target and material-source images with the `imagegen` skill.
-- [ ] Copy selected image outputs into `artifacts/imagegen/stage7/`.
-- [ ] Copy Unreal-consumed texture sources into `renderer/unreal/SmartIntersection/SourceAssets/PhotorealRoadKit/Textures/`.
-- [ ] Record prompt, generated path, project path, license class, intended material consumer, and intended actor/mesh consumer in `operator_stage7_production_photoreal_profile.json`.
-- [ ] Include a `visual_target_contract` field that states the target is not completion proof.
-- [ ] Include `simulation_boundary` fields that state `visual_only=true`, `simulation_source_unchanged=true`, and `traffic_control_authority=false`.
-- [ ] Reject any source whose license is unknown or commercial without explicit license evidence.
+- [x] Decide whether Stage 6 source plates are sufficient or Stage 7 needs new Image Gen source plates.
+- [x] If new plates are needed, generate the Stage 7 target and material-source images with the `imagegen` skill.
+- [x] Copy selected image outputs into `artifacts/imagegen/stage7/`.
+- [x] Copy Unreal-consumed texture sources into `renderer/unreal/SmartIntersection/SourceAssets/PhotorealRoadKit/Textures/`.
+- [x] Record prompt, generated path, project path, license class, intended material consumer, and intended actor/mesh consumer in `operator_stage7_production_photoreal_profile.json`.
+- [x] Include a `visual_target_contract` field that states the target is not completion proof.
+- [x] Include `simulation_boundary` fields that state `visual_only=true`, `simulation_source_unchanged=true`, and `traffic_control_authority=false`.
+- [x] Reject any source whose license is unknown or commercial without explicit license evidence.
 
 **Expected result:** Every source image or asset used by Stage 7 has an evidence trail and a named Unreal consumer before production integration begins.
 
@@ -414,11 +414,11 @@ Photoreal material-source plate for a wet Seoul urban intersection: dark patched
 
 **Steps:**
 
-- [ ] Capture a before frame from the Stage 6 accepted operator view or latest pre-Stage-7 map.
-- [ ] Capture an after frame from `smart_intersection_rebuild_operator_stage7.umap`.
-- [ ] Generate a before/after contact sheet with no production proof strips inside the Unreal map.
-- [ ] Inspect the after frame visually at full size.
-- [ ] If the frame still looks synthetic, record exact failures and return to the relevant asset/material/lighting task.
+- [x] Capture a before frame from the Stage 6 accepted operator view or latest pre-Stage-7 map.
+- [x] Capture an after frame from `smart_intersection_rebuild_operator_stage7.umap`.
+- [x] Generate a before/after contact sheet with no production proof strips inside the Unreal map.
+- [x] Inspect the after frame visually at full size.
+- [x] If the frame still looks synthetic, record exact failures and return to the relevant asset/material/lighting task.
 - [ ] Approve the visual verdict only when the after frame looks photo-realistic enough and Stage 1-6 readability is preserved.
 - [ ] Keep the verdict artifact machine-readable for the Stage 7 verifier.
 
@@ -449,13 +449,13 @@ Photoreal material-source plate for a wet Seoul urban intersection: dark patched
 
 - [ ] Confirms root plan points Stage 7 to production photoreal work and Stage 8 to multi-city expansion.
 - [ ] Confirms Stage 6 plan says Stage 8 owns multi-city rollout.
-- [ ] Confirms `operator_stage7_production_photoreal_profile.json` exists and names `seoul`.
-- [ ] Confirms source evidence includes prompt/path/license/consumer fields.
-- [ ] Confirms source assets are copied under approved project paths.
-- [ ] Confirms generated map and manifest exist.
-- [ ] Confirms manifest states Stage 7 is visual-only and preserves simulation boundaries.
-- [ ] Confirms manifest includes road, marking, curb, sidewalk, signal, vehicle, street-hardware, lighting, camera, post-process, and asset-consumer evidence.
-- [ ] Confirms proof captures exist, are non-empty, and have expected image dimensions/statistics.
+- [x] Confirms `operator_stage7_production_photoreal_profile.json` exists and names `seoul`.
+- [x] Confirms source evidence includes prompt/path/license/consumer fields.
+- [x] Confirms source assets are copied under approved project paths.
+- [x] Confirms generated map and manifest exist.
+- [x] Confirms manifest states Stage 7 is visual-only and preserves simulation boundaries.
+- [x] Confirms manifest includes road, marking, curb, sidewalk, signal, vehicle, street-hardware, lighting, camera, post-process, and asset-consumer evidence.
+- [x] Confirms proof captures exist, are non-empty, and have expected image dimensions/statistics.
 - [ ] Confirms visual verdict schema exists and `photo_realistic_enough` is true.
 - [ ] Confirms the verdict also approves asphalt, markings, curbs/sidewalks, signals, vehicles, street hardware, lighting/reflections, camera operator view, and Stage 1-6 readability.
 - [ ] Confirms no proof strips, plinths, traffic-zone image cards, or landing-page proof assets are used for completion.
@@ -521,6 +521,70 @@ rg -n "SecurityToken=|OPENAI_API_KEY=|BEGIN RSA PRIVATE KEY|BEGIN OPENSSH PRIVAT
 ## Stage 7 Execution Evidence
 
 During implementation, append dated evidence bullets here after each completed validation group. Each entry must include command or artifact path, pass/fail result, and any remaining blocker. Required categories are execution mode, branch/worktree, baseline Stage 6 proof inspected, Stage 7 failure list, Image Gen/source evidence, Unreal source copies, generated map, manifest, imported/generated Unreal assets, before proof, after proof, contact sheet, human visual verdict, focused validation, runtime readiness evidence, repo-wide validation, local artifact and secret scan, and remaining open live gates.
+
+### Stage 7 Source Evidence And Verifier Wiring - 2026-06-16
+
+- Image Gen/source evidence: created `artifacts/imagegen/stage7/operator_stage7_traffic_camera_target.png`, `operator_stage7_asphalt_marking_source.png`, `operator_stage7_curb_sidewalk_source.png`, `operator_stage7_signal_vehicle_source.png`, and `operator_stage7_contact_sheet.png`.
+- Unreal source copies: copied Stage 7 source plates into `renderer/unreal/SmartIntersection/SourceAssets/PhotorealRoadKit/Textures/T_stage7_seoul_*`.
+- Source profile: created `renderer/unreal/SmartIntersection/SceneProfiles/operator_stage7_production_photoreal_profile.json` with prompt, original Image Gen path, artifact path, Unreal source texture path, synthetic license class, consumer, visual-target-not-proof contract, and visual-only simulation boundary.
+- Generator/package wiring: added `SMART_INTERSECTION_OPERATOR_STAGE7`, `/Game/Maps/Generated/smart_intersection_rebuild_operator_stage7`, Stage 7 material/source-texture names, manifest path, `unreal:generate:operator-stage7`, `unreal:capture:operator-stage7`, and `verify:operator-map-stage7`.
+- Static checks: `py_compile` passed for `generate_road_intersection.py`, `capture_operator_map_stage7.py`, and `verify-sumo-ready-operator-map-stage7.py`; PowerShell parser passed for `scripts/generate-unreal-city.ps1` and `scripts/capture-unreal-operator-map-stage7.ps1`; `package.json` parsed successfully.
+- Focused verifier red gate: `npm run verify:operator-map-stage7` passed source token checks, all Stage 7 Image Gen/source texture image checks, contact sheet image check, and Stage 7 profile check, then failed as expected on missing `renderer/unreal/SmartIntersection/GeneratedProof/smart_intersection_rebuild_operator_stage7_production_photoreal_manifest.json`.
+
+### Stage 7 Unreal Proof And Reviewer Iteration - 2026-06-16
+
+- Generation/capture: `npm run unreal:generate:operator-stage7` produced `renderer/unreal/SmartIntersection/Content/Maps/Generated/smart_intersection_rebuild_operator_stage7.umap`; `npm run unreal:capture:operator-stage7` produced `artifacts/unreal-operator-map-stage7-before.png`, `artifacts/unreal-operator-map-stage7-production-photoreal-proof.png`, and `artifacts/unreal-operator-map-stage7-before-after-contact-sheet.png`.
+- Focused verifier progress: `npm run verify:operator-map-stage7` now passes Stage 7 source tokens, profile, manifest, generated map, before proof, after proof, and contact sheet checks, then fails on the intentionally missing approved visual verdict.
+- Secret boundary: Unreal generation/capture repeatedly inserted `SecurityToken=` into `renderer/unreal/SmartIntersection/Config/DefaultEngine.ini`; each generated token line was removed before continuing.
+- First reviewer subagent verdict: `CHANGES_REQUESTED`; `photo_realistic_enough=false`. Findings: vehicles/street hardware/signals/sidewalks/curbs/background still proxy-like, asphalt too noisy, signal state weak, and black/background context broke realism.
+- Fix pass after reviewer: removed central controller/card artifact from rendered proof, moved saved camera/card/context/controller visuals out of frame while preserving map labels, reduced asphalt noise, added muted vehicle materials/details, enlarged signal-state markers, added sidewalk slab/joint/curb shadow details, and added neutral overcast background fill.
+- Second reviewer subagent verdict: `CHANGES_REQUESTED`; `photo_realistic_enough=false`. Findings: still stylized/low-poly; vehicles, curbs, sidewalks, signals, and street hardware remain primitive/blocky; asphalt remains flat panels with localized noisy patches; material response and mesh detail are insufficient for photoreal approval.
+- Additional attempted fix after second reviewer: added Stage 7 roughness/specular tuning, cylinder wheels/lenses/covers, project mesh assets for signal poles/heads, CCTV box, bollards, railings, tactile tiles, and drains, and captured a lower oblique traffic-camera angle.
+- Current blocker: the lower oblique proof exposed more black/background limits and still does not satisfy the human photoreal bar. Stage 7 remains incomplete; no machine-readable approved visual verdict has been created.
+
+### Stage 7 Vehicle Mesh, Texture, And Camera Iteration - 2026-06-16
+
+- Execution mode: continued inline because the available multi-agent tool surface states `spawn_agent` may be used only when the user explicitly asks for delegation; no fresh reviewer subagent was spawned in this iteration.
+- Vehicle mesh sources: added project-owned procedural OBJ source meshes under `renderer/unreal/SmartIntersection/SourceAssets/PhotorealRoadKit/Meshes/` for `stage7_seoul_passenger_sedan`, `stage7_seoul_bus`, `stage7_seoul_taxi`, and `stage7_seoul_emergency_van`, with `scripts/generate-stage7-vehicle-meshes.py` as the deterministic generator and profile `procedural_mesh_sources` evidence.
+- Generator changes: Stage 7 now records and imports `stage7_seoul_traffic_camera_target`, applies `stage7_seoul_asphalt_marking_source` to the main road slabs, replaces Stage 7 vehicle bodies with mesh actors, keeps Stage 7 facade/context actors visible, adds camera-visible curb/railing/streetlight/signal/background closure actors, and adds a camera-side fill light plus overcast post-process tuning.
+- Capture changes: `capture_operator_map_stage7.py` now uses the tighter oblique operator camera `origin_cm=[-2450,-6100,2100]`, `target_cm=[120,-120,-620]`, `fov_degrees=46.0`; manifest capture metadata is updated by `npm run unreal:capture:operator-stage7`.
+- Generated proof: `npm run unreal:generate:operator-stage7` and `npm run unreal:capture:operator-stage7` regenerated `renderer/unreal/SmartIntersection/Content/Maps/Generated/smart_intersection_rebuild_operator_stage7.umap`, `renderer/unreal/SmartIntersection/GeneratedProof/smart_intersection_rebuild_operator_stage7_production_photoreal_manifest.json`, `artifacts/unreal-operator-map-stage7-before.png`, `artifacts/unreal-operator-map-stage7-production-photoreal-proof.png`, and `artifacts/unreal-operator-map-stage7-before-after-contact-sheet.png`.
+- Focused verifier status: `npm run verify:operator-map-stage7` passes Stage 7 source tokens, Image Gen/source texture checks, profile, manifest, generated map, before proof, after proof, contact sheet, and proof image checks, then fails intentionally on missing `artifacts/unreal-operator-map-stage7-visual-verdict.json`.
+- Secret boundary: Unreal continued to regenerate `SecurityToken=` in `renderer/unreal/SmartIntersection/Config/DefaultEngine.ini` during generate/capture; each generated token line was removed. Final token scan for `SecurityToken=` returned no matches before this evidence update.
+- Current visual blocker: latest proof is materially improved from black-void/cube-car blockout, but still reads as constructed Unreal map geometry rather than production photoreal traffic-camera footage. Main remaining issues are texture-sheet repetition on road slabs, flat gray sidewalk/background planes, simplified vehicle silhouettes/materials, and low-detail curbs/signals/street hardware. No approved visual verdict was created.
+
+### Stage 7 Reviewer-Gated Iteration - 2026-06-16
+
+- Focused verifier red gate added: `scripts/verify-sumo-ready-operator-map-stage7.py` now requires `Stage7IntegratedAsphaltBlend`, `Stage7VehicleLocalYawDetail`, `Stage7CurbOcclusionGrime`, and `Stage7BoundaryOcclusion` source/map tokens so the next pass is tracked structurally.
+- Generator/profile/capture changes: reduced source-image asphalt use from broad slabs to smaller blend/detail actors, added local-yaw vehicle glass/wheel/lamp/contact-shadow overlays, muted vehicle colors, hid inherited Stage 3 cuboid vehicle proxies after Stage 7 replacements are spawned, added curb occlusion/grime/slab variation actors, reduced card-like background material use, and updated the Stage 7 capture camera metadata.
+- Generated proof: `npm run unreal:generate:operator-stage7` and `npm run unreal:capture:operator-stage7` regenerated the Stage 7 map, manifest, before proof, after proof, and contact sheet. Unreal repeatedly regenerated `renderer/unreal/SmartIntersection/Config/DefaultEngine.ini` `SecurityToken=` lines during editor runs; each generated token was removed after capture.
+- Latest focused verifier: `npm run verify:operator-map-stage7` passes Stage 7 source tokens, Image Gen/source texture checks, profile, manifest, generated map, before proof, after proof, contact sheet, and proof image checks, then fails on the intentionally missing approved visual verdict.
+- Fresh visual reviewer: reviewer subagent `019ece4f-8aee-75c0-b067-d00d73a37abc` returned `CHANGES_REQUESTED`, `photo_realistic_enough=false`, and `Stage 1-6 readability preserved=true`. Findings: synthetic rectangular asphalt slabs/seams/noise bands, low-poly/game-like vehicles, non-camera-realistic lighting/background/exposure, simplified/floating curbs/signals/street hardware, and lane markings visually inconsistent with asphalt treatment.
+- Latest primary visual inspection: `artifacts/unreal-operator-map-stage7-production-photoreal-proof.png` still fails the Stage 7 hard rule. It preserves traffic readability but remains a stylized Unreal operator render, not production photoreal traffic-camera footage. No `artifacts/unreal-operator-map-stage7-visual-verdict.json` was created.
+- Preservation validation: Stage 1 through Stage 6 verifiers passed: `SUMO_READY_OPERATOR_STAGE1_PASS`, `SUMO_READY_OPERATOR_STAGE2_PASS`, `SUMO_READY_OPERATOR_STAGE3_PASS`, `SUMO_READY_OPERATOR_STAGE4_PASS`, `SUMO_READY_OPERATOR_STAGE5_PASS`, and `SUMO_READY_OPERATOR_STAGE6_PASS`.
+- Runtime/simulator validation: `npm run unreal:runtime-smoke` wrote `artifacts/unreal-runtime-snapshot-smoke.json`; `npm run unreal:http-smoke` wrote `artifacts/unreal-http-snapshot-smoke.json`; `scripts/verify-simulator-builder-agent.py` printed `SIMULATOR_BUILDER_AGENT_PASS`; `scripts/verify-complete-simulation-renderer.py` printed `SOURCE_CHECK_PASS`, `LANDING_CHECK_PASS`, `MAP_CHECK_PASS`, `RENDERER_SNAPSHOT_VISUAL_LAYER_CHECK_PASS`, `RENDERER_SNAPSHOT_CAPTURE_VIEW_CHECK_PASS`, `FASTAPI_RENDERER_SNAPSHOT_CHECK_PASS`, `UNREAL_RUNTIME_SMOKE_ARTIFACTS_CHECK_PASS`, and `UNREAL_HTTP_SMOKE_ARTIFACTS_CHECK_PASS`. `npm run simulator:verify` is not defined in `package.json`.
+- Readiness and hygiene: `npm run runtime:readiness` remains fixture-backed (`vision ready=False`, `simulation ready=False`, `openai ready=False`, `pgvector ready=False`) with missing live dependencies recorded in command output. `rg -n "SecurityToken=" renderer/unreal/SmartIntersection/Config/DefaultEngine.ini` found no token after cleanup. `git diff --check` passed with CRLF warnings only.
+- Current blocker: Stage 7 is still blocked on visual production quality and the missing approved visual verdict. The smallest next unlock is a deeper asset/material pass that removes visible road slab construction, uses genuinely traffic-camera-scale vehicle/hardware assets, and normalizes lighting/background exposure before another reviewer run.
+
+### Stage 7 Material And Lighting Retry - 2026-06-16
+
+- Fresh visual reviewer: reviewer subagent `019ece63-d4ce-7301-a8c5-47ffe9674449` reviewed the regenerated Stage 7 proof after the previous material-consumer patch and returned `CHANGES_REQUESTED`, `photo_realistic_enough=false`, and `Stage 1-6 readability preserved=uncertain`. Findings: flat procedural road/sidewalk planes, harsh/game-like lighting, simplified vehicles/street objects, and insufficient confirmation that fine-grained Stage 1-6 overlays remain legible.
+- Follow-up generator/capture changes: added separated vehicle window panes, plates, bumpers, wheel-arch shadows, camera-distance asphalt/sidewalk breakup actors, sidewalk stains/seams, lighter Stage 7 wet-asphalt material values, softer overcast light/post-process settings, and a temporary lower traffic-camera capture angle.
+- Reverted failed follow-up: the lower capture angle exposed black/white background bands, and a tiled asphalt experiment produced obvious rectangular road slabs. The tiled layer was removed and the Stage 7 capture camera was returned to the high-oblique operator view before the final proof of this iteration.
+- Latest generated proof: `npm run unreal:generate:operator-stage7` and `npm run unreal:capture:operator-stage7` regenerated `renderer/unreal/SmartIntersection/Content/Maps/Generated/smart_intersection_rebuild_operator_stage7.umap`, `renderer/unreal/SmartIntersection/GeneratedProof/smart_intersection_rebuild_operator_stage7_production_photoreal_manifest.json`, `artifacts/unreal-operator-map-stage7-production-photoreal-proof.png`, and `artifacts/unreal-operator-map-stage7-before-after-contact-sheet.png`. Unreal regenerated `renderer/unreal/SmartIntersection/Config/DefaultEngine.ini` `SecurityToken=` lines during editor runs; each generated token was removed.
+- Latest focused verifier: `npm run verify:operator-map-stage7` passes Stage 7 source tokens, Image Gen/source texture checks, profile, manifest, generated map, before proof, after proof, contact sheet, and proof image checks, then fails on the intentionally missing approved visual verdict: `SUMO_READY_OPERATOR_STAGE7_FAIL: missing Stage 7 visual verdict: artifacts/unreal-operator-map-stage7-visual-verdict.json`.
+- Current visual status: primary inspection still rejects the latest proof as production photoreal because the operator frame remains visibly procedural: flat sidewalks, synthetic vehicles, simplified signals/street hardware, dark uniform asphalt, and constructed-scene lighting remain visible. No visual verdict artifact was created.
+
+### Stage 7 Image-Derived Surface Mesh Iteration - 2026-06-16
+
+- Source-to-3D route: added deterministic ImageGen/source-derived OBJ heightfields via `scripts/generate-stage7-surface-meshes.py`, producing `renderer/unreal/SmartIntersection/SourceAssets/PhotorealRoadKit/Meshes/stage7_seoul_asphalt_imagegen_heightfield.obj` and `stage7_seoul_sidewalk_imagegen_heightfield.obj`. These are visual-only mesh sources generated from existing Stage 7 source textures, not traffic/runtime authority.
+- Verifier contract: `scripts/verify-sumo-ready-operator-map-stage7.py` now requires `Stage7ImageGenSurfaceGeometry`, `Stage7SidewalkCoverageGeometry`, the new OBJ source files, map labels for the asphalt and sidewalk heightfield actors, and profile/manifest procedural mesh evidence. The first focused red gate failed as expected on missing `Stage7ImageGenSurfaceGeometry`; after wiring, source/profile checks passed and stale generated artifacts failed until Unreal regeneration.
+- Unreal wiring: `generate_road_intersection.py` now records `scripts/generate-stage7-surface-meshes.py`, spawns image-derived surface mesh actors into the Stage 7 operator map, and tags them as `Stage7ImageGenSurfaceGeometry` / `Stage7SidewalkCoverageGeometry` without changing SUMO/TraCI, FastAPI, Pixel Streaming, or live SUMO state.
+- Capture/lighting retry: `capture_operator_map_stage7.py` was tuned to use stronger Stage 7-only soft overcast key/fill/skylight and post-process exposure after verifier failures reported the after-proof below the `62.0` mean brightness floor.
+- Validation run: Python compilation passed for `generate_road_intersection.py`, `capture_operator_map_stage7.py`, `verify-sumo-ready-operator-map-stage7.py`, and `generate-stage7-surface-meshes.py`; `operator_stage7_production_photoreal_profile.json` parsed as valid JSON; `npm run unreal:generate:operator-stage7` and `npm run unreal:capture:operator-stage7` exited 0 and regenerated the Stage 7 `.umap`, manifest, after proof, and contact sheet.
+- Latest focused verifier: `npm run verify:operator-map-stage7` passes Stage 7 source tokens, Image Gen/source texture checks, profile, manifest, generated map, and before proof, then fails on the after proof brightness floor: `SUMO_READY_OPERATOR_STAGE7_FAIL: stage7_after_unreal_production_photoreal_proof brightness out of range: mean=52.99`.
+- Secret/hygiene: Unreal regenerated `SecurityToken=` during editor runs; each generated token was removed. Final token scan after cleanup returned no matches. `git diff --check` initially found a new blank line at EOF in `renderer/unreal/SmartIntersection/Config/DefaultEngine.ini`; that whitespace issue was removed.
+- Current visual status: primary inspection still rejects `artifacts/unreal-operator-map-stage7-production-photoreal-proof.png`. The image-derived mesh path technically works, but the proof still reads as constructed Unreal/procedural geometry with dark asphalt, gray slab sidewalks, simplified vehicles/signals, and visible surface-panel artifacts. No fresh reviewer was dispatched and no visual verdict artifact was created.
 
 ## Stage 7 Goal Prompt
 

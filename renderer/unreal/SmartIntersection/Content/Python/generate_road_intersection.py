@@ -8,6 +8,7 @@
 from __future__ import annotations
 
 import json
+import math
 import os
 from pathlib import Path
 
@@ -96,6 +97,45 @@ MATERIAL_COLORS = {
     "stage6_seoul_material_study": (0.28, 0.29, 0.27, 1.0),
     "stage6_seoul_road_atlas": (0.19, 0.20, 0.195, 1.0),
     "stage6_seoul_surface_overlays": (0.16, 0.15, 0.135, 1.0),
+    "stage7_seoul_traffic_camera_target": (0.42, 0.45, 0.44, 1.0),
+    "stage7_seoul_asphalt_marking_source": (0.18, 0.19, 0.18, 1.0),
+    "stage7_seoul_curb_sidewalk_source": (0.49, 0.48, 0.43, 1.0),
+    "stage7_seoul_signal_vehicle_source": (0.12, 0.13, 0.13, 1.0),
+    "stage7_seoul_facade_context_source": (0.32, 0.34, 0.33, 1.0),
+    "stage7_textured_asphalt_base": (0.390, 0.405, 0.392, 1.0),
+    "stage7_dark_wet_asphalt": (0.370, 0.385, 0.372, 1.0),
+    "stage7_wet_asphalt_patch": (0.425, 0.438, 0.415, 1.0),
+    "stage7_worn_white": (0.76, 0.75, 0.68, 1.0),
+    "stage7_worn_yellow": (0.70, 0.52, 0.12, 1.0),
+    "stage7_curb_concrete": (0.430, 0.425, 0.390, 1.0),
+    "stage7_sidewalk_paver": (0.440, 0.445, 0.405, 1.0),
+    "stage7_sidewalk_joint": (0.16, 0.17, 0.16, 1.0),
+    "stage7_tactile": (0.56, 0.42, 0.12, 1.0),
+    "stage7_signal_black": (0.055, 0.058, 0.058, 1.0),
+    "stage7_vehicle_blue": (0.065, 0.120, 0.210, 1.0),
+    "stage7_vehicle_bus_blue": (0.060, 0.125, 0.220, 1.0),
+    "stage7_vehicle_bus_green": (0.045, 0.360, 0.230, 1.0),
+    "stage7_vehicle_taxi_yellow": (0.55, 0.43, 0.110, 1.0),
+    "stage7_vehicle_dark_body": (0.155, 0.165, 0.168, 1.0),
+    "stage7_tire_black": (0.010, 0.010, 0.009, 1.0),
+    "stage7_headlamp": (0.58, 0.54, 0.42, 1.0),
+    "stage7_vehicle_glass": (0.070, 0.095, 0.105, 1.0),
+    "stage7_contact_shadow": (0.075, 0.070, 0.062, 1.0),
+    "stage7_puddle_reflection": (0.16, 0.19, 0.20, 1.0),
+    "stage7_road_micro_highlight": (0.500, 0.540, 0.525, 1.0),
+    "stage7_curb_wet_grime": (0.150, 0.145, 0.128, 1.0),
+    "stage7_sidewalk_damp_edge": (0.360, 0.365, 0.330, 1.0),
+    "stage7_facade_soft": (0.500, 0.510, 0.480, 1.0),
+    "stage7_overcast_background": (0.74, 0.76, 0.72, 1.0),
+    "stage7_window_glass": (0.160, 0.188, 0.198, 1.0),
+    "stage7_roof_concrete": (0.520, 0.505, 0.465, 1.0),
+    "stage7_roof_gravel": (0.385, 0.380, 0.340, 1.0),
+    "stage7_parking_concrete": (0.335, 0.345, 0.325, 1.0),
+    "stage7_pavement_fill": (0.410, 0.415, 0.375, 1.0),
+    "stage7_rooftop_unit": (0.300, 0.310, 0.292, 1.0),
+    "stage7_grass_verge": (0.135, 0.230, 0.115, 1.0),
+    "stage7_tree_canopy": (0.085, 0.160, 0.080, 1.0),
+    "stage7_tree_trunk": (0.160, 0.110, 0.070, 1.0),
     "operator_context_ground": (0.30, 0.34, 0.31, 1.0),
     "operator_asphalt": (0.44, 0.47, 0.43, 1.0),
     "operator_asphalt_patch": (0.36, 0.39, 0.36, 1.0),
@@ -194,6 +234,19 @@ SEOUL_TEXTURE_MATERIALS = SHARED_ROAD_TEXTURE_MATERIALS | {
     "stage6_seoul_material_study": "/Game/PhotorealRoadKit/Textures/T_stage6_seoul_material_study",
     "stage6_seoul_road_atlas": "/Game/PhotorealRoadKit/Textures/T_stage6_seoul_road_atlas",
     "stage6_seoul_surface_overlays": "/Game/PhotorealRoadKit/Textures/T_stage6_seoul_surface_overlays",
+    "stage7_seoul_traffic_camera_target": "/Game/PhotorealRoadKit/Textures/T_stage7_seoul_traffic_camera_target",
+    "stage7_seoul_asphalt_marking_source": "/Game/PhotorealRoadKit/Textures/T_stage7_seoul_asphalt_marking_source",
+    "stage7_seoul_curb_sidewalk_source": "/Game/PhotorealRoadKit/Textures/T_stage7_seoul_curb_sidewalk_source",
+    "stage7_seoul_signal_vehicle_source": "/Game/PhotorealRoadKit/Textures/T_stage7_seoul_signal_vehicle_source",
+    "stage7_seoul_facade_context_source": "/Game/PhotorealRoadKit/Textures/T_stage7_seoul_facade_context_source",
+    "stage7_textured_asphalt_base": "/Game/PhotorealRoadKit/Textures/T_london_asphalt_albedo",
+    "stage7_curb_concrete": "/Game/PhotorealRoadKit/Textures/T_stage7_pavement_fill_noise",
+    "stage7_sidewalk_paver": "/Game/PhotorealRoadKit/Textures/T_stage7_pavement_fill_noise",
+    "stage7_roof_concrete": "/Game/PhotorealRoadKit/Textures/T_stage7_roof_gravel_noise",
+    "stage7_roof_gravel": "/Game/PhotorealRoadKit/Textures/T_stage7_roof_gravel_noise",
+    "stage7_parking_concrete": "/Game/PhotorealRoadKit/Textures/T_stage7_parking_concrete_noise",
+    "stage7_pavement_fill": "/Game/PhotorealRoadKit/Textures/T_stage7_pavement_fill_noise",
+    "stage7_rooftop_unit": "/Game/PhotorealRoadKit/Textures/T_stage7_rooftop_unit_noise",
     "photoreal_brick": "/Game/PhotorealRoadKit/Textures/T_london_brick_facade",
     "photoreal_glass": "/Game/PhotorealRoadKit/Textures/T_london_glass_windows",
 }
@@ -340,6 +393,59 @@ OPERATOR_STAGE6_FORBIDDEN_MAP_TOKENS = [
     "traffic_zone_image_card",
     "dominant traffic-zone image card",
 ]
+
+OPERATOR_STAGE7_PROFILE_SCHEMA = "operator-stage7-production-photoreal-seoul-profile-v1"
+OPERATOR_STAGE7_REQUIRED_TOKENS = [
+    "OperatorStage7",
+    "SUMOReadyOperatorMapProductionPhotoreal",
+    "Stage7ProductionRoadUV",
+    "Stage7RoadWearDecal",
+    "Stage7CurbSidewalkUV",
+    "Stage7SignalHardware",
+    "Stage7VehicleDetail",
+    "Stage7VehicleMeshReplacement",
+    "Stage7StreetHardware",
+    "Stage7LightingCameraPostProcess",
+    "Stage7CameraBackgroundClosure",
+    "Stage7IntegratedAsphaltBlend",
+    "Stage7VehicleLocalYawDetail",
+    "Stage7CurbOcclusionGrime",
+    "Stage7BoundaryOcclusion",
+    "Stage7LegacyLightingDisabled",
+    "Stage7CameraVisibleProductionDetail",
+    "Stage7ForegroundSurfaceBreakup",
+    "Stage7ImageGenSurfaceGeometry",
+    "Stage7SidewalkCoverageGeometry",
+    "Stage1To6ReadableRuntimeState",
+    "NoTrafficZoneImageCard",
+]
+OPERATOR_STAGE7_SURFACE_MESH_SOURCE_SCRIPT = "scripts/generate-stage7-surface-meshes.py"
+OPERATOR_STAGE7_VEHICLE_MESH_BY_VARIANT = {
+    "passenger_car": "stage7_seoul_passenger_sedan",
+    "bus": "stage7_seoul_bus",
+    "taxi": "stage7_seoul_taxi",
+    "emergency_vehicle": "stage7_seoul_emergency_van",
+}
+OPERATOR_STAGE7_VEHICLE_SCALE_BY_VARIANT = {
+    "passenger_car": (1.00, 1.00, 1.00),
+    "bus": (1.32, 1.32, 1.32),
+    "taxi": (1.00, 1.00, 1.00),
+    "emergency_vehicle": (1.00, 1.00, 1.00),
+}
+OPERATOR_STAGE7_VEHICLE_DETAIL_EXTENTS_BY_VARIANT = {
+    "passenger_car": (2.05, 0.82, 0.58),
+    "bus": (5.05, 1.38, 1.05),
+    "taxi": (2.05, 0.82, 0.58),
+    "emergency_vehicle": (2.36, 0.92, 0.78),
+}
+OPERATOR_STAGE7_FORBIDDEN_MAP_TOKENS = [
+    "proof_plinth",
+    "foreground proof",
+    "foreground plinth",
+    "traffic_zone_image_card",
+    "dominant traffic-zone image card",
+    "Stage8MultiCityExpansion",
+]
 OPERATOR_STAGE6_SURFACE_PATCHES = [
     ("main_east_west_mesh_uv_asphalt", (0, 0, 18), (58.0, 9.2, 1.0), "photoreal_asphalt", (0, 0, 0)),
     ("main_north_south_mesh_uv_asphalt", (0, 0, 20), (9.2, 58.0, 1.0), "photoreal_asphalt", (0, 0, 0)),
@@ -435,6 +541,48 @@ OPERATOR_STAGE6_MATERIAL_NAMES = OPERATOR_STAGE3_MATERIAL_NAMES | SEOUL_MATERIAL
     "stage6_seoul_surface_overlays",
 }
 
+OPERATOR_STAGE7_MATERIAL_NAMES = OPERATOR_STAGE6_MATERIAL_NAMES | {
+    "stage7_seoul_traffic_camera_target",
+    "stage7_seoul_asphalt_marking_source",
+    "stage7_seoul_curb_sidewalk_source",
+    "stage7_seoul_signal_vehicle_source",
+    "stage7_seoul_facade_context_source",
+    "stage7_textured_asphalt_base",
+    "stage7_dark_wet_asphalt",
+    "stage7_wet_asphalt_patch",
+    "stage7_worn_white",
+    "stage7_worn_yellow",
+    "stage7_curb_concrete",
+    "stage7_sidewalk_paver",
+    "stage7_sidewalk_joint",
+    "stage7_tactile",
+    "stage7_signal_black",
+    "stage7_vehicle_blue",
+    "stage7_vehicle_bus_blue",
+    "stage7_vehicle_bus_green",
+    "stage7_vehicle_taxi_yellow",
+    "stage7_vehicle_dark_body",
+    "stage7_tire_black",
+    "stage7_headlamp",
+    "stage7_vehicle_glass",
+    "stage7_contact_shadow",
+    "stage7_puddle_reflection",
+    "stage7_road_micro_highlight",
+    "stage7_curb_wet_grime",
+    "stage7_sidewalk_damp_edge",
+    "stage7_facade_soft",
+    "stage7_overcast_background",
+    "stage7_window_glass",
+    "stage7_roof_concrete",
+    "stage7_roof_gravel",
+    "stage7_parking_concrete",
+    "stage7_pavement_fill",
+    "stage7_rooftop_unit",
+    "stage7_grass_verge",
+    "stage7_tree_canopy",
+    "stage7_tree_trunk",
+}
+
 NEW_YORK_MATERIAL_NAMES = GENERIC_MATERIAL_NAMES | {
     "photoreal_asphalt",
     "photoreal_curb",
@@ -514,6 +662,7 @@ class RoadOnlyRenderer:
         self.operator_stage1 = os.environ.get("SMART_INTERSECTION_OPERATOR_STAGE1") == "1"
         self.operator_stage2 = os.environ.get("SMART_INTERSECTION_OPERATOR_STAGE2") == "1"
         self.operator_stage3 = os.environ.get("SMART_INTERSECTION_OPERATOR_STAGE3") == "1"
+        self.operator_stage7 = os.environ.get("SMART_INTERSECTION_OPERATOR_STAGE7") == "1"
         self.operator_stage6 = os.environ.get("SMART_INTERSECTION_OPERATOR_STAGE6") == "1"
         self.project_root = self.profile_path.parents[2]
         self.generated_dir = self.project_root / "GeneratedProof"
@@ -523,6 +672,8 @@ class RoadOnlyRenderer:
 
     @property
     def package_path(self) -> str:
+        if self.operator_stage7:
+            return "/Game/Maps/Generated/smart_intersection_rebuild_operator_stage7"
         if self.operator_stage6:
             return "/Game/Maps/Generated/smart_intersection_rebuild_operator_stage6"
         if self.operator_stage3:
@@ -534,6 +685,102 @@ class RoadOnlyRenderer:
         return f"/Game/Maps/Generated/{self.city}_RoadOnly"
 
     def build_manifest(self) -> dict:
+        if self.operator_stage7:
+            stage7_profile = self._load_operator_stage7_profile()
+            source_textures = stage7_profile.get("source_textures", [])
+            return {
+                "generator": "RoadOnlyRenderer",
+                "schema": "operator-stage7-production-photoreal-proof-v1",
+                "mode": "OperatorStage7",
+                "city": self.city,
+                "display_name": "SUMO-ready Seoul production photoreal operator viewport",
+                "simulation_truth_source": "SUMO/TraCI is truth",
+                "future_bridge": "TraCI bridge via FastAPI renderer snapshots",
+                "renderer_role": "Unreal renders only",
+                "scope": "Stage 7 production photoreal visual pass; no live SUMO motion and no real traffic-control integration",
+                "unreal_map": self.package_path,
+                "base_stage": "OperatorStage6",
+                "base_motion_stage": "OperatorStage4 fixture renderer snapshots",
+                "transport_stage": "OperatorStage5 Pixel Streaming dashboard transport remains frame-only",
+                "profile_schema": stage7_profile.get("schema"),
+                "profile_path": "renderer/unreal/SmartIntersection/SceneProfiles/operator_stage7_production_photoreal_profile.json",
+                "imagegen_sources": stage7_profile.get("imagegen_sources", []),
+                "reference_photo_sources": stage7_profile.get("reference_photo_sources", []),
+                "source_textures": source_textures,
+                "procedural_texture_sources": stage7_profile.get("procedural_texture_sources", []),
+                "procedural_mesh_sources": stage7_profile.get("procedural_mesh_sources", []),
+                "applied_materials": [
+                    "stage7_seoul_asphalt_marking_source",
+                    "stage7_seoul_curb_sidewalk_source",
+                    "stage7_seoul_signal_vehicle_source",
+                    "stage7_seoul_facade_context_source",
+                    "stage7_textured_asphalt_base",
+                    "stage7_dark_wet_asphalt",
+                    "stage7_wet_asphalt_patch",
+                    "stage7_worn_white",
+                    "stage7_worn_yellow",
+                    "stage7_curb_concrete",
+                    "stage7_sidewalk_paver",
+                    "stage7_sidewalk_joint",
+                    "stage7_tactile",
+                "stage7_signal_black",
+                "stage7_vehicle_blue",
+                "stage7_vehicle_bus_blue",
+                "stage7_vehicle_bus_green",
+                "stage7_vehicle_taxi_yellow",
+                "stage7_vehicle_dark_body",
+                "stage7_tire_black",
+                "stage7_headlamp",
+                "stage7_vehicle_glass",
+                "stage7_contact_shadow",
+                "stage7_puddle_reflection",
+                "stage7_road_micro_highlight",
+                "stage7_curb_wet_grime",
+                "stage7_sidewalk_damp_edge",
+                "stage7_facade_soft",
+                "stage7_overcast_background",
+                "stage7_window_glass",
+                "stage7_roof_concrete",
+                "stage7_roof_gravel",
+                "stage7_parking_concrete",
+                "stage7_pavement_fill",
+                "stage7_rooftop_unit",
+                "stage7_grass_verge",
+                "stage7_tree_canopy",
+                "stage7_tree_trunk",
+                    "stage6_seoul_road_atlas",
+                    "stage6_seoul_surface_overlays",
+                ],
+                "production_asset_consumers": {
+                    item.get("material"): item.get("consuming_actors", [])
+                    for item in source_textures
+                    if isinstance(item, dict)
+                },
+                "actor_evidence": [
+                    *OPERATOR_STAGE7_REQUIRED_TOKENS,
+                    "OperatorStage6",
+                    "SUMOReadyOperatorMapPhotoreal",
+                    "Stage6PhotorealSurface",
+                    "Stage6GeneratedTextureApplied",
+                    "Stage6DecalAtlasApplied",
+                    "Stage4ReadableRuntimeState",
+                    "NoImageCardTrafficZone",
+                    "OperatorStage1",
+                    "TrafficReadableQueueZone",
+                    "OperatorStage2",
+                    "NoTrafficZoneBackplate",
+                    "OperatorStage3",
+                    "Stage3CityAssetKit",
+                    "Stage3SignalKit",
+                    "Stage3VehicleKit",
+                    "SUMOReadyAssetPivot",
+                ],
+                "readability_requirements": stage7_profile.get("readability_requirements", []),
+                "forbidden_map_tokens": OPERATOR_STAGE7_FORBIDDEN_MAP_TOKENS,
+                "renderer_policy": "SUMO/TraCI is truth; FastAPI orchestrates state; Unreal renders; Pixel Streaming transports frames only.",
+                "live_sumo_status": "deferred_until_real_sumo_traci_runtime_metadata_proves_simulation_source_sumo_traci",
+                "runtime_controller": f"TrafficSimulationController SmartIntersectionRuntime {self.city}",
+            }
         if self.operator_stage6:
             stage6_profile = self._load_operator_stage6_profile()
             return {
@@ -679,6 +926,10 @@ class RoadOnlyRenderer:
         }
 
     def write_manifest(self) -> Path:
+        if self.operator_stage7:
+            path = self.generated_dir / "smart_intersection_rebuild_operator_stage7_production_photoreal_manifest.json"
+            path.write_text(json.dumps(self.build_manifest(), indent=2) + "\n", encoding="utf-8")
+            return path
         if self.operator_stage6:
             path = self.generated_dir / "smart_intersection_rebuild_operator_stage6_photoreal_manifest.json"
             path.write_text(json.dumps(self.build_manifest(), indent=2) + "\n", encoding="utf-8")
@@ -711,6 +962,9 @@ class RoadOnlyRenderer:
         self._create_materials()
         self._build_scene()
         self._save_level()
+        if self.operator_stage7:
+            print(f"OPERATOR_STAGE7_UNREAL_GENERATED city={self.city} package={self.package_path}")
+            return
         if self.operator_stage6:
             print(f"OPERATOR_STAGE6_UNREAL_GENERATED city={self.city} package={self.package_path}")
             return
@@ -813,7 +1067,9 @@ class RoadOnlyRenderer:
         asset_tools = unreal.AssetToolsHelpers.get_asset_tools()
         material_dir = "/Game/Materials/RoadOnlyRenderer"
         unreal.EditorAssetLibrary.make_directory(material_dir)
-        if self.operator_stage6:
+        if self.operator_stage7:
+            city_material_names = OPERATOR_STAGE7_MATERIAL_NAMES
+        elif self.operator_stage6:
             city_material_names = OPERATOR_STAGE6_MATERIAL_NAMES
         elif self.operator_stage3:
             city_material_names = OPERATOR_STAGE3_MATERIAL_NAMES
@@ -834,8 +1090,10 @@ class RoadOnlyRenderer:
             asset_path = f"{material_dir}/{asset_name}"
             mat = unreal.EditorAssetLibrary.load_asset(asset_path)
             rebuilt = False
-            operator_mode = self.operator_stage1 or self.operator_stage2 or self.operator_stage3 or self.operator_stage6
-            if self.operator_stage6:
+            operator_mode = self.operator_stage1 or self.operator_stage2 or self.operator_stage3 or self.operator_stage6 or self.operator_stage7
+            if self.operator_stage7:
+                recreate_operator_material = name.startswith("stage7_") or name.startswith("stage6_")
+            elif self.operator_stage6:
                 recreate_operator_material = name.startswith("stage6_")
             elif self.operator_stage3:
                 recreate_operator_material = name.startswith("operator_stage3_")
@@ -894,18 +1152,56 @@ class RoadOnlyRenderer:
             material_key = mat.get_name().lower()
             if "_operator_" in material_key:
                 emissive_rgba = rgba
-            elif any(key in material_key for key in ("target_sky_atlas", "target_mist_building", "target_fog_plane_soft")):
+            elif any(key in material_key for key in (
+                "target_sky_atlas",
+                "target_mist_building",
+                "target_fog_plane_soft",
+                "stage7_seoul_traffic_camera_target",
+                "stage7_overcast_background",
+            )):
                 emissive_rgba = rgba
+            elif any(key in material_key for key in (
+                "stage7_facade_soft",
+                "stage7_roof_concrete",
+                "stage7_roof_gravel",
+                "stage7_parking_concrete",
+                "stage7_pavement_fill",
+                "stage7_rooftop_unit",
+                "stage7_window_glass",
+                "stage7_sidewalk_paver",
+                "stage7_curb_concrete",
+                "stage7_grass_verge",
+                "stage7_tree_canopy",
+            )):
+                emissive_rgba = tuple(min(1.0, channel * 0.22) for channel in rgba[:3]) + (rgba[3],)
             else:
                 emissive_rgba = (0.0, 0.0, 0.0, 1.0)
             black = unreal.MaterialEditingLibrary.create_material_expression(mat, unreal.MaterialExpressionConstant3Vector, -420, 180)
             black.set_editor_property("constant", unreal.LinearColor(*emissive_rgba))
             connect_constant_property(black, "emissive_color", unreal.MaterialProperty.MP_EMISSIVE_COLOR)
             rough = unreal.MaterialEditingLibrary.create_material_expression(mat, unreal.MaterialExpressionConstant, -420, 320)
-            rough.set_editor_property("r", 0.62)
+            if "stage7_textured_asphalt_base" in material_key or "stage7_dark_wet_asphalt" in material_key or "stage7_wet_asphalt_patch" in material_key or "stage7_puddle_reflection" in material_key:
+                rough_value = 0.30
+            elif "stage7_curb_concrete" in material_key or "stage7_sidewalk_paver" in material_key:
+                rough_value = 0.55
+            elif "stage7_vehicle_glass" in material_key or "stage7_window_glass" in material_key:
+                rough_value = 0.22
+            elif "stage7_vehicle" in material_key or "stage7_signal_black" in material_key:
+                rough_value = 0.42
+            else:
+                rough_value = 0.62
+            rough.set_editor_property("r", rough_value)
             unreal.MaterialEditingLibrary.connect_material_property(rough, "", unreal.MaterialProperty.MP_ROUGHNESS)
             spec = unreal.MaterialEditingLibrary.create_material_expression(mat, unreal.MaterialExpressionConstant, -420, 430)
-            spec.set_editor_property("r", 0.18)
+            if "stage7_textured_asphalt_base" in material_key or "stage7_dark_wet_asphalt" in material_key or "stage7_wet_asphalt_patch" in material_key or "stage7_puddle_reflection" in material_key:
+                spec_value = 0.46
+            elif "stage7_vehicle_glass" in material_key or "stage7_window_glass" in material_key:
+                spec_value = 0.62
+            elif "stage7_vehicle" in material_key or "stage7_signal_black" in material_key:
+                spec_value = 0.32
+            else:
+                spec_value = 0.18
+            spec.set_editor_property("r", spec_value)
             unreal.MaterialEditingLibrary.connect_material_property(spec, "", unreal.MaterialProperty.MP_SPECULAR)
             if hasattr(unreal.MaterialEditingLibrary, "recompile_material"):
                 unreal.MaterialEditingLibrary.recompile_material(mat)
@@ -928,29 +1224,79 @@ class RoadOnlyRenderer:
                 "m_london_custom_imagegen_london_facade_road_backplate": 0.85,
                 "m_paris_custom_imagegen_paris_overcast_boulevard_backplate": 0.28,
             }
+            stage7_texture_tones = {
+                "m_seoul_stage7_textured_asphalt_base": 1.48,
+                "m_seoul_stage7_seoul_asphalt_marking_source": 0.82,
+                "m_seoul_stage7_seoul_curb_sidewalk_source": 0.78,
+                "m_seoul_stage7_seoul_facade_context_source": 0.95,
+                "m_seoul_stage7_curb_concrete": 0.86,
+                "m_seoul_stage7_sidewalk_paver": 0.92,
+                "m_seoul_stage7_roof_concrete": 0.82,
+                "m_seoul_stage7_roof_gravel": 0.82,
+                "m_seoul_stage7_parking_concrete": 0.92,
+                "m_seoul_stage7_pavement_fill": 0.88,
+                "m_seoul_stage7_rooftop_unit": 0.82,
+            }
+            stage7_context_texture_keys = (
+                "stage7_roof_gravel",
+                "stage7_parking_concrete",
+                "stage7_pavement_fill",
+                "stage7_rooftop_unit",
+                "stage7_curb_concrete",
+                "stage7_sidewalk_paver",
+                "stage7_roof_concrete",
+            )
             sample = unreal.MaterialEditingLibrary.create_material_expression(mat, unreal.MaterialExpressionTextureSample, -740, 0)
             sample.set_editor_property("texture", texture)
-            backplate_tone = toned_backplates.get(mat_name)
-            if backplate_tone is not None:
-                facade_tone = unreal.MaterialEditingLibrary.create_material_expression(mat, unreal.MaterialExpressionMultiply, -520, 0)
-                facade_tone.set_editor_property("const_b", backplate_tone)
-                unreal.MaterialEditingLibrary.connect_material_expressions(sample, "RGB", facade_tone, "A")
-                unreal.MaterialEditingLibrary.connect_material_property(facade_tone, "", unreal.MaterialProperty.MP_BASE_COLOR)
+            texture_tone = toned_backplates.get(mat_name)
+            if texture_tone is None:
+                texture_tone = stage7_texture_tones.get(mat_name)
+            if texture_tone is not None:
+                tone = unreal.MaterialEditingLibrary.create_material_expression(mat, unreal.MaterialExpressionMultiply, -520, 0)
+                tone.set_editor_property("const_b", texture_tone)
+                unreal.MaterialEditingLibrary.connect_material_expressions(sample, "RGB", tone, "A")
+                unreal.MaterialEditingLibrary.connect_material_property(tone, "", unreal.MaterialProperty.MP_BASE_COLOR)
             else:
                 unreal.MaterialEditingLibrary.connect_material_property(sample, "RGB", unreal.MaterialProperty.MP_BASE_COLOR)
-            if "custom_imagegen" in mat_name or "stage6_seoul" in mat_name:
+            if (
+                "custom_imagegen" in mat_name
+                or "stage6_seoul" in mat_name
+                or "stage7_seoul" in mat_name
+                or any(key in mat_name for key in stage7_context_texture_keys)
+            ):
                 try:
                     mat.set_editor_property("two_sided", True)
                 except Exception:
                     pass
-            if "custom_imagegen" in mat_name and "backplate" in mat_name and mat_name not in toned_backplates:
+            if (
+                ("custom_imagegen" in mat_name and "backplate" in mat_name and mat_name not in toned_backplates)
+                or "stage7_seoul_traffic_camera_target" in mat_name
+            ):
                 unreal.MaterialEditingLibrary.connect_material_property(sample, "RGB", unreal.MaterialProperty.MP_EMISSIVE_COLOR)
+            elif "stage7_seoul_facade_context_source" in mat_name:
+                soft = unreal.MaterialEditingLibrary.create_material_expression(mat, unreal.MaterialExpressionConstant3Vector, -740, 180)
+                soft.set_editor_property("constant", unreal.LinearColor(0.050, 0.055, 0.052, 1.0))
+                unreal.MaterialEditingLibrary.connect_material_property(soft, "RGB", unreal.MaterialProperty.MP_EMISSIVE_COLOR)
+            elif any(key in mat_name for key in stage7_context_texture_keys):
+                soft = unreal.MaterialEditingLibrary.create_material_expression(mat, unreal.MaterialExpressionConstant3Vector, -740, 180)
+                soft.set_editor_property("constant", unreal.LinearColor(0.055, 0.056, 0.052, 1.0))
+                unreal.MaterialEditingLibrary.connect_material_property(soft, "RGB", unreal.MaterialProperty.MP_EMISSIVE_COLOR)
             else:
                 black = unreal.MaterialEditingLibrary.create_material_expression(mat, unreal.MaterialExpressionConstant3Vector, -740, 180)
                 black.set_editor_property("constant", unreal.LinearColor(0.0, 0.0, 0.0, 1.0))
                 unreal.MaterialEditingLibrary.connect_material_property(black, "RGB", unreal.MaterialProperty.MP_EMISSIVE_COLOR)
             rough = unreal.MaterialEditingLibrary.create_material_expression(mat, unreal.MaterialExpressionConstant, -740, 320)
-            if "stage6_seoul_road_atlas" in mat_name:
+            if "stage7_seoul_asphalt_marking_source" in mat_name or "stage7_textured_asphalt_base" in mat_name:
+                rough_value = 0.24
+            elif "stage7_seoul_curb_sidewalk_source" in mat_name:
+                rough_value = 0.42
+            elif "stage7_seoul_signal_vehicle_source" in mat_name:
+                rough_value = 0.34
+            elif "stage7_seoul_facade_context_source" in mat_name:
+                rough_value = 0.38
+            elif any(key in mat_name for key in stage7_context_texture_keys):
+                rough_value = 0.46
+            elif "stage6_seoul_road_atlas" in mat_name:
                 rough_value = 0.28
             elif "stage6_seoul_surface_overlays" in mat_name:
                 rough_value = 0.40
@@ -969,15 +1315,23 @@ class RoadOnlyRenderer:
             rough.set_editor_property("r", rough_value)
             unreal.MaterialEditingLibrary.connect_material_property(rough, "", unreal.MaterialProperty.MP_ROUGHNESS)
             spec = unreal.MaterialEditingLibrary.create_material_expression(mat, unreal.MaterialExpressionConstant, -740, 430)
-            spec.set_editor_property(
-                "r",
-                0.56 if "stage6_seoul_road_atlas" in mat_name else (
-                    0.46 if "stage6_seoul" in mat_name else (
-                        0.48 if ("custom_imagegen" in mat_name and ("wet_intersection_atlas" in mat_name or "wet_yellow_box_atlas" in mat_name or "wet_bus_lane_atlas" in mat_name))
-                        else (0.62 if "target_full_road_atlas" in mat_name else 0.22)
-                    )
-                ),
-            )
+            if "stage7_seoul_asphalt_marking_source" in mat_name or "stage7_textured_asphalt_base" in mat_name:
+                spec_value = 0.58
+            elif "stage7_seoul" in mat_name:
+                spec_value = 0.48
+            elif any(key in mat_name for key in stage7_context_texture_keys):
+                spec_value = 0.30
+            elif "stage6_seoul_road_atlas" in mat_name:
+                spec_value = 0.56
+            elif "stage6_seoul" in mat_name:
+                spec_value = 0.46
+            elif "custom_imagegen" in mat_name and ("wet_intersection_atlas" in mat_name or "wet_yellow_box_atlas" in mat_name or "wet_bus_lane_atlas" in mat_name):
+                spec_value = 0.48
+            elif "target_full_road_atlas" in mat_name:
+                spec_value = 0.62
+            else:
+                spec_value = 0.22
+            spec.set_editor_property("r", spec_value)
             unreal.MaterialEditingLibrary.connect_material_property(spec, "", unreal.MaterialProperty.MP_SPECULAR)
             if "T_london_text_" in texture.get_name():
                 try:
@@ -1053,6 +1407,40 @@ class RoadOnlyRenderer:
         )
         actor.set_actor_label(label)
         actor.set_actor_scale3d(unreal.Vector(float(scale[0]), float(scale[1]), float(scale[2])))
+        comp = actor.get_component_by_class(unreal.StaticMeshComponent)
+        if comp and mesh:
+            comp.set_static_mesh(mesh)
+            mat = self.materials.get(material_name)
+            if mat:
+                comp.set_material(0, mat)
+        return actor
+
+    def _cylinder_actor(self, label: str, loc, scale, material_name: str, rotation=(0, 0, 0)):
+        actor = unreal.EditorLevelLibrary.spawn_actor_from_class(
+            unreal.StaticMeshActor,
+            unreal.Vector(float(loc[0]), float(loc[1]), float(loc[2])),
+            unreal.Rotator(float(rotation[0]), float(rotation[1]), float(rotation[2])),
+        )
+        actor.set_actor_label(label)
+        actor.set_actor_scale3d(unreal.Vector(float(scale[0]), float(scale[1]), float(scale[2])))
+        mesh = unreal.EditorAssetLibrary.load_asset("/Engine/BasicShapes/Cylinder.Cylinder")
+        comp = actor.get_component_by_class(unreal.StaticMeshComponent)
+        if comp and mesh:
+            comp.set_static_mesh(mesh)
+            mat = self.materials.get(material_name)
+            if mat:
+                comp.set_material(0, mat)
+        return actor
+
+    def _sphere_actor(self, label: str, loc, scale, material_name: str, rotation=(0, 0, 0)):
+        actor = unreal.EditorLevelLibrary.spawn_actor_from_class(
+            unreal.StaticMeshActor,
+            unreal.Vector(float(loc[0]), float(loc[1]), float(loc[2])),
+            unreal.Rotator(float(rotation[0]), float(rotation[1]), float(rotation[2])),
+        )
+        actor.set_actor_label(label)
+        actor.set_actor_scale3d(unreal.Vector(float(scale[0]), float(scale[1]), float(scale[2])))
+        mesh = unreal.EditorAssetLibrary.load_asset("/Engine/BasicShapes/Sphere.Sphere")
         comp = actor.get_component_by_class(unreal.StaticMeshComponent)
         if comp and mesh:
             comp.set_static_mesh(mesh)
@@ -1636,6 +2024,44 @@ class RoadOnlyRenderer:
             raise RuntimeError(f"Stage 6 profile missing source texture material evidence: {missing_materials}")
         return data
 
+    def _load_operator_stage7_profile(self) -> dict:
+        path = self.project_root / "SceneProfiles" / "operator_stage7_production_photoreal_profile.json"
+        data = json.loads(path.read_text(encoding="utf-8"))
+        if data.get("schema") != OPERATOR_STAGE7_PROFILE_SCHEMA:
+            raise RuntimeError(f"Unexpected Stage 7 profile schema: {data.get('schema')}")
+        if data.get("city") != "seoul":
+            raise RuntimeError(f"Stage 7 profile must target seoul: {data.get('city')}")
+        sources = data.get("imagegen_sources", [])
+        if len(sources) < 4:
+            raise RuntimeError("Stage 7 profile must record target plus three source plates")
+        for source in sources:
+            if not isinstance(source, dict):
+                raise RuntimeError("Stage 7 imagegen_sources entries must be objects")
+            missing_fields = [
+                field
+                for field in ("prompt", "original_imagegen_path", "artifact_path", "source_texture_path", "license", "consumer")
+                if not source.get(field)
+            ]
+            if missing_fields:
+                raise RuntimeError(f"Stage 7 image source missing fields: {source.get('id')} fields={missing_fields}")
+        texture_materials = {
+            item.get("material")
+            for item in data.get("source_textures", [])
+            if isinstance(item, dict) and item.get("consuming_actors")
+        }
+        missing_materials = [
+            material
+            for material in (
+                "stage7_seoul_asphalt_marking_source",
+                "stage7_seoul_curb_sidewalk_source",
+                "stage7_seoul_signal_vehicle_source",
+            )
+            if material not in texture_materials
+        ]
+        if missing_materials:
+            raise RuntimeError(f"Stage 7 profile missing source texture consumers: {missing_materials}")
+        return data
+
     def _tag_operator_stage3_asset(self, actor, city: str, kit: str, *extra_tags: str) -> None:
         self._set_actor_property(
             actor,
@@ -1754,6 +2180,157 @@ class RoadOnlyRenderer:
             "Tags",
             ["OperatorStage6", "SUMOReadyOperatorMapPhotoreal", "Stage6GeneratedTextureApplied", *extra_tags],
         )
+
+    def _tag_operator_stage7_asset(self, actor, *extra_tags: str) -> None:
+        self._set_actor_property(
+            actor,
+            "Tags",
+            [
+                "OperatorStage7",
+                "SUMOReadyOperatorMapProductionPhotoreal",
+                "NoTrafficZoneImageCard",
+                *extra_tags,
+            ],
+        )
+
+    def _stage7_local_point(self, x: float, y: float, z: float, yaw: float, forward_cm: float = 0.0, lateral_cm: float = 0.0):
+        radians = math.radians(float(yaw))
+        return (
+            x + math.cos(radians) * forward_cm - math.sin(radians) * lateral_cm,
+            y + math.sin(radians) * forward_cm + math.cos(radians) * lateral_cm,
+            z,
+        )
+
+    def _spawn_operator_stage7_vehicle_detail_overlays(
+        self,
+        base_label: str,
+        x: float,
+        y: float,
+        yaw: float,
+        variant: str,
+        body_scale,
+    ) -> None:
+        length_cm = body_scale[0] * 100.0
+        width_cm = body_scale[1] * 100.0
+        is_bus = variant == "bus"
+        roof_z = 220 if is_bus else 184
+        side_z = 168 if is_bus else 150
+        wheel_z = 98 if is_bus else 88
+        detail_prefix = f"OperatorStage7_Stage7VehicleLocalYawDetail_{variant}_{base_label}"
+        roof_actor = self._rotated_cube(
+            f"{detail_prefix}_roof_glass_band",
+            self._stage7_local_point(x, y, roof_z, yaw, -length_cm * 0.03, 0),
+            (body_scale[0] * (0.34 if is_bus else 0.38), body_scale[1] * 0.54, 0.050),
+            "stage7_vehicle_glass",
+            rotation=(0, 0, yaw),
+        )
+        self._tag_operator_stage7_asset(roof_actor, "Stage7VehicleDetail", "Stage7VehicleLocalYawDetail", variant, "roof_glass")
+        for side_label, lateral in (("near", -width_cm * 0.54), ("far", width_cm * 0.54)):
+            side_actor = self._rotated_cube(
+                f"{detail_prefix}_{side_label}_side_window_strip",
+                self._stage7_local_point(x, y, side_z, yaw, 0, lateral),
+                (body_scale[0] * (0.42 if is_bus else 0.30), 0.020, 0.070),
+                "stage7_vehicle_glass",
+                rotation=(0, 0, yaw),
+            )
+            self._tag_operator_stage7_asset(side_actor, "Stage7VehicleDetail", "Stage7VehicleLocalYawDetail", variant, "side_glass")
+        pane_offsets = (-0.34, -0.18, -0.02, 0.16, 0.32) if is_bus else (-0.18, 0.08)
+        for pane_idx, forward_factor in enumerate(pane_offsets):
+            for side_label, lateral in (("near", -width_cm * 0.555), ("far", width_cm * 0.555)):
+                pane_actor = self._rotated_cube(
+                    f"{detail_prefix}_{side_label}_separated_window_pane_{pane_idx}",
+                    self._stage7_local_point(x, y, side_z + 2, yaw, length_cm * forward_factor, lateral),
+                    (body_scale[0] * (0.055 if is_bus else 0.075), 0.018, 0.078),
+                    "stage7_window_glass",
+                    rotation=(0, 0, yaw),
+                )
+                self._tag_operator_stage7_asset(
+                    pane_actor,
+                    "Stage7VehicleDetail",
+                    "Stage7VehicleLocalYawDetail",
+                    variant,
+                    "separated_window_pane",
+                )
+        for end_label, forward, material in (
+            ("front_bumper", length_cm * 0.505, "stage7_signal_black"),
+            ("rear_bumper", -length_cm * 0.505, "stage7_signal_black"),
+            ("front_plate", length_cm * 0.512, "stage7_worn_white"),
+            ("rear_plate", -length_cm * 0.512, "stage7_worn_white"),
+        ):
+            end_actor = self._rotated_cube(
+                f"{detail_prefix}_{end_label}",
+                self._stage7_local_point(x, y, 112 if is_bus else 98, yaw, forward, 0),
+                (0.020 if "plate" in end_label else 0.030, body_scale[1] * (0.30 if "plate" in end_label else 0.58), 0.024),
+                material,
+                rotation=(0, 0, yaw),
+            )
+            self._tag_operator_stage7_asset(end_actor, "Stage7VehicleDetail", "Stage7VehicleLocalYawDetail", variant, end_label)
+        for wheel_idx, forward in enumerate((-length_cm * 0.34, length_cm * 0.34)):
+            for side_label, lateral in (("near", -width_cm * 0.50), ("far", width_cm * 0.50)):
+                wheel_actor = self._cylinder_actor(
+                    f"{detail_prefix}_{side_label}_wheel_{wheel_idx}",
+                    self._stage7_local_point(x, y, wheel_z, yaw, forward, lateral),
+                    (0.082 if is_bus else 0.066, 0.082 if is_bus else 0.066, 0.026),
+                    "stage7_tire_black",
+                    rotation=(0, 90, yaw),
+                )
+                self._tag_operator_stage7_asset(wheel_actor, "Stage7VehicleDetail", "Stage7VehicleLocalYawDetail", variant, "local_wheel")
+                arch_actor = self._rotated_cube(
+                    f"{detail_prefix}_{side_label}_wheel_arch_shadow_{wheel_idx}",
+                    self._stage7_local_point(x, y, wheel_z + 23, yaw, forward, lateral),
+                    (0.17 if is_bus else 0.14, 0.020, 0.045),
+                    "stage7_contact_shadow",
+                    rotation=(0, 0, yaw),
+                )
+                self._tag_operator_stage7_asset(
+                    arch_actor,
+                    "Stage7VehicleDetail",
+                    "Stage7VehicleLocalYawDetail",
+                    variant,
+                    "wheel_arch_shadow",
+                )
+        head_actor = self._rotated_cube(
+            f"{detail_prefix}_headlamp_pair",
+            self._stage7_local_point(x, y, 126 if is_bus else 112, yaw, length_cm * 0.48, 0),
+            (0.026, body_scale[1] * 0.48, 0.024),
+            "stage7_headlamp",
+            rotation=(0, 0, yaw),
+        )
+        tail_actor = self._rotated_cube(
+            f"{detail_prefix}_tail_lamp_pair",
+            self._stage7_local_point(x, y, 123 if is_bus else 108, yaw, -length_cm * 0.48, 0),
+            (0.020, body_scale[1] * 0.42, 0.022),
+            "red_signal",
+            rotation=(0, 0, yaw),
+        )
+        for actor in (head_actor, tail_actor):
+            self._tag_operator_stage7_asset(actor, "Stage7VehicleDetail", "Stage7VehicleLocalYawDetail", variant, "lamp_detail")
+        shadow_actor = self._rotated_cube(
+            f"{detail_prefix}_grounded_wet_contact_shadow",
+            self._stage7_local_point(x, y, 62, yaw, 0, 0),
+            (body_scale[0] * 1.04, body_scale[1] * 1.10, 0.010),
+            "stage7_contact_shadow",
+            rotation=(0, 0, yaw),
+        )
+        self._tag_operator_stage7_asset(shadow_actor, "Stage7VehicleDetail", "Stage7VehicleLocalYawDetail", variant, "vehicle_contact_shadow")
+        if variant == "taxi":
+            roof_sign = self._rotated_cube(
+                f"{detail_prefix}_muted_taxi_roof_sign",
+                self._stage7_local_point(x, y, 225, yaw, -length_cm * 0.02, 0),
+                (0.32, 0.10, 0.045),
+                "stage7_worn_yellow",
+                rotation=(0, 0, yaw),
+            )
+            self._tag_operator_stage7_asset(roof_sign, "Stage7VehicleDetail", "Stage7VehicleLocalYawDetail", variant, "taxi_roof_sign")
+        if variant == "emergency_vehicle":
+            beacon = self._rotated_cube(
+                f"{detail_prefix}_muted_emergency_lightbar",
+                self._stage7_local_point(x, y, 234, yaw, -length_cm * 0.04, 0),
+                (0.40, 0.13, 0.055),
+                "red_signal",
+                rotation=(0, 0, yaw),
+            )
+            self._tag_operator_stage7_asset(beacon, "Stage7VehicleDetail", "Stage7VehicleLocalYawDetail", variant, "emergency_lightbar")
 
     def _build_operator_stage6_surface_materials(self) -> None:
         for label, loc, scale, material, rotation in OPERATOR_STAGE6_SURFACE_PATCHES:
@@ -1910,7 +2487,1715 @@ class RoadOnlyRenderer:
         self._tag_operator_stage6_asset(marker, "Stage4ReadableRuntimeState", "NoImageCardTrafficZone")
         self._configure_operator_stage6_lighting_camera()
 
+    def _build_operator_stage7_road_production_layer(self) -> None:
+        road_surfaces = [
+            (
+                "OperatorStage7_Stage7ProductionRoadUV_asphalt_base_east_west",
+                (0, 0, 69),
+                (61.0, 18.0, 1.0),
+                "stage7_textured_asphalt_base",
+                0,
+            ),
+            (
+                "OperatorStage7_Stage7ProductionRoadUV_asphalt_base_north_south",
+                (0, 0, 72),
+                (18.0, 61.0, 1.0),
+                "stage7_textured_asphalt_base",
+                0,
+            ),
+            (
+                "OperatorStage7_Stage7ProductionRoadUV_asphalt_patch_main",
+                (-1040, -260, 82),
+                (0.20, 0.035, 1.0),
+                "stage7_seoul_asphalt_marking_source",
+                -2,
+            ),
+            (
+                "OperatorStage7_Stage7ProductionRoadUV_wet_asphalt_patch_center",
+                (420, 180, 81),
+                (2.4, 1.15, 1.0),
+                "stage7_dark_wet_asphalt",
+                0,
+            ),
+            (
+                "OperatorStage7_Stage7ProductionRoadUV_bus_lane_wet_source",
+                (0, -1480, 78),
+                (9.0, 0.55, 1.0),
+                "stage7_dark_wet_asphalt",
+                0,
+            ),
+        ]
+        for label, loc, scale, material, yaw in road_surfaces:
+            actor = self._rotated_cube(label, loc, (scale[0], scale[1], 0.014), material, rotation=(0, 0, yaw))
+            self._tag_operator_stage7_asset(actor, "Stage7ProductionRoadUV", "Stage7IntegratedAsphaltBlend", material)
+
+        integrated_wear = [
+            ("source_scuffed_lane_transition_east", (840, -360, 84), (0.24, 0.022, 1.0), "stage7_seoul_asphalt_marking_source", 2),
+            ("source_scuffed_lane_transition_west", (-840, 360, 85), (0.22, 0.022, 1.0), "stage7_seoul_asphalt_marking_source", -3),
+            ("source_oil_shear_north_queue", (-310, 820, 86), (0.026, 0.24, 1.0), "stage7_seoul_asphalt_marking_source", 5),
+            ("source_oil_shear_south_queue", (310, -820, 87), (0.026, 0.24, 1.0), "stage7_seoul_asphalt_marking_source", -5),
+            ("subtle_wet_sheen_eastbound", (1040, -160, 88), (1.85, 0.060, 1.0), "stage7_road_micro_highlight", 1),
+            ("subtle_wet_sheen_westbound", (-1040, 160, 89), (1.85, 0.060, 1.0), "stage7_road_micro_highlight", -1),
+            ("wheel_path_shadow_northbound", (-210, 520, 90), (0.070, 2.0, 1.0), "stage7_contact_shadow", 4),
+            ("wheel_path_shadow_southbound", (210, -520, 91), (0.070, 2.0, 1.0), "stage7_contact_shadow", -4),
+        ]
+        for label, loc, scale, material, yaw in integrated_wear:
+            actor = self._rotated_cube(
+                f"OperatorStage7_Stage7IntegratedAsphaltBlend_{label}",
+                loc,
+                (scale[0], scale[1], 0.007),
+                material,
+                rotation=(0, 0, yaw),
+            )
+            self._tag_operator_stage7_asset(
+                actor,
+                "Stage7ProductionRoadUV",
+                "Stage7RoadWearDecal",
+                "Stage7IntegratedAsphaltBlend",
+                material,
+            )
+
+        asphalt_breakup = [
+            ("camera_near_wet_sheen_left", (-980, -2260, 96), (6.4, 0.050, 0.006), "target_wet_micro_highlight", -2),
+            ("camera_near_wet_sheen_right", (930, -2140, 97), (5.8, 0.045, 0.006), "stage7_road_micro_highlight", 2),
+            ("eastbound_lane_grain_a", (1340, -520, 98), (2.6, 0.032, 0.006), "photoreal_grime_overlay", 1),
+            ("eastbound_lane_grain_b", (420, -520, 99), (1.7, 0.026, 0.006), "stage7_contact_shadow", -3),
+            ("westbound_lane_grain_a", (-1340, 520, 100), (2.4, 0.032, 0.006), "photoreal_grime_overlay", -1),
+            ("westbound_lane_grain_b", (-360, 520, 101), (1.8, 0.026, 0.006), "stage7_contact_shadow", 4),
+            ("northbound_lane_grain_a", (-520, 1320, 102), (0.032, 2.5, 0.006), "photoreal_grime_overlay", 2),
+            ("southbound_lane_grain_a", (520, -1320, 103), (0.032, 2.5, 0.006), "photoreal_grime_overlay", -2),
+            ("center_tar_repair_east", (520, 60, 104), (1.35, 0.020, 0.006), "photoreal_crack_overlay", -9),
+            ("center_tar_repair_west", (-520, -60, 105), (1.35, 0.020, 0.006), "photoreal_crack_overlay", 8),
+            ("stopline_scuff_north", (0, 1160, 106), (8.8, 0.030, 0.006), "stage7_contact_shadow", 0),
+            ("stopline_scuff_south", (0, -1160, 107), (8.8, 0.030, 0.006), "stage7_contact_shadow", 0),
+        ]
+        for label, loc, scale, material, yaw in asphalt_breakup:
+            actor = self._rotated_cube(
+                f"OperatorStage7_Stage7IntegratedAsphaltBlend_microbreakup_{label}",
+                loc,
+                scale,
+                material,
+                rotation=(0, 0, yaw),
+            )
+            self._tag_operator_stage7_asset(
+                actor,
+                "Stage7ProductionRoadUV",
+                "Stage7RoadWearDecal",
+                "Stage7IntegratedAsphaltBlend",
+                "camera_distance_material_breakup",
+                material,
+            )
+
+        for idx, y in enumerate([-520, -250, 250, 520]):
+            for dash in range(-5, 6):
+                if dash % 2 == 0:
+                    actor = self._rotated_cube(
+                        f"OperatorStage7_Stage7RoadWearDecal_worn_lane_dash_ew_{idx}_{dash}_stage7_worn_white",
+                        (dash * 520, y, 91 + idx),
+                        (1.45, 0.055, 0.010),
+                        "stage7_worn_white",
+                    )
+                    self._tag_operator_stage7_asset(actor, "Stage7RoadWearDecal", "lane_marking_readable")
+        for idx, x in enumerate([-520, -250, 250, 520]):
+            for dash in range(-5, 6):
+                if dash % 2 == 0:
+                    actor = self._rotated_cube(
+                        f"OperatorStage7_Stage7RoadWearDecal_worn_lane_dash_ns_{idx}_{dash}_stage7_worn_white",
+                        (x, dash * 520, 92 + idx),
+                        (0.055, 1.45, 0.010),
+                        "stage7_worn_white",
+                    )
+                    self._tag_operator_stage7_asset(actor, "Stage7RoadWearDecal", "lane_marking_readable")
+
+        stop_bars = [
+            ("OperatorStage7_Stage7RoadWearDecal_worn_stop_bar_north", (0, 1210, 98), (15.8, 0.085, 0.012), 0),
+            ("OperatorStage7_Stage7RoadWearDecal_worn_stop_bar_south", (0, -1210, 99), (15.8, 0.085, 0.012), 0),
+            ("OperatorStage7_Stage7RoadWearDecal_worn_stop_bar_east", (1210, 0, 100), (0.085, 15.8, 0.012), 0),
+            ("OperatorStage7_Stage7RoadWearDecal_worn_stop_bar_west", (-1210, 0, 101), (0.085, 15.8, 0.012), 0),
+        ]
+        for label, loc, scale, yaw in stop_bars:
+            actor = self._rotated_cube(label, loc, scale, "stage7_worn_white", rotation=(0, 0, yaw))
+            self._tag_operator_stage7_asset(actor, "Stage7RoadWearDecal", "stop_bar_readable")
+
+        for idx, y in enumerate([-1415, 1415]):
+            for x in range(-820, 821, 205):
+                actor = self._rotated_cube(
+                    f"OperatorStage7_Stage7RoadWearDecal_crosswalk_worn_bar_{idx}_{x}",
+                    (x, y, 108 + idx),
+                    (0.34, 1.35, 0.010),
+                    "stage7_worn_white",
+                )
+                self._tag_operator_stage7_asset(actor, "Stage7RoadWearDecal", "crosswalk_readable")
+        for idx, x in enumerate([-1415, 1415]):
+            for y in range(-820, 821, 205):
+                actor = self._rotated_cube(
+                    f"OperatorStage7_Stage7RoadWearDecal_crosswalk_worn_bar_side_{idx}_{y}",
+                    (x, y, 109 + idx),
+                    (1.35, 0.34, 0.010),
+                    "stage7_worn_white",
+                )
+                self._tag_operator_stage7_asset(actor, "Stage7RoadWearDecal", "crosswalk_readable")
+
+        wear_decals = [
+            ("OperatorStage7_Stage7RoadWearDecal_tire_polish_east_queue", (820, -170, 112), (3.4, 0.46, 1.0), "stage7_puddle_reflection", 0),
+            ("OperatorStage7_Stage7RoadWearDecal_tire_polish_west_queue", (-820, 170, 113), (3.4, 0.46, 1.0), "stage7_puddle_reflection", 0),
+            ("OperatorStage7_Stage7RoadWearDecal_oil_patch_north_queue", (-210, 850, 114), (0.72, 2.15, 1.0), "stage7_contact_shadow", 0),
+            ("OperatorStage7_Stage7RoadWearDecal_oil_patch_south_queue", (210, -850, 115), (0.72, 2.15, 1.0), "stage7_contact_shadow", 0),
+            ("OperatorStage7_Stage7RoadWearDecal_tar_crack_centerline_a", (-175, 0, 116), (0.055, 7.8, 1.0), "stage7_contact_shadow", 7),
+            ("OperatorStage7_Stage7RoadWearDecal_tar_crack_centerline_b", (185, 0, 117), (0.055, 7.6, 1.0), "stage7_contact_shadow", -8),
+        ]
+        for label, loc, scale, material, yaw in wear_decals:
+            actor = self._rotated_cube(label, loc, (scale[0], scale[1], 0.008), material, rotation=(0, 0, yaw))
+            self._tag_operator_stage7_asset(actor, "Stage7RoadWearDecal", material)
+
+    def _build_operator_stage7_imagegen_surface_geometry_layer(self) -> None:
+        mesh_root = "/Game/PhotorealRoadKit/Meshes"
+        surface_specs = [
+            (
+                "asphalt_heightfield_east_west",
+                "stage7_seoul_asphalt_imagegen_heightfield",
+                (-680, -260, 84),
+                (0.14, 0.16, 0.20),
+                "stage7_wet_asphalt_patch",
+                (0, 0, 0),
+                "Stage7ProductionRoadUV",
+                "imagegen_luminance_heightfield",
+            ),
+            (
+                "asphalt_heightfield_north_south",
+                "stage7_seoul_asphalt_imagegen_heightfield",
+                (260, 660, 85),
+                (0.13, 0.16, 0.20),
+                "stage7_wet_asphalt_patch",
+                (0, 0, 90),
+                "Stage7ProductionRoadUV",
+                "imagegen_luminance_heightfield",
+            ),
+            (
+                "sidewalk_heightfield_south_foreground",
+                "stage7_seoul_sidewalk_imagegen_heightfield",
+                (0, -3205, 120),
+                (0.085, 0.110, 0.18),
+                "stage7_seoul_curb_sidewalk_source",
+                (0, 0, 0),
+                "Stage7CurbSidewalkUV",
+                "imagegen_luminance_heightfield",
+            ),
+            (
+                "sidewalk_heightfield_north_foreground",
+                "stage7_seoul_sidewalk_imagegen_heightfield",
+                (0, 3205, 122),
+                (0.085, 0.110, 0.18),
+                "stage7_seoul_curb_sidewalk_source",
+                (0, 0, 180),
+                "Stage7CurbSidewalkUV",
+                "imagegen_luminance_heightfield",
+            ),
+            (
+                "sidewalk_heightfield_west_edge",
+                "stage7_seoul_sidewalk_imagegen_heightfield",
+                (-3205, 0, 124),
+                (0.085, 0.110, 0.18),
+                "stage7_seoul_curb_sidewalk_source",
+                (0, 0, 90),
+                "Stage7CurbSidewalkUV",
+                "imagegen_luminance_heightfield",
+            ),
+            (
+                "sidewalk_heightfield_east_edge",
+                "stage7_seoul_sidewalk_imagegen_heightfield",
+                (3205, 0, 126),
+                (0.085, 0.110, 0.18),
+                "stage7_seoul_curb_sidewalk_source",
+                (0, 0, -90),
+                "Stage7CurbSidewalkUV",
+                "imagegen_luminance_heightfield",
+            ),
+            (
+                "southwest_corner_panel",
+                "stage7_seoul_sidewalk_imagegen_heightfield",
+                (-2760, -3020, 128),
+                (0.040, 0.095, 0.16),
+                "stage7_seoul_curb_sidewalk_source",
+                (0, 0, 0),
+                "Stage7CurbSidewalkUV",
+                "Stage7SidewalkCoverageGeometry",
+            ),
+            (
+                "southeast_corner_panel",
+                "stage7_seoul_sidewalk_imagegen_heightfield",
+                (2760, -3020, 130),
+                (0.040, 0.095, 0.16),
+                "stage7_seoul_curb_sidewalk_source",
+                (0, 0, 0),
+                "Stage7CurbSidewalkUV",
+                "Stage7SidewalkCoverageGeometry",
+            ),
+            (
+                "northwest_corner_panel",
+                "stage7_seoul_sidewalk_imagegen_heightfield",
+                (-2760, 3020, 132),
+                (0.040, 0.095, 0.16),
+                "stage7_seoul_curb_sidewalk_source",
+                (0, 0, 180),
+                "Stage7CurbSidewalkUV",
+                "Stage7SidewalkCoverageGeometry",
+            ),
+            (
+                "northeast_corner_panel",
+                "stage7_seoul_sidewalk_imagegen_heightfield",
+                (2760, 3020, 134),
+                (0.040, 0.095, 0.16),
+                "stage7_seoul_curb_sidewalk_source",
+                (0, 0, 180),
+                "Stage7CurbSidewalkUV",
+                "Stage7SidewalkCoverageGeometry",
+            ),
+        ]
+        for label, asset, loc, scale, material, rotation, surface_role, geometry_role in surface_specs:
+            actor = self._mesh_actor(
+                f"OperatorStage7_Stage7ImageGenSurfaceGeometry_{label}",
+                f"{mesh_root}/{asset}",
+                loc,
+                scale,
+                material,
+                rotation=rotation,
+            )
+            if geometry_role == "Stage7SidewalkCoverageGeometry":
+                actor.set_actor_label(f"OperatorStage7_Stage7SidewalkCoverageGeometry_{label}")
+            self._tag_operator_stage7_asset(
+                actor,
+                "Stage7ImageGenSurfaceGeometry",
+                surface_role,
+                geometry_role,
+                asset,
+                material,
+                OPERATOR_STAGE7_SURFACE_MESH_SOURCE_SCRIPT,
+            )
+
+    def _build_operator_stage7_curb_sidewalk_layer(self) -> None:
+        sidewalk_specs = [
+            ("north", (0, 3190, 92), (60.0, 4.1, 0.055), "photoreal_sidewalk"),
+            ("south", (0, -3190, 92), (60.0, 4.1, 0.055), "photoreal_sidewalk"),
+            ("east", (3190, 0, 92), (4.1, 60.0, 0.055), "photoreal_sidewalk"),
+            ("west", (-3190, 0, 92), (4.1, 60.0, 0.055), "photoreal_sidewalk"),
+        ]
+        for label, loc, scale, material in sidewalk_specs:
+            actor = self._cube(f"OperatorStage7_Stage7CurbSidewalkUV_sidewalk_{label}_{material}", loc, scale, material)
+            self._tag_operator_stage7_asset(actor, "Stage7CurbSidewalkUV", material)
+
+        curb_specs = [
+            ("corner_ne", (1400, 1400, 116), (2.25, 0.32, 0.085), 0),
+            ("corner_nw", (-1400, 1400, 116), (2.25, 0.32, 0.085), 0),
+            ("corner_se", (1400, -1400, 116), (2.25, 0.32, 0.085), 0),
+            ("corner_sw", (-1400, -1400, 116), (2.25, 0.32, 0.085), 0),
+        ]
+        for label, loc, scale, yaw in curb_specs:
+            actor = self._rotated_cube(
+                f"OperatorStage7_Stage7CurbSidewalkUV_{label}",
+                loc,
+                scale,
+                "photoreal_curb",
+                rotation=(0, 0, yaw),
+            )
+            self._tag_operator_stage7_asset(actor, "Stage7CurbSidewalkUV", "curb_edge")
+        for idx, (x, y) in enumerate([(-1265, 1265), (1265, 1265), (-1265, -1265), (1265, -1265)]):
+            actor = self._cube(
+                f"OperatorStage7_Stage7TactilePavingUV_corner_{['nw', 'ne', 'sw', 'se'][idx]}",
+                (x, y, 126),
+                (0.74, 0.54, 0.020),
+                "stage7_tactile",
+            )
+            self._tag_operator_stage7_asset(actor, "Stage7CurbSidewalkUV", "tactile_paving")
+        actor = self._cube(
+            "OperatorStage7_Stage7DrainUtilityDetail_center_south",
+            (360, -1510, 118),
+            (0.56, 0.30, 0.016),
+            "stage7_seoul_curb_sidewalk_source",
+        )
+        self._tag_operator_stage7_asset(actor, "Stage7CurbSidewalkUV", "drain_utility_detail")
+        for idx, (x, y) in enumerate([(-610, -980), (520, 910), (920, -430), (-840, 360)]):
+            actor = self._cylinder_actor(
+                f"OperatorStage7_Stage7DrainUtilityDetail_round_utility_cover_{idx}",
+                (x, y, 120 + idx),
+                (0.32, 0.32, 0.012),
+                "stage7_signal_black",
+            )
+            self._tag_operator_stage7_asset(actor, "Stage7CurbSidewalkUV", "utility_cover")
+        mesh_root = "/Game/PhotorealRoadKit/Meshes"
+        for idx, (x, y, yaw) in enumerate([(-1260, 1325, 0), (1260, 1325, 180), (-1260, -1325, 0), (1260, -1325, 180)]):
+            actor = self._mesh_actor(
+                f"OperatorStage7_Stage7CurbSidewalkUV_tactile_tile_mesh_{idx}",
+                f"{mesh_root}/tactile_paving_tile",
+                (x, y, 132),
+                (0.92, 0.92, 0.08),
+                "stage7_tactile",
+                rotation=(0, 0, yaw),
+            )
+            self._tag_operator_stage7_asset(actor, "Stage7CurbSidewalkUV", "tactile_mesh_detail")
+        for idx, (x, y, yaw) in enumerate([(380, -1540, 0), (-380, 1540, 180), (1540, 380, 90), (-1540, -380, -90)]):
+            actor = self._mesh_actor(
+                f"OperatorStage7_Stage7DrainUtilityDetail_drain_grate_mesh_{idx}",
+                f"{mesh_root}/drain_grate_rect",
+                (x, y, 132),
+                (0.000026, 0.000026, 0.000026),
+                "stage7_signal_black",
+                rotation=(0, 0, yaw),
+            )
+            self._tag_operator_stage7_asset(actor, "Stage7CurbSidewalkUV", "drain_mesh_detail")
+
+    def _build_operator_stage7_sidewalk_slab_detail(self) -> None:
+        for idx, y in enumerate([2960, 3420, -2960, -3420]):
+            actor = self._cube(
+                f"OperatorStage7_Stage7CurbSidewalkUV_sidewalk_longitudinal_joint_{idx}",
+                (0, y, 126 + idx),
+                (58.0, 0.018, 0.010),
+                "stage7_sidewalk_joint",
+            )
+            self._tag_operator_stage7_asset(actor, "Stage7CurbSidewalkUV", "sidewalk_joint")
+        for idx, x in enumerate([2960, 3420, -2960, -3420]):
+            actor = self._cube(
+                f"OperatorStage7_Stage7CurbSidewalkUV_sidewalk_lateral_joint_{idx}",
+                (x, 0, 130 + idx),
+                (0.018, 58.0, 0.010),
+                "stage7_sidewalk_joint",
+            )
+            self._tag_operator_stage7_asset(actor, "Stage7CurbSidewalkUV", "sidewalk_joint")
+        for idx, (x, y, sx, sy) in enumerate([
+            (0, 1848, 54.0, 0.040),
+            (0, -1848, 54.0, 0.040),
+            (1848, 0, 0.040, 54.0),
+            (-1848, 0, 0.040, 54.0),
+        ]):
+            actor = self._cube(
+                f"OperatorStage7_Stage7CurbSidewalkUV_curb_contact_shadow_{idx}",
+                (x, y, 133 + idx),
+                (sx, sy, 0.010),
+                "stage7_contact_shadow",
+            )
+            self._tag_operator_stage7_asset(actor, "Stage7CurbSidewalkUV", "Stage7CurbOcclusionGrime", "curb_contact_shadow")
+        grime_edges = [
+            ("north_inner", (0, 1785, 140), (54.0, 0.065, 0.010), 0),
+            ("south_inner", (0, -1785, 141), (54.0, 0.065, 0.010), 0),
+            ("east_inner", (1785, 0, 142), (0.065, 54.0, 0.010), 0),
+            ("west_inner", (-1785, 0, 143), (0.065, 54.0, 0.010), 0),
+            ("north_outer_damp", (0, 3005, 144), (55.5, 0.050, 0.010), 0),
+            ("south_outer_damp", (0, -3005, 145), (55.5, 0.050, 0.010), 0),
+            ("east_outer_damp", (3005, 0, 146), (0.050, 55.5, 0.010), 0),
+            ("west_outer_damp", (-3005, 0, 147), (0.050, 55.5, 0.010), 0),
+        ]
+        for label, loc, scale, yaw in grime_edges:
+            actor = self._rotated_cube(
+                f"OperatorStage7_Stage7CurbOcclusionGrime_{label}",
+                loc,
+                scale,
+                "stage7_curb_wet_grime" if "inner" in label else "stage7_sidewalk_damp_edge",
+                rotation=(0, 0, yaw),
+            )
+            self._tag_operator_stage7_asset(actor, "Stage7CurbSidewalkUV", "Stage7CurbOcclusionGrime", "curb_grime")
+        for idx, (x, y, sx, sy, material) in enumerate([
+            (-2160, -3235, 4.2, 0.42, "stage7_sidewalk_paver"),
+            (-1200, -3238, 3.8, 0.38, "photoreal_sidewalk"),
+            (-240, -3232, 3.9, 0.40, "stage7_sidewalk_paver"),
+            (760, -3237, 4.1, 0.36, "photoreal_sidewalk"),
+            (1800, -3234, 4.0, 0.42, "stage7_sidewalk_paver"),
+            (-1800, 3234, 4.0, 0.42, "stage7_sidewalk_paver"),
+            (-760, 3238, 4.1, 0.36, "photoreal_sidewalk"),
+            (240, 3233, 3.9, 0.40, "stage7_sidewalk_paver"),
+            (1200, 3236, 3.8, 0.38, "photoreal_sidewalk"),
+            (2160, 3235, 4.2, 0.42, "stage7_sidewalk_paver"),
+        ]):
+            actor = self._rotated_cube(
+                f"OperatorStage7_Stage7CurbOcclusionGrime_sidewalk_slab_variation_{idx}",
+                (x, y, 148 + idx),
+                (sx, sy, 0.012),
+                material,
+            )
+            self._tag_operator_stage7_asset(actor, "Stage7CurbSidewalkUV", "Stage7CurbOcclusionGrime", "sidewalk_slab_variation")
+        for idx, x in enumerate(range(-2700, 2701, 540)):
+            for side_label, y, z_base in (("south", -3190, 166), ("north", 3190, 172)):
+                seam = self._cube(
+                    f"OperatorStage7_Stage7CurbOcclusionGrime_sidewalk_panel_cross_seam_{side_label}_{idx}",
+                    (x, y, z_base + idx),
+                    (0.016, 3.55, 0.010),
+                    "stage7_sidewalk_joint",
+                )
+                self._tag_operator_stage7_asset(
+                    seam,
+                    "Stage7CurbSidewalkUV",
+                    "Stage7CurbOcclusionGrime",
+                    "camera_distance_sidewalk_panel_seam",
+                )
+        for idx, y in enumerate(range(-2700, 2701, 540)):
+            for side_label, x, z_base in (("west", -3190, 182), ("east", 3190, 188)):
+                seam = self._cube(
+                    f"OperatorStage7_Stage7CurbOcclusionGrime_sidewalk_panel_cross_seam_{side_label}_{idx}",
+                    (x, y, z_base + idx),
+                    (3.55, 0.016, 0.010),
+                    "stage7_sidewalk_joint",
+                )
+                self._tag_operator_stage7_asset(
+                    seam,
+                    "Stage7CurbSidewalkUV",
+                    "Stage7CurbOcclusionGrime",
+                    "camera_distance_sidewalk_panel_seam",
+                )
+        sidewalk_stains = [
+            ("south_near_tire_splash", (-980, -3020, 210), (1.65, 0.090, 0.010), "stage7_sidewalk_damp_edge", -4),
+            ("south_near_utility_grime", (780, -2985, 211), (1.25, 0.070, 0.010), "stage7_curb_wet_grime", 6),
+            ("north_bus_stop_grime", (-1320, 3020, 212), (1.55, 0.080, 0.010), "stage7_sidewalk_damp_edge", 3),
+            ("east_corner_service_patch", (3020, -880, 213), (0.075, 1.25, 0.010), "stage7_curb_wet_grime", -5),
+            ("west_corner_service_patch", (-3020, 920, 214), (0.075, 1.25, 0.010), "stage7_sidewalk_damp_edge", 5),
+        ]
+        for label, loc, scale, material, yaw in sidewalk_stains:
+            actor = self._rotated_cube(
+                f"OperatorStage7_Stage7CurbOcclusionGrime_sidewalk_camera_stain_{label}",
+                loc,
+                scale,
+                material,
+                rotation=(0, 0, yaw),
+            )
+            self._tag_operator_stage7_asset(
+                actor,
+                "Stage7CurbSidewalkUV",
+                "Stage7CurbOcclusionGrime",
+                "sidewalk_camera_distance_stain",
+            )
+
+    def _build_operator_stage7_background_fill(self) -> None:
+        for idx, (label, loc, scale, material) in enumerate([
+            ("Stage7CameraBackgroundClosure_camera_visible_overcast_sky_scrim", (0, 11200, 3600), (190.0, 0.026, 42.0), "stage7_overcast_background"),
+            ("Stage7CameraBackgroundClosure_camera_visible_near_sky_fill", (0, 8800, 3150), (150.0, 0.024, 27.0), "stage7_overcast_background"),
+            ("Stage7CameraBackgroundClosure_camera_visible_mist_horizon_band", (0, 9100, 1750), (120.0, 0.024, 4.2), "stage7_overcast_background"),
+            ("Stage7CameraBackgroundClosure_north_overcast_context_mist_band", (0, 10600, 980), (92.0, 0.018, 1.2), "stage7_overcast_background"),
+            ("Stage7CameraBackgroundClosure_east_overcast_context_wall", (7900, 0, 1260), (0.030, 112.0, 5.8), "stage7_overcast_background"),
+            ("Stage7CameraBackgroundClosure_west_overcast_context_wall", (-7900, 0, 1260), (0.030, 112.0, 5.8), "stage7_overcast_background"),
+            ("Stage7CameraBackgroundClosure_distant_ground_context_fill", (0, 0, -92), (112.0, 112.0, 0.020), "stage7_pavement_fill"),
+            ("Stage7CameraBackgroundClosure_far_ground_city_plane", (0, 8800, 44), (130.0, 46.0, 0.020), "stage7_pavement_fill"),
+        ]):
+            actor = self._cube(
+                f"OperatorStage7_Stage7LightingCameraPostProcess_{label}_{idx}",
+                loc,
+                scale,
+                material,
+            )
+            self._tag_operator_stage7_asset(
+                actor,
+                "Stage7LightingCameraPostProcess",
+                "Stage7CameraBackgroundClosure",
+                "Stage7BoundaryOcclusion",
+                "overcast_background_fill",
+            )
+        for idx, (label, loc, scale, material) in enumerate([
+            ("camera_near_lower_shadow_wedge", (-1600, -4560, 95), (16.0, 0.035, 0.52), "stage7_curb_wet_grime"),
+            ("camera_near_left_context_occluder", (-7600, -760, 620), (0.045, 52.0, 3.8), "stage7_facade_soft"),
+            ("camera_near_right_context_occluder", (7600, 680, 620), (0.045, 52.0, 3.8), "stage7_facade_soft"),
+            ("south_frame_ground_fill", (0, -6600, 35), (120.0, 0.040, 0.42), "stage7_sidewalk_damp_edge"),
+            ("east_frame_ground_fill", (6600, 0, 35), (0.040, 120.0, 0.42), "stage7_sidewalk_damp_edge"),
+            ("west_frame_ground_fill", (-6600, 0, 35), (0.040, 120.0, 0.42), "stage7_sidewalk_damp_edge"),
+        ]):
+            actor = self._cube(
+                f"OperatorStage7_Stage7BoundaryOcclusion_{label}_{idx}",
+                loc,
+                scale,
+                material,
+            )
+            self._tag_operator_stage7_asset(
+                actor,
+                "Stage7LightingCameraPostProcess",
+                "Stage7CameraBackgroundClosure",
+                "Stage7BoundaryOcclusion",
+                "boundary_fill",
+            )
+        for idx, x in enumerate(range(-4300, 4301, 780)):
+            height = 2.4 + (idx % 3) * 0.42
+            actor = self._cube(
+                f"OperatorStage7_Stage7CameraBackgroundClosure_distant_facade_mass_{idx}",
+                (x, 5320, 540 + height * 62),
+                (3.05, 0.070, height),
+                "stage7_facade_soft",
+            )
+            self._tag_operator_stage7_asset(
+                actor,
+                "Stage7LightingCameraPostProcess",
+                "Stage7CameraBackgroundClosure",
+                "distant_facade_depth",
+            )
+            for bay in range(4):
+                offset = (bay - 1.5) * 120
+                actor = self._cube(
+                    f"OperatorStage7_Stage7CameraBackgroundClosure_distant_window_band_{idx}_{bay}",
+                    (x + offset, 5308, 660 + height * 62),
+                    (0.34, 0.018, 0.22),
+                    "stage7_window_glass",
+                )
+                self._tag_operator_stage7_asset(
+                    actor,
+                    "Stage7LightingCameraPostProcess",
+                    "Stage7CameraBackgroundClosure",
+                    "distant_window_depth",
+                )
+
+    def _build_operator_stage7_signal_vehicle_hardware_layer(self) -> None:
+        mesh_root = "/Game/PhotorealRoadKit/Meshes"
+        for idx, (label, city, x, y, yaw, style) in enumerate(OPERATOR_STAGE3_SIGNAL_ASSEMBLIES):
+            head_x = x + (430 if yaw == 0 else -430)
+            pole_mesh = self._mesh_actor(
+                f"OperatorStage7_Stage7SignalHardware_signal_pole_mesh_{idx}",
+                f"{mesh_root}/signal_pole_slim",
+                (x, y, 185),
+                (0.72, 0.72, 1.28),
+                "stage7_signal_black",
+            )
+            self._tag_operator_stage7_asset(pole_mesh, "Stage7SignalHardware", "signal_pole_mesh")
+            head_mesh = self._mesh_actor(
+                f"OperatorStage7_Stage7SignalHardware_signal_head_mesh_{idx}",
+                f"{mesh_root}/signal_head_uk_black",
+                (head_x, y - 25, 392),
+                (0.82, 0.82, 0.82),
+                "stage7_signal_black",
+                rotation=(0, 0, yaw),
+            )
+            self._tag_operator_stage7_asset(head_mesh, "Stage7SignalHardware", "signal_head_mesh")
+            actor = self._rotated_cube(
+                f"OperatorStage7_Stage7SignalHardware_signal_head_depth_{idx}",
+                (head_x, y - 18, 392),
+                (0.38, 0.055, 0.54),
+                "stage7_signal_black",
+                rotation=(0, 0, yaw),
+            )
+            self._tag_operator_stage7_asset(actor, "Stage7SignalHardware", style)
+            actor = self._rotated_cube(
+                f"OperatorStage7_Stage7SignalHardware_signal_backplate_{idx}_stage7_seoul_signal_vehicle_source",
+                (head_x, y - 24, 392),
+                (0.50, 0.040, 0.66),
+                "stage7_seoul_signal_vehicle_source",
+                rotation=(0, 0, yaw),
+            )
+            self._tag_operator_stage7_asset(actor, "Stage7SignalHardware", "signal_source_material")
+            for lens_idx, (z, material) in enumerate([(440, "red_signal"), (392, "stage7_worn_yellow"), (344, "green_signal")]):
+                actor = self._cylinder_actor(
+                    f"OperatorStage7_Stage7SignalHardware_deep_lens_{idx}_{lens_idx}",
+                    (head_x, y - 31, z),
+                    (0.060, 0.060, 0.018),
+                    material,
+                    rotation=(90, 0, yaw),
+                )
+                self._tag_operator_stage7_asset(actor, "Stage7SignalHardware", "signal_lens_readable")
+
+        readable_states = [
+            ("east_green", (860, -245, 245), "green_signal"),
+            ("west_green", (-860, 245, 245), "green_signal"),
+            ("north_red", (-280, 860, 245), "red_signal"),
+            ("south_red", (280, -860, 245), "red_signal"),
+        ]
+        for state_label, loc, material in readable_states:
+            actor = self._cylinder_actor(
+                f"OperatorStage7_Stage7SignalHardware_operator_readable_signal_state_{state_label}",
+                loc,
+                (0.090, 0.090, 0.020),
+                material,
+                rotation=(90, 0, 0),
+            )
+            self._tag_operator_stage7_asset(actor, "Stage7SignalHardware", "signal_state_readable")
+
+        for idx, (direction, variant, slot, x, y, yaw) in enumerate(OPERATOR_STAGE3_VEHICLE_SLOTS):
+            base_label = f"OperatorStage3_Stage3VehicleKit_SUMOReadyAssetPivot_seoul_{direction}_{variant}_{slot:02d}"
+            body_scale = OPERATOR_STAGE7_VEHICLE_DETAIL_EXTENTS_BY_VARIANT[variant]
+            body_material = {
+                "bus": "stage7_vehicle_bus_blue",
+                "taxi": "stage7_vehicle_taxi_yellow",
+                "emergency_vehicle": "stage7_vehicle_blue",
+                "passenger_car": "stage7_vehicle_dark_body",
+            }[variant]
+            mesh_asset = OPERATOR_STAGE7_VEHICLE_MESH_BY_VARIANT[variant]
+            mesh_scale = OPERATOR_STAGE7_VEHICLE_SCALE_BY_VARIANT[variant]
+            body_label = (
+                "OperatorStage7_Stage7VehicleMeshReplacement_OperatorStage7_Stage7VehicleDetail_bus_body_0_stage7_seoul_bus"
+                if variant == "bus" and slot == 2 and direction == "north"
+                else f"OperatorStage7_Stage7VehicleMeshReplacement_{variant}_{direction}_{slot:02d}_{mesh_asset}_{base_label}"
+            )
+            actor = self._mesh_actor(
+                body_label,
+                f"{mesh_root}/{mesh_asset}",
+                (x, y, 92),
+                mesh_scale,
+                body_material,
+                rotation=(0, 0, yaw),
+            )
+            self._tag_operator_stage7_asset(
+                actor,
+                "Stage7VehicleDetail",
+                "Stage7VehicleMeshReplacement",
+                mesh_asset,
+                variant,
+                "vehicle_queue_readable",
+            )
+            self._spawn_operator_stage7_vehicle_detail_overlays(base_label, x, y, yaw, variant, body_scale)
+
+        cctv_pole = self._mesh_actor(
+            "OperatorStage7_Stage7StreetHardware_cctv_pole_0",
+            f"{mesh_root}/signal_pole_slim",
+            (-1540, 1560, 305),
+            (0.65, 0.65, 1.20),
+            "stage7_signal_black",
+        )
+        cctv_head = self._mesh_actor(
+            "OperatorStage7_Stage7StreetHardware_cctv_camera_0",
+            f"{mesh_root}/cctv_camera_box",
+            (-1506, 1586, 528),
+            (0.62, 0.62, 0.62),
+            "stage7_seoul_signal_vehicle_source",
+            rotation=(0, 0, 34),
+        )
+        streetlight_pole = self._mesh_actor(
+            "OperatorStage7_Stage7StreetHardware_streetlight_pole_0",
+            f"{mesh_root}/signal_pole_slim",
+            (1530, -1510, 305),
+            (0.68, 0.68, 1.32),
+            "stage7_signal_black",
+        )
+        streetlight_head = self._rotated_cube(
+            "OperatorStage7_Stage7StreetHardware_streetlight_0",
+            (1468, -1510, 540),
+            (0.42, 0.055, 0.050),
+            "stage7_seoul_signal_vehicle_source",
+            rotation=(0, 0, 180),
+        )
+        railing = self._rotated_cube(
+            "OperatorStage7_Stage7StreetHardware_railing_0",
+            (-1030, -1565, 126),
+            (1.75, 0.040, 0.26),
+            "stage7_signal_black",
+        )
+        for actor in (cctv_pole, cctv_head, streetlight_pole, streetlight_head, railing):
+            self._tag_operator_stage7_asset(actor, "Stage7StreetHardware", "controlled_geometry_source_consumer")
+        for idx, (x, y) in enumerate([(-1380, 1350), (-1280, 1350), (1380, -1350), (1280, -1350), (-1350, -1380), (1350, 1380)]):
+            actor = self._mesh_actor(
+                f"OperatorStage7_Stage7StreetHardware_bollard_mesh_{idx}",
+                f"{mesh_root}/keep_left_bollard",
+                (x, y, 132),
+                (0.42, 0.42, 0.58),
+                "stage7_signal_black",
+            )
+            self._tag_operator_stage7_asset(actor, "Stage7StreetHardware", "bollard_mesh_detail")
+        for idx, (x, y, yaw) in enumerate([(-1180, -1565, 0), (-880, -1565, 0), (1180, 1565, 180), (880, 1565, 180)]):
+            actor = self._mesh_actor(
+                f"OperatorStage7_Stage7StreetHardware_railing_mesh_{idx}",
+                f"{mesh_root}/london_pedestrian_railing_proxy",
+                (x, y, 138),
+                (0.72, 0.72, 0.72),
+                "stage7_signal_black",
+                rotation=(0, 0, yaw),
+            )
+            self._tag_operator_stage7_asset(actor, "Stage7StreetHardware", "railing_mesh_detail")
+        for idx, (x, y) in enumerate([(-1550, 1545), (1530, -1535), (1840, 420), (-1840, -420)]):
+            actor = self._cube(
+                f"OperatorStage7_Stage7StreetHardware_signal_controller_cabinet_{idx}",
+                (x, y, 156),
+                (0.38, 0.24, 0.58),
+                "stage7_seoul_signal_vehicle_source",
+            )
+            self._tag_operator_stage7_asset(actor, "Stage7StreetHardware", "controller_cabinet")
+
+    def _build_operator_stage7_facade_depth_layer(self) -> None:
+        for idx, (x, y, z, side, floors, bays) in enumerate([
+            (-3350, 3920, 760, "horizon", 4, 5),
+            (3150, 3850, 720, "horizon", 4, 5),
+            (-3480, -3920, 780, "horizon", 4, 4),
+            (3380, -3740, 750, "horizon", 4, 4),
+            (-4520, -1720, 680, "side", 3, 4),
+            (4560, 1760, 680, "side", 3, 4),
+        ]):
+            actor = self._cube(
+                f"OperatorStage7_Stage7StreetHardware_facade_soft_mass_{idx}",
+                (x, y, z),
+                (4.7 if side == "horizon" else 0.38, 0.38 if side == "horizon" else 4.2, 2.8),
+                "stage7_facade_soft",
+            )
+            self._tag_operator_stage7_asset(actor, "Stage7StreetHardware", "facade_depth")
+            for bay in range(bays):
+                offset = (bay - (bays - 1) / 2) * 145
+                loc = (x + offset, y - 24, z + 80) if side == "horizon" else (x - 24, y + offset, z + 80)
+                scale = (0.32, 0.030, 0.25) if side == "horizon" else (0.030, 0.32, 0.25)
+                actor = self._cube(
+                    f"OperatorStage7_Stage7StreetHardware_window_glass_{idx}_{bay}",
+                    loc,
+                    scale,
+                    "stage7_window_glass",
+                )
+                self._tag_operator_stage7_asset(actor, "Stage7StreetHardware", "facade_window_depth")
+
+    def _build_operator_stage7_camera_context_mesh_layer(self) -> None:
+        mesh_root = "/Game/PhotorealRoadKit/Meshes"
+        for idx, x in enumerate(range(-3600, 3601, 600)):
+            height = 3.2 + (idx % 3) * 0.42
+            actor = self._cube(
+                f"OperatorStage7_Stage7CameraBackgroundClosure_camera_visible_facade_mass_{idx}",
+                (x, 4080, 520 + height * 48),
+                (2.55, 0.060, height),
+                "stage7_facade_soft",
+            )
+            self._tag_operator_stage7_asset(
+                actor,
+                "Stage7StreetHardware",
+                "Stage7CameraBackgroundClosure",
+                "camera_visible_facade_depth",
+            )
+            for bay in range(4):
+                actor = self._cube(
+                    f"OperatorStage7_Stage7CameraBackgroundClosure_camera_visible_window_{idx}_{bay}",
+                    (x + (bay - 1.5) * 118, 4070, 640 + height * 48),
+                    (0.32, 0.018, 0.20),
+                    "stage7_window_glass",
+                )
+                self._tag_operator_stage7_asset(
+                    actor,
+                    "Stage7StreetHardware",
+                    "Stage7CameraBackgroundClosure",
+                    "camera_visible_window_depth",
+                )
+
+        for idx, (x, y, yaw) in enumerate([
+            (-2780, -1860, 0),
+            (-1940, -1860, 0),
+            (-1100, -1860, 0),
+            (1100, 1860, 180),
+            (1940, 1860, 180),
+            (2780, 1860, 180),
+            (-1860, 2780, 90),
+            (1860, -2780, -90),
+        ]):
+            actor = self._mesh_actor(
+                f"OperatorStage7_Stage7CurbSidewalkUV_beveled_curb_mesh_{idx}",
+                f"{mesh_root}/curb_beveled_module",
+                (x, y, 132),
+                (1.35, 1.0, 0.78),
+                "photoreal_curb",
+                rotation=(0, 0, yaw),
+            )
+            self._tag_operator_stage7_asset(actor, "Stage7CurbSidewalkUV", "beveled_curb_mesh")
+
+        for idx, (x, y, yaw) in enumerate([
+            (-1540, -3230, 5),
+            (-960, -3230, 2),
+            (-380, -3230, 0),
+            (380, -3230, 0),
+            (960, -3230, -2),
+            (1540, -3230, -5),
+            (-1540, 3230, 180),
+            (-960, 3230, 180),
+            (960, 3230, 180),
+            (1540, 3230, 180),
+        ]):
+            actor = self._mesh_actor(
+                f"OperatorStage7_Stage7StreetHardware_camera_readable_railing_mesh_{idx}",
+                f"{mesh_root}/london_pedestrian_railing_high_fidelity",
+                (x, y, 150),
+                (0.000042, 0.000042, 0.000046),
+                "stage7_signal_black",
+                rotation=(0, 0, yaw),
+            )
+            self._tag_operator_stage7_asset(actor, "Stage7StreetHardware", "high_fidelity_railing_mesh")
+
+        for idx, (x, y, yaw) in enumerate([
+            (-1680, -2940, 12),
+            (1680, -2940, -12),
+            (-1680, 2940, 168),
+            (1680, 2940, 192),
+        ]):
+            actor = self._mesh_actor(
+                f"OperatorStage7_Stage7StreetHardware_high_fidelity_streetlight_{idx}",
+                f"{mesh_root}/london_streetlight_high_fidelity",
+                (x, y, 156),
+                (0.000042, 0.000042, 0.000048),
+                "stage7_signal_black",
+                rotation=(0, 0, yaw),
+            )
+            self._tag_operator_stage7_asset(actor, "Stage7StreetHardware", "high_fidelity_streetlight_mesh")
+
+        for idx, (x, y, z, yaw) in enumerate([
+            (-1140, -1165, 430, 0),
+            (1140, -1165, 430, 180),
+            (-1140, 1165, 430, 0),
+            (1140, 1165, 430, 180),
+        ]):
+            actor = self._mesh_actor(
+                f"OperatorStage7_Stage7SignalHardware_high_fidelity_signal_head_mesh_{idx}",
+                f"{mesh_root}/signal_head_uk_high_fidelity",
+                (x, y, z),
+                (0.000055, 0.000055, 0.000055),
+                "stage7_signal_black",
+                rotation=(0, 0, yaw),
+            )
+            self._tag_operator_stage7_asset(actor, "Stage7SignalHardware", "high_fidelity_signal_head_mesh")
+
+    def _build_operator_stage7_camera_visible_production_detail_layer(self) -> None:
+        foreground_gutter = [
+            ("camera_near_gutter_darkening_0", (-1760, -1860, 142), (4.4, 0.026, 0.010), "stage7_curb_wet_grime", 0),
+            ("camera_near_gutter_darkening_1", (-780, -1860, 143), (3.8, 0.024, 0.010), "stage7_contact_shadow", 1),
+            ("camera_near_gutter_darkening_2", (860, 1860, 144), (4.2, 0.024, 0.010), "stage7_curb_wet_grime", 180),
+            ("camera_near_gutter_darkening_3", (1780, 1860, 145), (3.6, 0.026, 0.010), "stage7_contact_shadow", 179),
+            ("east_side_gutter_waterline", (1860, -980, 146), (0.026, 4.4, 0.010), "stage7_curb_wet_grime", 90),
+            ("west_side_gutter_waterline", (-1860, 980, 147), (0.026, 4.4, 0.010), "stage7_contact_shadow", -90),
+        ]
+        for label, loc, scale, material, yaw in foreground_gutter:
+            actor = self._rotated_cube(
+                f"OperatorStage7_Stage7ForegroundSurfaceBreakup_{label}",
+                loc,
+                scale,
+                material,
+                rotation=(0, 0, yaw),
+            )
+            self._tag_operator_stage7_asset(
+                actor,
+                "Stage7ProductionRoadUV",
+                "Stage7ForegroundSurfaceBreakup",
+                "Stage7CurbOcclusionGrime",
+                material,
+            )
+
+        slab_index = 0
+        for y in (-3420, -3190, -2960, 2960, 3190, 3420):
+            for x in range(-2760, 2761, 460):
+                actor = self._rotated_cube(
+                    f"OperatorStage7_Stage7ForegroundSurfaceBreakup_sidewalk_slab_seam_{slab_index}",
+                    (x, y, 153 + slab_index % 5),
+                    (0.014, 1.95, 0.008),
+                    "stage7_sidewalk_joint",
+                    rotation=(0, 0, 0),
+                )
+                self._tag_operator_stage7_asset(actor, "Stage7CurbSidewalkUV", "Stage7ForegroundSurfaceBreakup", "sidewalk_slab_seam")
+                slab_index += 1
+
+        paver_index = 0
+        for x, y in [(-1320, -3020), (-1060, -3020), (1060, 3020), (1320, 3020), (-3020, 1060), (3020, -1060)]:
+            for step in range(3):
+                actor = self._cube(
+                    f"OperatorStage7_Stage7ForegroundSurfaceBreakup_tactile_depth_paver_{paver_index}",
+                    (x + step * 78, y, 160 + step),
+                    (0.28, 0.18, 0.018),
+                    "stage7_tactile",
+                )
+                self._tag_operator_stage7_asset(actor, "Stage7CurbSidewalkUV", "Stage7ForegroundSurfaceBreakup", "tactile_depth_paver")
+                paver_index += 1
+
+        for idx, (x, y, yaw) in enumerate([(-420, -1540, 0), (420, -1540, 0), (-1540, 420, 90), (1540, -420, -90)]):
+            actor = self._mesh_actor(
+                f"OperatorStage7_Stage7ForegroundSurfaceBreakup_camera_visible_drain_grate_{idx}",
+                "/Game/PhotorealRoadKit/Meshes/drain_grate_rect",
+                (x, y, 156 + idx),
+                (0.000036, 0.000036, 0.000036),
+                "stage7_signal_black",
+                rotation=(0, 0, yaw),
+            )
+            self._tag_operator_stage7_asset(actor, "Stage7CurbSidewalkUV", "Stage7ForegroundSurfaceBreakup", "drain_grate_depth")
+
+        signal_positions = [
+            (-1120, -1120, 0),
+            (1120, -1120, 180),
+            (-1120, 1120, 0),
+            (1120, 1120, 180),
+        ]
+        for idx, (x, y, yaw) in enumerate(signal_positions):
+            head = self._rotated_cube(
+                f"OperatorStage7_Stage7CameraVisibleProductionDetail_signal_lens_stack_{idx}",
+                (x, y, 420),
+                (0.34, 0.060, 0.62),
+                "stage7_signal_black",
+                rotation=(0, 0, yaw),
+            )
+            self._tag_operator_stage7_asset(head, "Stage7SignalHardware", "Stage7CameraVisibleProductionDetail")
+            for lens_idx, (z, material) in enumerate(((468, "red_signal"), (420, "stage7_worn_yellow"), (372, "green_signal"))):
+                lens = self._cylinder_actor(
+                    f"OperatorStage7_Stage7CameraVisibleProductionDetail_signal_glass_lens_{idx}_{lens_idx}",
+                    self._stage7_local_point(x, y, z, yaw, 0, -7),
+                    (0.074, 0.074, 0.018),
+                    material,
+                    rotation=(90, 0, yaw),
+                )
+                self._tag_operator_stage7_asset(lens, "Stage7SignalHardware", "Stage7CameraVisibleProductionDetail", "signal_lens_readable")
+                visor = self._rotated_cube(
+                    f"OperatorStage7_Stage7CameraVisibleProductionDetail_signal_visor_depth_{idx}_{lens_idx}",
+                    self._stage7_local_point(x, y, z + 2, yaw, 0, -19),
+                    (0.16, 0.060, 0.028),
+                    "stage7_signal_black",
+                    rotation=(0, 0, yaw),
+                )
+                self._tag_operator_stage7_asset(visor, "Stage7SignalHardware", "Stage7CameraVisibleProductionDetail", "signal_visor_depth")
+
+        for idx, (x, y, yaw) in enumerate([(-1500, -3180, 6), (-1040, -3180, 3), (1040, 3180, 183), (1500, 3180, 186)]):
+            post = self._cylinder_actor(
+                f"OperatorStage7_Stage7CameraVisibleProductionDetail_foreground_railing_post_{idx}",
+                (x, y, 188),
+                (0.030, 0.030, 0.62),
+                "stage7_signal_black",
+            )
+            rail = self._rotated_cube(
+                f"OperatorStage7_Stage7CameraVisibleProductionDetail_foreground_railing_rail_{idx}",
+                (x + 115, y, 238),
+                (1.28, 0.030, 0.030),
+                "stage7_signal_black",
+                rotation=(0, 0, yaw),
+            )
+            for actor in (post, rail):
+                self._tag_operator_stage7_asset(actor, "Stage7StreetHardware", "Stage7CameraVisibleProductionDetail", "foreground_railing_depth")
+
+        for idx, (x, y, material) in enumerate([
+            (-52, 1540, "stage7_vehicle_dark_body"),
+            (1180, -52, "stage7_vehicle_dark_body"),
+            (54, -1380, "stage7_vehicle_blue"),
+            (-1320, 44, "stage7_vehicle_taxi_yellow"),
+        ]):
+            mirror_left = self._rotated_cube(
+                f"OperatorStage7_Stage7CameraVisibleProductionDetail_vehicle_side_mirror_{idx}_left",
+                (x - 48, y - 58, 156),
+                (0.050, 0.026, 0.034),
+                material,
+            )
+            mirror_right = self._rotated_cube(
+                f"OperatorStage7_Stage7CameraVisibleProductionDetail_vehicle_side_mirror_{idx}_right",
+                (x + 48, y + 58, 156),
+                (0.050, 0.026, 0.034),
+                material,
+            )
+            for actor in (mirror_left, mirror_right):
+                self._tag_operator_stage7_asset(actor, "Stage7VehicleDetail", "Stage7CameraVisibleProductionDetail", "vehicle_mirror_depth")
+
+    def _build_operator_stage7_reference_camera_corridor_layer(self) -> None:
+        mesh_root = "/Game/PhotorealRoadKit/Meshes"
+        corridor_surfaces = [
+            ("north_long_arterial_asphalt", (0, 6420, 71), (17.6, 58.0, 0.014), "stage7_textured_asphalt_base"),
+            ("south_camera_approach_asphalt", (0, -4680, 71), (17.6, 26.0, 0.014), "stage7_textured_asphalt_base"),
+            ("north_left_context_parking", (-3120, 6060, 63), (10.8, 34.0, 0.012), "stage7_dark_wet_asphalt"),
+            ("north_right_context_parking", (3120, 6000, 63), (10.2, 31.0, 0.012), "stage7_dark_wet_asphalt"),
+            ("left_sidewalk_corridor", (-2140, 6220, 122), (2.8, 58.0, 0.035), "stage7_sidewalk_paver"),
+            ("right_sidewalk_corridor", (2140, 6220, 122), (2.8, 58.0, 0.035), "stage7_sidewalk_paver"),
+            ("left_grass_verge", (-2650, 5960, 126), (1.6, 46.0, 0.018), "stage7_grass_verge"),
+            ("right_grass_verge", (2650, 5960, 126), (1.6, 46.0, 0.018), "stage7_grass_verge"),
+        ]
+        for label, loc, scale, material in corridor_surfaces:
+            actor = self._rotated_cube(
+                f"OperatorStage7_Stage7CameraVisibleProductionDetail_reference_corridor_{label}",
+                loc,
+                scale,
+                material,
+            )
+            self._tag_operator_stage7_asset(
+                actor,
+                "Stage7CameraVisibleProductionDetail",
+                "Stage7CameraBackgroundClosure",
+                "traffic_camera_reference_corridor",
+                material,
+            )
+
+        context_surface_overlays = [
+            ("south_left_camera_parking_lot", (-3880, -4550, 126), (20.5, 12.5, 0.016), "stage7_parking_concrete", 0),
+            ("south_right_camera_parking_lot", (3880, -4550, 126), (20.5, 12.5, 0.016), "stage7_parking_concrete", 0),
+            ("mid_left_service_lot", (-3880, -1500, 128), (20.0, 15.5, 0.016), "stage7_pavement_fill", 0),
+            ("mid_right_service_lot", (3880, -1500, 128), (20.0, 15.5, 0.016), "stage7_pavement_fill", 0),
+            ("north_left_retail_parking_lot", (-3920, 2850, 128), (21.0, 17.0, 0.016), "stage7_parking_concrete", 0),
+            ("north_right_retail_parking_lot", (3920, 2850, 128), (21.0, 17.0, 0.016), "stage7_parking_concrete", 0),
+            ("far_left_roof_yard", (-4160, 6820, 128), (24.0, 18.0, 0.016), "stage7_pavement_fill", 0),
+            ("far_right_roof_yard", (4160, 6820, 128), (24.0, 18.0, 0.016), "stage7_pavement_fill", 0),
+            ("camera_bottom_foreground_pavement", (0, -7080, 118), (72.0, 7.8, 0.016), "stage7_pavement_fill", 0),
+            ("far_horizon_ground_continuation", (0, 10200, 118), (82.0, 12.0, 0.016), "stage7_pavement_fill", 0),
+        ]
+        for label, loc, scale, material, yaw in context_surface_overlays:
+            actor = self._rotated_cube(
+                f"OperatorStage7_Stage7CameraBackgroundClosure_reference_corridor_context_surface_{label}",
+                loc,
+                scale,
+                material,
+                rotation=(0, 0, yaw),
+            )
+            self._tag_operator_stage7_asset(
+                actor,
+                "Stage7CameraVisibleProductionDetail",
+                "Stage7CameraBackgroundClosure",
+                "traffic_camera_reference_corridor",
+                "aerial_context_surface",
+                material,
+            )
+
+        parking_line_index = 0
+        for side_x, side_name in ((-3920, "left"), (3920, "right")):
+            for row_y in (-4850, -4250, -1650, -1050, 2550, 3150, 6420, 7020):
+                for slot in range(5):
+                    x = side_x + (slot - 2) * 245
+                    actor = self._rotated_cube(
+                        f"OperatorStage7_Stage7RoadWearDecal_reference_corridor_parking_stall_{side_name}_{parking_line_index}",
+                        (x, row_y, 146 + parking_line_index % 5),
+                        (0.030, 0.78, 0.008),
+                        "stage7_worn_white",
+                        rotation=(0, 0, 0),
+                    )
+                    self._tag_operator_stage7_asset(
+                        actor,
+                        "Stage7RoadWearDecal",
+                        "Stage7CameraVisibleProductionDetail",
+                        "traffic_camera_reference_corridor",
+                        "parking_lot_marking",
+                    )
+                    parking_line_index += 1
+
+        reference_texture_tiles = [
+            ("left_south_asphalt_scuff", (-3920, -4580, 150), (3.20, 2.25, 0.008), "stage7_seoul_asphalt_marking_source", -4),
+            ("right_south_asphalt_scuff", (3920, -4520, 151), (3.05, 2.10, 0.008), "stage7_seoul_asphalt_marking_source", 6),
+            ("left_mid_sidewalk_tile", (-3940, -1300, 152), (2.70, 2.15, 0.008), "stage7_seoul_curb_sidewalk_source", 3),
+            ("right_mid_sidewalk_tile", (3920, -1280, 153), (2.75, 2.05, 0.008), "stage7_seoul_curb_sidewalk_source", -5),
+            ("left_north_lot_grime", (-3940, 2760, 154), (3.25, 2.45, 0.008), "stage7_seoul_asphalt_marking_source", 7),
+            ("right_north_lot_grime", (3940, 2860, 155), (3.10, 2.35, 0.008), "stage7_seoul_asphalt_marking_source", -8),
+            ("left_far_sidewalk_drain_source", (-4120, 6420, 156), (2.60, 2.25, 0.008), "stage7_seoul_curb_sidewalk_source", 4),
+            ("right_far_sidewalk_drain_source", (4120, 6500, 157), (2.60, 2.25, 0.008), "stage7_seoul_curb_sidewalk_source", -4),
+            ("south_foreground_wet_patch_left", (-2320, -7010, 150), (4.2, 1.65, 0.008), "stage7_seoul_asphalt_marking_source", 2),
+            ("south_foreground_wet_patch_right", (2320, -6960, 151), (4.0, 1.65, 0.008), "stage7_seoul_asphalt_marking_source", -3),
+            ("horizon_pavement_breakup_left", (-2500, 9880, 150), (4.4, 1.85, 0.008), "stage7_seoul_curb_sidewalk_source", 0),
+            ("horizon_pavement_breakup_right", (2500, 9880, 151), (4.4, 1.85, 0.008), "stage7_seoul_curb_sidewalk_source", 0),
+        ]
+        for label, loc, scale, material, yaw in reference_texture_tiles:
+            actor = self._rotated_cube(
+                f"OperatorStage7_Stage7IntegratedAsphaltBlend_reference_corridor_texture_tile_{label}",
+                loc,
+                scale,
+                material,
+                rotation=(0, 0, yaw),
+            )
+            self._tag_operator_stage7_asset(
+                actor,
+                "Stage7IntegratedAsphaltBlend",
+                "Stage7CameraVisibleProductionDetail",
+                "traffic_camera_reference_corridor",
+                "fragmented_source_texture_consumer",
+                material,
+            )
+
+        roof_context_specs = [
+            ("left_foreground_flat_roof", (-5550, -3850, 310), (15.0, 15.5, 1.55), "stage7_roof_gravel"),
+            ("right_foreground_flat_roof", (5550, -3700, 300), (14.0, 14.0, 1.45), "stage7_roof_gravel"),
+            ("left_mid_flat_roof", (-5520, 250, 330), (15.0, 17.0, 1.65), "stage7_roof_concrete"),
+            ("right_mid_flat_roof", (5520, 420, 318), (14.5, 16.5, 1.55), "stage7_roof_concrete"),
+            ("left_far_low_roof", (-5580, 5750, 335), (16.0, 19.0, 1.70), "stage7_roof_gravel"),
+            ("right_far_low_roof", (5580, 5900, 340), (16.0, 18.0, 1.72), "stage7_roof_gravel"),
+            ("left_horizon_roof_block", (-5420, 9400, 320), (14.0, 10.0, 1.45), "stage7_roof_concrete"),
+            ("right_horizon_roof_block", (5420, 9400, 320), (14.0, 10.0, 1.45), "stage7_roof_concrete"),
+        ]
+        for idx, (label, loc, scale, material) in enumerate(roof_context_specs):
+            roof = self._rotated_cube(
+                f"OperatorStage7_Stage7CameraBackgroundClosure_reference_corridor_context_roof_{label}",
+                loc,
+                scale,
+                material,
+            )
+            self._tag_operator_stage7_asset(
+                roof,
+                "Stage7StreetHardware",
+                "Stage7CameraBackgroundClosure",
+                "traffic_camera_reference_corridor",
+                "aerial_roof_context",
+            )
+            cap = self._rotated_cube(
+                f"OperatorStage7_Stage7CameraBackgroundClosure_reference_corridor_roof_cap_{idx}",
+                (loc[0], loc[1], loc[2] + scale[2] * 52),
+                (scale[0] * 1.02, scale[1] * 1.02, 0.040),
+                "stage7_roof_gravel" if material == "stage7_roof_concrete" else "stage7_roof_concrete",
+            )
+            self._tag_operator_stage7_asset(
+                cap,
+                "Stage7StreetHardware",
+                "Stage7CameraBackgroundClosure",
+                "traffic_camera_reference_corridor",
+                "roof_top_surface",
+            )
+            for unit in range(5):
+                unit_x = loc[0] - 420 + unit * 210
+                unit_y = loc[1] - 260 + (unit % 2) * 260
+                rooftop_unit = self._rotated_cube(
+                    f"OperatorStage7_Stage7CameraBackgroundClosure_reference_corridor_roof_mechanical_{idx}_{unit}",
+                    (unit_x, unit_y, loc[2] + scale[2] * 58),
+                    (0.46, 0.34, 0.22),
+                    "stage7_rooftop_unit",
+                    rotation=(0, 0, 8 if unit % 2 else -6),
+                )
+                self._tag_operator_stage7_asset(
+                    rooftop_unit,
+                    "Stage7StreetHardware",
+                    "Stage7CameraBackgroundClosure",
+                    "traffic_camera_reference_corridor",
+                    "rooftop_scale_detail",
+                )
+
+        median_segments = [
+            ("south_raised_median", (0, -4300, 142), (0.34, 18.0, 0.045), "stage7_curb_concrete"),
+            ("north_raised_median", (0, 5350, 142), (0.30, 38.0, 0.045), "stage7_curb_concrete"),
+            ("north_median_paver", (0, 5350, 152), (0.18, 35.0, 0.012), "stage7_tactile"),
+        ]
+        for label, loc, scale, material in median_segments:
+            actor = self._rotated_cube(
+                f"OperatorStage7_Stage7CameraVisibleProductionDetail_reference_corridor_{label}",
+                loc,
+                scale,
+                material,
+            )
+            self._tag_operator_stage7_asset(actor, "Stage7CurbSidewalkUV", "Stage7CameraVisibleProductionDetail", "traffic_camera_reference_corridor")
+
+        lane_xs = [-760, -500, -250, 250, 500, 760]
+        dash_index = 0
+        for y in range(3050, 9650, 520):
+            for x in lane_xs:
+                actor = self._rotated_cube(
+                    f"OperatorStage7_Stage7RoadWearDecal_reference_corridor_lane_dash_{dash_index}",
+                    (x, y, 116 + dash_index % 5),
+                    (0.035, 1.15, 0.009),
+                    "stage7_worn_white",
+                )
+                self._tag_operator_stage7_asset(actor, "Stage7RoadWearDecal", "Stage7CameraVisibleProductionDetail", "traffic_camera_reference_corridor")
+                dash_index += 1
+        for idx, (y, scale_y) in enumerate(((3020, 1.25), (7920, 1.10))):
+            for x in range(-900, 901, 225):
+                actor = self._rotated_cube(
+                    f"OperatorStage7_Stage7RoadWearDecal_reference_corridor_crosswalk_{idx}_{x}",
+                    (x, y, 128 + idx),
+                    (0.34, scale_y, 0.010),
+                    "stage7_worn_white",
+                )
+                self._tag_operator_stage7_asset(actor, "Stage7RoadWearDecal", "crosswalk_readable", "traffic_camera_reference_corridor")
+
+        context_vehicles = [
+            ("bus", -780, 3920, 0, "stage7_vehicle_bus_blue"),
+            ("passenger_car", -500, 3500, 0, "stage7_vehicle_dark_body"),
+            ("taxi", -250, 4040, 0, "stage7_vehicle_taxi_yellow"),
+            ("passenger_car", 250, 3380, 0, "stage7_vehicle_dark_body"),
+            ("passenger_car", 500, 3860, 0, "stage7_vehicle_blue"),
+            ("passenger_car", 760, 4400, 0, "stage7_vehicle_dark_body"),
+            ("passenger_car", -760, 5120, 180, "stage7_vehicle_dark_body"),
+            ("taxi", -500, 5520, 180, "stage7_vehicle_taxi_yellow"),
+            ("passenger_car", -250, 5940, 180, "stage7_vehicle_blue"),
+            ("bus", 250, 6320, 180, "stage7_vehicle_bus_blue"),
+            ("passenger_car", 500, 6820, 180, "stage7_vehicle_dark_body"),
+            ("passenger_car", 760, 7240, 180, "stage7_vehicle_dark_body"),
+            ("passenger_car", -760, 8120, 0, "stage7_vehicle_dark_body"),
+            ("taxi", -500, 8520, 0, "stage7_vehicle_taxi_yellow"),
+            ("passenger_car", -250, 8940, 0, "stage7_vehicle_blue"),
+            ("passenger_car", 250, 8240, 180, "stage7_vehicle_dark_body"),
+            ("passenger_car", 500, 8720, 180, "stage7_vehicle_dark_body"),
+            ("emergency_vehicle", 760, 9160, 180, "stage7_vehicle_blue"),
+        ]
+        for idx, (variant, x, y, yaw, material) in enumerate(context_vehicles):
+            mesh_asset = OPERATOR_STAGE7_VEHICLE_MESH_BY_VARIANT[variant]
+            body_scale = OPERATOR_STAGE7_VEHICLE_DETAIL_EXTENTS_BY_VARIANT[variant]
+            actor = self._mesh_actor(
+                f"OperatorStage7_Stage7CameraVisibleProductionDetail_reference_corridor_context_vehicle_{idx}_{variant}_{mesh_asset}",
+                f"{mesh_root}/{mesh_asset}",
+                (x, y, 92),
+                OPERATOR_STAGE7_VEHICLE_SCALE_BY_VARIANT[variant],
+                material,
+                rotation=(0, 0, yaw),
+            )
+            self._tag_operator_stage7_asset(
+                actor,
+                "Stage7VehicleDetail",
+                "Stage7CameraVisibleProductionDetail",
+                "traffic_camera_reference_corridor",
+                "visual_context_not_sumo_truth",
+                variant,
+            )
+            self._spawn_operator_stage7_vehicle_detail_overlays(
+                f"reference_corridor_context_vehicle_{idx}_{variant}",
+                x,
+                y,
+                yaw,
+                variant,
+                body_scale,
+            )
+
+        building_specs = [
+            ("left_roof_mass_near", (-4100, 3850, 470), (10.8, 14.0, 4.1)),
+            ("left_roof_mass_far", (-4100, 7200, 430), (11.5, 16.0, 3.4)),
+            ("right_roof_mass_near", (4120, 4020, 390), (9.2, 11.0, 3.2)),
+            ("right_roof_mass_far", (4100, 7420, 440), (10.6, 14.0, 3.5)),
+        ]
+        for idx, (label, loc, scale) in enumerate(building_specs):
+            actor = self._rotated_cube(
+                f"OperatorStage7_Stage7CameraBackgroundClosure_reference_corridor_building_{label}",
+                loc,
+                scale,
+                "stage7_roof_concrete",
+            )
+            self._tag_operator_stage7_asset(actor, "Stage7StreetHardware", "Stage7CameraBackgroundClosure", "traffic_camera_reference_corridor")
+            roof_cap = self._rotated_cube(
+                f"OperatorStage7_Stage7CameraBackgroundClosure_reference_corridor_building_roof_cap_{idx}",
+                (loc[0], loc[1], loc[2] + scale[2] * 52),
+                (scale[0] * 1.03, scale[1] * 1.03, 0.045),
+                "stage7_roof_gravel",
+            )
+            self._tag_operator_stage7_asset(
+                roof_cap,
+                "Stage7StreetHardware",
+                "Stage7CameraBackgroundClosure",
+                "traffic_camera_reference_corridor",
+                "roof_top_surface",
+            )
+            for unit in range(4):
+                rooftop = self._rotated_cube(
+                    f"OperatorStage7_Stage7CameraBackgroundClosure_reference_corridor_rooftop_unit_{idx}_{unit}",
+                    (loc[0] - 300 + unit * 210, loc[1] - 230 + unit * 120, loc[2] + scale[2] * 55),
+                    (0.55, 0.42, 0.20),
+                    "stage7_rooftop_unit",
+                )
+                self._tag_operator_stage7_asset(rooftop, "Stage7StreetHardware", "Stage7CameraBackgroundClosure", "rooftop_scale_detail")
+
+        tree_index = 0
+        for side_x in (-2760, 2760):
+            for y in range(3380, 8800, 760):
+                trunk = self._cylinder_actor(
+                    f"OperatorStage7_Stage7CameraBackgroundClosure_reference_corridor_tree_trunk_{tree_index}",
+                    (side_x, y, 250),
+                    (0.045, 0.045, 0.70),
+                    "stage7_tree_trunk",
+                )
+                canopy = self._sphere_actor(
+                    f"OperatorStage7_Stage7CameraBackgroundClosure_reference_corridor_tree_canopy_{tree_index}",
+                    (side_x, y, 380),
+                    (0.72, 0.72, 0.52),
+                    "stage7_tree_canopy",
+                )
+                for actor in (trunk, canopy):
+                    self._tag_operator_stage7_asset(
+                        actor,
+                        "Stage7StreetHardware",
+                        "Stage7CameraBackgroundClosure",
+                        "traffic_camera_reference_corridor",
+                        "tree_context",
+                    )
+                tree_index += 1
+
+    def _build_operator_stage7_seoul_photo_reference_layer(self) -> None:
+        mesh_root = "/Game/PhotorealRoadKit/Meshes"
+        tower_specs = [
+            ("left_black_glass_near", -5860, -4980, 0, 4.6, 8.8, 38.0, "stage7_seoul_facade_context_source", "photoreal_glass"),
+            ("left_green_glass_mid", -5480, -2440, 0, 5.6, 7.4, 28.0, "stage7_seoul_facade_context_source", "stage7_window_glass"),
+            ("left_concrete_center", -5750, 560, 0, 4.2, 6.8, 32.0, "stage7_facade_soft", "stage7_window_glass"),
+            ("left_white_tower_far", -5300, 3320, 0, 4.8, 7.6, 42.0, "stage7_seoul_facade_context_source", "photoreal_glass"),
+            ("left_horizon_dense_slab", -5120, 6500, 0, 5.8, 8.6, 30.0, "stage7_seoul_facade_context_source", "stage7_window_glass"),
+            ("right_dark_glass_near", 5860, -4660, 0, 5.0, 8.0, 40.0, "stage7_seoul_facade_context_source", "stage7_window_glass"),
+            ("right_mid_office", 5480, -1860, 0, 4.4, 7.8, 30.0, "stage7_seoul_facade_context_source", "photoreal_glass"),
+            ("right_tan_vertical", 5730, 760, 0, 4.6, 6.2, 34.0, "stage7_facade_soft", "stage7_window_glass"),
+            ("right_highrise_far", 5300, 3740, 0, 5.2, 8.2, 45.0, "stage7_seoul_facade_context_source", "stage7_window_glass"),
+            ("right_horizon_dense_slab", 5120, 6720, 0, 6.0, 8.4, 32.0, "stage7_seoul_facade_context_source", "photoreal_glass"),
+            ("far_left_center_tower", -3420, 9280, 0, 3.8, 4.2, 28.0, "stage7_seoul_facade_context_source", "stage7_window_glass"),
+            ("far_right_center_tower", 3360, 9400, 0, 4.0, 4.0, 26.0, "stage7_facade_soft", "photoreal_glass"),
+        ]
+        for idx, (label, x, y, yaw, sx, sy, sz, facade_material, window_material) in enumerate(tower_specs):
+            z = 135 + sz * 50
+            tower = self._rotated_cube(
+                f"OperatorStage7_Stage7CameraBackgroundClosure_SeoulPhotoReferenceCanyon_tower_mass_{idx}_{label}",
+                (x, y, z),
+                (sx, sy, sz),
+                facade_material,
+                rotation=(0, 0, yaw),
+            )
+            self._tag_operator_stage7_asset(
+                tower,
+                "Stage7StreetHardware",
+                "Stage7CameraBackgroundClosure",
+                "Stage7SeoulPhotoReferenceCanyon",
+                "user_seoul_reference_photo_3_highrise_boulevard",
+            )
+            cap = self._rotated_cube(
+                f"OperatorStage7_Stage7CameraBackgroundClosure_SeoulPhotoReferenceCanyon_roof_cap_{idx}",
+                (x, y, z + sz * 50 + 8),
+                (sx * 1.02, sy * 1.02, 0.055),
+                "stage7_roof_gravel",
+                rotation=(0, 0, yaw),
+            )
+            self._tag_operator_stage7_asset(cap, "Stage7CameraBackgroundClosure", "Stage7SeoulPhotoReferenceCanyon", "roof_texture_context")
+            rows = max(5, min(14, int(sz // 3)))
+            for row in range(rows):
+                row_z = 360 + row * 210
+                if row_z > z + sz * 38:
+                    break
+                for bay in range(3):
+                    bay_y = y + (bay - 1) * (sy * 22)
+                    face_x = x + (-sx * 52 if x < 0 else sx * 52)
+                    window = self._rotated_cube(
+                        f"OperatorStage7_Stage7CameraBackgroundClosure_SeoulPhotoReferenceCanyon_window_grid_{idx}_{row}_{bay}",
+                        (face_x, bay_y, row_z),
+                        (0.030, max(0.36, sy * 0.22), 0.30),
+                        window_material,
+                        rotation=(0, 0, yaw),
+                    )
+                    self._tag_operator_stage7_asset(window, "Stage7CameraBackgroundClosure", "Stage7SeoulPhotoReferenceCanyon", "window_grid_depth")
+            if idx < 8:
+                screen_material = "stage7_vehicle_bus_blue" if idx % 3 == 0 else ("stage7_vehicle_bus_green" if idx % 3 == 1 else "stage7_worn_yellow")
+                screen = self._rotated_cube(
+                    f"OperatorStage7_Stage7CameraBackgroundClosure_SeoulPhotoReferenceCanyon_lit_facade_panel_{idx}",
+                    (x + (-sx * 54 if x < 0 else sx * 54), y - sy * 18, 720 + (idx % 3) * 180),
+                    (0.034, max(0.58, sy * 0.24), 0.34),
+                    screen_material,
+                    rotation=(0, 0, yaw),
+                )
+                self._tag_operator_stage7_asset(screen, "Stage7CameraBackgroundClosure", "Stage7SeoulPhotoReferenceCanyon", "unreadable_facade_light_panel")
+
+        channel_stripes = [
+            (-830, -5700, 28), (-700, -5480, 28), (-570, -5260, 28), (-440, -5040, 28),
+            (-310, -4820, 28), (-180, -4600, 28), (-50, -4380, 28), (80, -4160, 28),
+            (210, -3940, 28), (340, -3720, 28), (470, -3500, 28),
+        ]
+        for idx, (x, y, yaw) in enumerate(channel_stripes):
+            stripe = self._rotated_cube(
+                f"OperatorStage7_Stage7RoadWearDecal_SeoulPhotoReferenceCanyon_yellow_channel_hatching_{idx}",
+                (x, y, 174 + idx),
+                (0.050, 1.62, 0.010),
+                "stage7_worn_yellow",
+                rotation=(0, 0, yaw),
+            )
+            self._tag_operator_stage7_asset(stripe, "Stage7RoadWearDecal", "Stage7SeoulPhotoReferenceCanyon", "photo3_channelized_hatching")
+        for idx, (x, y, sx, sy, yaw) in enumerate([
+            (-820, -5820, 0.040, 3.90, 12),
+            (120, -4050, 0.040, 4.15, 12),
+            (-330, -4850, 2.65, 0.040, 0),
+        ]):
+            boundary = self._rotated_cube(
+                f"OperatorStage7_Stage7RoadWearDecal_SeoulPhotoReferenceCanyon_channel_boundary_{idx}",
+                (x, y, 190 + idx),
+                (sx, sy, 0.010),
+                "stage7_worn_white",
+                rotation=(0, 0, yaw),
+            )
+            self._tag_operator_stage7_asset(boundary, "Stage7RoadWearDecal", "Stage7SeoulPhotoReferenceCanyon", "photo3_channelized_hatching")
+
+        dense_queues = []
+        main_lanes = [-860, -580, -300, 300, 580, 860]
+        south_y_values = [-5480, -4960, -4440, -3920, -3400]
+        north_y_values = [3400, 3920, 4440, 4960, 5480, 6040, 6600, 7160, 7720, 8280]
+        for lane_index, x in enumerate(main_lanes):
+            for queue_index, y in enumerate(south_y_values if lane_index < 3 else north_y_values):
+                variant = "bus" if (lane_index, queue_index) in {(0, 1), (5, 4), (2, 3)} else ("taxi" if (lane_index + queue_index) % 5 == 0 else "passenger_car")
+                material = "stage7_vehicle_bus_blue" if variant == "bus" else ("stage7_vehicle_taxi_yellow" if variant == "taxi" else ("stage7_vehicle_blue" if (lane_index + queue_index) % 4 == 0 else "stage7_vehicle_dark_body"))
+                yaw = 0 if lane_index < 3 else 180
+                dense_queues.append((variant, x, y, yaw, material))
+        for lane_index, y in enumerate([-760, -500, -240, 250, 500, 760]):
+            for queue_index, x in enumerate([-3960, -3400, -2840, 2840, 3400, 3960]):
+                variant = "bus" if (lane_index + queue_index) % 7 == 0 else ("taxi" if (lane_index + queue_index) % 4 == 0 else "passenger_car")
+                material = "stage7_vehicle_bus_green" if variant == "bus" else ("stage7_vehicle_taxi_yellow" if variant == "taxi" else "stage7_vehicle_dark_body")
+                yaw = 90 if x < 0 else 270
+                dense_queues.append((variant, x, y, yaw, material))
+        for idx, (variant, x, y, yaw, material) in enumerate(dense_queues):
+            mesh_asset = OPERATOR_STAGE7_VEHICLE_MESH_BY_VARIANT[variant]
+            body_scale = OPERATOR_STAGE7_VEHICLE_DETAIL_EXTENTS_BY_VARIANT[variant]
+            actor = self._mesh_actor(
+                f"OperatorStage7_Stage7CameraVisibleProductionDetail_SeoulPhotoReferenceCanyon_dense_context_vehicle_{idx}_{variant}_{mesh_asset}",
+                f"{mesh_root}/{mesh_asset}",
+                (x, y, 94),
+                OPERATOR_STAGE7_VEHICLE_SCALE_BY_VARIANT[variant],
+                material,
+                rotation=(0, 0, yaw),
+            )
+            self._tag_operator_stage7_asset(
+                actor,
+                "Stage7VehicleDetail",
+                "Stage7CameraVisibleProductionDetail",
+                "Stage7SeoulPhotoReferenceCanyon",
+                "visual_context_not_sumo_truth",
+                "dense_reference_queue",
+            )
+            if idx % 3 != 0:
+                self._spawn_operator_stage7_vehicle_detail_overlays(
+                    f"seoul_photo_reference_dense_context_vehicle_{idx}_{variant}",
+                    x,
+                    y,
+                    yaw,
+                    variant,
+                    body_scale,
+                )
+
+    def _disable_operator_stage7_legacy_lighting(self) -> None:
+        for actor in unreal.EditorLevelLibrary.get_all_level_actors():
+            try:
+                label = actor.get_actor_label()
+            except Exception:
+                continue
+            if not label.startswith("OperatorStage6_"):
+                continue
+            if not any(token in label for token in ("key_light", "skylight", "postprocess")):
+                continue
+            try:
+                actor.set_actor_hidden_in_game(True)
+                actor.set_is_temporarily_hidden_in_editor(True)
+            except Exception:
+                pass
+            for component_class in (
+                getattr(unreal, "DirectionalLightComponent", None),
+                getattr(unreal, "SkyLightComponent", None),
+            ):
+                if component_class is None:
+                    continue
+                comp = actor.get_component_by_class(component_class)
+                if comp is None:
+                    continue
+                try:
+                    comp.set_editor_property("intensity", 0.0)
+                except Exception:
+                    pass
+            self._tag_operator_stage7_asset(actor, "Stage7LightingCameraPostProcess", "Stage7LegacyLightingDisabled")
+
+    def _apply_stage7_actor_material(self, actor, material_name: str) -> None:
+        mat = self.materials.get(material_name)
+        comp = actor.get_component_by_class(unreal.StaticMeshComponent)
+        if comp is not None and mat is not None:
+            comp.set_material(0, mat)
+
+    def _soften_operator_stage7_inherited_context(self) -> None:
+        for actor in unreal.EditorLevelLibrary.get_all_level_actors():
+            try:
+                label = actor.get_actor_label()
+                loc = actor.get_actor_location()
+                scale = actor.get_actor_scale3d()
+            except Exception:
+                continue
+            is_context_building = (
+                label.startswith("OperatorStage1_context_low_rise_geometry_")
+                or label.startswith("OperatorStage1_context_window_band_")
+                or label.startswith("OperatorStage2_Stage2ContextGeometry_facade_")
+                or label.startswith("OperatorStage2_Stage2ContextGeometry_window_band_")
+                or label.startswith("OperatorStage2_Stage2ContextGeometry_roofline_")
+                or label.startswith("OperatorStage6_SUMOReadyOperatorMapPhotoreal_Stage6PhotorealSurface_")
+                or label.startswith("OperatorStage6_Stage6DecalAtlasApplied_")
+                or "CineCamera" in label
+            )
+            if is_context_building:
+                try:
+                    actor.set_actor_location(unreal.Vector(9200, 9200, -900), False, False)
+                    actor.set_actor_scale3d(unreal.Vector(0.010, 0.010, 0.010))
+                    actor.set_actor_hidden_in_game(True)
+                    actor.set_is_temporarily_hidden_in_editor(True)
+                except Exception:
+                    pass
+                comp = actor.get_component_by_class(unreal.StaticMeshComponent)
+                if comp is not None:
+                    try:
+                        comp.set_visibility(False, True)
+                        comp.set_hidden_in_game(True, True)
+                    except Exception:
+                        pass
+                self._apply_stage7_actor_material(
+                    actor,
+                    "stage7_window_glass" if "window" in label else "stage7_facade_soft",
+                )
+                self._tag_operator_stage7_asset(actor, "Stage7StreetHardware", "context_visibility_preserved")
+                continue
+            if label.startswith("OperatorStage3_Stage3VehicleKit_"):
+                try:
+                    actor.set_actor_location(unreal.Vector(9300, 9300, -920), False, False)
+                    actor.set_actor_scale3d(unreal.Vector(0.010, 0.010, 0.010))
+                    actor.set_actor_hidden_in_game(True)
+                    actor.set_is_temporarily_hidden_in_editor(True)
+                except Exception:
+                    pass
+                comp = actor.get_component_by_class(unreal.StaticMeshComponent)
+                if comp is not None:
+                    try:
+                        comp.set_visibility(False, True)
+                        comp.set_hidden_in_game(True, True)
+                    except Exception:
+                        pass
+                self._tag_operator_stage7_asset(actor, "Stage7VehicleDetail", "Stage7VehicleMeshReplacement", "legacy_vehicle_proxy_hidden")
+                continue
+            if label.startswith("OperatorStage1_context_ground_slab"):
+                self._apply_stage7_actor_material(actor, "stage7_curb_concrete")
+                self._tag_operator_stage7_asset(actor, "Stage7CurbSidewalkUV", "inherited_ground_recolored")
+                continue
+            if label.startswith("OperatorStage1_sidewalk_") or label.startswith("OperatorStage2_Stage2ContextGeometry_sidewalk_"):
+                self._apply_stage7_actor_material(actor, "photoreal_sidewalk")
+                self._tag_operator_stage7_asset(actor, "Stage7CurbSidewalkUV", "inherited_sidewalk_recolored")
+                continue
+            if (
+                "Stage3VehicleKit" in label
+                or label.startswith("OperatorStage1_SUMOPlaceholderVehicleQueue_")
+                or label.startswith("RendererSnapshotState_seoul_queue_")
+            ):
+                if "glass" in label:
+                    material = "stage7_vehicle_glass"
+                elif "bus" in label:
+                    material = "stage7_vehicle_bus_blue"
+                elif "taxi" in label:
+                    material = "stage7_vehicle_taxi_yellow"
+                elif "emergency" in label:
+                    material = "stage7_vehicle_blue"
+                else:
+                    material = "stage7_vehicle_dark_body"
+                self._apply_stage7_actor_material(actor, material)
+                self._tag_operator_stage7_asset(actor, "Stage7VehicleDetail", "inherited_vehicle_recolored")
+                continue
+            if label.startswith("OperatorStage1_median_") or "curb_" in label:
+                self._apply_stage7_actor_material(actor, "stage7_curb_concrete")
+                self._tag_operator_stage7_asset(actor, "Stage7CurbSidewalkUV", "inherited_curb_recolored")
+
+    def _move_operator_stage7_runtime_controller_visuals(self) -> None:
+        for actor in unreal.EditorLevelLibrary.get_all_level_actors():
+            try:
+                label = actor.get_actor_label()
+            except Exception:
+                continue
+            if "TrafficSimulationController" not in label:
+                continue
+            try:
+                actor.set_actor_location(unreal.Vector(9200, 9200, -900), False, False)
+                actor.set_actor_scale3d(unreal.Vector(0.010, 0.010, 0.010))
+                actor.set_actor_hidden_in_game(True)
+                actor.set_is_temporarily_hidden_in_editor(True)
+            except Exception:
+                pass
+            for component_class in (
+                getattr(unreal, "StaticMeshComponent", None),
+                getattr(unreal, "PrimitiveComponent", None),
+            ):
+                if component_class is None:
+                    continue
+                comp = actor.get_component_by_class(component_class)
+                if comp is None:
+                    continue
+                try:
+                    comp.set_visibility(False, True)
+                    comp.set_hidden_in_game(True, True)
+                except Exception:
+                    pass
+
+    def _configure_operator_stage7_lighting_camera(self) -> None:
+        world = unreal.EditorLevelLibrary.get_editor_world()
+        if world is not None:
+            for command in (
+                "DisableAllScreenMessages",
+                "r.DefaultFeature.AutoExposure 0",
+                "r.EyeAdaptationQuality 0",
+                "r.Tonemapper.Sharpen 0.20",
+            ):
+                try:
+                    unreal.SystemLibrary.execute_console_command(world, command)
+                except Exception:
+                    pass
+        sun = unreal.EditorLevelLibrary.spawn_actor_from_class(
+            unreal.DirectionalLight,
+            unreal.Vector(-3300, -3650, 4800),
+            unreal.Rotator(-52, -38, 0),
+        )
+        sun.set_actor_label("OperatorStage7_Stage7LightingCameraPostProcess_overcast_key_light")
+        sun_comp = sun.get_component_by_class(unreal.DirectionalLightComponent)
+        if sun_comp:
+            sun_comp.set_editor_property("intensity", 0.52)
+            self._set_actor_property(sun_comp, "cast_shadows", False)
+            self._set_actor_property(sun_comp, "light_source_angle", 34.0)
+            try:
+                sun_comp.set_mobility(unreal.ComponentMobility.MOVABLE)
+            except Exception:
+                pass
+        fill = unreal.EditorLevelLibrary.spawn_actor_from_class(
+            unreal.DirectionalLight,
+            unreal.Vector(-2450, -6100, 2600),
+            unreal.Rotator(-22, 68, 0),
+        )
+        fill.set_actor_label("OperatorStage7_Stage7LightingCameraPostProcess_camera_side_fill_light")
+        fill_comp = fill.get_component_by_class(unreal.DirectionalLightComponent)
+        if fill_comp:
+            fill_comp.set_editor_property("intensity", 1.10)
+            self._set_actor_property(fill_comp, "cast_shadows", False)
+            self._set_actor_property(fill_comp, "light_source_angle", 42.0)
+            try:
+                fill_comp.set_mobility(unreal.ComponentMobility.MOVABLE)
+            except Exception:
+                pass
+        sky = unreal.EditorLevelLibrary.spawn_actor_from_class(
+            unreal.SkyLight,
+            unreal.Vector(0, 0, 1900),
+            unreal.Rotator(0, 0, 0),
+        )
+        sky.set_actor_label("OperatorStage7_Stage7LightingCameraPostProcess_wet_overcast_skylight")
+        sky_comp = sky.get_component_by_class(unreal.SkyLightComponent)
+        if sky_comp:
+            sky_comp.set_editor_property("intensity", 3.10)
+            try:
+                sky_comp.set_mobility(unreal.ComponentMobility.MOVABLE)
+                sky_comp.recapture_sky()
+            except Exception:
+                pass
+        pp = unreal.EditorLevelLibrary.spawn_actor_from_class(
+            unreal.PostProcessVolume,
+            unreal.Vector(0, 0, 900),
+            unreal.Rotator(0, 0, 0),
+        )
+        pp.set_actor_label("OperatorStage7_Stage7LightingCameraPostProcess_unbound_traffic_camera_grade")
+        self._set_actor_property(pp, "b_unbound", True)
+        self._set_actor_property(pp, "blend_weight", 1.0)
+        try:
+            settings = pp.get_editor_property("settings")
+            for name, value in (
+                ("override_auto_exposure_bias", True),
+                ("auto_exposure_bias", 0.78),
+                ("override_bloom_intensity", True),
+                ("bloom_intensity", 0.035),
+                ("override_vignette_intensity", True),
+                ("vignette_intensity", 0.03),
+                ("override_color_saturation", True),
+                ("color_saturation", unreal.Vector4(0.80, 0.82, 0.82, 1.0)),
+                ("override_color_contrast", True),
+                ("color_contrast", unreal.Vector4(0.98, 0.98, 0.96, 1.0)),
+            ):
+                self._set_actor_property(settings, name, value)
+            pp.set_editor_property("settings", settings)
+        except Exception as exc:
+            print(f"OPERATOR_STAGE7_POSTPROCESS_FALLBACK error={exc}")
+        camera = unreal.EditorLevelLibrary.spawn_actor_from_class(
+            unreal.CineCameraActor,
+            unreal.Vector(0, -7500, 4800),
+            unreal.Rotator(0, -30, 90),
+        )
+        camera.set_actor_label("OperatorStage7_Stage7LightingCameraPostProcess_CineCamera_production_operator_view")
+        try:
+            camera.set_actor_hidden_in_game(True)
+            camera.set_is_temporarily_hidden_in_editor(True)
+        except Exception:
+            pass
+        unreal.EditorLevelLibrary.set_level_viewport_camera_info(camera.get_actor_location(), camera.get_actor_rotation())
+        try:
+            camera.set_actor_location(unreal.Vector(9200, 9200, -900), False, False)
+            camera.set_actor_scale3d(unreal.Vector(0.010, 0.010, 0.010))
+        except Exception:
+            pass
+
+    def _build_operator_stage7_scene(self) -> None:
+        if self.city != "seoul":
+            raise RuntimeError(f"Operator Stage 7 is locked to seoul, got {self.city}")
+        self._load_operator_stage7_profile()
+        self._build_operator_stage6_scene()
+        self._build_operator_stage7_road_production_layer()
+        self._build_operator_stage7_curb_sidewalk_layer()
+        self._build_operator_stage7_imagegen_surface_geometry_layer()
+        self._build_operator_stage7_sidewalk_slab_detail()
+        self._build_operator_stage7_signal_vehicle_hardware_layer()
+        self._build_operator_stage7_facade_depth_layer()
+        self._build_operator_stage7_camera_context_mesh_layer()
+        self._build_operator_stage7_camera_visible_production_detail_layer()
+        self._build_operator_stage7_reference_camera_corridor_layer()
+        self._build_operator_stage7_seoul_photo_reference_layer()
+        self._build_operator_stage7_background_fill()
+        self._soften_operator_stage7_inherited_context()
+        self._disable_operator_stage7_legacy_lighting()
+        marker = self._cube(
+            "OperatorStage7_Stage1To6ReadableRuntimeState_NoTrafficZoneImageCard_fixture_state_marker",
+            (0, -190, 172),
+            (1.40, 0.050, 0.020),
+            "green_signal",
+        )
+        self._tag_operator_stage7_asset(marker, "Stage1To6ReadableRuntimeState", "NoTrafficZoneImageCard")
+        self._spawn_runtime_controller()
+        self._move_operator_stage7_runtime_controller_visuals()
+        self._configure_operator_stage7_lighting_camera()
+
     def _build_scene(self) -> None:
+        if self.operator_stage7:
+            self._build_operator_stage7_scene()
+            return
         if self.operator_stage6:
             self._build_operator_stage6_scene()
             return

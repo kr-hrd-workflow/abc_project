@@ -4,6 +4,7 @@ param(
   [switch]$OperatorStage1,
   [switch]$OperatorStage2,
   [switch]$OperatorStage3,
+  [switch]$OperatorStage7,
   [switch]$OperatorStage6,
   [switch]$DryRun
 )
@@ -72,6 +73,7 @@ if ($UnrealEditor) { Write-Output "UNREAL_EDITOR=$UnrealEditor" }
 if ($OperatorStage1) { Write-Output 'OPERATOR_STAGE1=true' }
 if ($OperatorStage2) { Write-Output 'OPERATOR_STAGE2=true' }
 if ($OperatorStage3) { Write-Output 'OPERATOR_STAGE3=true' }
+if ($OperatorStage7) { Write-Output 'OPERATOR_STAGE7=true' }
 if ($OperatorStage6) { Write-Output 'OPERATOR_STAGE6=true' }
 
 if ($DryRun) {
@@ -101,6 +103,11 @@ if ($OperatorStage3) {
   $env:SMART_INTERSECTION_OPERATOR_STAGE3 = '1'
 } else {
   Remove-Item Env:\SMART_INTERSECTION_OPERATOR_STAGE3 -ErrorAction SilentlyContinue
+}
+if ($OperatorStage7) {
+  $env:SMART_INTERSECTION_OPERATOR_STAGE7 = '1'
+} else {
+  Remove-Item Env:\SMART_INTERSECTION_OPERATOR_STAGE7 -ErrorAction SilentlyContinue
 }
 if ($OperatorStage6) {
   $env:SMART_INTERSECTION_OPERATOR_STAGE6 = '1'
