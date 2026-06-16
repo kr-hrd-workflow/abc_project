@@ -51,7 +51,7 @@ MATERIAL_COLORS = {
     "photoreal_puddle": (0.085, 0.100, 0.105, 1.0),
     "photoreal_sidewalk": (0.50, 0.48, 0.43, 1.0),
     "photoreal_brick": (0.45, 0.24, 0.18, 1.0),
-    "photoreal_glass": (0.100, 0.140, 0.165, 1.0),
+    "photoreal_glass": (0.180, 0.220, 0.240, 1.0),
     "photoreal_sign_plate": (0.88, 0.86, 0.76, 1.0),
     "photoreal_warm_window": (1.0, 0.62, 0.25, 1.0),
     "photoreal_decal_zebra": (0.92, 0.91, 0.82, 1.0),
@@ -111,23 +111,23 @@ MATERIAL_COLORS = {
     "stage7_sidewalk_paver": (0.440, 0.445, 0.405, 1.0),
     "stage7_sidewalk_joint": (0.16, 0.17, 0.16, 1.0),
     "stage7_tactile": (0.56, 0.42, 0.12, 1.0),
-    "stage7_signal_black": (0.055, 0.058, 0.058, 1.0),
-    "stage7_vehicle_blue": (0.050, 0.090, 0.145, 1.0),
-    "stage7_vehicle_bus_blue": (0.045, 0.090, 0.145, 1.0),
-    "stage7_vehicle_bus_green": (0.030, 0.210, 0.135, 1.0),
-    "stage7_vehicle_taxi_yellow": (0.430, 0.325, 0.085, 1.0),
-    "stage7_vehicle_dark_body": (0.155, 0.165, 0.168, 1.0),
-    "stage7_tire_black": (0.010, 0.010, 0.009, 1.0),
-    "stage7_headlamp": (0.58, 0.54, 0.42, 1.0),
-    "stage7_vehicle_glass": (0.070, 0.095, 0.105, 1.0),
-    "stage7_contact_shadow": (0.075, 0.070, 0.062, 1.0),
-    "stage7_puddle_reflection": (0.16, 0.19, 0.20, 1.0),
-    "stage7_road_micro_highlight": (0.500, 0.540, 0.525, 1.0),
+    "stage7_signal_black": (0.072, 0.076, 0.074, 1.0),
+    "stage7_vehicle_blue": (0.095, 0.135, 0.178, 1.0),
+    "stage7_vehicle_bus_blue": (0.070, 0.130, 0.205, 1.0),
+    "stage7_vehicle_bus_green": (0.060, 0.205, 0.135, 1.0),
+    "stage7_vehicle_taxi_yellow": (0.520, 0.425, 0.160, 1.0),
+    "stage7_vehicle_dark_body": (0.355, 0.360, 0.345, 1.0),
+    "stage7_tire_black": (0.022, 0.022, 0.020, 1.0),
+    "stage7_headlamp": (0.70, 0.66, 0.50, 1.0),
+    "stage7_vehicle_glass": (0.105, 0.135, 0.145, 1.0),
+    "stage7_contact_shadow": (0.105, 0.100, 0.090, 1.0),
+    "stage7_puddle_reflection": (0.130, 0.150, 0.155, 1.0),
+    "stage7_road_micro_highlight": (0.270, 0.300, 0.292, 1.0),
     "stage7_curb_wet_grime": (0.150, 0.145, 0.128, 1.0),
     "stage7_sidewalk_damp_edge": (0.360, 0.365, 0.330, 1.0),
     "stage7_facade_soft": (0.500, 0.510, 0.480, 1.0),
     "stage7_overcast_background": (0.74, 0.76, 0.72, 1.0),
-    "stage7_window_glass": (0.160, 0.188, 0.198, 1.0),
+    "stage7_window_glass": (0.170, 0.205, 0.215, 1.0),
     "stage7_roof_concrete": (0.520, 0.505, 0.465, 1.0),
     "stage7_roof_gravel": (0.385, 0.380, 0.340, 1.0),
     "stage7_parking_concrete": (0.335, 0.345, 0.325, 1.0),
@@ -1172,8 +1172,18 @@ class RoadOnlyRenderer:
                 "stage7_curb_concrete",
                 "stage7_grass_verge",
                 "stage7_tree_canopy",
+                "photoreal_glass",
             )):
                 emissive_rgba = tuple(min(1.0, channel * 0.22) for channel in rgba[:3]) + (rgba[3],)
+            elif any(key in material_key for key in (
+                "stage7_vehicle",
+                "stage7_signal_black",
+                "stage7_tire_black",
+                "stage7_contact_shadow",
+            )):
+                emissive_rgba = tuple(min(1.0, channel * 0.18) for channel in rgba[:3]) + (rgba[3],)
+            elif "stage7_headlamp" in material_key:
+                emissive_rgba = tuple(min(1.0, channel * 0.34) for channel in rgba[:3]) + (rgba[3],)
             else:
                 emissive_rgba = (0.0, 0.0, 0.0, 1.0)
             black = unreal.MaterialEditingLibrary.create_material_expression(mat, unreal.MaterialExpressionConstant3Vector, -420, 180)
@@ -1181,7 +1191,7 @@ class RoadOnlyRenderer:
             connect_constant_property(black, "emissive_color", unreal.MaterialProperty.MP_EMISSIVE_COLOR)
             rough = unreal.MaterialEditingLibrary.create_material_expression(mat, unreal.MaterialExpressionConstant, -420, 320)
             if "stage7_textured_asphalt_base" in material_key or "stage7_dark_wet_asphalt" in material_key or "stage7_wet_asphalt_patch" in material_key or "stage7_puddle_reflection" in material_key:
-                rough_value = 0.30
+                rough_value = 0.46
             elif "stage7_curb_concrete" in material_key or "stage7_sidewalk_paver" in material_key:
                 rough_value = 0.55
             elif "stage7_vehicle_glass" in material_key or "stage7_window_glass" in material_key:
@@ -1194,7 +1204,7 @@ class RoadOnlyRenderer:
             unreal.MaterialEditingLibrary.connect_material_property(rough, "", unreal.MaterialProperty.MP_ROUGHNESS)
             spec = unreal.MaterialEditingLibrary.create_material_expression(mat, unreal.MaterialExpressionConstant, -420, 430)
             if "stage7_textured_asphalt_base" in material_key or "stage7_dark_wet_asphalt" in material_key or "stage7_wet_asphalt_patch" in material_key or "stage7_puddle_reflection" in material_key:
-                spec_value = 0.46
+                spec_value = 0.28
             elif "stage7_vehicle_glass" in material_key or "stage7_window_glass" in material_key:
                 spec_value = 0.62
             elif "stage7_vehicle" in material_key or "stage7_signal_black" in material_key:
@@ -1225,7 +1235,7 @@ class RoadOnlyRenderer:
                 "m_paris_custom_imagegen_paris_overcast_boulevard_backplate": 0.28,
             }
             stage7_texture_tones = {
-                "m_seoul_stage7_textured_asphalt_base": 1.48,
+                "m_seoul_stage7_textured_asphalt_base": 1.28,
                 "m_seoul_stage7_seoul_asphalt_marking_source": 0.82,
                 "m_seoul_stage7_seoul_curb_sidewalk_source": 0.78,
                 "m_seoul_stage7_seoul_facade_context_source": 0.95,
@@ -1278,6 +1288,11 @@ class RoadOnlyRenderer:
                 facade_glow.set_editor_property("const_b", 0.28)
                 unreal.MaterialEditingLibrary.connect_material_expressions(sample, "RGB", facade_glow, "A")
                 unreal.MaterialEditingLibrary.connect_material_property(facade_glow, "", unreal.MaterialProperty.MP_EMISSIVE_COLOR)
+            elif "stage7_seoul_signal_vehicle_source" in mat_name:
+                hardware_glow = unreal.MaterialEditingLibrary.create_material_expression(mat, unreal.MaterialExpressionMultiply, -520, 180)
+                hardware_glow.set_editor_property("const_b", 0.18)
+                unreal.MaterialEditingLibrary.connect_material_expressions(sample, "RGB", hardware_glow, "A")
+                unreal.MaterialEditingLibrary.connect_material_property(hardware_glow, "", unreal.MaterialProperty.MP_EMISSIVE_COLOR)
             elif any(key in mat_name for key in stage7_context_texture_keys):
                 soft = unreal.MaterialEditingLibrary.create_material_expression(mat, unreal.MaterialExpressionConstant3Vector, -740, 180)
                 soft.set_editor_property("constant", unreal.LinearColor(0.055, 0.056, 0.052, 1.0))
@@ -1288,7 +1303,7 @@ class RoadOnlyRenderer:
                 unreal.MaterialEditingLibrary.connect_material_property(black, "RGB", unreal.MaterialProperty.MP_EMISSIVE_COLOR)
             rough = unreal.MaterialEditingLibrary.create_material_expression(mat, unreal.MaterialExpressionConstant, -740, 320)
             if "stage7_seoul_asphalt_marking_source" in mat_name or "stage7_textured_asphalt_base" in mat_name:
-                rough_value = 0.24
+                rough_value = 0.44
             elif "stage7_seoul_curb_sidewalk_source" in mat_name:
                 rough_value = 0.42
             elif "stage7_seoul_signal_vehicle_source" in mat_name:
@@ -1317,7 +1332,7 @@ class RoadOnlyRenderer:
             unreal.MaterialEditingLibrary.connect_material_property(rough, "", unreal.MaterialProperty.MP_ROUGHNESS)
             spec = unreal.MaterialEditingLibrary.create_material_expression(mat, unreal.MaterialExpressionConstant, -740, 430)
             if "stage7_seoul_asphalt_marking_source" in mat_name or "stage7_textured_asphalt_base" in mat_name:
-                spec_value = 0.58
+                spec_value = 0.30
             elif "stage7_seoul" in mat_name:
                 spec_value = 0.48
             elif any(key in mat_name for key in stage7_context_texture_keys):
@@ -2557,7 +2572,7 @@ class RoadOnlyRenderer:
             )
 
         asphalt_breakup = [
-            ("camera_near_wet_sheen_left", (-980, -2260, 96), (6.4, 0.050, 0.006), "target_wet_micro_highlight", -2),
+            ("camera_near_wet_sheen_left", (-980, -2260, 96), (6.4, 0.050, 0.006), "stage7_road_micro_highlight", -2),
             ("camera_near_wet_sheen_right", (930, -2140, 97), (5.8, 0.045, 0.006), "stage7_road_micro_highlight", 2),
             ("eastbound_lane_grain_a", (1340, -520, 98), (2.6, 0.032, 0.006), "photoreal_grime_overlay", 1),
             ("eastbound_lane_grain_b", (420, -520, 99), (1.7, 0.026, 0.006), "stage7_contact_shadow", -3),
@@ -2597,6 +2612,15 @@ class RoadOnlyRenderer:
                         "stage7_worn_white",
                     )
                     self._tag_operator_stage7_asset(actor, "Stage7RoadWearDecal", "lane_marking_readable")
+                    for chip_idx, offset in enumerate((-115, 118)):
+                        chip = self._rotated_cube(
+                            f"OperatorStage7_Stage7RoadWearDecal_lane_dash_ew_chip_{idx}_{dash}_{chip_idx}",
+                            (dash * 520 + offset, y + (12 if chip_idx == 0 else -10), 112 + chip_idx),
+                            (0.20, 0.020, 0.011),
+                            "stage7_contact_shadow",
+                            rotation=(0, 0, 1.5 if chip_idx == 0 else -2.5),
+                        )
+                        self._tag_operator_stage7_asset(chip, "Stage7RoadWearDecal", "lane_marking_wear_breakup")
         for idx, x in enumerate([-520, -250, 250, 520]):
             for dash in range(-5, 6):
                 if dash % 2 == 0:
@@ -2607,6 +2631,15 @@ class RoadOnlyRenderer:
                         "stage7_worn_white",
                     )
                     self._tag_operator_stage7_asset(actor, "Stage7RoadWearDecal", "lane_marking_readable")
+                    for chip_idx, offset in enumerate((-115, 118)):
+                        chip = self._rotated_cube(
+                            f"OperatorStage7_Stage7RoadWearDecal_lane_dash_ns_chip_{idx}_{dash}_{chip_idx}",
+                            (x + (10 if chip_idx == 0 else -12), dash * 520 + offset, 116 + chip_idx),
+                            (0.020, 0.20, 0.011),
+                            "stage7_contact_shadow",
+                            rotation=(0, 0, -1.5 if chip_idx == 0 else 2.5),
+                        )
+                        self._tag_operator_stage7_asset(chip, "Stage7RoadWearDecal", "lane_marking_wear_breakup")
 
         stop_bars = [
             ("OperatorStage7_Stage7RoadWearDecal_worn_stop_bar_north", (0, 1210, 98), (15.8, 0.085, 0.012), 0),
@@ -2627,6 +2660,15 @@ class RoadOnlyRenderer:
                     "stage7_worn_white",
                 )
                 self._tag_operator_stage7_asset(actor, "Stage7RoadWearDecal", "crosswalk_readable")
+                if (x // 205) % 2 == 0:
+                    chip = self._rotated_cube(
+                        f"OperatorStage7_Stage7RoadWearDecal_crosswalk_chip_ns_{idx}_{x}",
+                        (x + 36, y, 120 + idx),
+                        (0.060, 0.32, 0.011),
+                        "stage7_contact_shadow",
+                        rotation=(0, 0, 2 if idx == 0 else -2),
+                    )
+                    self._tag_operator_stage7_asset(chip, "Stage7RoadWearDecal", "crosswalk_wear_breakup")
         for idx, x in enumerate([-1415, 1415]):
             for y in range(-820, 821, 205):
                 actor = self._rotated_cube(
@@ -2636,6 +2678,15 @@ class RoadOnlyRenderer:
                     "stage7_worn_white",
                 )
                 self._tag_operator_stage7_asset(actor, "Stage7RoadWearDecal", "crosswalk_readable")
+                if (y // 205) % 2 == 0:
+                    chip = self._rotated_cube(
+                        f"OperatorStage7_Stage7RoadWearDecal_crosswalk_chip_ew_{idx}_{y}",
+                        (x, y - 36, 122 + idx),
+                        (0.32, 0.060, 0.011),
+                        "stage7_contact_shadow",
+                        rotation=(0, 0, -2 if idx == 0 else 2),
+                    )
+                    self._tag_operator_stage7_asset(chip, "Stage7RoadWearDecal", "crosswalk_wear_breakup")
 
         wear_decals = [
             ("OperatorStage7_Stage7RoadWearDecal_tire_polish_east_queue", (820, -170, 112), (3.4, 0.46, 1.0), "stage7_puddle_reflection", 0),
@@ -3054,7 +3105,7 @@ class RoadOnlyRenderer:
                 f"OperatorStage7_Stage7SignalHardware_signal_head_mesh_{idx}",
                 f"{mesh_root}/signal_head_uk_black",
                 (head_x, y - 25, 392),
-                (0.82, 0.82, 0.82),
+                (0.62, 0.62, 0.62),
                 "stage7_signal_black",
                 rotation=(0, 0, yaw),
             )
@@ -3062,7 +3113,7 @@ class RoadOnlyRenderer:
             actor = self._rotated_cube(
                 f"OperatorStage7_Stage7SignalHardware_signal_head_depth_{idx}",
                 (head_x, y - 18, 392),
-                (0.38, 0.055, 0.54),
+                (0.30, 0.042, 0.42),
                 "stage7_signal_black",
                 rotation=(0, 0, yaw),
             )
@@ -3070,7 +3121,7 @@ class RoadOnlyRenderer:
             actor = self._rotated_cube(
                 f"OperatorStage7_Stage7SignalHardware_signal_backplate_{idx}_stage7_seoul_signal_vehicle_source",
                 (head_x, y - 24, 392),
-                (0.50, 0.040, 0.66),
+                (0.39, 0.032, 0.50),
                 "stage7_seoul_signal_vehicle_source",
                 rotation=(0, 0, yaw),
             )
@@ -3079,7 +3130,7 @@ class RoadOnlyRenderer:
                 actor = self._cylinder_actor(
                     f"OperatorStage7_Stage7SignalHardware_deep_lens_{idx}_{lens_idx}",
                     (head_x, y - 31, z),
-                    (0.060, 0.060, 0.018),
+                    (0.044, 0.044, 0.014),
                     material,
                     rotation=(90, 0, yaw),
                 )
@@ -3911,13 +3962,21 @@ class RoadOnlyRenderer:
         for lane_index, x in enumerate(main_lanes):
             for queue_index, y in enumerate(south_y_values if lane_index < 3 else north_y_values):
                 variant = "bus" if (lane_index, queue_index) in {(0, 1), (5, 4), (2, 3)} else ("taxi" if (lane_index + queue_index) % 5 == 0 else "passenger_car")
-                material = "stage7_vehicle_bus_blue" if variant == "bus" else ("stage7_vehicle_taxi_yellow" if variant == "taxi" else ("stage7_vehicle_blue" if (lane_index + queue_index) % 4 == 0 else "stage7_vehicle_dark_body"))
+                material = (
+                    "stage7_vehicle_bus_blue"
+                    if variant == "bus"
+                    else (
+                        "stage7_vehicle_taxi_yellow"
+                        if variant == "taxi"
+                        else ("queue_vehicle_body" if (lane_index + queue_index) % 3 == 0 else ("stage7_vehicle_blue" if (lane_index + queue_index) % 4 == 0 else "stage7_vehicle_dark_body"))
+                    )
+                )
                 yaw = 0 if lane_index < 3 else 180
                 dense_queues.append((variant, x, y, yaw, material))
         for lane_index, y in enumerate([-760, -500, -240, 250, 500, 760]):
             for queue_index, x in enumerate([-3960, -3400, -2840, 2840, 3400, 3960]):
                 variant = "bus" if (lane_index + queue_index) % 7 == 0 else ("taxi" if (lane_index + queue_index) % 4 == 0 else "passenger_car")
-                material = "stage7_vehicle_bus_green" if variant == "bus" else ("stage7_vehicle_taxi_yellow" if variant == "taxi" else "stage7_vehicle_dark_body")
+                material = "stage7_vehicle_bus_green" if variant == "bus" else ("stage7_vehicle_taxi_yellow" if variant == "taxi" else ("queue_vehicle_body" if queue_index % 2 == 0 else "stage7_vehicle_dark_body"))
                 yaw = 90 if x < 0 else 270
                 dense_queues.append((variant, x, y, yaw, material))
         for idx, (variant, x, y, yaw, material) in enumerate(dense_queues):
@@ -3939,15 +3998,73 @@ class RoadOnlyRenderer:
                 "visual_context_not_sumo_truth",
                 "dense_reference_queue",
             )
-            if idx % 3 != 0:
-                self._spawn_operator_stage7_vehicle_detail_overlays(
-                    f"seoul_photo_reference_dense_context_vehicle_{idx}_{variant}",
-                    x,
-                    y,
-                    yaw,
-                    variant,
-                    body_scale,
+            self._spawn_operator_stage7_vehicle_detail_overlays(
+                f"seoul_photo_reference_dense_context_vehicle_{idx}_{variant}",
+                x,
+                y,
+                yaw,
+                variant,
+                body_scale,
+            )
+
+        edge_canyon_specs = [
+            ("left_near_black_glass", -3920, -2500, 0, 3.0, 4.8, 30.0, "photoreal_glass", "stage7_window_glass"),
+            ("left_mid_pale_office", -4060, -220, 0, 3.5, 5.8, 26.0, "stage7_facade_soft", "stage7_window_glass"),
+            ("left_far_green_glass", -3940, 2280, 0, 3.1, 5.2, 34.0, "stage7_seoul_facade_context_source", "photoreal_glass"),
+            ("left_horizon_wall", -3860, 5120, 0, 3.6, 6.0, 28.0, "stage7_facade_soft", "stage7_window_glass"),
+            ("right_near_dark_tower", 3920, -2350, 0, 3.2, 5.0, 32.0, "photoreal_glass", "stage7_window_glass"),
+            ("right_mid_concrete_office", 4080, 120, 0, 3.4, 5.6, 27.0, "stage7_seoul_facade_context_source", "stage7_window_glass"),
+            ("right_far_white_tower", 3940, 2600, 0, 3.2, 5.3, 36.0, "stage7_facade_soft", "photoreal_glass"),
+            ("right_horizon_wall", 3860, 5480, 0, 3.7, 6.2, 29.0, "stage7_seoul_facade_context_source", "stage7_window_glass"),
+        ]
+        for idx, (label, x, y, yaw, sx, sy, sz, facade_material, window_material) in enumerate(edge_canyon_specs):
+            z = 130 + sz * 50
+            tower = self._rotated_cube(
+                f"OperatorStage7_Stage7CameraBackgroundClosure_SeoulPhotoReferenceCanyon_edge_infill_tower_{idx}_{label}",
+                (x, y, z),
+                (sx, sy, sz),
+                facade_material,
+                rotation=(0, 0, yaw),
+            )
+            self._tag_operator_stage7_asset(
+                tower,
+                "Stage7CameraBackgroundClosure",
+                "Stage7SeoulPhotoReferenceCanyon",
+                "user_seoul_reference_photo_highrise_edge_infill",
+            )
+            roof = self._rotated_cube(
+                f"OperatorStage7_Stage7CameraBackgroundClosure_SeoulPhotoReferenceCanyon_edge_infill_roof_{idx}",
+                (x, y, z + sz * 50 + 6),
+                (sx * 1.04, sy * 1.04, 0.050),
+                "stage7_roof_gravel",
+                rotation=(0, 0, yaw),
+            )
+            self._tag_operator_stage7_asset(roof, "Stage7CameraBackgroundClosure", "Stage7SeoulPhotoReferenceCanyon", "roof_texture_context")
+            face_x = x + sx * 52 if x < 0 else x - sx * 52
+            row_count = max(7, min(16, int(sz // 2.4)))
+            for row in range(row_count):
+                row_z = 315 + row * 185
+                if row_z > z + sz * 42:
+                    break
+                for bay in range(4):
+                    bay_y = y + (bay - 1.5) * (sy * 18)
+                    window = self._rotated_cube(
+                        f"OperatorStage7_Stage7CameraBackgroundClosure_SeoulPhotoReferenceCanyon_edge_window_grid_{idx}_{row}_{bay}",
+                        (face_x, bay_y, row_z),
+                        (0.026, max(0.24, sy * 0.16), 0.22),
+                        window_material,
+                        rotation=(0, 0, yaw),
+                    )
+                    self._tag_operator_stage7_asset(window, "Stage7CameraBackgroundClosure", "Stage7SeoulPhotoReferenceCanyon", "edge_window_grid_depth")
+            if idx % 2 == 0:
+                panel = self._rotated_cube(
+                    f"OperatorStage7_Stage7CameraBackgroundClosure_SeoulPhotoReferenceCanyon_edge_unreadable_light_panel_{idx}",
+                    (face_x, y - sy * 16, 760 + idx * 28),
+                    (0.028, max(0.34, sy * 0.18), 0.24),
+                    "stage7_worn_yellow" if idx % 4 == 0 else "stage7_vehicle_bus_blue",
+                    rotation=(0, 0, yaw),
                 )
+                self._tag_operator_stage7_asset(panel, "Stage7CameraBackgroundClosure", "Stage7SeoulPhotoReferenceCanyon", "unreadable_facade_light_panel")
 
     def _disable_operator_stage7_legacy_lighting(self) -> None:
         for actor in unreal.EditorLevelLibrary.get_all_level_actors():

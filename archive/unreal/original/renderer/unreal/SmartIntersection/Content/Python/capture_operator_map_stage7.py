@@ -26,12 +26,14 @@ MANIFEST = UE_ROOT / "GeneratedProof" / "smart_intersection_rebuild_operator_sta
 MAP_BEFORE = "/Game/Maps/Generated/smart_intersection_rebuild_operator_stage6"
 MAP_AFTER = "/Game/Maps/Generated/smart_intersection_rebuild_operator_stage7"
 SNAPSHOT_ID = "stage4-fixture-a"
+CAPTURE_WIDTH = 2048
+CAPTURE_HEIGHT = 1350
 BEFORE_CAMERA_ORIGIN = unreal.Vector(0, -7200, 5200)
 BEFORE_CAMERA_TARGET = unreal.Vector(0, 1800, -850)
 BEFORE_CAMERA_FOV = 46.0
-AFTER_CAMERA_ORIGIN = unreal.Vector(0, -7500, 4800)
-AFTER_CAMERA_TARGET = unreal.Vector(0, 2800, 120)
-AFTER_CAMERA_FOV = 49.0
+AFTER_CAMERA_ORIGIN = unreal.Vector(0, -8200, 5400)
+AFTER_CAMERA_TARGET = unreal.Vector(0, 1900, -520)
+AFTER_CAMERA_FOV = 50.0
 
 
 def configure_stage7_capture_world(label: str):
@@ -85,7 +87,7 @@ def configure_stage7_capture_world(label: str):
     sun.set_actor_label(f"{label}_OPERATOR_STAGE7_CAPTURE_soft_overcast_key_light")
     sun_comp = sun.get_component_by_class(unreal.DirectionalLightComponent)
     if sun_comp:
-        sun_comp.set_editor_property("intensity", 0.92)
+        sun_comp.set_editor_property("intensity", 1.35)
         base.set_editor_property_if_supported(sun_comp, "cast_shadows", False)
         base.set_editor_property_if_supported(sun_comp, "light_source_angle", 46.0)
         try:
@@ -101,7 +103,7 @@ def configure_stage7_capture_world(label: str):
     fill.set_actor_label(f"{label}_OPERATOR_STAGE7_CAPTURE_camera_side_fill")
     fill_comp = fill.get_component_by_class(unreal.DirectionalLightComponent)
     if fill_comp:
-        fill_comp.set_editor_property("intensity", 1.82)
+        fill_comp.set_editor_property("intensity", 2.75)
         base.set_editor_property_if_supported(fill_comp, "cast_shadows", False)
         base.set_editor_property_if_supported(fill_comp, "light_source_angle", 54.0)
         try:
@@ -117,7 +119,7 @@ def configure_stage7_capture_world(label: str):
     sky.set_actor_label(f"{label}_OPERATOR_STAGE7_CAPTURE_wet_overcast_skylight")
     sky_comp = sky.get_component_by_class(unreal.SkyLightComponent)
     if sky_comp:
-        sky_comp.set_editor_property("intensity", 4.85)
+        sky_comp.set_editor_property("intensity", 6.45)
         try:
             sky_comp.set_mobility(unreal.ComponentMobility.MOVABLE)
             sky_comp.recapture_sky()
@@ -136,13 +138,13 @@ def configure_stage7_capture_world(label: str):
         settings = pp.get_editor_property("settings")
         for name, value in (
             ("override_auto_exposure_bias", True),
-            ("auto_exposure_bias", 1.45),
+            ("auto_exposure_bias", 2.10),
             ("override_bloom_intensity", True),
             ("bloom_intensity", 0.025),
             ("override_vignette_intensity", True),
             ("vignette_intensity", 0.02),
             ("override_color_saturation", True),
-            ("color_saturation", unreal.Vector4(0.92, 0.94, 0.94, 1.0)),
+            ("color_saturation", unreal.Vector4(0.98, 0.99, 0.99, 1.0)),
             ("override_color_contrast", True),
             ("color_contrast", unreal.Vector4(0.96, 0.96, 0.95, 1.0)),
         ):
@@ -168,18 +170,23 @@ def build_scene_capture(origin, rotation, label: str, fov: float):
             pass
     rt = unreal.TextureRenderTarget2D()
     if hasattr(rt, "init_auto_format"):
-        rt.init_auto_format(2400, 1350)
+        rt.init_auto_format(CAPTURE_WIDTH, CAPTURE_HEIGHT)
     elif hasattr(rt, "init_custom_format"):
-        rt.init_custom_format(2400, 1350, unreal.PixelFormat.PF_B8G8R8A8, False)
+        rt.init_custom_format(CAPTURE_WIDTH, CAPTURE_HEIGHT, unreal.PixelFormat.PF_B8G8R8A8, False)
     else:
-        rt.set_editor_property("size_x", 2400)
-        rt.set_editor_property("size_y", 1350)
+        rt.set_editor_property("size_x", CAPTURE_WIDTH)
+        rt.set_editor_property("size_y", CAPTURE_HEIGHT)
         if hasattr(unreal, "TextureRenderTargetFormat"):
             rt.set_editor_property("render_target_format", unreal.TextureRenderTargetFormat.RTF_RGBA8)
     comp.texture_target = rt
     comp.fov_angle = fov
     try:
-        comp.set_editor_property("capture_source", unreal.SceneCaptureSource.SCS_SCENE_COLOR_HDR)
+        capture_source = getattr(
+            unreal.SceneCaptureSource,
+            "SCS_FINAL_COLOR_LDR",
+            unreal.SceneCaptureSource.SCS_SCENE_COLOR_HDR,
+        )
+        comp.set_editor_property("capture_source", capture_source)
     except Exception:
         pass
     return comp, rt

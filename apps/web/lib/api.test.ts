@@ -5,6 +5,7 @@ import { afterEach, describe, expect, test, vi } from "vitest";
 import {
   getFixtures,
   getIntersectionStatus,
+  getSimulationFrame,
   getRuntimeReadiness,
   normalizeApiBaseUrl,
   recommendSignal
@@ -94,6 +95,78 @@ describe("API client", () => {
     expect(readiness.openai.ready).toBe(false);
     expect(readiness.openai.mode).toBe("unavailable");
     expect(readiness.openai.missing).toContain("runtime readiness endpoint");
+  });
+
+  test("requests the simulation frame snapshot with the selected scenario", async () => {
+    const frameSnapshot = {
+      source: "simulation_snapshot_fixture",
+      intersection_id: "INT-0001",
+      scenario_id: "emergency",
+      sim_time_seconds: 42,
+      captured_at: "2026-06-16T00:00:00.000Z",
+      bounds_meters: { min_x: -160, max_x: 160, min_y: -140, max_y: 140 },
+      vehicles: [
+        {
+          id: "east-emergency-1",
+          vehicle_type: "emergency",
+          lane_id: "east_in_1",
+          x_meters: 72,
+          y_meters: 4,
+          heading_degrees: 270,
+          speed_mps: 11.5,
+          waiting_seconds: 0,
+          emergency: true
+        }
+      ],
+      density_segments: [
+        {
+          segment_id: "west-queue-1",
+          approach: "west",
+          start_meters_from_stop_line: 12,
+          end_meters_from_stop_line: 118,
+          lane_count: 3,
+          vehicle_count: 28,
+          average_speed_mps: 2.5,
+          source: "fixture_density_proxy"
+        }
+      ],
+      signals: [
+        {
+          signal_id: "east-main",
+          direction: "east",
+          state: "green",
+          seconds_remaining: 18
+        }
+      ],
+      queues: { north: 9, south: 5, east: 7, west: 16 },
+      events: [
+        {
+          id: 1,
+          intersection_id: "INT-0001",
+          occurred_at: "2026-06-16T00:00:00.000Z",
+          direction: "east",
+          event_type: "emergency_vehicle_approach",
+          severity: "critical",
+          object_count: 1,
+          ai_summary: "Emergency vehicle approaching from East.",
+          recommendation: "Review emergency priority signal simulation.",
+          status: "open",
+          source: "scenario_mock"
+        }
+      ]
+    };
+    const fetchMock = vi.fn().mockResolvedValueOnce({
+      ok: true,
+      json: async () => frameSnapshot
+    });
+
+    vi.stubGlobal("fetch", fetchMock);
+
+    await expect(getSimulationFrame("emergency")).resolves.toEqual(frameSnapshot);
+    expect(fetchMock).toHaveBeenCalledWith(
+      "http://127.0.0.1:8000/api/simulation/frame?scenario_id=emergency",
+      expect.objectContaining({ cache: "no-store" })
+    );
   });
 
   test("uses simulation-only fallback recommendation when control route is missing", async () => {

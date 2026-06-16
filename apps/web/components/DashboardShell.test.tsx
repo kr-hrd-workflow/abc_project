@@ -2,10 +2,16 @@
 
 import { cleanup, render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
+import type { ReactNode } from "react";
 import { useState } from "react";
 import { afterEach, describe, expect, test, vi } from "vitest";
 
+vi.mock("@react-three/fiber", () => ({
+  Canvas: (_props: { children?: ReactNode }) => <div data-testid="r3f-canvas" />
+}));
+
 import { DashboardShell } from "./DashboardShell";
+import { buildSceneSnapshot } from "./r3f/buildSceneSnapshot";
 import type {
   ChatResponse,
   AnalysisFixture,
@@ -22,6 +28,7 @@ import type {
 } from "../lib/types";
 import { SCENARIO_OPTIONS } from "../lib/types";
 import { CITY_PROFILES } from "../lib/cities";
+import type { SimulationFrameSnapshot } from "../lib/simulationSnapshot";
 
 const status: IntersectionStatus = {
   intersection_id: "INT-0001",
@@ -97,6 +104,50 @@ const simulation: SimulationComparison = {
     throughput_percent: 13,
     emergency_vehicle_clearance_percent: -36
   }
+};
+
+const frameSnapshot: SimulationFrameSnapshot = {
+  source: "simulation_snapshot_fixture",
+  intersection_id: "INT-0001",
+  scenario_id: "emergency",
+  sim_time_seconds: 42,
+  captured_at: "2026-06-16T00:00:00.000Z",
+  bounds_meters: { min_x: -160, max_x: 160, min_y: -140, max_y: 140 },
+  vehicles: [
+    {
+      id: "east-emergency-1",
+      vehicle_type: "emergency",
+      lane_id: "east_in_1",
+      x_meters: 72,
+      y_meters: 4,
+      heading_degrees: 270,
+      speed_mps: 11.5,
+      waiting_seconds: 0,
+      emergency: true
+    }
+  ],
+  density_segments: [
+    {
+      segment_id: "west-queue-1",
+      approach: "west",
+      start_meters_from_stop_line: 12,
+      end_meters_from_stop_line: 118,
+      lane_count: 3,
+      vehicle_count: 28,
+      average_speed_mps: 2.5,
+      source: "fixture_density_proxy"
+    }
+  ],
+  signals: [
+    {
+      signal_id: "east-main",
+      direction: "east",
+      state: "green",
+      seconds_remaining: 18
+    }
+  ],
+  queues: status.queues,
+  events
 };
 
 const report: Report = {
@@ -223,6 +274,22 @@ function dashboardProps(overrides: Partial<Parameters<typeof DashboardShell>[0]>
 function renderDashboard(overrides = {}) {
   return render(
     <DashboardShell {...dashboardProps(overrides)} />
+  );
+}
+
+function mockWebGLSupport(supported: boolean) {
+  vi.spyOn(HTMLCanvasElement.prototype, "getContext").mockImplementation(
+    ((contextId: string) => {
+      if (
+        contextId === "webgl2" ||
+        contextId === "webgl" ||
+        contextId === "experimental-webgl"
+      ) {
+        return supported ? ({} as WebGLRenderingContext) : null;
+      }
+
+      return null;
+    }) as HTMLCanvasElement["getContext"]
   );
 }
 
@@ -406,9 +473,157 @@ describe("DashboardShell", () => {
     expect(screen.getByText("집계 지표 기반")).toBeTruthy();
   });
 
+  test("builds R3F scene vehicles only from SimulationFrameSnapshot vehicles", () => {
+    const scene = buildSceneSnapshot({
+      ...frameSnapshot,
+      queues: { north: 40, south: 32, east: 27, west: 45 },
+      events: [
+        ...frameSnapshot.events,
+        {
+          id: 2,
+          intersection_id: "INT-0001",
+          occurred_at: "2026-06-16T00:00:05.000Z",
+          direction: "west",
+          event_type: "queue_threshold_exceeded",
+          severity: "warning",
+          object_count: 45,
+          ai_summary: "Westbound queue is high.",
+          recommendation: "Review queue pressure.",
+          status: "open",
+          source: "scenario_mock"
+        }
+      ]
+    });
+
+    expect(scene.source).toBe("simulation_snapshot_fixture");
+    expect(scene.preciseVehicleSource).toBe("simulation_frame_snapshot");
+    expect(scene.vehicles).toEqual(frameSnapshot.vehicles);
+    expect(scene.vehicles).not.toBe(frameSnapshot.vehicles);
+    expect(scene.vehicles).toHaveLength(1);
+    expect(scene.vehicles[0]?.id).toBe("east-emergency-1");
+  });
+
+  test("does not turn aggregate SimulationComparison into precise vehicle instances", () => {
+    const scene = buildSceneSnapshot(simulation as unknown as SimulationFrameSnapshot);
+
+    expect(scene.source).toBe("sumo_traci");
+    expect(scene.preciseVehicleSource).toBe("none");
+    expect(scene.vehicles).toEqual([]);
+    expect(scene.densitySegments).toEqual([]);
+    expect(scene.allowsDensityFill).toBe(false);
+  });
+
+  test("allows long-road density fill only from density segments or explicit fixture mode", () => {
+    const densityScene = buildSceneSnapshot(frameSnapshot);
+    const fixtureScene = buildSceneSnapshot({
+      ...frameSnapshot,
+      density_segments: []
+    });
+    const unlabeledScene = buildSceneSnapshot({
+      ...frameSnapshot,
+      source: "sumo_traci",
+      density_segments: []
+    });
+
+    expect(densityScene.allowsDensityFill).toBe(true);
+    expect(densityScene.densityFillSource).toBe("density_segments");
+    expect(fixtureScene.allowsDensityFill).toBe(true);
+    expect(fixtureScene.densityFillSource).toBe("fixture_mode");
+    expect(unlabeledScene.allowsDensityFill).toBe(false);
+    expect(unlabeledScene.densityFillSource).toBe("none");
+  });
+
+  test("rejects far-corridor density fill when segment source is not an explicit proxy", () => {
+    const scene = buildSceneSnapshot({
+      ...frameSnapshot,
+      source: "sumo_traci",
+      density_segments: [
+        {
+          ...frameSnapshot.density_segments[0],
+          source: "sumo_traci"
+        }
+      ]
+    } as unknown as SimulationFrameSnapshot);
+
+    expect(scene.densitySegments).toEqual([]);
+    expect(scene.allowsDensityFill).toBe(false);
+    expect(scene.densityFillSource).toBe("none");
+  });
+
+  test("keeps dashboard aggregate telemetry renderable when frame snapshots are unavailable", () => {
+    const emptyScene = buildSceneSnapshot(null);
+    renderDashboard();
+
+    expect(emptyScene.vehicles).toEqual([]);
+    expect(emptyScene.allowsDensityFill).toBe(false);
+    expect(screen.getByLabelText("SUMO 집계 텔레메트리")).toBeTruthy();
+    expect(screen.getByText("대기 72s -> 59s")).toBeTruthy();
+    expect(screen.getByText("집계 지표 기반")).toBeTruthy();
+  });
+
+  test("mounts the browser-only R3F renderer when it is enabled and WebGL is supported", async () => {
+    vi.stubEnv("NEXT_PUBLIC_R3F_SIMULATION_ENABLED", "true");
+    mockWebGLSupport(true);
+
+    const { container } = renderDashboard();
+
+    const viewport = await screen.findByTestId("r3f-simulation-viewport");
+
+    expect(viewport).toBeTruthy();
+    expect(screen.getByTestId("r3f-canvas")).toBeTruthy();
+    expect(screen.getByText("R3F digital twin")).toBeTruthy();
+    expect(screen.queryByText("Digital twin fallback")).toBeNull();
+    expect(screen.getByText("Simulation only / No real signal control")).toBeTruthy();
+    expect(container.querySelector("[data-r3f-simulation-ready='true']")).toBeTruthy();
+    expect(viewport.getAttribute("data-r3f-renderer-mode")).toBe("r3f_procedural_stage3");
+    expect(viewport.getAttribute("data-r3f-snapshot-source")).toBe("simulation_snapshot_fixture");
+    expect(viewport.getAttribute("data-r3f-traffic-density-mode")).toBe("fixture_queues");
+  });
+
+  test("exposes Stage 3 corridor lengths in meters outside the canvas", async () => {
+    vi.stubEnv("NEXT_PUBLIC_R3F_SIMULATION_ENABLED", "true");
+    mockWebGLSupport(true);
+
+    renderDashboard();
+
+    const viewport = await screen.findByTestId("r3f-simulation-viewport");
+    const lengthAttr = viewport.getAttribute("data-r3f-corridor-length-meters");
+
+    expect(lengthAttr).toBeTruthy();
+    expect(lengthAttr).toContain("north:140");
+    expect(lengthAttr).toContain("south:120");
+    expect(lengthAttr).toContain("east:140");
+    expect(lengthAttr).toContain("west:140");
+  });
+
+  test("keeps the fallback viewport when R3F is disabled", () => {
+    mockWebGLSupport(true);
+
+    renderDashboard();
+
+    expect(screen.getByText("Digital twin fallback")).toBeTruthy();
+    expect(screen.getByText("실사형 가상 CCTV / 디지털 트윈")).toBeTruthy();
+    expect(screen.queryByTestId("r3f-simulation-viewport")).toBeNull();
+    expect(screen.getByText("Simulation only / No real signal control")).toBeTruthy();
+  });
+
+  test("keeps the fallback viewport when R3F is enabled but WebGL is unavailable", () => {
+    vi.stubEnv("NEXT_PUBLIC_R3F_SIMULATION_ENABLED", "true");
+    mockWebGLSupport(false);
+
+    renderDashboard();
+
+    expect(screen.getByText("Digital twin fallback")).toBeTruthy();
+    expect(screen.getByText("실사형 가상 CCTV / 디지털 트윈")).toBeTruthy();
+    expect(screen.queryByTestId("r3f-simulation-viewport")).toBeNull();
+    expect(screen.getByText("Simulation only / No real signal control")).toBeTruthy();
+  });
+
   test("mounts the hosted simulation stream URL before the legacy alias", () => {
+    vi.stubEnv("NEXT_PUBLIC_R3F_SIMULATION_ENABLED", "true");
     vi.stubEnv("NEXT_PUBLIC_SIMULATION_STREAM_URL", "https://pixel.example/stream");
     vi.stubEnv("NEXT_PUBLIC_UNITY_WEBGL_URL", "/unity/index.html");
+    mockWebGLSupport(true);
 
     const { container } = renderDashboard();
     const streamFrame = container.querySelector("iframe.simulation-stream-frame");
@@ -416,11 +631,14 @@ describe("DashboardShell", () => {
     expect(streamFrame?.getAttribute("src")).toBe("https://pixel.example/stream");
     expect(streamFrame?.getAttribute("title")).toBe("시뮬레이션 스트림");
     expect(screen.getByText("Hosted simulation stream")).toBeTruthy();
+    expect(screen.queryByTestId("r3f-simulation-viewport")).toBeNull();
   });
 
   test("mounts the local hosted simulation iframe before the legacy alias", () => {
+    vi.stubEnv("NEXT_PUBLIC_R3F_SIMULATION_ENABLED", "true");
     vi.stubEnv("NEXT_PUBLIC_SIMULATION_STREAM_URL", "http://127.0.0.1");
     vi.stubEnv("NEXT_PUBLIC_UNITY_WEBGL_URL", "/unity/index.html");
+    mockWebGLSupport(true);
 
     const { container } = renderDashboard();
     const streamFrame = container.querySelector("iframe.simulation-stream-frame");
@@ -431,18 +649,22 @@ describe("DashboardShell", () => {
     expect(streamFrame?.getAttribute("allow")).toContain("fullscreen");
     expect(screen.getByText("Hosted simulation stream")).toBeTruthy();
     expect(screen.queryByText("Legacy stream alias")).toBeNull();
+    expect(screen.queryByTestId("r3f-simulation-viewport")).toBeNull();
     expect(screen.getByText("Simulation only / No real signal control")).toBeTruthy();
     expect(screen.getByText("SUMO/TraCI Renderer")).toBeTruthy();
   });
 
   test("keeps NEXT_PUBLIC_UNITY_WEBGL_URL as a legacy stream fallback alias", () => {
+    vi.stubEnv("NEXT_PUBLIC_R3F_SIMULATION_ENABLED", "true");
     vi.stubEnv("NEXT_PUBLIC_UNITY_WEBGL_URL", "/unity/index.html");
+    mockWebGLSupport(true);
 
     const { container } = renderDashboard();
     const streamFrame = container.querySelector("iframe.simulation-stream-frame");
 
     expect(streamFrame?.getAttribute("src")).toBe("/unity/index.html");
     expect(screen.getByText("Legacy stream alias")).toBeTruthy();
+    expect(screen.queryByTestId("r3f-simulation-viewport")).toBeNull();
   });
 
   test("switches visible labels between Korean and English", async () => {

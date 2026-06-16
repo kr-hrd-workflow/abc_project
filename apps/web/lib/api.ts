@@ -12,6 +12,7 @@ import type {
   TrafficEvent,
   UploadAnalysisResult
 } from "./types";
+import type { SimulationFrameSnapshot } from "./simulationSnapshot";
 
 const API_BASE_URL = normalizeApiBaseUrl(
   process.env.NEXT_PUBLIC_API_BASE_URL ?? "http://127.0.0.1:8000"
@@ -113,6 +114,14 @@ export async function simulateSignal(
     if (isMissingRouteError(error)) return fallbackSimulation();
     throw error;
   }
+}
+
+export async function getSimulationFrame(
+  scenarioId?: ScenarioId
+): Promise<SimulationFrameSnapshot> {
+  return requestJson<SimulationFrameSnapshot>(
+    withScenario("/api/simulation/frame", scenarioId)
+  );
 }
 
 export async function askQuestion(

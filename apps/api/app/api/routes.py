@@ -19,7 +19,13 @@ from app.adapters.vision import (
 )
 from app.core.config import settings
 from app.db.session import SessionLocal, get_session
-from app.domain.schemas import ChatRequest, ChatResponse, VisionObservation
+from app.domain.schemas import (
+    ChatRequest,
+    ChatResponse,
+    TrafficEventRead,
+    VisionObservation,
+)
+from app.domain.simulation_snapshot import SimulationFrameSnapshot
 from app.scenarios.fixtures import SAMPLE_INPUT_FIXTURES, fixture_to_payload
 from app.services.chat import answer_question
 from app.services.agent_service import build_agent_sections
@@ -59,6 +65,7 @@ from app.services.runtime_readiness import (
     get_runtime_readiness,
     is_vector_extension_enabled,
 )
+from app.services.simulation_snapshot import build_fixture_simulation_frame
 
 router = APIRouter()
 vision_adapter = ScenarioVisionAnalysisAdapter()
@@ -245,6 +252,20 @@ def get_events(
     observation = vision_adapter.analyze(scenario_id)
     _status, events = ensure_scenario_snapshot(session, observation)
     return [event_to_payload(event) for event in events]
+
+
+@router.get("/api/simulation/frame")
+def get_simulation_frame(
+    scenario_id: str = "emergency",
+    session: Session = Depends(get_session),
+) -> SimulationFrameSnapshot:
+    observation = vision_adapter.analyze(scenario_id)
+    _status, events = ensure_scenario_snapshot(session, observation)
+    event_reads = [
+        TrafficEventRead(**event_to_payload(event))
+        for event in events
+    ]
+    return build_fixture_simulation_frame(scenario_id, observation, event_reads)
 
 
 @router.post("/api/scenarios/{scenario_id}/load")
