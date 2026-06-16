@@ -11,6 +11,12 @@ export type SceneDensityFillSource =
   | "fixture_mode"
   | "none";
 
+export type SceneTrafficDensityMode =
+  | "density_segments"
+  | "fixture_queues"
+  | "snapshot_vehicles"
+  | "none";
+
 export type ScenePreciseVehicleSource =
   | "simulation_frame_snapshot"
   | "none";
@@ -25,6 +31,7 @@ export type SceneSnapshot = {
   preciseVehicleSource: ScenePreciseVehicleSource;
   allowsDensityFill: boolean;
   densityFillSource: SceneDensityFillSource;
+  trafficDensityMode: SceneTrafficDensityMode;
 };
 
 export function buildSceneSnapshot(
@@ -35,6 +42,7 @@ export function buildSceneSnapshot(
   const densitySegments = Array.isArray(frame?.density_segments)
     ? frame.density_segments.filter(isKnownDensitySegment)
     : [];
+  const queues = isQueueMetrics(frame?.queues) ? { ...frame.queues } : null;
   const densityFillSource = resolveDensityFillSource(source, densitySegments);
 
   return {
@@ -42,12 +50,39 @@ export function buildSceneSnapshot(
     vehicles,
     densitySegments,
     signals: Array.isArray(frame?.signals) ? [...frame.signals] : [],
-    queues: isQueueMetrics(frame?.queues) ? { ...frame.queues } : null,
+    queues,
     events: Array.isArray(frame?.events) ? [...frame.events] : [],
     preciseVehicleSource:
       vehicles.length > 0 ? "simulation_frame_snapshot" : "none",
     allowsDensityFill: densityFillSource !== "none",
-    densityFillSource
+    densityFillSource,
+    trafficDensityMode: resolveTrafficDensityMode(
+      vehicles,
+      densitySegments,
+      densityFillSource,
+      queues
+    )
+  };
+}
+
+export function buildFixtureSceneSnapshot({
+  queues,
+  events = []
+}: {
+  queues: QueueMetrics;
+  events?: TrafficEvent[];
+}): SceneSnapshot {
+  return {
+    source: "simulation_snapshot_fixture",
+    vehicles: [],
+    densitySegments: [],
+    signals: [],
+    queues: { ...queues },
+    events: [...events],
+    preciseVehicleSource: "none",
+    allowsDensityFill: true,
+    densityFillSource: "fixture_mode",
+    trafficDensityMode: "fixture_queues"
   };
 }
 
@@ -57,6 +92,18 @@ function resolveDensityFillSource(
 ): SceneDensityFillSource {
   if (densitySegments.length > 0) return "density_segments";
   if (source === "simulation_snapshot_fixture") return "fixture_mode";
+  return "none";
+}
+
+function resolveTrafficDensityMode(
+  vehicles: SimulationVehicleSnapshot[],
+  densitySegments: SimulationDensitySegment[],
+  densityFillSource: SceneDensityFillSource,
+  queues: QueueMetrics | null
+): SceneTrafficDensityMode {
+  if (densitySegments.length > 0) return "density_segments";
+  if (densityFillSource === "fixture_mode" && queues) return "fixture_queues";
+  if (vehicles.length > 0) return "snapshot_vehicles";
   return "none";
 }
 
