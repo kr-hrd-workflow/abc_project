@@ -238,7 +238,8 @@ async function prepareServer() {
         ...process.env,
         ...stage5Env
       },
-      stdio: ["ignore", "pipe", "pipe"]
+      stdio: ["ignore", "pipe", "pipe"],
+      detached: process.platform !== "win32"
     }
   );
 
@@ -353,6 +354,23 @@ async function stopProcessTree(child) {
     return;
   }
 
+  const waitForExit = (timeoutMs) =>
+    new Promise((resolve) => {
+      if (child.exitCode !== null || child.signalCode !== null) {
+        resolve(true);
+        return;
+      }
+      const onExit = () => {
+        clearTimeout(timeout);
+        resolve(true);
+      };
+      const timeout = setTimeout(() => {
+        child.off("exit", onExit);
+        resolve(false);
+      }, timeoutMs);
+      child.once("exit", onExit);
+    });
+
   if (process.platform === "win32") {
     await new Promise((resolve) => {
       const killer = spawn(
@@ -369,7 +387,24 @@ async function stopProcessTree(child) {
     return;
   }
 
-  child.kill("SIGTERM");
+  // The server is spawned as its own process group so nested `next start`
+  // workers do not keep CI alive after verification finishes.
+  try {
+    process.kill(-child.pid, "SIGTERM");
+  } catch {
+    child.kill("SIGTERM");
+  }
+
+  if (await waitForExit(5000)) {
+    return;
+  }
+
+  try {
+    process.kill(-child.pid, "SIGKILL");
+  } catch {
+    child.kill("SIGKILL");
+  }
+  await waitForExit(5000);
 }
 
 function getDevServerCommand(port) {
