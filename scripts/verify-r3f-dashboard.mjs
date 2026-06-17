@@ -2,13 +2,14 @@
 
 import { spawn } from "node:child_process";
 import { createServer } from "node:net";
-import { mkdir, readFile, stat, writeFile } from "node:fs/promises";
+import { mkdir, readFile, rm, stat, writeFile } from "node:fs/promises";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { deflateSync, inflateSync } from "node:zlib";
 
 const scriptDir = path.dirname(fileURLToPath(import.meta.url));
 const repoRoot = path.resolve(scriptDir, "..");
+const webBuildDir = path.join(repoRoot, "apps", "web", ".next");
 const artifactsDir = path.join(repoRoot, "artifacts");
 const desktopScreenshotPath = path.join(artifactsDir, "r3f-dashboard-desktop.png");
 const mobileScreenshotPath = path.join(artifactsDir, "r3f-dashboard-mobile.png");
@@ -218,6 +219,8 @@ async function prepareServer() {
   };
 
   if (serverMode === "production") {
+    // Avoid stale Next trace artifacts when this verifier follows a prior build.
+    await rm(webBuildDir, { recursive: true, force: true });
     await runCommand({
       commandSpec: getProductionBuildCommand(),
       env: stage5Env,
