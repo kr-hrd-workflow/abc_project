@@ -5390,6 +5390,48 @@ main[lang="ko"] .concept-a-hero h1 {
   font-weight: 750;
 }
 
+.simulation-source-overlays {
+  position: absolute;
+  z-index: 13;
+  top: 14px;
+  right: 14px;
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 6px;
+  width: min(420px, calc(100% - 260px));
+  pointer-events: none;
+}
+
+.simulation-source-badge {
+  display: inline-flex;
+  align-items: center;
+  min-height: 28px;
+  border: 1px solid rgba(112, 236, 199, 0.24);
+  border-radius: 8px;
+  padding: 5px 8px;
+  color: rgba(236, 255, 248, 0.86);
+  background: rgba(8, 24, 34, 0.72);
+  box-shadow: 0 10px 22px rgba(0, 0, 0, 0.14);
+  backdrop-filter: blur(14px);
+  font-size: 10px;
+  font-weight: 800;
+  white-space: nowrap;
+}
+
+.simulation-source-badge b {
+  margin-right: 6px;
+  color: rgba(112, 236, 199, 0.92);
+  font-size: 9px;
+  text-transform: uppercase;
+}
+
+.simulation-source-badge span {
+  max-width: 190px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
 .sumo-telemetry,
 .lane-pressure-panel,
 .sumo-event-marker {
@@ -6850,6 +6892,20 @@ main[lang="ko"] .concept-a-hero h1 {
   .renderer-status span {
     border-left: 0;
     padding-left: 0;
+  }
+
+  .simulation-source-overlays {
+    top: auto;
+    right: 10px;
+    bottom: 60px;
+    left: 10px;
+    width: auto;
+    justify-content: flex-start;
+  }
+
+  .simulation-source-badge {
+    min-height: 26px;
+    font-size: 9px;
   }
 
   .metrics-table-head {

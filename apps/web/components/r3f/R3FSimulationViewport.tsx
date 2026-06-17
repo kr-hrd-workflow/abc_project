@@ -6,6 +6,7 @@ import type { SimulationViewportProps } from "../SimulationViewportFallback";
 import { buildFixtureSceneSnapshot, buildSceneSnapshot } from "./buildSceneSnapshot";
 import { getCorridorLengthDataAttribute } from "./roadGeometry";
 import { SimulationCanvas } from "./SimulationCanvas";
+import { SimulationOverlays } from "./SimulationOverlays";
 import {
   STAGE5_TRAFFIC_VEHICLE_SILHOUETTE_PARTS,
   buildTrafficDensityRenderPlan
@@ -41,6 +42,7 @@ export function R3FSimulationViewport({
   const corridorLengthMeters = getCorridorLengthDataAttribute();
   const visibleVehiclePartCount =
     STAGE5_TRAFFIC_VEHICLE_SILHOUETTE_PARTS.filter((part) => part.visible).length;
+  const signalState = buildSignalStateDataAttribute(sceneSnapshot.signals);
 
   return (
     <div
@@ -53,6 +55,9 @@ export function R3FSimulationViewport({
       data-r3f-photoreal-stage="5"
       data-r3f-corridor-length-meters={corridorLengthMeters}
       data-r3f-traffic-density-mode={sceneSnapshot.trafficDensityMode}
+      data-r3f-signal-state={signalState}
+      data-r3f-scenario-id={sceneSnapshot.scenarioId ?? undefined}
+      data-r3f-queue-source={sceneSnapshot.queueSource}
       data-r3f-visible-vehicle-count={visibleVehicleCount}
       data-r3f-glb-vehicle-count={STAGE5_VISIBLE_TRAFFIC_GLB_PLACEMENTS.length}
       data-r3f-street-shadow-count={
@@ -61,6 +66,11 @@ export function R3FSimulationViewport({
       data-r3f-vehicle-silhouette-part-count={visibleVehiclePartCount}
     >
       <SimulationCanvas sceneSnapshot={sceneSnapshot} />
+      <SimulationOverlays
+        simulationSource={simulation.source}
+        sceneSnapshot={sceneSnapshot}
+        signalState={signalState}
+      />
       <div className="playback-badge">
         <strong>R3F digital twin</strong>
         <span>Browser WebGL renderer</span>
@@ -72,4 +82,22 @@ export function R3FSimulationViewport({
       </div>
     </div>
   );
+}
+
+function buildSignalStateDataAttribute(
+  signals: ReturnType<typeof buildSceneSnapshot>["signals"]
+) {
+  if (signals.length === 0) return "unavailable";
+
+  const byDirection = new Map<string, string>();
+  for (const signal of signals) {
+    if (!byDirection.has(signal.direction)) {
+      byDirection.set(signal.direction, signal.state);
+    }
+  }
+
+  return Array.from(byDirection.entries())
+    .sort(([left], [right]) => left.localeCompare(right))
+    .map(([direction, state]) => `${direction}:${state}`)
+    .join(",");
 }

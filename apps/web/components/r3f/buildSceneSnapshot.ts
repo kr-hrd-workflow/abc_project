@@ -21,8 +21,15 @@ export type SceneTrafficDensityMode =
   | "snapshot_vehicles"
   | "none";
 
+export type SceneQueueSource =
+  | "frame"
+  | "density_segment"
+  | "fixture_fallback"
+  | "none";
+
 export type SceneSnapshot = {
   source: string | null;
+  scenarioId: string | null;
   vehicles: SimulationVehicleSnapshot[];
   densitySegments: SimulationDensitySegment[];
   signals: SimulationSignalSnapshot[];
@@ -32,6 +39,7 @@ export type SceneSnapshot = {
   allowsDensityFill: boolean;
   densityFillSource: SceneDensityFillSource;
   trafficDensityMode: SceneTrafficDensityMode;
+  queueSource: SceneQueueSource;
 };
 
 export function buildSceneSnapshot(
@@ -52,6 +60,7 @@ export function buildSceneSnapshot(
 
   return {
     source,
+    scenarioId: typeof frame?.scenario_id === "string" ? frame.scenario_id : null,
     vehicles,
     densitySegments,
     signals: Array.isArray(frame?.signals) ? [...frame.signals] : [],
@@ -61,7 +70,8 @@ export function buildSceneSnapshot(
       vehicles.length > 0 ? "simulation_frame_snapshot" : "none",
     allowsDensityFill: densityFillSource !== "none",
     densityFillSource,
-    trafficDensityMode
+    trafficDensityMode,
+    queueSource: resolveFrameQueueSource(frame, densitySegments)
   };
 }
 
@@ -74,6 +84,7 @@ export function buildFixtureSceneSnapshot({
 }): SceneSnapshot {
   return {
     source: "simulation_snapshot_fixture",
+    scenarioId: null,
     vehicles: [],
     densitySegments: [],
     signals: [],
@@ -82,8 +93,18 @@ export function buildFixtureSceneSnapshot({
     preciseVehicleSource: "none",
     allowsDensityFill: true,
     densityFillSource: "fixture_mode",
-    trafficDensityMode: "fixture_queues"
+    trafficDensityMode: "fixture_queues",
+    queueSource: "fixture_fallback"
   };
+}
+
+function resolveFrameQueueSource(
+  frame: SimulationFrameSnapshot | null | undefined,
+  densitySegments: SimulationDensitySegment[]
+): SceneQueueSource {
+  if (isQueueMetrics(frame?.queues)) return "frame";
+  if (densitySegments.length > 0) return "density_segment";
+  return "none";
 }
 
 function resolveDensityFillSource(

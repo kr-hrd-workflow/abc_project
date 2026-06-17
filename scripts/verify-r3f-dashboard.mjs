@@ -14,6 +14,7 @@ const desktopScreenshotPath = path.join(artifactsDir, "r3f-dashboard-desktop.png
 const mobileScreenshotPath = path.join(artifactsDir, "r3f-dashboard-mobile.png");
 const desktopCanvasScreenshotPath = path.join(artifactsDir, "r3f-dashboard-desktop-canvas.png");
 const mobileCanvasScreenshotPath = path.join(artifactsDir, "r3f-dashboard-mobile-canvas.png");
+const mobileOverlayScreenshotPath = path.join(artifactsDir, "r3f-dashboard-mobile-overlays.png");
 const fallbackScreenshotPath = path.join(artifactsDir, "r3f-dashboard-webgl-off.png");
 const detailsPath = path.join(artifactsDir, "r3f-dashboard-details.json");
 const manifestPath = path.join(
@@ -59,6 +60,7 @@ const details = {
   artifacts: {
     desktop: normalizeArtifactPath(desktopScreenshotPath),
     mobile: normalizeArtifactPath(mobileScreenshotPath),
+    mobile_overlays: normalizeArtifactPath(mobileOverlayScreenshotPath),
     desktop_canvas: normalizeArtifactPath(desktopCanvasScreenshotPath),
     mobile_canvas: normalizeArtifactPath(mobileCanvasScreenshotPath),
     webgl_off_fallback: normalizeArtifactPath(fallbackScreenshotPath),
@@ -75,6 +77,7 @@ const details = {
   photorealism_check: null,
   composition_check: null,
   mobile_composition_check: null,
+  queue_source_check: null,
   assertions: {},
   failures: []
 };
@@ -637,8 +640,11 @@ function buildFixturePayloads() {
   };
 }
 
-async function installApiRoutes(page) {
+async function installApiRoutes(page, options = {}) {
   const payloads = buildFixturePayloads();
+  if (typeof options.mutatePayloads === "function") {
+    options.mutatePayloads(payloads);
+  }
 
   await page.route("**/api/**", async (route) => {
     const request = route.request();
@@ -770,7 +776,9 @@ async function newRoutedPage(browser, viewport, options = {}) {
   if (options.forceWebglOff) {
     await page.addInitScript(forceWebglOff);
   }
-  await installApiRoutes(page);
+  await installApiRoutes(page, {
+    mutatePayloads: options.mutatePayloads
+  });
 
   return { context, page, consoleErrors };
 }
@@ -891,18 +899,29 @@ async function collectRendererProof(page) {
     const frameBound = viewport?.getAttribute("data-r3f-frame-bound") === "true";
     const trafficDensityMode =
       viewport?.getAttribute("data-r3f-traffic-density-mode") ?? null;
+    const signalState = viewport?.getAttribute("data-r3f-signal-state") ?? null;
+    const scenarioId = viewport?.getAttribute("data-r3f-scenario-id") ?? null;
+    const queueSource = viewport?.getAttribute("data-r3f-queue-source") ?? null;
     const fallbackUsed = Boolean(viewport) && !frameBound;
+    const readText = (selector) =>
+      document.querySelector(selector)?.textContent?.replace(/\s+/g, " ").trim() ?? null;
 
     return {
       snapshot_source: snapshotSource,
       frame_bound: frameBound,
       traffic_density_mode: trafficDensityMode,
+      signal_state: signalState,
+      scenario_id: scenarioId,
+      queue_source: queueSource,
       fallback_used: fallbackUsed,
       rendererMode: viewport?.getAttribute("data-r3f-renderer-mode") ?? null,
       photorealStage: viewport?.getAttribute("data-r3f-photoreal-stage") ?? null,
       snapshotSource,
       frameBound,
       trafficDensityMode,
+      signalState,
+      scenarioId,
+      queueSource,
       fallbackUsed,
       visibleVehicleCount: Number(
         viewport?.getAttribute("data-r3f-visible-vehicle-count") ?? "0"
@@ -949,6 +968,17 @@ async function collectRendererProof(page) {
         : null,
       domProof: {
         viewport: readElementProof(viewport),
+        sourceOverlays: readElementProof(
+          document.querySelector('[data-testid="r3f-simulation-overlays"]')
+        ),
+        sourceBadges: {
+          simulation: readText('[data-testid="r3f-simulation-source-badge"]'),
+          snapshot: readText('[data-testid="r3f-snapshot-source-badge"]'),
+          trafficDensity: readText('[data-testid="r3f-traffic-density-mode-badge"]'),
+          signalState: readText('[data-testid="r3f-signal-state-badge"]'),
+          queueSource: readText('[data-testid="r3f-queue-source-badge"]'),
+          scenarioId: readText('[data-testid="r3f-scenario-id-badge"]')
+        },
         wrapper: readElementProof(document.querySelector(".r3f-simulation-canvas")),
         canvas: readElementProof(canvas),
         canvases: Array.from(document.querySelectorAll("canvas")).map((element) =>
@@ -957,6 +987,108 @@ async function collectRendererProof(page) {
       }
     };
   });
+}
+
+async function collectOverlayLayoutProof(page) {
+  return page.evaluate(() => {
+    const viewportRect = {
+      top: 0,
+      right: window.innerWidth,
+      bottom: window.innerHeight,
+      left: 0,
+      width: window.innerWidth,
+      height: window.innerHeight
+    };
+    const readRect = (element) => {
+      if (!element) return null;
+      const rect = element.getBoundingClientRect();
+
+      return {
+        x: Math.round(rect.x),
+        y: Math.round(rect.y),
+        width: Math.round(rect.width),
+        height: Math.round(rect.height),
+        top: Math.round(rect.top),
+        right: Math.round(rect.right),
+        bottom: Math.round(rect.bottom),
+        left: Math.round(rect.left)
+      };
+    };
+    const intersectRect = (left, right) => {
+      if (!left || !right) return null;
+      const x1 = Math.max(left.left, right.left);
+      const y1 = Math.max(left.top, right.top);
+      const x2 = Math.min(left.right, right.right);
+      const y2 = Math.min(left.bottom, right.bottom);
+      const width = Math.max(0, x2 - x1);
+      const height = Math.max(0, y2 - y1);
+
+      return {
+        x: Math.round(x1),
+        y: Math.round(y1),
+        width: Math.round(width),
+        height: Math.round(height),
+        top: Math.round(y1),
+        right: Math.round(x2),
+        bottom: Math.round(y2),
+        left: Math.round(x1)
+      };
+    };
+    const visibleInViewport = (rect, intersection) =>
+      Boolean(
+        rect &&
+          rect.width > 0 &&
+          rect.height > 0 &&
+          intersection &&
+          intersection.width > 0 &&
+          intersection.height > 0
+      );
+    const overlaps = (left, right) => {
+      if (!left || !right) return false;
+      return !(
+        left.right <= right.left ||
+        left.left >= right.right ||
+        left.bottom <= right.top ||
+        left.top >= right.bottom
+      );
+    };
+    const overlay = document.querySelector('[data-testid="r3f-simulation-overlays"]');
+    const safety = document.querySelector(".safety-command-banner");
+    const overlayRect = readRect(overlay);
+    const safetyRect = readRect(safety);
+    const overlayViewportIntersection = intersectRect(overlayRect, viewportRect);
+    const safetyViewportIntersection = intersectRect(safetyRect, viewportRect);
+
+    return {
+      viewportRect,
+      overlayVisible: visibleInViewport(overlayRect, overlayViewportIntersection),
+      safetyCopyVisible: visibleInViewport(safetyRect, safetyViewportIntersection),
+      overlayRect,
+      safetyRect,
+      overlayViewportIntersection,
+      safetyViewportIntersection,
+      overlapsSafetyCopy: overlaps(overlayRect, safetyRect)
+    };
+  });
+}
+
+async function scrollToOverlayProofRegion(page) {
+  await page.evaluate(() => {
+    const overlay = document.querySelector('[data-testid="r3f-simulation-overlays"]');
+    const safety = document.querySelector(".safety-command-banner");
+
+    if (!overlay || !safety) return;
+
+    const overlayRect = overlay.getBoundingClientRect();
+    const safetyRect = safety.getBoundingClientRect();
+    const currentScrollY = window.scrollY;
+    const top = currentScrollY + Math.min(overlayRect.top, safetyRect.top);
+    const bottom = currentScrollY + Math.max(overlayRect.bottom, safetyRect.bottom);
+    const wantedTop = Math.max(0, Math.min(top - 24, bottom - window.innerHeight + 24));
+
+    window.scrollTo({ top: wantedTop, left: 0, behavior: "instant" });
+  });
+  await page.waitForTimeout(400);
 }
 
 async function captureR3FCanvasPng(page, filePath, options = {}) {
@@ -1743,6 +1875,7 @@ async function runBrowserVerification(baseUrl) {
       ? analyzeCanvasComposition(desktopCanvasPng)
       : null;
     const rendererProof = await collectRendererProof(desktop.page);
+    const desktopLayout = await collectOverlayLayoutProof(desktop.page);
 
     details.renderer = {
       ...rendererProof,
@@ -1752,6 +1885,7 @@ async function runBrowserVerification(baseUrl) {
       viewport: desktopViewport,
       r3f_ready: desktopR3FReady,
       page_state: await collectPageState(desktop.page),
+      layout: desktopLayout,
       canvas_metrics: desktopMetrics,
       canvas_composition: desktopComposition,
       canvas_screenshot: await verifyScreenshotArtifact(
@@ -1784,6 +1918,13 @@ async function runBrowserVerification(baseUrl) {
       ? analyzeCanvasComposition(mobileCanvasPng)
       : null;
     const mobileLayout = await collectMobileLayoutProof(mobile.page);
+    await scrollToOverlayProofRegion(mobile.page);
+    const mobileOverlayLayout = await collectOverlayLayoutProof(mobile.page);
+    await mobile.page.screenshot({
+      path: mobileOverlayScreenshotPath,
+      fullPage: false,
+      scale: "css"
+    });
 
     details.mobile = {
       viewport: mobileViewport,
@@ -1791,14 +1932,44 @@ async function runBrowserVerification(baseUrl) {
       page_state: await collectPageState(mobile.page),
       canvas_metrics: mobileMetrics,
       canvas_composition: mobileComposition,
-      layout: mobileLayout,
+      layout: {
+        ...mobileLayout,
+        overlays: mobileOverlayLayout
+      },
       canvas_screenshot: await verifyScreenshotArtifact(
         mobileCanvasScreenshotPath,
         mobileViewport
       ),
-      screenshot: await verifyScreenshotArtifact(mobileScreenshotPath, mobileViewport)
+      screenshot: await verifyScreenshotArtifact(mobileScreenshotPath, mobileViewport),
+      overlay_screenshot: await verifyScreenshotArtifact(
+        mobileOverlayScreenshotPath,
+        mobileViewport
+      )
     };
     details.console_errors.push(...mobile.consoleErrors);
+
+    const densitySegmentQueue = await newRoutedPage(browser, desktopViewport, {
+      mutatePayloads: (payloads) => {
+        payloads.frame = {
+          ...payloads.frame,
+          queues: null
+        };
+      }
+    });
+    await gotoDashboard(densitySegmentQueue.page, baseUrl);
+    const densitySegmentR3FReady = await waitForR3F(densitySegmentQueue.page);
+    const densitySegmentRendererProof = await collectRendererProof(
+      densitySegmentQueue.page
+    );
+    details.queue_source_check = {
+      density_segment_without_frame_queues: {
+        r3f_ready: densitySegmentR3FReady,
+        queue_source: densitySegmentRendererProof.queue_source,
+        traffic_density_mode: densitySegmentRendererProof.traffic_density_mode,
+        badge: densitySegmentRendererProof.domProof?.sourceBadges?.queueSource ?? null
+      }
+    };
+    details.console_errors.push(...densitySegmentQueue.consoleErrors);
 
     const fallback = await newRoutedPage(browser, desktopViewport, {
       forceWebglOff: true
@@ -1827,10 +1998,13 @@ async function runBrowserVerification(baseUrl) {
 
     await desktop.context.close();
     await mobile.context.close();
+    await densitySegmentQueue.context.close();
     await fallback.context.close();
 
-    details.webgl_context_loss_errors = details.console_errors.filter((message) =>
-      /webgl.*context.*lost|context.*lost.*webgl/i.test(message)
+    details.webgl_context_loss_errors = details.console_errors.filter(
+      (message) =>
+        /webgl.*context.*lost|context.*lost.*webgl/i.test(message) &&
+        !isBenignWebglTeardownWarning(message)
     );
     details.console_failures = details.console_errors.filter(isBlockingConsoleMessage);
 
@@ -1858,6 +2032,12 @@ async function runBrowserVerification(baseUrl) {
 
 function isBlockingConsoleMessage(message) {
   return /^\[(error|pageerror)\]/i.test(message);
+}
+
+function isBenignWebglTeardownWarning(message) {
+  return /^\[warning\] WebGL: CONTEXT_LOST_WEBGL: loseContext: context lost$/i.test(
+    message
+  );
 }
 
 function screenshotMatchesViewport(screenshot, viewport) {
@@ -1956,6 +2136,50 @@ function addFinalAssertions() {
     `snapshot_source=${renderer.snapshot_source ?? "missing"}, frame_bound=${renderer.frame_bound ?? "missing"}, traffic_density_mode=${renderer.traffic_density_mode ?? "missing"}, fallback_used=${renderer.fallback_used ?? "missing"}`
   );
   addAssertion(
+    "R3F signal state badge reflects frame signals",
+    desktop.r3f_ready !== true ||
+      (
+        typeof renderer.signal_state === "string" &&
+        renderer.signal_state.includes("east:green") &&
+        renderer.signal_state.includes("north:red") &&
+        renderer.scenario_id === "emergency" &&
+        renderer.queue_source === "frame" &&
+        renderer.domProof?.sourceBadges?.signalState?.includes("east:green") &&
+        renderer.domProof?.sourceBadges?.signalState?.includes("north:red") &&
+        renderer.domProof?.sourceBadges?.queueSource?.includes("frame") &&
+        renderer.domProof?.sourceBadges?.scenarioId?.includes("emergency")
+    ),
+    `signal_state=${renderer.signal_state ?? "missing"}, scenario_id=${renderer.scenario_id ?? "missing"}, queue_source=${renderer.queue_source ?? "missing"}, badges=${JSON.stringify(renderer.domProof?.sourceBadges ?? null)}`
+  );
+  addAssertion(
+    "R3F queue source supports density segments without frame queues",
+    desktop.r3f_ready !== true ||
+      (
+        details.queue_source_check?.density_segment_without_frame_queues?.r3f_ready === true &&
+        details.queue_source_check?.density_segment_without_frame_queues?.queue_source ===
+          "density_segment" &&
+        details.queue_source_check?.density_segment_without_frame_queues
+          ?.traffic_density_mode === "density_segments" &&
+        details.queue_source_check?.density_segment_without_frame_queues?.badge?.includes(
+          "density_segment"
+        )
+      ),
+    JSON.stringify(details.queue_source_check?.density_segment_without_frame_queues ?? null)
+  );
+  addAssertion(
+    "operator source overlays are visible and clear of safety copy",
+    desktop.r3f_ready !== true ||
+      (
+        desktop.layout?.overlayVisible === true &&
+        desktop.layout?.safetyCopyVisible === true &&
+        desktop.layout?.overlapsSafetyCopy === false &&
+        mobile.layout?.overlays?.overlayVisible === true &&
+        mobile.layout?.overlays?.safetyCopyVisible === true &&
+        mobile.layout?.overlays?.overlapsSafetyCopy === false
+      ),
+    `desktop=${JSON.stringify(desktop.layout ?? null)}, mobile=${JSON.stringify(mobile.layout?.overlays ?? null)}`
+  );
+  addAssertion(
     "forced-WebGL-off fallback renders",
     fallback.r3fMounted === false &&
       fallback.fallbackCanvasVisible === true &&
@@ -2030,6 +2254,9 @@ function printReport() {
   }
   if (details.mobile?.canvas_screenshot?.exists) {
     console.log(`- ${details.artifacts.mobile_canvas}`);
+  }
+  if (details.mobile?.overlay_screenshot?.exists) {
+    console.log(`- ${details.artifacts.mobile_overlays}`);
   }
   if (details.fallback?.screenshot?.exists) {
     console.log(`- ${details.artifacts.webgl_off_fallback}`);

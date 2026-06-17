@@ -7,6 +7,7 @@ import type { SceneSnapshot } from "./buildSceneSnapshot";
 import { ApproachCorridors } from "./ApproachCorridors";
 import { LightingRig } from "./LightingRig";
 import { ProceduralIntersection } from "./ProceduralIntersection";
+import { SignalHardware } from "./SignalHardware";
 import { Stage5SceneAssets } from "./Stage5SceneAssets";
 import { getStage5CameraForAspect } from "./roadGeometry";
 import { TrafficDensityLayer } from "./TrafficDensityLayer";
@@ -27,6 +28,7 @@ export function SimulationScene({
       <Suspense fallback={null}>
         <Stage5SceneAssets />
       </Suspense>
+      <SignalHardware signals={sceneSnapshot.signals} />
       <TrafficDensityLayer sceneSnapshot={sceneSnapshot} />
     </group>
   );

@@ -230,6 +230,12 @@ const frameSnapshot: SimulationFrameSnapshot = {
       direction: "east",
       state: "green",
       seconds_remaining: 18
+    },
+    {
+      signal_id: "north-main",
+      direction: "north",
+      state: "red",
+      seconds_remaining: 42
     }
   ],
   queues: status.queues,
@@ -1065,6 +1071,15 @@ describe("DashboardShell", () => {
     expect(viewport.getAttribute("data-r3f-snapshot-source")).toBe("simulation_snapshot_fixture");
     expect(viewport.getAttribute("data-r3f-frame-bound")).toBe("true");
     expect(viewport.getAttribute("data-r3f-traffic-density-mode")).toBe("density_segments");
+    expect(viewport.getAttribute("data-r3f-signal-state")).toBe("east:green,north:red");
+    expect(viewport.getAttribute("data-r3f-scenario-id")).toBe("emergency");
+    expect(viewport.getAttribute("data-r3f-queue-source")).toBe("frame");
+    expect(screen.getByTestId("r3f-simulation-overlays")).toBeTruthy();
+    expect(screen.getByTestId("r3f-signal-state-badge").textContent).toContain(
+      "east:green,north:red"
+    );
+    expect(screen.getByTestId("r3f-queue-source-badge").textContent).toContain("frame");
+    expect(screen.getByTestId("r3f-scenario-id-badge").textContent).toContain("emergency");
     expect(
       Number(viewport.getAttribute("data-r3f-visible-vehicle-count"))
     ).toBeGreaterThan(0);
@@ -1084,9 +1099,53 @@ describe("DashboardShell", () => {
     expect(viewport.getAttribute("data-r3f-snapshot-source")).toBe("simulation_snapshot_fixture");
     expect(viewport.getAttribute("data-r3f-frame-bound")).toBeNull();
     expect(viewport.getAttribute("data-r3f-traffic-density-mode")).toBe("fixture_queues");
+    expect(viewport.getAttribute("data-r3f-signal-state")).toBe("unavailable");
+    expect(viewport.getAttribute("data-r3f-queue-source")).toBe("fixture_fallback");
+    expect(screen.getByTestId("r3f-signal-state-badge").textContent).toContain("unavailable");
     expect(
       Number(viewport.getAttribute("data-r3f-visible-vehicle-count"))
     ).toBeGreaterThanOrEqual(STAGE5_MIN_VISIBLE_VEHICLES);
+  });
+
+  test("marks empty frame signals as unavailable instead of inventing signal states", async () => {
+    vi.stubEnv("NEXT_PUBLIC_R3F_SIMULATION_ENABLED", "true");
+    mockWebGLSupport(true);
+
+    renderDashboard({
+      simulationFrame: {
+        ...frameSnapshot,
+        signals: [],
+        density_segments: []
+      }
+    });
+
+    const viewport = await screen.findByTestId("r3f-simulation-viewport");
+
+    expect(viewport.getAttribute("data-r3f-frame-bound")).toBe("true");
+    expect(viewport.getAttribute("data-r3f-signal-state")).toBe("unavailable");
+    expect(viewport.getAttribute("data-r3f-queue-source")).toBe("frame");
+    expect(screen.getByTestId("r3f-signal-state-badge").textContent).toContain("unavailable");
+  });
+
+  test("marks queue source as density segment when frame queues are not valid", async () => {
+    vi.stubEnv("NEXT_PUBLIC_R3F_SIMULATION_ENABLED", "true");
+    mockWebGLSupport(true);
+
+    renderDashboard({
+      simulationFrame: {
+        ...frameSnapshot,
+        queues: null
+      } as unknown as SimulationFrameSnapshot
+    });
+
+    const viewport = await screen.findByTestId("r3f-simulation-viewport");
+
+    expect(viewport.getAttribute("data-r3f-frame-bound")).toBe("true");
+    expect(viewport.getAttribute("data-r3f-traffic-density-mode")).toBe("density_segments");
+    expect(viewport.getAttribute("data-r3f-queue-source")).toBe("density_segment");
+    expect(screen.getByTestId("r3f-queue-source-badge").textContent).toContain(
+      "density_segment"
+    );
   });
 
   test("exposes Stage 3 corridor lengths in meters outside the canvas", async () => {
