@@ -1,0 +1,52 @@
+name: R3F Dashboard Verify
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  verify:
+    name: R3F dashboard verification
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Install Playwright Chromium
+        run: npx --no-install playwright install --with-deps chromium
+
+      - name: Install API dependencies
+        run: |
+          python -m venv apps/api/.venv
+          apps/api/.venv/bin/python -m pip install --upgrade pip
+          apps/api/.venv/bin/python -m pip install -e "apps/api[dev,ai]"
+
+      - name: Run API tests
+        run: npm run test:api
+
+      - name: Run web tests
+        run: npm run test:web
+
+      - name: Build web app
+        run: npm run build:web
+
+      - name: Verify R3F assets
+        run: npm run verify:r3f-assets
+
+      - name: Verify R3F dashboard browser proof
+        run: npm run verify:r3f-dashboard

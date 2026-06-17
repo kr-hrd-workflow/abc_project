@@ -66,7 +66,19 @@ apps/web/public/unity/TemplateData/...
 
 Keep the safety copy visible: this is a digital twin and operator decision-support surface. It does not control real traffic signals and it is not a live CCTV feed.
 
-## 4. Production deployment checklist
+## 4. Local quality gate
+
+Run the normal local quality gate before release or handoff:
+
+```bash
+npm run verify
+```
+
+`npm run verify` runs API tests, web tests, the web build, R3F asset proof, R3F dashboard browser proof, and `git diff --check`.
+
+The checked-in R3F dashboard workflow runs the same test/build/proof commands for `push` and `pull_request`. Branch protection, required-check settings, and CodeQL configuration are external GitHub settings and are not changed by this workflow.
+
+## 5. Production deployment checklist
 
 1. Set environment variables in the hosting platform:
    - `DATABASE_URL`
@@ -85,8 +97,9 @@ Keep the safety copy visible: this is a digital twin and operator decision-suppo
    - `npm run test:api`
    - `npm run test:web`
    - `npm run build:web`
+   - `npm run verify`
 
-## 5. Safety boundaries
+## 6. Safety boundaries
 
 - The UI may recommend an operator action, but it never directly changes a real signal controller.
 - The dashboard renderer is presentation/digital-twin visualization unless an approved external simulator stream is configured.

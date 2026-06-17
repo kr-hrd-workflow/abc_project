@@ -2236,6 +2236,37 @@ async function writeDetails() {
   await writeFile(detailsPath, `${JSON.stringify(details, null, 2)}\n`, "utf8");
 }
 
+async function assertReportedArtifactsExistAfterSuccess() {
+  if (failures.length > 0) {
+    return false;
+  }
+
+  const missingArtifacts = [];
+
+  for (const [artifactName, artifactPath] of Object.entries(details.artifacts)) {
+    if (typeof artifactPath !== "string" || artifactPath.length === 0) {
+      missingArtifacts.push(`${artifactName}: missing artifact path`);
+      continue;
+    }
+
+    const localPath = path.resolve(repoRoot, artifactPath);
+
+    if (!(await pathExists(localPath))) {
+      missingArtifacts.push(`${artifactName}: ${artifactPath}`);
+    }
+  }
+
+  addAssertion(
+    "all reported proof artifacts exist",
+    missingArtifacts.length === 0,
+    missingArtifacts.length === 0
+      ? Object.values(details.artifacts).join(", ")
+      : `missing ${missingArtifacts.join(", ")}`
+  );
+
+  return true;
+}
+
 function printReport() {
   if (failures.length === 0) {
     console.log("R3F dashboard verification passed.");
@@ -2291,6 +2322,9 @@ async function main() {
       await server.stop();
     }
     await writeDetails();
+    if (await assertReportedArtifactsExistAfterSuccess()) {
+      await writeDetails();
+    }
     printReport();
   }
 

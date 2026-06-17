@@ -180,8 +180,12 @@ npm run verify
 npm run test:api
 npm run test:web
 npm run build:web
+npm run verify:r3f-assets
+npm run verify:r3f-dashboard
 git diff --check
 ```
+
+`npm run verify` is the normal local quality gate. It includes the R3F asset proof (`npm run verify:r3f-assets`) and the R3F dashboard browser proof (`npm run verify:r3f-dashboard`) before the final whitespace diff check.
 
 개별 검증:
 
@@ -189,6 +193,8 @@ git diff --check
 npm run test:api
 npm run test:web
 npm run build:web
+npm run verify:r3f-assets
+npm run verify:r3f-dashboard
 npm run runtime:readiness
 npm run runtime:readiness:strict
 ```
