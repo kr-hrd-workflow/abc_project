@@ -627,7 +627,7 @@ Reviewer 2: visual/code-quality risk
 
 If any reviewer says `CHANGES_REQUESTED`, send the issue back to the owning worker and repeat review. Continue this loop until both reviewers approve or a real blocker is documented.
 
-- [ ] **Step 1: Tighten the asset realism contract**
+- [x] **Step 1: Tighten the asset realism contract**
 
 Extend the asset manifest and verifier so Stage 4.1 has a measurable realism bar beyond file existence:
 
@@ -657,7 +657,11 @@ fail if Stage 4.1 proof images are missing
 
 Keep budgets practical for web delivery. Raising triangle budgets is allowed only when the updated manifest still keeps first-pass GLB + texture payload under the Stage 5 25 MB guardrail.
 
-- [ ] **Step 2: Upgrade vehicle GLBs**
+Stage 4.1 evidence captured 2026-06-17:
+- `scripts/verify-r3f-assets.mjs` now requires `realismStatus="stage4_1_ready"`, `visualRejectIfToyLike=true`, vehicle/prop/texture detail metadata, banned GLB node/material name checks, near-vehicle realism floor, far LOD triangle ordering, required proof PNGs, and a 25 MB first-pass GLB + texture payload guardrail.
+- `node scripts/verify-r3f-assets.mjs` passed with current payload `9.62 MB / 25.00 MB` after proof regeneration.
+
+- [x] **Step 2: Upgrade vehicle GLBs**
 
 Replace primitive vehicle bodies with more believable shipped GLBs for:
 
@@ -702,7 +706,12 @@ node scripts/verify-r3f-assets.mjs
 
 Expected: verifier passes or fails only on known non-vehicle Stage 4.1 work still pending. No vehicle realism metadata or GLB budget failures.
 
-- [ ] **Step 3: Upgrade street furniture, signals, and curb props**
+Stage 4.1 vehicle evidence captured 2026-06-17:
+- Replaced all 11 vehicle GLBs with higher-detail project-authored GLBs carrying named wheels, hubs, glass, lights, panel breaks, front/rear cues, and required type-specific cues.
+- Final vehicle GLB examples: `passenger_car_near` 13,664 tris / 1.09 MB, `taxi_near` 14,396 tris / 1.17 MB, `bus_near` 10,044 tris / 684.2 KB, `truck_near` 12,108 tris / 869.9 KB, `emergency_ambulance_near` 10,356 tris / 816.4 KB.
+- Vehicle manifest entries now include Stage 4.1 realism metadata and updated triangle/file-size budgets.
+
+- [x] **Step 3: Upgrade street furniture, signals, and curb props**
 
 Upgrade prop GLBs:
 
@@ -734,7 +743,12 @@ node scripts/verify-r3f-assets.mjs
 
 Expected: no prop realism metadata or GLB budget failures.
 
-- [ ] **Step 4: Upgrade texture/decal realism**
+Stage 4.1 prop evidence captured 2026-06-17:
+- Replaced all 5 prop GLBs with more legible infrastructure assets: brighter signal mast/arm/base details, separated signal heads/lenses/hoods, streetlight emitter geometry, multi-tree cluster with visible trunks/branches/canopies, and curb details with drain, bollards, chips, pavers, seams, and grime geometry.
+- Final prop GLB examples: `traffic_signal_pole` 968 tris / 50.5 KB, `traffic_signal_heads` 684 tris / 53.5 KB, `streetlight` 760 tris / 37.4 KB, `tree_cluster` 2,344 tris / 75.5 KB, `curb_details` 1,000 tris / 66.7 KB.
+- Prop manifest entries now include Stage 4.1 `scaleReferenceMeters`, `functionalParts`, realism notes, and updated triangle/file-size metadata.
+
+- [x] **Step 4: Upgrade texture/decal realism**
 
 Upgrade runtime maps so they can support realistic Stage 5 materials:
 
@@ -758,7 +772,11 @@ node scripts/verify-r3f-assets.mjs
 
 Expected: verifier passes for texture dimensions, budgets, source/license/provenance, and Stage 4.1 realism metadata.
 
-- [ ] **Step 5: Generate asset proof images from actual assets**
+Stage 4.1 texture/decal evidence captured 2026-06-17:
+- Regenerated all 7 runtime texture/decal files with project-authored deterministic `sharp` routines and recorded Image Gen as non-runtime material direction only in `apps/web/public/simulation/r3f/assets/textures/PROVENANCE.md`.
+- Texture/decal manifest entries now include `realismStatus="stage4_1_ready"`, `visualRejectIfToyLike=true`, feature lists, dimensions, file sizes, and provenance.
+
+- [x] **Step 5: Generate asset proof images from actual assets**
 
 Create proof artifacts from the actual shipped files, not invented illustrations:
 
@@ -789,7 +807,12 @@ textures are blank, overly clean, or purely procedural-looking from normal viewi
 labels overlap or are unreadable
 ```
 
-- [ ] **Step 6: Stage 4.1 visual review gate**
+Stage 4.1 proof evidence captured 2026-06-17:
+- Created `artifacts/r3f-stage4.1-asset-realism-contact-sheet.png` from current shipped GLBs/textures: 3200x3040, 1,401,695 bytes.
+- Created `artifacts/r3f-stage4.1-glb-turntable-contact-sheet.png` from current shipped GLBs: 3200x2288, 1,010,927 bytes.
+- Proof images use deterministic software projection of parsed GLB triangle geometry and actual runtime texture/decal thumbnails. They include verifier status, labels, triangle/file-size or texture-dimension/file-size metadata, and the required asset-proof-only note.
+
+- [x] **Step 6: Stage 4.1 visual review gate**
 
 Primary agent and reviewers must inspect the proof artifacts before completion.
 
@@ -806,7 +829,12 @@ no placeholder/blockout/proxy/toy-like visual remains in the Stage 4.1 proof ima
 
 If any item fails, do not proceed to Stage 5. Return to the owning worker, fix the concrete asset issue, regenerate proof images, and repeat review.
 
-- [ ] **Step 7: Documentation and validation**
+Stage 4.1 review evidence captured 2026-06-17:
+- Fresh spec-compliance reviewer approved after vehicle/prop fixes, technote update, plan evidence update, and proof regeneration.
+- Fresh visual/code-quality reviewer approved after inspecting refreshed proof images and independently running `node scripts/verify-r3f-assets.mjs`.
+- Primary visual inspection confirmed the regenerated proof images no longer show the earlier single-sphere tree, unreadable dark prop massing, or very low-detail blockout vehicle proof.
+
+- [x] **Step 7: Documentation and validation**
 
 Update `docs/technotes/r3f-photoreal-dashboard-renderer.md` with:
 
@@ -840,6 +868,14 @@ spec-compliance reviewer approves
 visual/code-quality reviewer approves
 Stage 4.1 checkboxes are updated with evidence
 ```
+
+Final Stage 4.1 validation captured 2026-06-17:
+- `node scripts/verify-r3f-assets.mjs` passed with hardened Stage 4.1 checks and payload `9.62 MB / 25.00 MB`.
+- `npm --workspace apps/web run test -- components/DashboardShell.test.tsx` passed: 1 test file, 49 tests.
+- `npm run build:web` passed with Next.js production build.
+- `git diff --check` passed; Git printed LF-to-CRLF working-copy warnings only.
+- Spec-compliance reviewer verdict: `APPROVED`.
+- Visual/code-quality reviewer verdict: `APPROVED`.
 
 Blocked-stop condition:
 

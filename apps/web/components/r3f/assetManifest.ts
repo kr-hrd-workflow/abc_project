@@ -4,6 +4,28 @@ export type R3FAssetKind = "vehicle" | "prop" | "texture" | "decal";
 export type R3FAssetLod = "hero" | "near" | "medium" | "far" | "material" | "decal";
 export type R3FAssetPath = `/simulation/r3f/assets/${string}`;
 export type R3FAssetId = keyof typeof manifestJson & string;
+export type R3FAssetRealismStatus = "stage4_1_ready";
+
+export type R3FAssetDetails = {
+  readonly wheels?: number;
+  readonly glassSurfaces?: number;
+  readonly lightEmitters?: number;
+  readonly bodyPanelBreaks?: number;
+  readonly mirrors?: boolean;
+  readonly mirrorReason?: string;
+  readonly frontRearDistinction?: boolean;
+  readonly normalizedPivot?: string;
+  readonly groundContact?: boolean;
+  readonly scaleReferenceMeters?: Readonly<Record<string, number>>;
+  readonly functionalParts?: readonly string[];
+  readonly materialFeatures?: readonly string[];
+  readonly decalFeatures?: readonly string[];
+  readonly provenance?: string;
+  readonly dimensions?: string;
+  readonly triangleCount?: number;
+  readonly fileSizeBytes?: number;
+  readonly [detailKey: string]: unknown;
+};
 
 export type R3FAssetEntry = {
   readonly id: R3FAssetId;
@@ -17,6 +39,10 @@ export type R3FAssetEntry = {
   readonly maxTextureSize: number;
   readonly maxTriangles: number;
   readonly maxFileSizeBytes: number;
+  readonly realismStatus?: R3FAssetRealismStatus;
+  readonly visualRejectIfToyLike?: boolean;
+  readonly realisticSilhouette?: boolean;
+  readonly details?: R3FAssetDetails;
   readonly lodGroup?: string;
   readonly lowerDetailId?: R3FAssetId;
   readonly densityEligible?: boolean;

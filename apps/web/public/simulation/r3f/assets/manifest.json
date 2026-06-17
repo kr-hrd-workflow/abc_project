@@ -11,8 +11,32 @@
     "lodGroup": "passenger_car",
     "lowerDetailId": "vehicles/passenger_car_medium",
     "maxTextureSize": 1024,
-    "maxTriangles": 10000,
-    "maxFileSizeBytes": 1200000
+    "maxTriangles": 16000,
+    "maxFileSizeBytes": 1200000,
+    "realisticSilhouette": true,
+    "realismStatus": "stage4_1_ready",
+    "visualRejectIfToyLike": true,
+    "details": {
+      "wheels": 4,
+      "glassSurfaces": 6,
+      "lightEmitters": 4,
+      "bodyPanelBreaks": 12,
+      "mirrors": true,
+      "frontRearDistinction": true,
+      "normalizedPivot": "vehicle_centerline_ground_contact_meters",
+      "groundContact": true,
+      "wheelAndHubMaterials": "separate dark tire rubber and lighter hub material",
+      "glassTreatment": "separate windshield, rear, and side window glass nodes",
+      "lodRealismNotes": "near sedan now uses rounded body panels, wheel-arch trim, bumpers, grille, plates, door handles, pillars, mirrors, and separate hood/trunk/door seams",
+      "typeSpecificCues": [
+        "rounded sedan body panels",
+        "front grille and license plates",
+        "door handles and side mirrors",
+        "wheel arch trim"
+      ],
+      "triangleCount": 13664,
+      "fileSizeBytes": 1147480
+    }
   },
   "vehicles/passenger_car_medium": {
     "id": "vehicles/passenger_car_medium",
@@ -26,8 +50,32 @@
     "lodGroup": "passenger_car",
     "lowerDetailId": "vehicles/passenger_car_far",
     "maxTextureSize": 1024,
-    "maxTriangles": 4500,
-    "maxFileSizeBytes": 750000
+    "maxTriangles": 12000,
+    "maxFileSizeBytes": 1000000,
+    "realisticSilhouette": true,
+    "realismStatus": "stage4_1_ready",
+    "visualRejectIfToyLike": true,
+    "details": {
+      "wheels": 4,
+      "glassSurfaces": 6,
+      "lightEmitters": 4,
+      "bodyPanelBreaks": 11,
+      "mirrors": true,
+      "frontRearDistinction": true,
+      "normalizedPivot": "vehicle_centerline_ground_contact_meters",
+      "groundContact": true,
+      "wheelAndHubMaterials": "separate dark tire rubber and lighter hub material",
+      "glassTreatment": "windshield, rear glass, and side glass retained for medium LOD",
+      "lodRealismNotes": "medium sedan retains rounded body panels, wheel arches, glass, grille, lights, plates, door seams, and handles while reducing wheel/corner segments",
+      "typeSpecificCues": [
+        "rounded sedan silhouette",
+        "front grille",
+        "wheel arch trim",
+        "reduced detail real traffic LOD"
+      ],
+      "triangleCount": 10536,
+      "fileSizeBytes": 900772
+    }
   },
   "vehicles/passenger_car_far": {
     "id": "vehicles/passenger_car_far",
@@ -41,8 +89,37 @@
     "lodGroup": "passenger_car",
     "densityEligible": true,
     "maxTextureSize": 512,
-    "maxTriangles": 900,
-    "maxFileSizeBytes": 300000
+    "maxTriangles": 7000,
+    "maxFileSizeBytes": 550000,
+    "realisticSilhouette": true,
+    "realismStatus": "stage4_1_ready",
+    "visualRejectIfToyLike": true,
+    "details": {
+      "wheels": 4,
+      "glassSurfaces": 4,
+      "lightEmitters": 4,
+      "bodyPanelBreaks": 5,
+      "mirrors": false,
+      "frontRearDistinction": true,
+      "normalizedPivot": "vehicle_centerline_ground_contact_meters",
+      "groundContact": true,
+      "wheelAndHubMaterials": "separate dark tire rubber and lighter hub material",
+      "glassTreatment": "front and rear glass blocks remain visible at distance",
+      "lodRealismNotes": "far sedan keeps rounded traffic-scale body, cabin, side glass bands, wheels, arch trim, grille, plates, headlights, and taillights",
+      "typeSpecificCues": [
+        "rounded sedan massing",
+        "side glass bands",
+        "wheel arch trim"
+      ],
+      "triangleCount": 5816,
+      "fileSizeBytes": 496616,
+      "mirrorReason": "far LOD omits mirrors to keep corridor density payload low",
+      "farBlocks": [
+        "four wheel cylinders",
+        "front and rear glass",
+        "headlight and taillight color blocks"
+      ]
+    }
   },
   "vehicles/taxi_near": {
     "id": "vehicles/taxi_near",
@@ -56,8 +133,32 @@
     "lodGroup": "taxi",
     "lowerDetailId": "vehicles/taxi_far",
     "maxTextureSize": 1024,
-    "maxTriangles": 10000,
-    "maxFileSizeBytes": 1200000
+    "maxTriangles": 16000,
+    "maxFileSizeBytes": 1350000,
+    "realisticSilhouette": true,
+    "realismStatus": "stage4_1_ready",
+    "visualRejectIfToyLike": true,
+    "details": {
+      "wheels": 4,
+      "glassSurfaces": 6,
+      "lightEmitters": 5,
+      "bodyPanelBreaks": 14,
+      "mirrors": true,
+      "frontRearDistinction": true,
+      "normalizedPivot": "vehicle_centerline_ground_contact_meters",
+      "groundContact": true,
+      "wheelAndHubMaterials": "separate dark tire rubber and lighter hub material",
+      "glassTreatment": "separate windshield, rear, and side window glass nodes",
+      "lodRealismNotes": "near taxi now uses rounded sedan panels plus roof sign, checker belts, wheel arches, mirrors, handles, grille, bumpers, plates, and door seams",
+      "typeSpecificCues": [
+        "illuminated roof sign",
+        "checker side belt",
+        "rounded taxi sedan body",
+        "wheel arch trim"
+      ],
+      "triangleCount": 14396,
+      "fileSizeBytes": 1221976
+    }
   },
   "vehicles/taxi_far": {
     "id": "vehicles/taxi_far",
@@ -71,8 +172,38 @@
     "lodGroup": "taxi",
     "densityEligible": true,
     "maxTextureSize": 512,
-    "maxTriangles": 900,
-    "maxFileSizeBytes": 300000
+    "maxTriangles": 7000,
+    "maxFileSizeBytes": 650000,
+    "realisticSilhouette": true,
+    "realismStatus": "stage4_1_ready",
+    "visualRejectIfToyLike": true,
+    "details": {
+      "wheels": 4,
+      "glassSurfaces": 4,
+      "lightEmitters": 5,
+      "bodyPanelBreaks": 6,
+      "mirrors": false,
+      "frontRearDistinction": true,
+      "normalizedPivot": "vehicle_centerline_ground_contact_meters",
+      "groundContact": true,
+      "wheelAndHubMaterials": "separate dark tire rubber and lighter hub material",
+      "glassTreatment": "front and rear glass blocks remain visible at distance",
+      "lodRealismNotes": "far taxi keeps rounded sedan massing, roof sign, side glass bands, wheels, arch trim, light blocks, and yellow taxi color cue",
+      "typeSpecificCues": [
+        "roof taxi sign",
+        "yellow body cue",
+        "rounded traffic-scale taxi"
+      ],
+      "triangleCount": 6548,
+      "fileSizeBytes": 571304,
+      "mirrorReason": "far LOD omits mirrors to keep corridor density payload low",
+      "farBlocks": [
+        "four wheel cylinders",
+        "front and rear glass",
+        "headlight and taillight color blocks",
+        "roof sign"
+      ]
+    }
   },
   "vehicles/bus_near": {
     "id": "vehicles/bus_near",
@@ -87,7 +218,33 @@
     "lowerDetailId": "vehicles/bus_far",
     "maxTextureSize": 1024,
     "maxTriangles": 14000,
-    "maxFileSizeBytes": 1500000
+    "maxFileSizeBytes": 1500000,
+    "realisticSilhouette": true,
+    "realismStatus": "stage4_1_ready",
+    "visualRejectIfToyLike": true,
+    "details": {
+      "wheels": 6,
+      "glassSurfaces": 18,
+      "lightEmitters": 6,
+      "bodyPanelBreaks": 14,
+      "mirrors": true,
+      "frontRearDistinction": true,
+      "normalizedPivot": "vehicle_centerline_ground_contact_meters",
+      "groundContact": true,
+      "wheelAndHubMaterials": "separate dark tire rubber and lighter hub material",
+      "glassTreatment": "long side window rows plus front and rear glass",
+      "lodRealismNotes": "near bus uses rounded long transit body, front driver windshield, route display, individual side window row, side doors, roof HVAC/hatches, bumpers, wheel arches, rear details, and six wheels",
+      "typeSpecificCues": [
+        "large rounded bus massing",
+        "front driver windshield",
+        "side window row",
+        "route display",
+        "roof HVAC and hatches",
+        "front and rear doors"
+      ],
+      "triangleCount": 10044,
+      "fileSizeBytes": 700664
+    }
   },
   "vehicles/bus_far": {
     "id": "vehicles/bus_far",
@@ -101,8 +258,38 @@
     "lodGroup": "bus",
     "densityEligible": true,
     "maxTextureSize": 512,
-    "maxTriangles": 1200,
-    "maxFileSizeBytes": 350000
+    "maxTriangles": 6000,
+    "maxFileSizeBytes": 500000,
+    "realisticSilhouette": true,
+    "realismStatus": "stage4_1_ready",
+    "visualRejectIfToyLike": true,
+    "details": {
+      "wheels": 4,
+      "glassSurfaces": 8,
+      "lightEmitters": 5,
+      "bodyPanelBreaks": 6,
+      "mirrors": false,
+      "frontRearDistinction": true,
+      "normalizedPivot": "vehicle_centerline_ground_contact_meters",
+      "groundContact": true,
+      "wheelAndHubMaterials": "separate dark tire rubber and lighter hub material",
+      "glassTreatment": "side window bands plus front and rear glass blocks",
+      "lodRealismNotes": "far bus remains traffic-believable with rounded long massing, route display, window bands, roof equipment, wheels, bumpers, and light blocks",
+      "typeSpecificCues": [
+        "long rounded transit body",
+        "side glass bands",
+        "route display",
+        "roof equipment"
+      ],
+      "triangleCount": 5212,
+      "fileSizeBytes": 430784,
+      "mirrorReason": "far LOD omits mirrors to preserve long-corridor density budget",
+      "farBlocks": [
+        "four wheel cylinders",
+        "window row bands",
+        "headlight and taillight color blocks"
+      ]
+    }
   },
   "vehicles/truck_near": {
     "id": "vehicles/truck_near",
@@ -117,7 +304,32 @@
     "lowerDetailId": "vehicles/truck_far",
     "maxTextureSize": 1024,
     "maxTriangles": 13000,
-    "maxFileSizeBytes": 1400000
+    "maxFileSizeBytes": 1400000,
+    "realisticSilhouette": true,
+    "realismStatus": "stage4_1_ready",
+    "visualRejectIfToyLike": true,
+    "details": {
+      "wheels": 6,
+      "glassSurfaces": 3,
+      "lightEmitters": 6,
+      "bodyPanelBreaks": 12,
+      "mirrors": true,
+      "frontRearDistinction": true,
+      "normalizedPivot": "vehicle_centerline_ground_contact_meters",
+      "groundContact": true,
+      "wheelAndHubMaterials": "separate dark tire rubber and lighter hub material",
+      "glassTreatment": "cab windshield and side glass nodes",
+      "lodRealismNotes": "near truck separates rounded cab, hood, chassis gap, and cargo box; adds windshield, side windows, grille, mirrors, step boards, cargo ribs, rear doors, reflectors, mudguards, and wheel arches",
+      "typeSpecificCues": [
+        "separate cab and cargo body",
+        "front grille and mirrors",
+        "cargo side ribs",
+        "rear cargo doors and reflectors",
+        "step boards and wheel arches"
+      ],
+      "triangleCount": 12108,
+      "fileSizeBytes": 890804
+    }
   },
   "vehicles/truck_far": {
     "id": "vehicles/truck_far",
@@ -131,8 +343,37 @@
     "lodGroup": "truck",
     "densityEligible": true,
     "maxTextureSize": 512,
-    "maxTriangles": 1200,
-    "maxFileSizeBytes": 350000
+    "maxTriangles": 6500,
+    "maxFileSizeBytes": 550000,
+    "realisticSilhouette": true,
+    "realismStatus": "stage4_1_ready",
+    "visualRejectIfToyLike": true,
+    "details": {
+      "wheels": 4,
+      "glassSurfaces": 2,
+      "lightEmitters": 6,
+      "bodyPanelBreaks": 6,
+      "mirrors": false,
+      "frontRearDistinction": true,
+      "normalizedPivot": "vehicle_centerline_ground_contact_meters",
+      "groundContact": true,
+      "wheelAndHubMaterials": "separate dark tire rubber and lighter hub material",
+      "glassTreatment": "cab windshield and side glass band retained",
+      "lodRealismNotes": "far truck keeps readable cab/cargo separation, rounded cargo body, windshield, side glass band, grille, wheels, lights, rear door cue, and reflectors",
+      "typeSpecificCues": [
+        "cab cargo separation",
+        "rounded box cargo body",
+        "rear reflectors"
+      ],
+      "triangleCount": 5668,
+      "fileSizeBytes": 473728,
+      "mirrorReason": "far LOD omits mirrors to keep corridor density payload low",
+      "farBlocks": [
+        "four wheel cylinders",
+        "cab glass band",
+        "headlight and taillight color blocks"
+      ]
+    }
   },
   "vehicles/emergency_ambulance_near": {
     "id": "vehicles/emergency_ambulance_near",
@@ -147,7 +388,32 @@
     "lowerDetailId": "vehicles/emergency_ambulance_medium",
     "maxTextureSize": 1024,
     "maxTriangles": 12000,
-    "maxFileSizeBytes": 1300000
+    "maxFileSizeBytes": 1300000,
+    "realisticSilhouette": true,
+    "realismStatus": "stage4_1_ready",
+    "visualRejectIfToyLike": true,
+    "details": {
+      "wheels": 4,
+      "glassSurfaces": 5,
+      "lightEmitters": 6,
+      "bodyPanelBreaks": 10,
+      "mirrors": true,
+      "frontRearDistinction": true,
+      "normalizedPivot": "vehicle_centerline_ground_contact_meters",
+      "groundContact": true,
+      "wheelAndHubMaterials": "separate dark tire rubber and lighter hub material",
+      "glassTreatment": "cab windshield and side glass nodes",
+      "lodRealismNotes": "near ambulance keeps white medical box and emergency markings while adding rounded cab/body panels, service window, side/rear door seams, roof hatch, mirrors, grille, step boards, lightbar, wheel arches, and rear cross",
+      "typeSpecificCues": [
+        "red side stripe",
+        "rear red cross",
+        "red and blue roof lightbar",
+        "rounded ambulance cab and medical box",
+        "side service window and door seams"
+      ],
+      "triangleCount": 10356,
+      "fileSizeBytes": 835976
+    }
   },
   "vehicles/emergency_ambulance_medium": {
     "id": "vehicles/emergency_ambulance_medium",
@@ -161,8 +427,33 @@
     "lodGroup": "emergency_ambulance",
     "densityEligible": true,
     "maxTextureSize": 1024,
-    "maxTriangles": 4500,
-    "maxFileSizeBytes": 700000
+    "maxTriangles": 6500,
+    "maxFileSizeBytes": 700000,
+    "realisticSilhouette": true,
+    "realismStatus": "stage4_1_ready",
+    "visualRejectIfToyLike": true,
+    "details": {
+      "wheels": 4,
+      "glassSurfaces": 5,
+      "lightEmitters": 6,
+      "bodyPanelBreaks": 9,
+      "mirrors": false,
+      "frontRearDistinction": true,
+      "normalizedPivot": "vehicle_centerline_ground_contact_meters",
+      "groundContact": true,
+      "wheelAndHubMaterials": "separate dark tire rubber and lighter hub material",
+      "glassTreatment": "cab windshield and side glass nodes retained",
+      "lodRealismNotes": "medium ambulance keeps rounded cab/body panels, red markings, lightbar, service window, side/rear door seams, roof hatch, wheels, glass, and light blocks",
+      "typeSpecificCues": [
+        "red side stripe",
+        "rear red cross",
+        "red and blue roof lightbar",
+        "rounded ambulance silhouette"
+      ],
+      "triangleCount": 5940,
+      "fileSizeBytes": 489488,
+      "mirrorReason": "medium ambulance LOD intentionally omits mirrors while preserving emergency markings and lightbar"
+    }
   },
   "props/traffic_signal_pole": {
     "id": "props/traffic_signal_pole",
@@ -175,7 +466,44 @@
     "lod": "hero",
     "maxTextureSize": 1024,
     "maxTriangles": 2500,
-    "maxFileSizeBytes": 450000
+    "maxFileSizeBytes": 450000,
+    "realisticSilhouette": true,
+    "realismStatus": "stage4_1_ready",
+    "visualRejectIfToyLike": true,
+    "details": {
+      "scaleReferenceMeters": {
+        "mastHeight": 5.9,
+        "overRoadArmSpan": 5.1,
+        "footingDiameter": 1.16,
+        "serviceHatchHeight": 0.62
+      },
+      "functionalParts": [
+        "bright grounded vertical mast",
+        "bright over-road mast arm",
+        "readable diagonal truss brace",
+        "under-arm cable conduit",
+        "round concrete footing",
+        "square steel base plate with visible edges",
+        "contrast anchor bolts",
+        "rectangular contrast service hatch",
+        "side cable service box",
+        "mast gusset plates",
+        "arm mounting clamp pairs",
+        "short signal hanger stubs",
+        "bright arm end cap"
+      ],
+      "groundContact": true,
+      "pbrMaterials": [
+        "bright galvanized metal",
+        "dark rubber cable",
+        "light weathered concrete",
+        "weathered base plate steel",
+        "pale service hatch metal"
+      ],
+      "realismNotes": "brighter galvanized mast/arm, base plate, bolts, conduit, brace, cable box, gusset plates, clamps, hanger stubs, and service hatch improve readability in dark proof projections",
+      "triangleCount": 968,
+      "fileSizeBytes": 51688
+    }
   },
   "props/traffic_signal_heads": {
     "id": "props/traffic_signal_heads",
@@ -188,7 +516,56 @@
     "lod": "hero",
     "maxTextureSize": 1024,
     "maxTriangles": 2500,
-    "maxFileSizeBytes": 450000
+    "maxFileSizeBytes": 450000,
+    "realisticSilhouette": true,
+    "realismStatus": "stage4_1_ready",
+    "visualRejectIfToyLike": true,
+    "details": {
+      "scaleReferenceMeters": {
+        "assemblyHeight": 2.0,
+        "housingWidth": 0.68,
+        "housingDepthWithHoods": 0.65,
+        "lensDiameter": 0.32
+      },
+      "functionalParts": [
+        "bright overhead mount clamp",
+        "top hanger bracket",
+        "bright rear vertical backing rails",
+        "rear crossbars separating each aspect",
+        "red rectangular housing",
+        "red gray face plate",
+        "red rear service panel",
+        "red circular lens",
+        "red deep top and side sun hoods",
+        "red side color service marker",
+        "yellow rectangular housing",
+        "yellow gray face plate",
+        "yellow rear service panel",
+        "yellow circular lens",
+        "yellow deep top and side sun hoods",
+        "yellow side color service marker",
+        "green rectangular housing",
+        "green gray face plate",
+        "green rear service panel",
+        "green circular lens",
+        "green deep top and side sun hoods",
+        "green side color service marker",
+        "bright side hinge strip",
+        "bright side latch strip"
+      ],
+      "mountContact": "overhead clamp mounts to traffic signal mast arm; asset bottom is normalized near y=0 for turntable preview",
+      "pbrMaterials": [
+        "visible charcoal signal housing",
+        "bright galvanized hanger metal",
+        "gray face plate metal",
+        "separate red emissive lens",
+        "separate yellow emissive lens",
+        "separate green emissive lens"
+      ],
+      "realismNotes": "three-aspect signal head keeps charcoal housing but adds separated rear rails, rear service panels, face plates, hinge/latch strips, side color markers, and stronger red/yellow/green lens contrast for dark contact-sheet readability",
+      "triangleCount": 684,
+      "fileSizeBytes": 54820
+    }
   },
   "props/streetlight": {
     "id": "props/streetlight",
@@ -201,7 +578,41 @@
     "lod": "hero",
     "maxTextureSize": 1024,
     "maxTriangles": 2200,
-    "maxFileSizeBytes": 450000
+    "maxFileSizeBytes": 450000,
+    "realisticSilhouette": true,
+    "realismStatus": "stage4_1_ready",
+    "visualRejectIfToyLike": true,
+    "details": {
+      "scaleReferenceMeters": {
+        "poleHeight": 6.1,
+        "outreachArmSpan": 1.62,
+        "lampHeadLength": 0.95,
+        "footingDiameter": 0.86
+      },
+      "functionalParts": [
+        "round concrete footing",
+        "square base plate with visible edges",
+        "base collar with contrast access panel",
+        "bright tapered pole",
+        "two-segment curved outreach arm",
+        "short visible lamp downrod",
+        "readable weathered lamp head housing",
+        "rounded front cap",
+        "bright warm emitter lens panel",
+        "dark anchor bolts"
+      ],
+      "groundContact": true,
+      "pbrMaterials": [
+        "light weathered concrete",
+        "bright galvanized pole",
+        "graphite base plate",
+        "weathered lamp cap",
+        "warm emissive lamp lens"
+      ],
+      "realismNotes": "streetlight now uses brighter metal, a taller tapered pole, separated arm/downrod/lamp housing, base hardware, and a clear warm emitter panel so it does not collapse into a dark icon",
+      "triangleCount": 760,
+      "fileSizeBytes": 38268
+    }
   },
   "props/tree_cluster": {
     "id": "props/tree_cluster",
@@ -214,7 +625,40 @@
     "lod": "medium",
     "maxTextureSize": 1024,
     "maxTriangles": 6000,
-    "maxFileSizeBytes": 800000
+    "maxFileSizeBytes": 800000,
+    "realisticSilhouette": true,
+    "realismStatus": "stage4_1_ready",
+    "visualRejectIfToyLike": true,
+    "details": {
+      "scaleReferenceMeters": {
+        "approximateFootprintWidth": 6.5,
+        "approximateFootprintDepth": 2.2,
+        "maximumCanopyHeight": 4.3,
+        "trunkCount": 5,
+        "shrubCount": 3
+      },
+      "functionalParts": [
+        "five separated visible trunks",
+        "left and right branch pairs for each trunk",
+        "individual separated leaf crowns",
+        "offset side leaf lobes with gaps",
+        "low shrub mounds",
+        "irregular soil ground-contact pad"
+      ],
+      "groundContact": true,
+      "pbrMaterials": [
+        "dark rough bark",
+        "light rough bark",
+        "deep leaf matte material",
+        "fresh leaf matte material",
+        "olive leaf matte material",
+        "dry leaf matte material",
+        "dark soil/grime pad"
+      ],
+      "realismNotes": "cluster is widened into distinct roadside trees and shrubs with visible trunk/branch gaps, separated crowns, varied heights, and leaf material variation to avoid the prior single-sphere silhouette",
+      "triangleCount": 2344,
+      "fileSizeBytes": 77336
+    }
   },
   "props/curb_details": {
     "id": "props/curb_details",
@@ -227,7 +671,45 @@
     "lod": "near",
     "maxTextureSize": 1024,
     "maxTriangles": 1800,
-    "maxFileSizeBytes": 350000
+    "maxFileSizeBytes": 350000,
+    "realisticSilhouette": true,
+    "realismStatus": "stage4_1_ready",
+    "visualRejectIfToyLike": true,
+    "details": {
+      "scaleReferenceMeters": {
+        "curbRunLength": 5.95,
+        "curbDepth": 0.68,
+        "curbHeight": 0.24,
+        "bollardHeight": 0.92,
+        "tactilePaverWidth": 1.05
+      },
+      "functionalParts": [
+        "light weathered curb segments",
+        "dark expansion seams",
+        "front asphalt grime-receiving lip",
+        "storm drain cast frame",
+        "parallel storm drain grate bars",
+        "yellow tactile warning paver slab",
+        "raised tactile domes",
+        "bright edge bollards",
+        "yellow reflective bollard bands",
+        "front edge concrete chips",
+        "vertical runoff grime stains"
+      ],
+      "groundContact": true,
+      "pbrMaterials": [
+        "light weathered concrete",
+        "road grime",
+        "cast iron drain",
+        "muted yellow tactile paver",
+        "bright worn grate edge",
+        "brushed steel bollard",
+        "chipped concrete bright edge"
+      ],
+      "realismNotes": "curb run uses lighter concrete, clearer drain bars, muted tactile paver detail, brighter bollards, chips, and grime strips to reduce icon-like dark/orange massing",
+      "triangleCount": 1000,
+      "fileSizeBytes": 68324
+    }
   },
   "textures/wet_asphalt_albedo": {
     "id": "textures/wet_asphalt_albedo",
@@ -240,7 +722,21 @@
     "lod": "material",
     "maxTextureSize": 2048,
     "maxTriangles": 0,
-    "maxFileSizeBytes": 1200000
+    "maxFileSizeBytes": 1200000,
+    "realismStatus": "stage4_1_ready",
+    "visualRejectIfToyLike": true,
+    "details": {
+      "dimensions": "2048x2048",
+      "fileSizeBytes": 653188,
+      "materialFeatures": [
+        "cool dark wet asphalt albedo",
+        "aggregate speckle",
+        "tar streaks",
+        "oil stain patches",
+        "nonrepeating large patch variation"
+      ],
+      "provenance": "Project-authored deterministic Sharp texture regenerated for Stage 4.1; Image Gen used only as non-runtime material direction and runtime proof is deferred to later browser screenshots."
+    }
   },
   "textures/wet_asphalt_roughness": {
     "id": "textures/wet_asphalt_roughness",
@@ -253,7 +749,21 @@
     "lod": "material",
     "maxTextureSize": 2048,
     "maxTriangles": 0,
-    "maxFileSizeBytes": 900000
+    "maxFileSizeBytes": 900000,
+    "realismStatus": "stage4_1_ready",
+    "visualRejectIfToyLike": true,
+    "details": {
+      "dimensions": "2048x2048",
+      "fileSizeBytes": 163128,
+      "materialFeatures": [
+        "grayscale roughness range for wet and dry asphalt",
+        "low-roughness puddle islands",
+        "tar and oil streak reflection variation",
+        "higher roughness aggregate grit",
+        "vehicle-track scuff variation"
+      ],
+      "provenance": "Project-authored deterministic Sharp texture regenerated for Stage 4.1; Image Gen used only as non-runtime material direction and runtime proof is deferred to later browser screenshots."
+    }
   },
   "decals/worn_lane_markings": {
     "id": "decals/worn_lane_markings",
@@ -266,7 +776,21 @@
     "lod": "decal",
     "maxTextureSize": 2048,
     "maxTriangles": 0,
-    "maxFileSizeBytes": 1200000
+    "maxFileSizeBytes": 1200000,
+    "realismStatus": "stage4_1_ready",
+    "visualRejectIfToyLike": true,
+    "details": {
+      "dimensions": "2048x2048",
+      "fileSizeBytes": 144063,
+      "decalFeatures": [
+        "cracked white and yellow paint",
+        "tire-scuffed lane bands",
+        "eroded paint edges",
+        "alpha breakup",
+        "stop bar fragments and arrow marking wear"
+      ],
+      "provenance": "Project-authored deterministic Sharp decal regenerated for Stage 4.1; Image Gen used only as non-runtime material direction and runtime proof is deferred to later browser screenshots."
+    }
   },
   "decals/crosswalk_wear": {
     "id": "decals/crosswalk_wear",
@@ -279,7 +803,21 @@
     "lod": "decal",
     "maxTextureSize": 2048,
     "maxTriangles": 0,
-    "maxFileSizeBytes": 1200000
+    "maxFileSizeBytes": 1200000,
+    "realismStatus": "stage4_1_ready",
+    "visualRejectIfToyLike": true,
+    "details": {
+      "dimensions": "2048x2048",
+      "fileSizeBytes": 478099,
+      "decalFeatures": [
+        "eroded zebra bars",
+        "vehicle-worn crossing bands",
+        "edge chipping",
+        "crack lines",
+        "nonuniform opacity"
+      ],
+      "provenance": "Project-authored deterministic Sharp decal regenerated for Stage 4.1; Image Gen used only as non-runtime material direction and runtime proof is deferred to later browser screenshots."
+    }
   },
   "decals/curb_grime": {
     "id": "decals/curb_grime",
@@ -292,7 +830,21 @@
     "lod": "decal",
     "maxTextureSize": 1024,
     "maxTriangles": 0,
-    "maxFileSizeBytes": 450000
+    "maxFileSizeBytes": 450000,
+    "realismStatus": "stage4_1_ready",
+    "visualRejectIfToyLike": true,
+    "details": {
+      "dimensions": "1024x1024",
+      "fileSizeBytes": 82193,
+      "decalFeatures": [
+        "road-contact dirt buildup",
+        "vertical runoff drips",
+        "curb seam grime",
+        "chipped lower-edge variation",
+        "transparent alpha strip for concrete edges"
+      ],
+      "provenance": "Project-authored deterministic Sharp decal regenerated for Stage 4.1; Image Gen used only as non-runtime material direction and runtime proof is deferred to later browser screenshots."
+    }
   },
   "textures/sidewalk_paver_variation": {
     "id": "textures/sidewalk_paver_variation",
@@ -305,7 +857,21 @@
     "lod": "material",
     "maxTextureSize": 1024,
     "maxTriangles": 0,
-    "maxFileSizeBytes": 700000
+    "maxFileSizeBytes": 700000,
+    "realismStatus": "stage4_1_ready",
+    "visualRejectIfToyLike": true,
+    "details": {
+      "dimensions": "1024x1024",
+      "fileSizeBytes": 92240,
+      "materialFeatures": [
+        "offset sidewalk slab grid",
+        "dark seams",
+        "concrete color mottling",
+        "stain patches",
+        "small crack network"
+      ],
+      "provenance": "Project-authored deterministic Sharp texture regenerated for Stage 4.1; Image Gen used only as non-runtime material direction and runtime proof is deferred to later browser screenshots."
+    }
   },
   "textures/facade_window_emissive": {
     "id": "textures/facade_window_emissive",
@@ -318,6 +884,20 @@
     "lod": "material",
     "maxTextureSize": 1024,
     "maxTriangles": 0,
-    "maxFileSizeBytes": 700000
+    "maxFileSizeBytes": 700000,
+    "realismStatus": "stage4_1_ready",
+    "visualRejectIfToyLike": true,
+    "details": {
+      "dimensions": "1024x1024",
+      "fileSizeBytes": 24110,
+      "materialFeatures": [
+        "dark mullion grid",
+        "varied warm lit panes",
+        "varied cool lit panes",
+        "unlit dark panes",
+        "subtle blind-line variation"
+      ],
+      "provenance": "Project-authored deterministic Sharp texture regenerated for Stage 4.1; Image Gen used only as non-runtime material direction and runtime proof is deferred to later browser screenshots."
+    }
   }
 }

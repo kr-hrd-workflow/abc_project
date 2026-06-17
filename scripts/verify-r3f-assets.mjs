@@ -26,7 +26,21 @@ const requiredFields = [
 const allowedKinds = new Set(["vehicle", "prop", "texture", "decal"]);
 const allowedLods = new Set(["hero", "near", "medium", "far", "material", "decal"]);
 const imageExtensions = new Set([".png", ".jpg", ".jpeg", ".webp"]);
-const bannedNamePattern = /placeholder|proxy|blockout|temp|test-asset/i;
+const bannedNameTerms = [
+  "toy",
+  "blockout",
+  "proxy",
+  "placeholder",
+  "primitive-only",
+  "temp",
+  "test-asset"
+];
+const proofArtifactPaths = [
+  "artifacts/r3f-stage4.1-asset-realism-contact-sheet.png",
+  "artifacts/r3f-stage4.1-glb-turntable-contact-sheet.png"
+];
+const firstPassPayloadLimitBytes = 25 * 1024 * 1024;
+const nearVehicleTriangleFloor = 600;
 const lodRank = new Map([
   ["hero", 0],
   ["near", 1],
@@ -35,6 +49,9 @@ const lodRank = new Map([
 ]);
 
 const failures = [];
+const assetMetricsById = new Map();
+const countedPayloadPaths = new Set();
+let firstPassPayloadBytes = 0;
 
 function addFailure(message) {
   failures.push(message);
@@ -73,6 +90,26 @@ function isInsideDirectory(childPath, parentPath) {
 
 function hasText(value) {
   return typeof value === "string" && value.trim().length > 0;
+}
+
+function hasNonEmptyArray(value) {
+  return Array.isArray(value) && value.length > 0;
+}
+
+function normalizeNameText(value) {
+  return String(value ?? "")
+    .toLowerCase()
+    .replace(/[_\s]+/g, "-");
+}
+
+function findBannedNameTerm(value) {
+  const normalizedValue = normalizeNameText(value);
+
+  return bannedNameTerms.find((term) => normalizedValue.includes(term));
+}
+
+function formatBytes(bytes) {
+  return `${(bytes / (1024 * 1024)).toFixed(2)} MB`;
 }
 
 function readUInt24LE(buffer, offset) {
@@ -340,6 +377,21 @@ function countGlbTriangles(gltf) {
   return triangles;
 }
 
+function getNamedGltfParts(gltf) {
+  const nodeNames = (gltf.nodes ?? []).map((node) => node.name).filter(hasText);
+  const meshNames = (gltf.meshes ?? []).map((mesh) => mesh.name).filter(hasText);
+  const materialNames = (gltf.materials ?? [])
+    .map((material) => material.name)
+    .filter(hasText);
+
+  return {
+    nodeNames,
+    meshNames,
+    materialNames,
+    allNames: [...nodeNames, ...meshNames, ...materialNames]
+  };
+}
+
 function getBufferViewBytes(gltf, binaryChunk, bufferViewIndex) {
   const bufferView = gltf.bufferViews?.[bufferViewIndex];
 
@@ -421,12 +473,30 @@ async function verifyGlb(assetId, entry, localPath, fileStat) {
   }
 
   const triangleCount = countGlbTriangles(glb.json);
+  const namedParts = getNamedGltfParts(glb.json);
 
   if (triangleCount > entry.maxTriangles) {
     addFailure(
       `${assetId}: GLB triangle count ${triangleCount} exceeds ${entry.maxTriangles} triangle budget`
     );
   }
+
+  for (const name of [...namedParts.nodeNames, ...namedParts.materialNames]) {
+    const bannedTerm = findBannedNameTerm(name);
+
+    if (bannedTerm) {
+      addFailure(
+        `${assetId}: GLB node/material name "${name}" contains banned Stage 4.1 term "${bannedTerm}"`
+      );
+    }
+  }
+
+  assetMetricsById.set(assetId, {
+    type: "glb",
+    fileSizeBytes: fileStat.size,
+    triangleCount,
+    nameText: normalizeNameText(namedParts.allNames.join(" "))
+  });
 
   verifyEmbeddedGlbTextures(assetId, entry, glb.json, glb.binaryChunk);
 }
@@ -472,6 +542,12 @@ async function verifyImage(assetId, entry, localPath, extension, fileStat) {
   if (entry.allowNonPowerOfTwo === true && !hasText(entry.nonPowerOfTwoReason)) {
     addFailure(`${assetId}: non-power-of-two exception requires nonPowerOfTwoReason`);
   }
+
+  assetMetricsById.set(assetId, {
+    type: "image",
+    fileSizeBytes: fileStat.size,
+    dimensions
+  });
 }
 
 function validateEntryShape(assetId, entry) {
@@ -503,8 +579,10 @@ function validateEntryShape(assetId, entry) {
       addFailure(`${assetId}: path must not point into archive/unreal/original`);
     }
 
-    if (bannedNamePattern.test(`${assetId} ${normalizedPath}`)) {
-      addFailure(`${assetId}: id or path contains a banned placeholder-style name`);
+    const bannedTerm = findBannedNameTerm(`${assetId} ${normalizedPath}`);
+
+    if (bannedTerm) {
+      addFailure(`${assetId}: id or path contains banned Stage 4.1 term "${bannedTerm}"`);
     }
   }
 
@@ -551,6 +629,8 @@ function validateEntryShape(assetId, entry) {
   if (entry.allowNonPowerOfTwo !== undefined && typeof entry.allowNonPowerOfTwo !== "boolean") {
     addFailure(`${assetId}: allowNonPowerOfTwo must be boolean when present`);
   }
+
+  validateStageRealismMetadata(assetId, entry);
 }
 
 function validateVehicleLods(entriesById) {
@@ -617,6 +697,236 @@ function validateVehicleLods(entriesById) {
   }
 }
 
+function requireMinimumDetail(assetId, details, field, minimum) {
+  if (!Number.isFinite(details[field]) || details[field] < minimum) {
+    addFailure(`${assetId}: details.${field} must be >= ${minimum}`);
+  }
+}
+
+function metadataContains(details, pattern) {
+  return pattern.test(JSON.stringify(details).toLowerCase());
+}
+
+function validateStageRealismMetadata(assetId, entry) {
+  if (!isRecord(entry)) {
+    return;
+  }
+
+  if (entry.realismStatus !== "stage4_1_ready") {
+    addFailure(`${assetId}: realismStatus must be "stage4_1_ready"`);
+  }
+
+  if (entry.visualRejectIfToyLike !== true) {
+    addFailure(`${assetId}: visualRejectIfToyLike must be true`);
+  }
+
+  const details = entry.details;
+
+  if (entry.kind === "vehicle" && ["near", "medium", "far"].includes(entry.lod)) {
+    if (entry.realisticSilhouette !== true) {
+      addFailure(`${assetId}: vehicle ${entry.lod} LOD must declare realisticSilhouette=true`);
+    }
+
+    if (!isRecord(details)) {
+      addFailure(`${assetId}: vehicle ${entry.lod} LOD must include details metadata`);
+      return;
+    }
+
+    requireMinimumDetail(assetId, details, "wheels", entry.lod === "near" ? 4 : 1);
+    requireMinimumDetail(assetId, details, "glassSurfaces", 1);
+    requireMinimumDetail(assetId, details, "lightEmitters", entry.lod === "near" ? 2 : 1);
+    requireMinimumDetail(assetId, details, "bodyPanelBreaks", entry.lod === "near" ? 3 : 1);
+
+    if (typeof details.mirrors !== "boolean") {
+      addFailure(`${assetId}: details.mirrors must be boolean for vehicle LODs`);
+    } else if (entry.lod === "near" && details.mirrors !== true) {
+      addFailure(`${assetId}: near vehicle LODs must declare details.mirrors=true`);
+    } else if (entry.lod !== "near" && details.mirrors === false && !hasText(details.mirrorReason)) {
+      addFailure(`${assetId}: non-near vehicle LODs without mirrors require details.mirrorReason`);
+    }
+
+    if (entry.lod === "far") {
+      const farMetadataChecks = [
+        ["wheel", /wheel|tire/],
+        ["glass", /glass|window|windshield/],
+        ["light", /light|headlight|taillight|emitter|lightbar/]
+      ];
+
+      for (const [label, pattern] of farMetadataChecks) {
+        if (!metadataContains(details, pattern)) {
+          addFailure(`${assetId}: far vehicle LOD metadata must preserve ${label} blocks`);
+        }
+      }
+    }
+  }
+
+  if (entry.kind === "prop") {
+    if (!isRecord(details)) {
+      addFailure(`${assetId}: prop assets must include details metadata`);
+      return;
+    }
+
+    if (!isRecord(details.scaleReferenceMeters) || Object.keys(details.scaleReferenceMeters).length === 0) {
+      addFailure(`${assetId}: prop details.scaleReferenceMeters is required`);
+    }
+
+    if (!hasNonEmptyArray(details.functionalParts)) {
+      addFailure(`${assetId}: prop details.functionalParts must be a non-empty array`);
+    }
+  }
+
+  if (entry.kind === "texture" || entry.kind === "decal") {
+    if (!isRecord(details)) {
+      addFailure(`${assetId}: ${entry.kind} assets must include details metadata`);
+      return;
+    }
+
+    if (!hasNonEmptyArray(details.materialFeatures) && !hasNonEmptyArray(details.decalFeatures)) {
+      addFailure(`${assetId}: ${entry.kind} details must include materialFeatures or decalFeatures`);
+    }
+
+    if (!hasText(details.provenance)) {
+      addFailure(`${assetId}: ${entry.kind} details.provenance is required`);
+    }
+  }
+}
+
+function requireNameEvidence(assetId, metric, label, pattern) {
+  if (!pattern.test(metric.nameText)) {
+    addFailure(`${assetId}: GLB names lack ${label} evidence required by Stage 4.1 metadata`);
+  }
+}
+
+function validateVehicleNameEvidence(assetId, entry, metric) {
+  if (!metric || metric.type !== "glb" || entry.kind !== "vehicle" || !isRecord(entry.details)) {
+    return;
+  }
+
+  const details = entry.details;
+
+  if (details.wheels > 0) {
+    requireNameEvidence(assetId, metric, "wheel/tire", /wheel|tire/);
+  }
+
+  if (details.wheels > 0 && entry.lod === "near") {
+    requireNameEvidence(assetId, metric, "hub", /hub/);
+  }
+
+  if (details.glassSurfaces > 0) {
+    requireNameEvidence(assetId, metric, "glass/window", /glass|window|windshield/);
+  }
+
+  if (details.lightEmitters > 0) {
+    requireNameEvidence(assetId, metric, "light/emitter", /light|headlight|taillight|emitter|lightbar/);
+  }
+
+  if (details.bodyPanelBreaks > 0) {
+    requireNameEvidence(assetId, metric, "body panel/break", /body|panel|break|seam|door|hood|trunk|cab|cargo/);
+  }
+
+  if (details.mirrors === true) {
+    requireNameEvidence(assetId, metric, "mirror", /mirror/);
+  }
+
+  if (entry.lod === "near") {
+    if (metric.triangleCount < nearVehicleTriangleFloor) {
+      addFailure(
+        `${assetId}: near vehicle triangle count ${metric.triangleCount} is below realism floor ${nearVehicleTriangleFloor}`
+      );
+    }
+
+    requireNameEvidence(assetId, metric, "front cue", /front|grille|headlight|hood|windshield/);
+    requireNameEvidence(assetId, metric, "rear cue", /rear|taillight|trunk|deck|cargo/);
+  }
+}
+
+function validateActualVehicleLodTriangles(entriesById) {
+  const groups = new Map();
+
+  for (const [assetId, entry] of entriesById) {
+    if (!isRecord(entry) || entry.kind !== "vehicle" || !hasText(entry.lodGroup)) {
+      continue;
+    }
+
+    const groupEntries = groups.get(entry.lodGroup) ?? [];
+    groupEntries.push([assetId, entry]);
+    groups.set(entry.lodGroup, groupEntries);
+  }
+
+  for (const [, groupEntries] of groups) {
+    const farEntries = groupEntries.filter(([, entry]) => entry.lod === "far");
+    const sourceEntries = groupEntries.filter(([, entry]) => ["near", "medium"].includes(entry.lod));
+
+    for (const [farAssetId] of farEntries) {
+      const farMetric = assetMetricsById.get(farAssetId);
+
+      if (!farMetric || farMetric.type !== "glb") {
+        continue;
+      }
+
+      for (const [sourceAssetId] of sourceEntries) {
+        const sourceMetric = assetMetricsById.get(sourceAssetId);
+
+        if (!sourceMetric || sourceMetric.type !== "glb") {
+          continue;
+        }
+
+        if (farMetric.triangleCount >= sourceMetric.triangleCount) {
+          addFailure(
+            `${farAssetId}: far LOD triangle count ${farMetric.triangleCount} must be below ${sourceAssetId} triangle count ${sourceMetric.triangleCount}`
+          );
+        }
+      }
+    }
+  }
+}
+
+function validateStageRealismEvidence(entriesById) {
+  for (const [assetId, entry] of entriesById) {
+    validateVehicleNameEvidence(assetId, entry, assetMetricsById.get(assetId));
+  }
+}
+
+function validatePayloadBudget() {
+  if (firstPassPayloadBytes >= firstPassPayloadLimitBytes) {
+    addFailure(
+      `first-pass GLB + texture payload ${formatBytes(firstPassPayloadBytes)} must stay below ${formatBytes(firstPassPayloadLimitBytes)}`
+    );
+  }
+}
+
+async function verifyProofArtifacts() {
+  for (const artifactPath of proofArtifactPaths) {
+    const localPath = path.join(repoRoot, artifactPath);
+    let fileStat;
+
+    try {
+      fileStat = await stat(localPath);
+    } catch {
+      addFailure(`${artifactPath}: missing Stage 4.1 proof artifact`);
+      continue;
+    }
+
+    if (!fileStat.isFile()) {
+      addFailure(`${artifactPath}: Stage 4.1 proof artifact path is not a file`);
+      continue;
+    }
+
+    let dimensions;
+
+    try {
+      dimensions = readPngDimensions(await readFile(localPath));
+    } catch (error) {
+      addFailure(`${artifactPath}: proof artifact must be a valid PNG (${error.message})`);
+      continue;
+    }
+
+    if (!isPositiveInteger(dimensions.width) || !isPositiveInteger(dimensions.height)) {
+      addFailure(`${artifactPath}: proof artifact dimensions must be positive`);
+    }
+  }
+}
+
 async function verifyConcreteAsset(assetId, entry) {
   if (!hasText(entry.path)) {
     return;
@@ -644,6 +954,15 @@ async function verifyConcreteAsset(assetId, entry) {
   }
 
   const extension = path.extname(localPath).toLowerCase();
+
+  if (extension === ".glb" || imageExtensions.has(extension)) {
+    const resolvedPayloadPath = path.resolve(localPath);
+
+    if (!countedPayloadPaths.has(resolvedPayloadPath)) {
+      countedPayloadPaths.add(resolvedPayloadPath);
+      firstPassPayloadBytes += fileStat.size;
+    }
+  }
 
   if (extension === ".glb") {
     await verifyGlb(assetId, entry, localPath, fileStat);
@@ -708,6 +1027,11 @@ async function main() {
       await verifyConcreteAsset(assetId, entry);
     }
   }
+
+  validateActualVehicleLodTriangles(entriesById);
+  validateStageRealismEvidence(entriesById);
+  validatePayloadBudget();
+  await verifyProofArtifacts();
 }
 
 await main();
@@ -719,7 +1043,15 @@ if (failures.length > 0) {
     console.error(`- ${failure}`);
   }
 
+  if (countedPayloadPaths.size > 0) {
+    console.error(
+      `First-pass GLB + texture payload: ${formatBytes(firstPassPayloadBytes)} / ${formatBytes(firstPassPayloadLimitBytes)}.`
+    );
+  }
+
   process.exitCode = 1;
 } else {
-  console.log("R3F asset verification passed.");
+  console.log(
+    `R3F asset verification passed. First-pass GLB + texture payload: ${formatBytes(firstPassPayloadBytes)} / ${formatBytes(firstPassPayloadLimitBytes)}.`
+  );
 }
