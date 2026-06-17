@@ -1845,14 +1845,20 @@ async function verifyScreenshotArtifact(filePath, expectedViewport) {
 
 async function runBrowserVerification(baseUrl) {
   const { chromium } = await import("playwright");
-  const browser = await chromium.launch({
+  const browserExecutablePath =
+    process.env.R3F_DASHBOARD_BROWSER_EXECUTABLE?.trim() || null;
+  const browserLaunchOptions = {
     headless: true,
     args: [
       "--enable-webgl",
       "--ignore-gpu-blocklist",
       "--disable-dev-shm-usage"
     ]
-  });
+  };
+  if (browserExecutablePath) {
+    browserLaunchOptions.executablePath = browserExecutablePath;
+  }
+  const browser = await chromium.launch(browserLaunchOptions);
 
   try {
     const desktop = await newRoutedPage(browser, desktopViewport);
