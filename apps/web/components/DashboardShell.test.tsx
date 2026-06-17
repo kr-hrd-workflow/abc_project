@@ -15,6 +15,20 @@ const r3fCameraMock = vi.hoisted(() => ({
   far: 0
 }));
 const r3fInvalidateMock = vi.hoisted(() => vi.fn());
+const dashboardRouteApiMock = vi.hoisted(() => ({
+  analyzeUpload: vi.fn(),
+  askQuestion: vi.fn(),
+  generateReport: vi.fn(),
+  getAnalysisJob: vi.fn(),
+  getEvents: vi.fn(),
+  getFixtures: vi.fn(),
+  getIntersectionStatus: vi.fn(),
+  getRuntimeReadiness: vi.fn(),
+  getSimulationFrame: vi.fn(),
+  ingestFixture: vi.fn(),
+  recommendSignal: vi.fn(),
+  simulateSignal: vi.fn()
+}));
 
 vi.mock("@react-three/fiber", () => ({
   Canvas: ({ children }: { children?: ReactNode }) => (
@@ -56,7 +70,9 @@ vi.mock("./r3f/TrafficDensityLayer", async (importActual) => {
 vi.mock("./r3f/WeatherAndAtmosphere", () => ({
   WeatherAndAtmosphere: () => null
 }));
+vi.mock("../lib/api", () => dashboardRouteApiMock);
 
+import { DashboardRoute } from "./DashboardRoute";
 import { DashboardShell } from "./DashboardShell";
 import {
   buildFixtureSceneSnapshot,
@@ -332,6 +348,7 @@ const runtimeReadiness: RuntimeReadiness = {
 
 afterEach(() => {
   cleanup();
+  vi.clearAllMocks();
   vi.restoreAllMocks();
   vi.unstubAllGlobals();
   vi.unstubAllEnvs();
@@ -346,6 +363,7 @@ function dashboardProps(overrides: Partial<Parameters<typeof DashboardShell>[0]>
     report,
     chat,
     runtimeReadiness,
+    simulationFrame: frameSnapshot,
     onAskQuestion: vi.fn(),
     onGenerateReport: vi.fn(),
     onRefreshRecommendation: vi.fn(),
@@ -389,7 +407,50 @@ function mockWebGLSupport(supported: boolean) {
   );
 }
 
+function mockDashboardRouteApi() {
+  dashboardRouteApiMock.getIntersectionStatus.mockResolvedValue(status);
+  dashboardRouteApiMock.getEvents.mockResolvedValue(events);
+  dashboardRouteApiMock.recommendSignal.mockResolvedValue(recommendation);
+  dashboardRouteApiMock.simulateSignal.mockResolvedValue(simulation);
+  dashboardRouteApiMock.generateReport.mockResolvedValue(report);
+  dashboardRouteApiMock.getFixtures.mockResolvedValue(fixtures);
+  dashboardRouteApiMock.getRuntimeReadiness.mockResolvedValue(runtimeReadiness);
+  dashboardRouteApiMock.getSimulationFrame.mockResolvedValue(frameSnapshot);
+}
+
 describe("DashboardShell", () => {
+  test("loads the dashboard with explicit fixture fallback when the frame route is missing", async () => {
+    vi.stubEnv("NEXT_PUBLIC_R3F_SIMULATION_ENABLED", "true");
+    mockWebGLSupport(true);
+    mockDashboardRouteApi();
+    dashboardRouteApiMock.getSimulationFrame.mockRejectedValue(
+      new Error("API request failed: 404 /api/simulation/frame?scenario_id=emergency")
+    );
+
+    render(<DashboardRoute />);
+
+    const viewport = await screen.findByTestId("r3f-simulation-viewport");
+
+    expect(dashboardRouteApiMock.getSimulationFrame).toHaveBeenCalledWith("emergency");
+    expect(screen.queryByText("Dashboard API unavailable")).toBeNull();
+    expect(viewport.getAttribute("data-r3f-snapshot-source")).toBe("simulation_snapshot_fixture");
+    expect(viewport.getAttribute("data-r3f-frame-bound")).toBeNull();
+    expect(viewport.getAttribute("data-r3f-traffic-density-mode")).toBe("fixture_queues");
+  });
+
+  test("surfaces non-route simulation frame load errors", async () => {
+    mockDashboardRouteApi();
+    dashboardRouteApiMock.getSimulationFrame.mockRejectedValue(
+      new Error("API request failed: 500 /api/simulation/frame?scenario_id=emergency")
+    );
+
+    render(<DashboardRoute />);
+
+    expect(await screen.findByText("Dashboard API unavailable")).toBeTruthy();
+    expect(dashboardRouteApiMock.getSimulationFrame).toHaveBeenCalledWith("emergency");
+    expect(screen.getByText("API request failed: 500 /api/simulation/frame?scenario_id=emergency")).toBeTruthy();
+  });
+
   test("renders the B plus A spatial command cockpit structure", () => {
     const { container } = renderDashboard({ selectedScenarioId: "emergency" });
 
@@ -985,7 +1046,7 @@ describe("DashboardShell", () => {
     });
   });
 
-  test("mounts the browser-only R3F renderer when it is enabled and WebGL is supported", async () => {
+  test("mounts frame-backed browser-only R3F when it is enabled and WebGL is supported", async () => {
     vi.stubEnv("NEXT_PUBLIC_R3F_SIMULATION_ENABLED", "true");
     mockWebGLSupport(true);
 
@@ -1002,13 +1063,30 @@ describe("DashboardShell", () => {
     expect(viewport.getAttribute("data-r3f-renderer-mode")).toBe(STAGE5_RENDERER_MODE);
     expect(viewport.getAttribute("data-r3f-photoreal-stage")).toBe("5");
     expect(viewport.getAttribute("data-r3f-snapshot-source")).toBe("simulation_snapshot_fixture");
+    expect(viewport.getAttribute("data-r3f-frame-bound")).toBe("true");
+    expect(viewport.getAttribute("data-r3f-traffic-density-mode")).toBe("density_segments");
+    expect(
+      Number(viewport.getAttribute("data-r3f-visible-vehicle-count"))
+    ).toBeGreaterThan(0);
+    expect(viewport.getAttribute("data-r3f-glb-vehicle-count")).toBe("2");
+    expect(viewport.getAttribute("data-r3f-street-shadow-count")).toBe("2");
+    expect(viewport.getAttribute("data-r3f-vehicle-silhouette-part-count")).toBe("14");
+  });
+
+  test("uses explicit fixture queue fallback when the simulation frame is absent", async () => {
+    vi.stubEnv("NEXT_PUBLIC_R3F_SIMULATION_ENABLED", "true");
+    mockWebGLSupport(true);
+
+    renderDashboard({ simulationFrame: null });
+
+    const viewport = await screen.findByTestId("r3f-simulation-viewport");
+
+    expect(viewport.getAttribute("data-r3f-snapshot-source")).toBe("simulation_snapshot_fixture");
+    expect(viewport.getAttribute("data-r3f-frame-bound")).toBeNull();
     expect(viewport.getAttribute("data-r3f-traffic-density-mode")).toBe("fixture_queues");
     expect(
       Number(viewport.getAttribute("data-r3f-visible-vehicle-count"))
     ).toBeGreaterThanOrEqual(STAGE5_MIN_VISIBLE_VEHICLES);
-    expect(viewport.getAttribute("data-r3f-glb-vehicle-count")).toBe("2");
-    expect(viewport.getAttribute("data-r3f-street-shadow-count")).toBe("2");
-    expect(viewport.getAttribute("data-r3f-vehicle-silhouette-part-count")).toBe("14");
   });
 
   test("exposes Stage 3 corridor lengths in meters outside the canvas", async () => {

@@ -12,10 +12,12 @@ import {
   getFixtures,
   getIntersectionStatus,
   getRuntimeReadiness,
+  getSimulationFrame,
   ingestFixture,
   recommendSignal,
   simulateSignal
 } from "../lib/api";
+import type { SimulationFrameSnapshot } from "../lib/simulationSnapshot";
 import type {
   AnalysisFixture,
   AnalysisJob,
@@ -41,6 +43,7 @@ type DashboardData = {
   events: TrafficEvent[];
   recommendation: Recommendation;
   simulation: SimulationComparison;
+  simulationFrame: SimulationFrameSnapshot | null;
   report: Report;
   chat: ChatResponse | null;
   fixtures: AnalysisFixture[];
@@ -63,7 +66,16 @@ export function DashboardRoute() {
 
   async function loadDashboard(scenarioId: ScenarioId) {
     try {
-      const [status, events, recommendation, simulation, report, fixtures, runtimeReadiness] =
+      const [
+        status,
+        events,
+        recommendation,
+        simulation,
+        report,
+        fixtures,
+        runtimeReadiness,
+        simulationFrame
+      ] =
         await Promise.all([
           getIntersectionStatus(scenarioId),
           getEvents(scenarioId),
@@ -71,7 +83,8 @@ export function DashboardRoute() {
           simulateSignal(scenarioId),
           generateReport(scenarioId),
           getFixtures(),
-          getRuntimeReadiness()
+          getRuntimeReadiness(),
+          loadSimulationFrame(scenarioId)
         ]);
 
       setData({
@@ -79,6 +92,7 @@ export function DashboardRoute() {
         events,
         recommendation,
         simulation,
+        simulationFrame,
         report,
         chat: null,
         fixtures,
@@ -183,6 +197,7 @@ export function DashboardRoute() {
       events={data.events}
       recommendation={data.recommendation}
       simulation={data.simulation}
+      simulationFrame={data.simulationFrame}
       report={data.report}
       chat={data.chat}
       fixtures={data.fixtures}
@@ -216,4 +231,22 @@ function formatDashboardError(error: string) {
     return "The API server is not reachable. Start the API service and try again.";
   }
   return error;
+}
+
+async function loadSimulationFrame(
+  scenarioId: ScenarioId
+): Promise<SimulationFrameSnapshot | null> {
+  try {
+    return await getSimulationFrame(scenarioId);
+  } catch (error) {
+    if (isSimulationFrameRouteMissingError(error)) return null;
+    throw error;
+  }
+}
+
+function isSimulationFrameRouteMissingError(error: unknown) {
+  return (
+    error instanceof Error &&
+    error.message.includes("API request failed: 404 /api/simulation/frame")
+  );
 }

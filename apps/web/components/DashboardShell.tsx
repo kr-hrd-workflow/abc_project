@@ -21,6 +21,7 @@ import type {
   TrafficEvent,
   UploadAnalysisResult
 } from "../lib/types";
+import type { SimulationFrameSnapshot } from "../lib/simulationSnapshot";
 import type { Locale } from "../lib/i18n";
 import { copy } from "../lib/i18n";
 import { AnalysisIntakePanel } from "./AnalysisIntakePanel";
@@ -36,6 +37,7 @@ export type DashboardShellProps = {
   events: TrafficEvent[];
   recommendation: Recommendation;
   simulation: SimulationComparison;
+  simulationFrame: SimulationFrameSnapshot | null;
   report: Report;
   chat: ChatResponse | null;
   fixtures: AnalysisFixture[];
@@ -63,6 +65,7 @@ export function DashboardShell({
   events,
   recommendation,
   simulation,
+  simulationFrame,
   report,
   chat,
   fixtures,
@@ -320,6 +323,7 @@ export function DashboardShell({
             status={status}
             events={events}
             simulation={simulation}
+            simulationFrame={simulationFrame}
             runtimeReadiness={runtimeReadiness}
             locale={locale}
             onRunSimulation={onRunSimulation}

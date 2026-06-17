@@ -3,7 +3,7 @@
 import { useMemo } from "react";
 
 import type { SimulationViewportProps } from "../SimulationViewportFallback";
-import { buildFixtureSceneSnapshot } from "./buildSceneSnapshot";
+import { buildFixtureSceneSnapshot, buildSceneSnapshot } from "./buildSceneSnapshot";
 import { getCorridorLengthDataAttribute } from "./roadGeometry";
 import { SimulationCanvas } from "./SimulationCanvas";
 import {
@@ -20,12 +20,19 @@ export const STAGE5_RENDERER_MODE = "r3f_photoreal_stage5";
 export function R3FSimulationViewport({
   status,
   events,
-  simulation
+  simulation,
+  simulationFrame
 }: SimulationViewportProps) {
-  const sceneSnapshot = useMemo(
+  const frameSceneSnapshot = useMemo(
+    () => buildSceneSnapshot(simulationFrame),
+    [simulationFrame]
+  );
+  const fallbackSceneSnapshot = useMemo(
     () => buildFixtureSceneSnapshot({ queues: status.queues, events }),
     [events, status.queues]
   );
+  const frameBound = frameSceneSnapshot.source !== null;
+  const sceneSnapshot = frameBound ? frameSceneSnapshot : fallbackSceneSnapshot;
   const visibleVehicleCount = useMemo(() => {
     const renderPlan = buildTrafficDensityRenderPlan(sceneSnapshot);
 
@@ -41,6 +48,7 @@ export function R3FSimulationViewport({
       data-testid="r3f-simulation-viewport"
       data-r3f-simulation-ready="true"
       data-r3f-snapshot-source={sceneSnapshot.source ?? "none"}
+      data-r3f-frame-bound={frameBound ? "true" : undefined}
       data-r3f-renderer-mode={STAGE5_RENDERER_MODE}
       data-r3f-photoreal-stage="5"
       data-r3f-corridor-length-meters={corridorLengthMeters}

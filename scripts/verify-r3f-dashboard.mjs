@@ -887,13 +887,23 @@ async function collectRendererProof(page) {
         backgroundColor: style.backgroundColor
       };
     };
+    const snapshotSource = viewport?.getAttribute("data-r3f-snapshot-source") ?? null;
+    const frameBound = viewport?.getAttribute("data-r3f-frame-bound") === "true";
+    const trafficDensityMode =
+      viewport?.getAttribute("data-r3f-traffic-density-mode") ?? null;
+    const fallbackUsed = Boolean(viewport) && !frameBound;
 
     return {
+      snapshot_source: snapshotSource,
+      frame_bound: frameBound,
+      traffic_density_mode: trafficDensityMode,
+      fallback_used: fallbackUsed,
       rendererMode: viewport?.getAttribute("data-r3f-renderer-mode") ?? null,
       photorealStage: viewport?.getAttribute("data-r3f-photoreal-stage") ?? null,
-      snapshotSource: viewport?.getAttribute("data-r3f-snapshot-source") ?? null,
-      trafficDensityMode:
-        viewport?.getAttribute("data-r3f-traffic-density-mode") ?? null,
+      snapshotSource,
+      frameBound,
+      trafficDensityMode,
+      fallbackUsed,
       visibleVehicleCount: Number(
         viewport?.getAttribute("data-r3f-visible-vehicle-count") ?? "0"
       ),
@@ -1914,6 +1924,38 @@ function addFinalAssertions() {
     `${details.webgl_context_loss_errors.length} console errors, ${renderer.webglContextLossEvents ?? "missing"} context-loss events`
   );
   addAssertion(
+    "R3F renderer source proof fields are present and consistent",
+    desktop.r3f_ready !== true ||
+      (
+        typeof renderer.snapshot_source === "string" &&
+        typeof renderer.frame_bound === "boolean" &&
+        typeof renderer.traffic_density_mode === "string" &&
+        typeof renderer.fallback_used === "boolean" &&
+        renderer.snapshot_source === renderer.snapshotSource &&
+        renderer.frame_bound === renderer.frameBound &&
+        renderer.traffic_density_mode === renderer.trafficDensityMode &&
+        renderer.fallback_used === renderer.fallbackUsed &&
+        renderer.fallback_used === !renderer.frame_bound
+      ),
+    `snapshot_source=${renderer.snapshot_source ?? "missing"}, frame_bound=${renderer.frame_bound ?? "missing"}, traffic_density_mode=${renderer.traffic_density_mode ?? "missing"}, fallback_used=${renderer.fallback_used ?? "missing"}, camelCase=${JSON.stringify({
+      snapshotSource: renderer.snapshotSource ?? null,
+      frameBound: renderer.frameBound ?? null,
+      trafficDensityMode: renderer.trafficDensityMode ?? null,
+      fallbackUsed: renderer.fallbackUsed ?? null
+    })}`
+  );
+  addAssertion(
+    "R3F renderer uses frame-backed simulation snapshot",
+    desktop.r3f_ready !== true ||
+      (
+        renderer.snapshot_source === "simulation_snapshot_fixture" &&
+        renderer.frame_bound === true &&
+        renderer.traffic_density_mode === "density_segments" &&
+        renderer.fallback_used === false
+      ),
+    `snapshot_source=${renderer.snapshot_source ?? "missing"}, frame_bound=${renderer.frame_bound ?? "missing"}, traffic_density_mode=${renderer.traffic_density_mode ?? "missing"}, fallback_used=${renderer.fallback_used ?? "missing"}`
+  );
+  addAssertion(
     "forced-WebGL-off fallback renders",
     fallback.r3fMounted === false &&
       fallback.fallbackCanvasVisible === true &&
@@ -1956,10 +1998,11 @@ function addFinalAssertions() {
     `viewportVisible=${mobile.layout?.r3fViewportVisible}, canvasVisible=${mobile.layout?.canvasVisible}, horizontalOverflow=${mobile.layout?.horizontalOverflow}, nonBackground=${mobile.canvas_metrics?.non_background_ratio ?? "missing"}`
   );
   addAssertion(
-    "dense fixture mode has at least 80 rendered vehicles",
-    renderer.trafficDensityMode === "fixture_queues" &&
+    "frame-backed density mode has at least 80 rendered vehicles",
+    renderer.traffic_density_mode === "density_segments" &&
+      renderer.frame_bound === true &&
       renderer.visibleVehicleCount >= minVisibleVehicles,
-    `mode=${renderer.trafficDensityMode}, visibleVehicleCount=${renderer.visibleVehicleCount ?? "missing"} / ${minVisibleVehicles}`
+    `mode=${renderer.traffic_density_mode}, frame_bound=${renderer.frame_bound}, visibleVehicleCount=${renderer.visibleVehicleCount ?? "missing"} / ${minVisibleVehicles}`
   );
 }
 

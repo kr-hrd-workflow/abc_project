@@ -1343,7 +1343,7 @@ Expected: `git diff --check` passes and the `rg` command returns no stale Stage 
 
 ## Stage 6E: Asset Runtime Utilization, Compression, And Licensing
 
-**Goal:** Use more of the existing manifest-backed asset kit in the runtime scene, optimize payloads, and consolidate asset licensing evidence.
+**Goal:** Use more of the existing manifest-backed asset kit in the runtime scene, harden the human-view visual baseline beyond the current blockout-like canvas, optimize payloads, and consolidate asset licensing evidence.
 
 **Files:**
 - Modify: `apps/web/components/r3f/Stage5SceneAssets.tsx`
@@ -1369,6 +1369,21 @@ all existing facade/window material panels
 ```
 
 If an asset family is not present in `manifest.json`, record that absence in the implementation notes instead of inventing a placeholder.
+
+- [ ] **Step 1A: Harden runtime visual proof against the Stage 5 baseline**
+
+Use the committed Stage 5 browser canvas artifacts as the before baseline, then improve the runtime scene so the accepted Stage 6E canvas no longer reads as a flat blockout to a human reviewer. The pass must visibly reduce:
+
+```text
+flat untextured building slabs
+flat road/sidewalk surfaces without believable wet PBR response
+toy-like repeated traffic silhouettes in foreground or operator-relevant lanes
+empty city-depth areas that make the intersection feel like a model set
+```
+
+Prefer manifest-backed GLB assets, existing texture/decal assets, material tuning, lighting/weather tuning, and richer facade/window panels already in the repo. Do not invent traffic truth or add fake precise vehicles; density still comes from `SimulationFrameSnapshot.density_segments` or labeled fixture fallback. Runtime proof must come from fresh browser screenshots, not Image Gen reference images or metadata alone.
+
+The Stage 6E verifier/review gate must compare current screenshots against the Stage 5 baseline and fail if the runtime canvas is not materially more realistic to a human reviewer, even when numeric photorealism metrics pass.
 
 - [ ] **Step 2: Add manifest-driven preload and tiering**
 
@@ -1428,11 +1443,12 @@ Run:
 npm --workspace apps/web exec gltf-transform -- --version
 node scripts/optimize-r3f-assets.mjs --check
 node scripts/verify-r3f-assets.mjs
+node scripts/verify-r3f-dashboard.mjs
 npm run build:web
 git diff --check
 ```
 
-Expected: optimization check, asset verifier, web build, and diff check pass without external downloads.
+Expected: optimization check, asset verifier, dashboard browser proof, web build, and diff check pass without external downloads. Desktop/mobile canvas artifacts show materially improved runtime realism versus the committed Stage 5 baseline, not merely denser traffic or passing metadata.
 
 ## Stage 6F: Operations, Telemetry, Security, Artifact Hygiene, And Release Discipline
 

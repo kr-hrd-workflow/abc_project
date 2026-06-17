@@ -10,6 +10,7 @@ import type {
   SimulationComparison,
   TrafficEvent
 } from "../lib/types";
+import type { SimulationFrameSnapshot } from "../lib/simulationSnapshot";
 import type { Locale } from "../lib/i18n";
 import { copy, formatDirection, formatEventType } from "../lib/i18n";
 
@@ -17,6 +18,7 @@ export type SimulationViewportProps = {
   status: IntersectionStatus;
   events: TrafficEvent[];
   simulation: SimulationComparison;
+  simulationFrame?: SimulationFrameSnapshot | null;
   runtimeReadiness: RuntimeReadiness;
   locale: Locale;
 };
