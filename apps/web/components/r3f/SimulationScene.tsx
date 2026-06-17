@@ -1,13 +1,16 @@
 "use client";
 
-import { useEffect } from "react";
-import { useThree } from "@react-three/fiber";
+import { Suspense, useEffect } from "react";
+import { useThree, type RootState } from "@react-three/fiber";
 
 import type { SceneSnapshot } from "./buildSceneSnapshot";
 import { ApproachCorridors } from "./ApproachCorridors";
+import { LightingRig } from "./LightingRig";
 import { ProceduralIntersection } from "./ProceduralIntersection";
-import { STAGE3_CAMERA } from "./roadGeometry";
+import { Stage5SceneAssets } from "./Stage5SceneAssets";
+import { getStage5CameraForAspect } from "./roadGeometry";
 import { TrafficDensityLayer } from "./TrafficDensityLayer";
+import { WeatherAndAtmosphere } from "./WeatherAndAtmosphere";
 
 export function SimulationScene({
   sceneSnapshot
@@ -15,36 +18,39 @@ export function SimulationScene({
   sceneSnapshot: SceneSnapshot;
 }) {
   return (
-    <group name={`smart-intersection-stage3-${sceneSnapshot.trafficDensityMode}`}>
+    <group name={`smart-intersection-stage5-${sceneSnapshot.trafficDensityMode}`}>
       <Stage3CameraRig />
-      <color attach="background" args={["#101418"]} />
-      <fog attach="fog" args={["#101418", 120, 430]} />
-      <ambientLight intensity={0.42} />
-      <directionalLight
-        position={[58, 84, 46]}
-        intensity={1.25}
-        castShadow
-      />
-      <pointLight position={[-38, 18, -44]} intensity={0.65} color="#ffd79a" />
-      <pointLight position={[44, 18, 38]} intensity={0.52} color="#9ec7ff" />
+      <WeatherAndAtmosphere />
+      <LightingRig />
       <ApproachCorridors />
       <ProceduralIntersection />
+      <Suspense fallback={null}>
+        <Stage5SceneAssets />
+      </Suspense>
       <TrafficDensityLayer sceneSnapshot={sceneSnapshot} />
     </group>
   );
 }
 
 function Stage3CameraRig() {
-  const { camera, invalidate } = useThree();
+  const { camera, invalidate, size } = useThree();
 
   useEffect(() => {
-    camera.position.set(...STAGE3_CAMERA.position);
-    camera.near = STAGE3_CAMERA.near;
-    camera.far = STAGE3_CAMERA.far;
-    camera.lookAt(...STAGE3_CAMERA.target);
+    const cameraConfig = getStage5CameraForAspect(size.width / size.height);
+
+    camera.position.set(...cameraConfig.position);
+    camera.near = cameraConfig.near;
+    camera.far = cameraConfig.far;
+    const perspectiveCamera = camera as RootState["camera"] & { fov?: number };
+
+    if (typeof perspectiveCamera.fov === "number") {
+      perspectiveCamera.fov = cameraConfig.fov;
+    }
+
+    camera.lookAt(...cameraConfig.target);
     camera.updateProjectionMatrix();
     invalidate();
-  }, [camera, invalidate]);
+  }, [camera, invalidate, size.height, size.width]);
 
   return null;
 }

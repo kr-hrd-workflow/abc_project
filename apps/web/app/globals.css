@@ -5304,6 +5304,29 @@ main[lang="ko"] .concept-a-hero h1 {
   pointer-events: none;
 }
 
+.r3f-simulation-canvas {
+  position: absolute !important;
+  inset: 0;
+  z-index: 6;
+  display: block;
+  width: 100% !important;
+  height: 100% !important;
+}
+
+.r3f-simulation-canvas canvas {
+  display: block;
+  width: 100% !important;
+  height: 100% !important;
+}
+
+.simulation-viewport[data-r3f-photoreal-stage="5"] {
+  background: #111820;
+}
+
+.simulation-viewport[data-r3f-photoreal-stage="5"]::before {
+  content: none;
+}
+
 .playback-badge {
   position: absolute;
   z-index: 12;
@@ -10143,6 +10166,14 @@ body {
   border: 0;
 }
 
+.launch-dashboard:is([data-layout="operations-cockpit"], [data-layout="spatial-command-hybrid"]) .simulation-viewport[data-r3f-photoreal-stage="5"] {
+  background: #111820;
+}
+
+.launch-dashboard:is([data-layout="operations-cockpit"], [data-layout="spatial-command-hybrid"]) .simulation-viewport[data-r3f-photoreal-stage="5"]::before {
+  content: none;
+}
+
 .launch-dashboard[data-layout="spatial-command-hybrid"] .cockpit-left,
 .launch-dashboard[data-layout="spatial-command-hybrid"] .cockpit-right {
   align-content: start;
@@ -10305,7 +10336,7 @@ body {
   }
 
   .launch-dashboard[data-layout="spatial-command-hybrid"] .simulation-viewport {
-    min-height: 560px;
+    min-height: clamp(340px, 96vw, 430px);
     max-width: 100%;
     overflow: hidden;
   }

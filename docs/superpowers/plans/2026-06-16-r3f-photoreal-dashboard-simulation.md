@@ -893,7 +893,7 @@ If realistic assets require external licensed models, paid asset stores, Blender
 - Modify: `apps/web/components/r3f/SimulationCanvas.tsx`
 - Modify: `scripts/verify-r3f-dashboard.mjs`
 
-- [ ] **Step 1: PBR road materials**
+- [x] **Step 1: PBR road materials**
 
 Use layered PBR materials, not flat color fills, for:
 
@@ -906,7 +906,7 @@ sidewalk slabs with joint lines, color variation, and roughness variation
 glass facade surfaces with restrained emissive/window response
 ```
 
-- [ ] **Step 2: Lighting setup**
+- [x] **Step 2: Lighting setup**
 
 Add:
 
@@ -920,7 +920,7 @@ subtle fog/haze
 wet-road reflection highlights tied to lamps, signals, and headlights
 ```
 
-- [ ] **Step 3: Restrained postprocessing**
+- [x] **Step 3: Restrained postprocessing**
 
 Use postprocessing only after the base scene is acceptable:
 
@@ -932,7 +932,7 @@ tone mapping and exposure tuned against r3f-photoreal-target-reference.png
 visual review tuned primarily against r3f-long-corridor-traffic-reference.png
 ```
 
-- [ ] **Step 4: Reject non-photoreal placeholders**
+- [x] **Step 4: Reject non-photoreal placeholders**
 
 Before moving to performance tuning, inspect a desktop screenshot and reject the pass if any of these are true:
 
@@ -945,7 +945,7 @@ lane markings are perfectly clean or purely procedural-looking
 the scene lacks contact shadows under vehicles and street furniture
 ```
 
-- [ ] **Step 5: Performance guardrails**
+- [x] **Step 5: Performance guardrails**
 
 Initial budgets:
 
@@ -958,7 +958,7 @@ visible traffic target: at least 80 rendered vehicles in fixture density mode, u
 no unbounded React state updates in useFrame
 ```
 
-- [ ] **Step 6: Verification**
+- [x] **Step 6: Verification**
 
 Run `scripts/verify-r3f-dashboard.mjs` to assert:
 
@@ -978,6 +978,15 @@ Then run:
 npm --workspace apps/web run test
 npm run build:web
 ```
+
+**Stage 5 completion evidence, 2026-06-17:**
+
+- `node scripts\verify-r3f-dashboard.mjs` passed against `/dashboard` with `rendererMode=r3f_photoreal_stage5`, `visibleVehicleCount=96`, `glbVehicleCount=2`, `vehicleSilhouettePartCount=14`, `streetFurnitureShadowCount=2`, `drawCalls=176/250`, payload `9.62 MB / 25.00 MB`, no console failures, no WebGL context loss, and WebGL-off fallback proof.
+- The real browser canvas proof passed both verifier visual gates: `photorealism_check.passed=true` and `composition_check.passed=true`. The desktop canvas metrics included `bright_ratio=0.011425`, `marking_ratio=0.035709`, `luminance_stddev=34.29`, `scene_coverage_ratio=0.9477`, and `empty_near_black_ratio=0.0512`.
+- Generated proof artifacts: `artifacts/r3f-dashboard-desktop.png`, `artifacts/r3f-dashboard-mobile.png`, `artifacts/r3f-dashboard-desktop-canvas.png`, `artifacts/r3f-dashboard-mobile-canvas.png`, `artifacts/r3f-dashboard-webgl-off.png`, and `artifacts/r3f-dashboard-details.json`.
+- `npm --workspace apps/web run test` passed 6 files / 73 tests, `npm run build:web` passed, `node scripts\verify-r3f-assets.mjs` passed at `9.62 MB / 25.00 MB`, and `git diff --check` exited 0 with LF/CRLF warnings only.
+- Fresh spec-compliance, human-visual, and code-quality review is required before claiming Stage 5 complete.
+- Scope note: Stage 5 proof is browser-rendered R3F runtime proof only. It does not complete Stage 6 live SUMO/Tarcl binding.
 
 ## Stage 6: Live SUMO/Tarcl Snapshot Binding
 

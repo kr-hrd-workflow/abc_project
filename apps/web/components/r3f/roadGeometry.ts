@@ -57,6 +57,30 @@ export const STAGE3_CAMERA = {
   far: 500
 } as const;
 
+export const STAGE5_CAMERA = {
+  position: [24, 78, 108] as Vector3Tuple,
+  target: [0, 0, -36] as Vector3Tuple,
+  fov: 50,
+  near: 0.1,
+  far: 520
+} as const;
+
+export const STAGE5_TALL_VIEWPORT_CAMERA = {
+  position: [0, 54, 52] as Vector3Tuple,
+  target: [0, 0, -8] as Vector3Tuple,
+  fov: 76,
+  near: STAGE5_CAMERA.near,
+  far: STAGE5_CAMERA.far
+} as const;
+
+export function getStage5CameraForAspect(aspect: number) {
+  if (!Number.isFinite(aspect) || aspect <= 0) {
+    return STAGE5_CAMERA;
+  }
+
+  return aspect < 0.82 ? STAGE5_TALL_VIEWPORT_CAMERA : STAGE5_CAMERA;
+}
+
 export const INTERSECTION_BOX_METERS = 32;
 export const LANE_WIDTH_METERS = 3.6;
 export const INBOUND_LANE_COUNT = 3;
@@ -73,6 +97,8 @@ export const CORRIDOR_LENGTH_METERS: Record<Direction, number> = {
 
 const HALF_INTERSECTION = INTERSECTION_BOX_METERS / 2;
 const MARKING_HEIGHT = 0.018;
+const LANE_DIVIDER_MARKING_WIDTH = 0.58;
+const CROSSWALK_STRIPE_WIDTH = 1.12;
 const CURB_WIDTH = 0.45;
 const CURB_HEIGHT = 0.22;
 const SIDEWALK_WIDTH = 5.5;
@@ -141,7 +167,7 @@ export const LANE_DIVIDER_MARKINGS = APPROACH_CORRIDORS.flatMap((corridor) => {
           MARKING_HEIGHT,
           corridor.position[2]
         ],
-        size: [0.16, corridor.lengthMeters - 8]
+        size: [LANE_DIVIDER_MARKING_WIDTH, corridor.lengthMeters - 8]
       });
     } else {
       dividers.push({
@@ -152,7 +178,7 @@ export const LANE_DIVIDER_MARKINGS = APPROACH_CORRIDORS.flatMap((corridor) => {
           MARKING_HEIGHT,
           laneOffset
         ],
-        size: [corridor.lengthMeters - 8, 0.16]
+        size: [corridor.lengthMeters - 8, LANE_DIVIDER_MARKING_WIDTH]
       });
     }
   }
@@ -303,25 +329,25 @@ function buildCrosswalkStripes(): PlanePrimitiveSpec[] {
       id: `north-crosswalk-${index}`,
       direction: "north",
       position: [offset, MARKING_HEIGHT + 0.008, -crosswalkOffset],
-      size: [0.56, ROAD_WIDTH_METERS + 2.5]
+      size: [CROSSWALK_STRIPE_WIDTH, ROAD_WIDTH_METERS + 2.5]
     });
     stripes.push({
       id: `south-crosswalk-${index}`,
       direction: "south",
       position: [offset, MARKING_HEIGHT + 0.008, crosswalkOffset],
-      size: [0.56, ROAD_WIDTH_METERS + 2.5]
+      size: [CROSSWALK_STRIPE_WIDTH, ROAD_WIDTH_METERS + 2.5]
     });
     stripes.push({
       id: `east-crosswalk-${index}`,
       direction: "east",
       position: [crosswalkOffset, MARKING_HEIGHT + 0.008, offset],
-      size: [ROAD_WIDTH_METERS + 2.5, 0.56]
+      size: [ROAD_WIDTH_METERS + 2.5, CROSSWALK_STRIPE_WIDTH]
     });
     stripes.push({
       id: `west-crosswalk-${index}`,
       direction: "west",
       position: [-crosswalkOffset, MARKING_HEIGHT + 0.008, offset],
-      size: [ROAD_WIDTH_METERS + 2.5, 0.56]
+      size: [ROAD_WIDTH_METERS + 2.5, CROSSWALK_STRIPE_WIDTH]
     });
   }
 

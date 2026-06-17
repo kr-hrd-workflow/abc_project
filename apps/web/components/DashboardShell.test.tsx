@@ -10,6 +10,7 @@ const r3fCameraMock = vi.hoisted(() => ({
   position: { set: vi.fn() },
   lookAt: vi.fn(),
   updateProjectionMatrix: vi.fn(),
+  fov: 0,
   near: 0,
   far: 0
 }));
@@ -21,8 +22,39 @@ vi.mock("@react-three/fiber", () => ({
   ),
   useThree: () => ({
     camera: r3fCameraMock,
-    invalidate: r3fInvalidateMock
+    invalidate: r3fInvalidateMock,
+    size: { width: 914, height: 680 }
   })
+}));
+vi.mock("./r3f/ApproachCorridors", () => ({
+  ApproachCorridors: () => null
+}));
+vi.mock("./r3f/LightingRig", () => ({
+  LightingRig: () => null
+}));
+vi.mock("./r3f/ProceduralIntersection", () => ({
+  ProceduralIntersection: () => null
+}));
+vi.mock("./r3f/Stage5SceneAssets", async (importActual) => {
+  const actual =
+    await importActual<typeof import("./r3f/Stage5SceneAssets")>();
+
+  return {
+    ...actual,
+    Stage5SceneAssets: () => null
+  };
+});
+vi.mock("./r3f/TrafficDensityLayer", async (importActual) => {
+  const actual =
+    await importActual<typeof import("./r3f/TrafficDensityLayer")>();
+
+  return {
+    ...actual,
+    TrafficDensityLayer: () => null
+  };
+});
+vi.mock("./r3f/WeatherAndAtmosphere", () => ({
+  WeatherAndAtmosphere: () => null
 }));
 
 import { DashboardShell } from "./DashboardShell";
@@ -30,10 +62,26 @@ import {
   buildFixtureSceneSnapshot,
   buildSceneSnapshot
 } from "./r3f/buildSceneSnapshot";
+import { STAGE5_RENDERER_MODE } from "./r3f/R3FSimulationViewport";
 import { SimulationScene } from "./r3f/SimulationScene";
-import { buildTrafficDensityRenderPlan } from "./r3f/TrafficDensityLayer";
+import {
+  STAGE5_MIN_VISIBLE_VEHICLES,
+  STAGE5_TRAFFIC_VEHICLE_SILHOUETTE_PARTS,
+  buildTrafficDensityRenderPlan
+} from "./r3f/TrafficDensityLayer";
 import { getR3FAssetEntry, listR3FAssetEntries } from "./r3f/assetManifest";
-import { STAGE3_CAMERA, TURN_ARROW_MARKINGS } from "./r3f/roadGeometry";
+import {
+  STAGE5_FACADE_PANELS,
+  STAGE5_HERO_GLB_ASSET_IDS,
+  STAGE5_HERO_VEHICLE_PLACEMENTS,
+  STAGE5_STREET_FURNITURE_CONTACT_SHADOW_PLACEMENTS,
+  STAGE5_STREET_FURNITURE_GLB_ASSET_IDS,
+  STAGE5_STREET_FURNITURE_PLACEMENTS,
+  STAGE5_VISIBLE_TRAFFIC_GLB_ASSET_IDS,
+  STAGE5_VISIBLE_TRAFFIC_GLB_PLACEMENTS
+} from "./r3f/Stage5SceneAssets";
+import { STAGE5_TEXTURE_PATHS } from "./r3f/roadMaterials";
+import { STAGE5_CAMERA, TURN_ARROW_MARKINGS } from "./r3f/roadGeometry";
 import type {
   ChatResponse,
   AnalysisFixture,
@@ -711,7 +759,7 @@ describe("DashboardShell", () => {
     });
   });
 
-  test("invalidates demand rendering after applying the Stage 3 camera target", () => {
+  test("invalidates demand rendering after applying the Stage 5 long-corridor camera target", () => {
     r3fCameraMock.position.set.mockClear();
     r3fCameraMock.lookAt.mockClear();
     r3fCameraMock.updateProjectionMatrix.mockClear();
@@ -727,11 +775,12 @@ describe("DashboardShell", () => {
     );
 
     expect(r3fCameraMock.position.set).toHaveBeenCalledWith(
-      ...STAGE3_CAMERA.position
+      ...STAGE5_CAMERA.position
     );
-    expect(r3fCameraMock.near).toBe(STAGE3_CAMERA.near);
-    expect(r3fCameraMock.far).toBe(STAGE3_CAMERA.far);
-    expect(r3fCameraMock.lookAt).toHaveBeenCalledWith(...STAGE3_CAMERA.target);
+    expect(r3fCameraMock.near).toBe(STAGE5_CAMERA.near);
+    expect(r3fCameraMock.far).toBe(STAGE5_CAMERA.far);
+    expect(r3fCameraMock.fov).toBe(STAGE5_CAMERA.fov);
+    expect(r3fCameraMock.lookAt).toHaveBeenCalledWith(...STAGE5_CAMERA.target);
     expect(r3fCameraMock.updateProjectionMatrix).toHaveBeenCalled();
     expect(r3fInvalidateMock).toHaveBeenCalledTimes(1);
   });
@@ -797,6 +846,145 @@ describe("DashboardShell", () => {
     expect(nearOrHeroAssets.every((asset) => asset.pbr)).toBe(true);
   });
 
+  test("defines the Stage 5 runtime material texture contract", () => {
+    expect(STAGE5_TEXTURE_PATHS.wetAsphaltAlbedo).toBe(
+      "/simulation/r3f/assets/textures/wet_asphalt_albedo.webp"
+    );
+    expect(STAGE5_TEXTURE_PATHS.wetAsphaltRoughness).toBe(
+      "/simulation/r3f/assets/textures/wet_asphalt_roughness.webp"
+    );
+    expect(STAGE5_TEXTURE_PATHS.wornLaneMarkings).toBe(
+      "/simulation/r3f/assets/textures/worn_lane_markings.png"
+    );
+    expect(STAGE5_TEXTURE_PATHS.crosswalkWear).toBe(
+      "/simulation/r3f/assets/textures/crosswalk_wear.png"
+    );
+    expect(STAGE5_TEXTURE_PATHS.sidewalkPaverVariation).toBe(
+      "/simulation/r3f/assets/textures/sidewalk_paver_variation.webp"
+    );
+    expect(STAGE5_TEXTURE_PATHS.facadeWindowEmissive).toBe(
+      "/simulation/r3f/assets/textures/facade_window_emissive.webp"
+    );
+  });
+
+  test("plans at least 80 fixture-density vehicles for the Stage 5 long-corridor view", () => {
+    const scene = buildFixtureSceneSnapshot({
+      queues: status.queues,
+      events
+    });
+    const plan = buildTrafficDensityRenderPlan(scene);
+
+    expect(STAGE5_MIN_VISIBLE_VEHICLES).toBe(80);
+    expect(plan.mode).toBe("fixture_queues");
+    expect(plan.preciseVehicles).toEqual([]);
+    expect(plan.farVehicles.length).toBeGreaterThanOrEqual(STAGE5_MIN_VISIBLE_VEHICLES);
+    expect(new Set(plan.farVehicles.map((vehicle) => vehicle.sourceLabel))).toEqual(
+      new Set(["fixture"])
+    );
+  });
+
+  test("keeps Stage 5 fixture traffic legible from an oblique camera", () => {
+    const scene = buildFixtureSceneSnapshot({
+      queues: status.queues,
+      events
+    });
+    const plan = buildTrafficDensityRenderPlan(scene);
+    const colorLuminance = (hexColor: string) => {
+      const red = Number.parseInt(hexColor.slice(1, 3), 16);
+      const green = Number.parseInt(hexColor.slice(3, 5), 16);
+      const blue = Number.parseInt(hexColor.slice(5, 7), 16);
+
+      return 0.2126 * red + 0.7152 * green + 0.0722 * blue;
+    };
+
+    expect(STAGE5_CAMERA.position[1]).toBeLessThan(STAGE5_CAMERA.position[2]);
+    expect(plan.farVehicles.every((vehicle) => vehicle.size[0] >= 2.3)).toBe(true);
+    expect(plan.farVehicles.every((vehicle) => vehicle.size[1] >= 1.05)).toBe(true);
+    expect(
+      Math.min(...plan.farVehicles.map((vehicle) => colorLuminance(vehicle.color)))
+    ).toBeGreaterThan(72);
+  });
+
+  test("uses non-box geometry for visible Stage 5 vehicle silhouettes", () => {
+    const visiblePartNames = STAGE5_TRAFFIC_VEHICLE_SILHOUETTE_PARTS.filter(
+      (part) => part.visible
+    ).map((part) => part.name);
+    const visibleGeometryTypes = STAGE5_TRAFFIC_VEHICLE_SILHOUETTE_PARTS.filter(
+      (part) => part.visible
+    ).map((part) => part.geometry);
+
+    expect(visiblePartNames).toEqual([
+      "body",
+      "cabin",
+      "windshield",
+      "rearGlass",
+      "sideGlass",
+      "roofHighlight",
+      "frontGrille",
+      "tailPanel",
+      "wheelArch",
+      "wheel",
+      "headlight",
+      "taillight",
+      "headlightGlow",
+      "taillightGlow"
+    ]);
+    expect(visibleGeometryTypes).not.toContain("boxGeometry");
+    expect(visibleGeometryTypes).toContain("extrudeGeometry");
+    expect(visibleGeometryTypes).toContain("cylinderGeometry");
+    expect(visibleGeometryTypes).toContain("sphereGeometry");
+    expect(visibleGeometryTypes).toContain("planeGeometry");
+    expect(visibleGeometryTypes).toContain("torusGeometry");
+  });
+
+  test("uses Stage 4.1 GLB assets and facade panels for Stage 5 foreground realism", () => {
+    expect(STAGE5_HERO_GLB_ASSET_IDS).toEqual([
+      "vehicles/bus_far",
+      "vehicles/emergency_ambulance_medium"
+    ]);
+    expect(STAGE5_VISIBLE_TRAFFIC_GLB_ASSET_IDS).toEqual([
+      "vehicles/bus_far",
+      "vehicles/emergency_ambulance_medium"
+    ]);
+    expect(STAGE5_HERO_VEHICLE_PLACEMENTS).toHaveLength(2);
+    expect(STAGE5_VISIBLE_TRAFFIC_GLB_PLACEMENTS).toEqual(
+      STAGE5_HERO_VEHICLE_PLACEMENTS
+    );
+    expect(STAGE5_STREET_FURNITURE_GLB_ASSET_IDS).toEqual([
+      "props/streetlight"
+    ]);
+    expect(STAGE5_STREET_FURNITURE_PLACEMENTS).toHaveLength(2);
+    expect(STAGE5_STREET_FURNITURE_CONTACT_SHADOW_PLACEMENTS).toHaveLength(2);
+    expect(
+      new Set(
+        STAGE5_STREET_FURNITURE_CONTACT_SHADOW_PLACEMENTS.map(
+          (shadow) => shadow.sourcePlacementId
+        )
+      )
+    ).toEqual(new Set(STAGE5_STREET_FURNITURE_PLACEMENTS.map((light) => light.id)));
+    expect(STAGE5_FACADE_PANELS.length).toBeGreaterThanOrEqual(8);
+    expect(
+      Math.max(...STAGE5_FACADE_PANELS.map((panel) => panel.size[1]))
+    ).toBeLessThanOrEqual(5.5);
+
+    STAGE5_VISIBLE_TRAFFIC_GLB_ASSET_IDS.forEach((assetId) => {
+      const asset = getR3FAssetEntry(assetId);
+
+      expect(asset.kind).toBe("vehicle");
+      expect(asset.pbr).toBe(true);
+      expect(asset.realisticSilhouette).toBe(true);
+      expect(asset.visualRejectIfToyLike).toBe(true);
+    });
+    STAGE5_STREET_FURNITURE_GLB_ASSET_IDS.forEach((assetId) => {
+      const asset = getR3FAssetEntry(assetId);
+
+      expect(asset.kind).toBe("prop");
+      expect(asset.pbr).toBe(true);
+      expect(asset.realisticSilhouette).toBe(true);
+      expect(asset.visualRejectIfToyLike).toBe(true);
+    });
+  });
+
   test("mounts the browser-only R3F renderer when it is enabled and WebGL is supported", async () => {
     vi.stubEnv("NEXT_PUBLIC_R3F_SIMULATION_ENABLED", "true");
     mockWebGLSupport(true);
@@ -811,9 +999,16 @@ describe("DashboardShell", () => {
     expect(screen.queryByText("Digital twin fallback")).toBeNull();
     expect(screen.getByText("Simulation only / No real signal control")).toBeTruthy();
     expect(viewport.getAttribute("data-r3f-simulation-ready")).toBe("true");
-    expect(viewport.getAttribute("data-r3f-renderer-mode")).toBe("r3f_procedural_stage3");
+    expect(viewport.getAttribute("data-r3f-renderer-mode")).toBe(STAGE5_RENDERER_MODE);
+    expect(viewport.getAttribute("data-r3f-photoreal-stage")).toBe("5");
     expect(viewport.getAttribute("data-r3f-snapshot-source")).toBe("simulation_snapshot_fixture");
     expect(viewport.getAttribute("data-r3f-traffic-density-mode")).toBe("fixture_queues");
+    expect(
+      Number(viewport.getAttribute("data-r3f-visible-vehicle-count"))
+    ).toBeGreaterThanOrEqual(STAGE5_MIN_VISIBLE_VEHICLES);
+    expect(viewport.getAttribute("data-r3f-glb-vehicle-count")).toBe("2");
+    expect(viewport.getAttribute("data-r3f-street-shadow-count")).toBe("2");
+    expect(viewport.getAttribute("data-r3f-vehicle-silhouette-part-count")).toBe("14");
   });
 
   test("exposes Stage 3 corridor lengths in meters outside the canvas", async () => {
