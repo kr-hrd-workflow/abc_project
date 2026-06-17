@@ -37,9 +37,11 @@ htmlcov/
 # Generated project data
 uploads/
 media/
-artifacts/*
-!artifacts/r3f-stage4.1-asset-realism-contact-sheet.png
-!artifacts/r3f-stage4.1-glb-turntable-contact-sheet.png
+
+# Generated artifacts stay ignored, except proof files required by CI.
+/artifacts/*
+!/artifacts/r3f-stage4.1-asset-realism-contact-sheet.png
+!/artifacts/r3f-stage4.1-glb-turntable-contact-sheet.png
 reports/generated/
 models/
 *.pt
