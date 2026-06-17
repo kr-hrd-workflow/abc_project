@@ -2,7 +2,7 @@
 
 ## Decision
 
-R3F is the active dashboard renderer path for this implementation plan; Stage 0 records the selected direction and does not mean the R3F runtime is already implemented or enabled.
+R3F is the active dashboard renderer path. The runtime is implemented through Stage 5 browser visual proof, with Stage 6A frame-backed renderer state, Stage 6B signal-state hardware and operator overlays, and Stage 6C default verification gates now present in the repo.
 
 Unreal/Pixel Streaming remains archived.
 
@@ -14,16 +14,39 @@ Image Gen references are visual targets, not runtime evidence.
 
 ## Renderer Boundary
 
-Stage 0 records the selected renderer path; it does not mean the R3F runtime is already implemented or enabled.
+SUMO/TraCI/Tarcl remains simulation truth. Browser rendering may interpolate received state, but it cannot invent traffic truth or perform real signal control.
 
 Renderer precedence for the `/dashboard` simulation viewport:
 
 1. External renderer: `NEXT_PUBLIC_SIMULATION_STREAM_URL` iframe remains highest priority.
 2. Legacy renderer: `NEXT_PUBLIC_UNITY_WEBGL_URL` only when the generic stream URL is absent.
-3. Default renderer: internal R3F digital twin when implemented/enabled and WebGL is available.
+3. Default renderer: internal R3F digital twin when enabled and WebGL is available.
 4. Fallback renderer: existing CSS/canvas virtual CCTV when R3F is disabled, unavailable, or WebGL fails.
 
-Photorealistic rendering remains required for future R3F stages. Stage 0 records direction only; runtime evidence must come from actual browser-rendered R3F screenshots in later stages, not from Image Gen references or archived Unreal proof.
+Photorealistic rendering remains required. Runtime evidence must come from actual browser-rendered R3F screenshots, not from Image Gen references or archived Unreal proof.
+
+## Status Vocabulary
+
+| Term | Meaning |
+|---|---|
+| implemented | Code or documentation exists and is wired locally. |
+| verified | Fresh local tests, build, browser proof, or docs checks passed. |
+| gated | Included in `npm run verify` and the checked-in R3F dashboard workflow. |
+| not live truth | Fixture, aggregate, or received simulation state is being rendered; the browser is not a SUMO/Tarcl authority. |
+
+## Current Evidence Status
+
+| Stage | Status | Evidence and boundary |
+|---|---|---|
+| Stage 1 R3F island | implemented, verified | Browser-only R3F island is the internal renderer when enabled and WebGL is available. |
+| Stage 2 frame contract | implemented, verified, not live truth | `/api/simulation/frame`, `getSimulationFrame()`, and `SimulationFrameSnapshot` exist. |
+| Stage 3 geometry and density | implemented, verified, not live truth | Procedural roads and density rendering exist; aggregate or fixture data remains labeled. |
+| Stage 4/4.1 assets and materials | implemented, verified, gated | Asset manifest, shipped GLBs/textures, proof images, and `verify:r3f-assets` enforce the asset bar. |
+| Stage 5 browser proof | implemented, verified, gated, not live truth | `/dashboard` browser screenshots and verifier artifacts prove runtime rendering, not live traffic control. |
+| Stage 6A frame wiring | implemented, verified, not live truth | R3F prefers `buildSceneSnapshot(simulationFrame)` and labels frame-backed versus fixture fallback state. |
+| Stage 6B dynamic signals | implemented, verified, not live truth | `SignalHardware` and `SimulationOverlays` render received signal state or explicit `unavailable`. |
+| Stage 6C default gates | implemented, verified, gated | Root `npm run verify` and `.github/workflows/r3f-dashboard-verify.yml` include R3F asset and dashboard proof. |
+| Stage 6D docs reconciliation | implemented, verified | README, runbook, technote, and plan now use implemented/verified/gated wording without production-ready claims. |
 
 ## Stage 4 And 4.1 Asset Pipeline Evidence
 
@@ -82,7 +105,7 @@ Runtime maps:
 - `sidewalk_paver_variation.webp`
 - `facade_window_emissive.webp`
 
-These files are runtime material/decal assets, not browser-rendering proof. Image Gen remains allowed as source/target material direction, but Image Gen output by itself is not runtime evidence. Runtime proof for photoreal rendering must come from actual browser screenshots of the `/dashboard` R3F renderer in later stages.
+These files are runtime material/decal assets, not browser-rendering proof. Image Gen remains allowed as source/target material direction, but Image Gen output by itself is not runtime evidence. Runtime proof for photoreal rendering must come from actual browser screenshots of the `/dashboard` R3F renderer, as the Stage 5 proof does.
 
 KTX2/BasisU is intentionally not used in Stage 4 because the Next/R3F decoder path has not been separately verified for those texture formats.
 
@@ -95,4 +118,4 @@ Stage 4.1 proof artifacts:
 
 Both proof images are generated from actual shipped GLBs/textures with deterministic software projection of parsed GLB triangle geometry and actual runtime texture/decal thumbnails. They include labels, triangle/file-size or texture-dimension/file-size metadata, verifier status, and the explicit note that they are asset proof only, not Stage 5 browser-rendered scene proof.
 
-Stage 4.1 proof images are local asset proof. Stage 5/7 completion still requires browser-rendered R3F screenshots from `/dashboard`; these proof PNGs do not prove runtime lighting, camera, material response, or live SUMO/Tarcl binding.
+Stage 4.1 proof images are local asset proof. Stage 5 browser screenshots provide runtime proof for the R3F renderer; these proof PNGs do not prove runtime lighting, camera, material response, or live SUMO/Tarcl binding.

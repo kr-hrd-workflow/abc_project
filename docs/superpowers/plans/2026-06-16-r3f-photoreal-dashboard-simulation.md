@@ -144,7 +144,9 @@ docs/technotes/r3f-photoreal-dashboard-renderer.md
 - Modify: `README.md`
 - Modify: `docs/launch-runbook.md`
 
-- [ ] **Step 1: Record the renderer decision**
+Stage 6D reconciliation note, 2026-06-18: Stage 0 through Stage 3 checkboxes are aligned to the current evidence table below. This is a documentation status sync only; it does not change runtime behavior or mark Stage 6E, Stage 6F, or final Stage 6 readiness complete.
+
+- [x] **Step 1: Record the renderer decision**
 
 Write a short technote stating:
 
@@ -156,7 +158,7 @@ The browser renderer can interpolate received state but cannot invent traffic tr
 Image Gen references are visual targets, not runtime evidence.
 ```
 
-- [ ] **Step 2: Update setup docs**
+- [x] **Step 2: Update setup docs**
 
 Add a dashboard renderer section to `README.md` and `docs/launch-runbook.md`:
 
@@ -166,7 +168,7 @@ External renderer: NEXT_PUBLIC_SIMULATION_STREAM_URL iframe, still highest prior
 Fallback renderer: existing CSS/canvas virtual CCTV when R3F is disabled or WebGL fails.
 ```
 
-- [ ] **Step 3: Verification**
+- [x] **Step 3: Verification**
 
 Run:
 
@@ -188,7 +190,7 @@ Expected: no whitespace errors.
 - Create: `apps/web/components/r3f/webglSupport.ts`
 - Modify: `apps/web/components/DashboardShell.test.tsx`
 
-- [ ] **Step 1: Add dependencies after approval**
+- [x] **Step 1: Add dependencies after approval**
 
 Run only after user approval:
 
@@ -199,11 +201,11 @@ npm --workspace apps/web install -D @types/three @gltf-transform/cli
 
 Expected: `apps/web/package.json` and `package-lock.json` update.
 
-- [ ] **Step 2: Extract the current fallback**
+- [x] **Step 2: Extract the current fallback**
 
 Move the current DOM/CSS/canvas implementation from `SimulationViewport.tsx` into `SimulationViewportFallback.tsx` without changing visible copy or tests.
 
-- [ ] **Step 3: Add browser-only R3F island**
+- [x] **Step 3: Add browser-only R3F island**
 
 Use `next/dynamic` with `ssr: false` so the Canvas never renders on the server:
 
@@ -214,7 +216,7 @@ const R3FSimulationViewport = dynamic(
 );
 ```
 
-- [ ] **Step 4: Keep stream precedence**
+- [x] **Step 4: Keep stream precedence**
 
 Renderer selection order:
 
@@ -225,7 +227,7 @@ Renderer selection order:
 4. SimulationViewportFallback
 ```
 
-- [ ] **Step 5: Add tests**
+- [x] **Step 5: Add tests**
 
 Add tests that assert:
 
@@ -236,7 +238,7 @@ Fallback copy remains visible when R3F is disabled.
 The safety boundary remains visible.
 ```
 
-- [ ] **Step 6: Verification**
+- [x] **Step 6: Verification**
 
 Run:
 
@@ -259,7 +261,7 @@ Expected: tests and build pass.
 - Modify: `apps/web/lib/types.ts`
 - Create: `apps/web/components/r3f/buildSceneSnapshot.ts`
 
-- [ ] **Step 1: Define backend snapshot schema**
+- [x] **Step 1: Define backend snapshot schema**
 
 Create a Pydantic schema with this shape:
 
@@ -305,7 +307,7 @@ class SimulationFrameSnapshot(BaseModel):
     events: list[TrafficEventRead]
 ```
 
-- [ ] **Step 2: Add fixture snapshot service**
+- [x] **Step 2: Add fixture snapshot service**
 
 Map existing scenario data to deterministic snapshot frames:
 
@@ -318,7 +320,7 @@ blocked: all-red or blocked marker plus high queue density on long approaches.
 
 This is a temporary fixture renderer contract and must return `source = "simulation_snapshot_fixture"`.
 
-- [ ] **Step 3: Add route**
+- [x] **Step 3: Add route**
 
 Add:
 
@@ -328,7 +330,7 @@ GET /api/simulation/frame?scenario_id=emergency
 
 Keep `/api/simulate-signal` unchanged for aggregate comparison.
 
-- [ ] **Step 4: Add frontend type and client**
+- [x] **Step 4: Add frontend type and client**
 
 Create `apps/web/lib/simulationSnapshot.ts` with TypeScript types matching the Pydantic shape and add:
 
@@ -336,7 +338,7 @@ Create `apps/web/lib/simulationSnapshot.ts` with TypeScript types matching the P
 export async function getSimulationFrame(scenarioId?: ScenarioId): Promise<SimulationFrameSnapshot>
 ```
 
-- [ ] **Step 5: Add tests that prevent invented trajectories**
+- [x] **Step 5: Add tests that prevent invented trajectories**
 
 Tests must assert:
 
@@ -347,7 +349,7 @@ Long-road traffic fill must come from density_segments or explicit fixture mode,
 The dashboard can still render aggregate SUMO telemetry without a frame endpoint.
 ```
 
-- [ ] **Step 6: Verification**
+- [x] **Step 6: Verification**
 
 Run:
 
@@ -370,7 +372,7 @@ Expected: backend snapshot tests and frontend contract tests pass.
 - Modify: `apps/web/components/r3f/R3FSimulationViewport.tsx`
 - Modify: `apps/web/components/DashboardShell.test.tsx`
 
-- [ ] **Step 1: Build the base road from data, not images**
+- [x] **Step 1: Build the base road from data, not images**
 
 Create procedural primitives for:
 
@@ -385,7 +387,7 @@ sidewalk slabs
 queue zones
 ```
 
-- [ ] **Step 2: Make the roads visibly longer than the intersection**
+- [x] **Step 2: Make the roads visibly longer than the intersection**
 
 `ApproachCorridors.tsx` must generate each approach as its own module:
 
@@ -400,7 +402,7 @@ sidewalk and building-edge context along each approach
 
 The target visual is `r3f-long-corridor-traffic-reference.png`, not the tighter first reference.
 
-- [ ] **Step 3: Add traffic density as a renderer layer**
+- [x] **Step 3: Add traffic density as a renderer layer**
 
 `TrafficDensityLayer.tsx` must show queue volume without inventing live truth:
 
@@ -412,7 +414,7 @@ far corridor fill: use visibly lower-detail instanced vehicles only when source 
 
 No dense traffic layer may be labeled `sumo_traci` unless backend data supplies the vehicle or aggregate-density proxy.
 
-- [ ] **Step 4: Use stable units**
+- [x] **Step 4: Use stable units**
 
 Set the scene contract:
 
@@ -424,7 +426,7 @@ Y is height.
 North is negative Z.
 ```
 
-- [ ] **Step 5: Add operator-readable camera**
+- [x] **Step 5: Add operator-readable camera**
 
 Use an oblique camera that keeps long approaches visible:
 
@@ -435,7 +437,7 @@ fov: 38
 near/far: 0.1 / 500
 ```
 
-- [ ] **Step 6: Add first scene test hooks**
+- [x] **Step 6: Add first scene test hooks**
 
 Expose stable data attributes outside the canvas:
 
@@ -447,7 +449,7 @@ data-r3f-corridor-length-meters
 data-r3f-traffic-density-mode
 ```
 
-- [ ] **Step 7: Verification**
+- [x] **Step 7: Verification**
 
 Run:
 
@@ -985,8 +987,7 @@ npm run build:web
 - The real browser canvas proof passed both verifier visual gates: `photorealism_check.passed=true` and `composition_check.passed=true`. The desktop canvas metrics included `bright_ratio=0.011425`, `marking_ratio=0.035709`, `luminance_stddev=34.29`, `scene_coverage_ratio=0.9477`, and `empty_near_black_ratio=0.0512`.
 - Generated proof artifacts: `artifacts/r3f-dashboard-desktop.png`, `artifacts/r3f-dashboard-mobile.png`, `artifacts/r3f-dashboard-desktop-canvas.png`, `artifacts/r3f-dashboard-mobile-canvas.png`, `artifacts/r3f-dashboard-webgl-off.png`, and `artifacts/r3f-dashboard-details.json`.
 - `npm --workspace apps/web run test` passed 6 files / 73 tests, `npm run build:web` passed, `node scripts\verify-r3f-assets.mjs` passed at `9.62 MB / 25.00 MB`, and `git diff --check` exited 0 with LF/CRLF warnings only.
-- Fresh spec-compliance, human-visual, and code-quality review is required before claiming Stage 5 complete.
-- Scope note: Stage 5 proof is browser-rendered R3F runtime proof only. It does not complete Stage 6 live SUMO/Tarcl binding.
+- Stage 5 proof is browser-rendered R3F runtime proof only. It does not complete Stage 6 live SUMO/Tarcl binding.
 
 ## 2026-06-18 Audit-Driven Roadmap Update
 
@@ -997,16 +998,30 @@ Decision: do not execute only the highest-priority audit findings. The next plan
 Current state summary:
 
 ```text
-Stage 5 browser visual proof exists.
+Stages 1-5 are implemented/proven as the R3F dashboard renderer path.
 Stage 2 /api/simulation/frame and getSimulationFrame() exist.
-R3FSimulationViewport still renders buildFixtureSceneSnapshot({ queues, events }).
-Signal snapshots exist in the contract, but no dedicated R3F signal layer exists.
-verify-r3f-assets.mjs and verify-r3f-dashboard.mjs exist, but npm run verify does not call them.
-.github/workflows is not present in the current working tree.
-README.md and docs/launch-runbook.md still describe R3F as a direction, not the implemented Stage 5 runtime proof.
+R3FSimulationViewport prefers buildSceneSnapshot(simulationFrame) and labels fixture fallback.
+Signal snapshots render through SignalHardware and SimulationOverlays, or explicit unavailable state.
+verify-r3f-assets.mjs and verify-r3f-dashboard.mjs are included in npm run verify.
+.github/workflows/r3f-dashboard-verify.yml is present and runs R3F asset/dashboard proof.
+README.md, docs/launch-runbook.md, the R3F technote, and this plan are reconciled in Stage 6D.
 ```
 
-Stage 6+ must start as report-driven stabilization, not as new visual expansion. Stage 6 entry is accepted only after Stages 6A through 6D are implemented and verified. Stages 6E and 6F remain required follow-up work from the same audit, not optional polish.
+Stage 6 started as report-driven stabilization, not as new visual expansion. Stages 6A through 6D cover truth wiring, signal overlays, verification gates, and documentation reconciliation. Stages 6E and 6F remain required follow-up work from the same audit, not optional polish; final Stage 6 readiness is not complete until those gates pass.
+
+### R3F Stage Status As Of Stage 6D
+
+| Stage | Status | Evidence and boundary |
+|---|---|---|
+| Stage 1 R3F island | implemented, verified | Browser-only R3F island is the internal renderer when enabled and WebGL is available. |
+| Stage 2 frame contract | implemented, verified, not live truth | `/api/simulation/frame`, `getSimulationFrame()`, and `SimulationFrameSnapshot` exist. |
+| Stage 3 geometry and density | implemented, verified, not live truth | Procedural roads and density rendering exist; aggregate or fixture data remains labeled. |
+| Stage 4/4.1 assets and materials | implemented, verified, gated | Asset manifest, shipped GLBs/textures, proof images, and `verify:r3f-assets` enforce the asset bar. |
+| Stage 5 browser proof | implemented, verified, gated, not live truth | Browser screenshots and verifier artifacts prove R3F rendering, not live SUMO/Tarcl binding. |
+| Stage 6A frame wiring | implemented, verified, not live truth | R3F prefers `SimulationFrameSnapshot` and labels frame-backed versus fixture fallback state. |
+| Stage 6B dynamic signals | implemented, verified, not live truth | Signal hardware and source badges render received signal state or explicit `unavailable`. |
+| Stage 6C default gates | implemented, verified, gated | Root `npm run verify` and `.github/workflows/r3f-dashboard-verify.yml` include R3F asset and dashboard proof. |
+| Stage 6D docs reconciliation | implemented, verified | README, runbook, technote, and this plan use implemented/verified/gated wording without production-ready claims. |
 
 ### Audit Coverage Matrix
 
@@ -1041,7 +1056,7 @@ Stage 6+ must start as report-driven stabilization, not as new visual expansion.
 - Modify: `apps/web/components/DashboardShell.test.tsx`
 - Modify: `scripts/verify-r3f-dashboard.mjs`
 
-- [ ] **Step 1: Load the frame with the rest of dashboard data**
+- [x] **Step 1: Load the frame with the rest of dashboard data**
 
 In `DashboardRoute.tsx`, import `getSimulationFrame` and `SimulationFrameSnapshot`. Extend `DashboardData`:
 
@@ -1051,7 +1066,7 @@ simulationFrame: SimulationFrameSnapshot | null;
 
 In `loadDashboard(scenarioId)`, request `getSimulationFrame(scenarioId)` in the same scenario load path as status, events, simulation, and readiness. If the frame endpoint returns a route-missing error, store `simulationFrame: null` and keep the dashboard on the existing fallback path. Do not swallow non-route errors silently.
 
-- [ ] **Step 2: Pass the frame through the DOM shell**
+- [x] **Step 2: Pass the frame through the DOM shell**
 
 Add `simulationFrame` to `DashboardShellProps`, pass it to `DigitalTwin`, pass it to `SimulationViewport`, and add it to `SimulationViewportProps` in `SimulationViewportFallback.tsx`:
 
@@ -1061,7 +1076,7 @@ simulationFrame?: SimulationFrameSnapshot | null;
 
 The fallback renderer does not need to draw from the frame, but it must be able to receive the prop without changing existing fallback behavior.
 
-- [ ] **Step 3: Prefer `buildSceneSnapshot(frame)` in R3F**
+- [x] **Step 3: Prefer `buildSceneSnapshot(frame)` in R3F**
 
 In `R3FSimulationViewport.tsx`, replace fixture-first rendering with frame-first rendering:
 
@@ -1080,7 +1095,7 @@ const sceneSnapshot =
 
 Keep `data-r3f-snapshot-source`, `data-r3f-traffic-density-mode`, `data-r3f-visible-vehicle-count`, and the safety copy visible. Add `data-r3f-frame-bound="true"` only when the selected scene came from `SimulationFrameSnapshot`.
 
-- [ ] **Step 4: Preserve truth boundaries in conversion**
+- [x] **Step 4: Preserve truth boundaries in conversion**
 
 Update `buildSceneSnapshot.ts` tests or assertions so:
 
@@ -1093,7 +1108,7 @@ Missing frame -> explicit fixture fallback only.
 
 Do not create frontend vehicle trajectories from aggregate queue metrics unless the mode is labeled `fixture_queues`.
 
-- [ ] **Step 5: Expand tests**
+- [x] **Step 5: Expand tests**
 
 In `DashboardShell.test.tsx`, mock `/api/simulation/frame` and assert:
 
@@ -1105,7 +1120,7 @@ The existing WebGL-off fallback still renders.
 The safety boundary remains visible.
 ```
 
-- [ ] **Step 6: Browser proof**
+- [x] **Step 6: Browser proof**
 
 Update `scripts/verify-r3f-dashboard.mjs` so `artifacts/r3f-dashboard-details.json` records:
 
@@ -1120,7 +1135,7 @@ Update `scripts/verify-r3f-dashboard.mjs` so `artifacts/r3f-dashboard-details.js
 
 The verifier must fail if R3F is ready but the details JSON cannot distinguish frame-backed rendering from fixture fallback.
 
-- [ ] **Step 7: Verification**
+- [x] **Step 7: Verification**
 
 Run:
 
@@ -1141,6 +1156,11 @@ details JSON proves frame-backed R3F when /api/simulation/frame is available.
 git diff check passes.
 ```
 
+Stage 6A evidence captured 2026-06-18:
+- `DashboardRoute.tsx` loads `getSimulationFrame()` with the dashboard data and preserves route-missing fallback.
+- `R3FSimulationViewport.tsx` prefers `buildSceneSnapshot(simulationFrame)` and exposes `data-r3f-frame-bound="true"` only for frame-backed rendering.
+- `scripts/verify-r3f-dashboard.mjs` asserts `snapshot_source="simulation_snapshot_fixture"`, `frame_bound=true`, `traffic_density_mode="density_segments"`, and `fallback_used=false`.
+
 ## Stage 6B: Dynamic Signal Hardware And Operator Overlays
 
 **Goal:** Render signal state and operator-visible source badges from `SceneSnapshot`, not hardcoded visual copy.
@@ -1155,7 +1175,7 @@ git diff check passes.
 - Modify: `scripts/verify-r3f-dashboard.mjs`
 - Modify: `apps/web/app/globals.css`
 
-- [ ] **Step 1: Add signal geometry**
+- [x] **Step 1: Add signal geometry**
 
 Create `SignalHardware.tsx` that accepts:
 
@@ -1167,7 +1187,7 @@ type SignalHardwareProps = {
 
 Render one signal head per direction when a signal exists. Use `red`, `yellow`, and `green` states from `SimulationSignalSnapshot.state`. If `signals` is empty, render no active light and expose `data-r3f-signal-state="unavailable"` from the parent viewport.
 
-- [ ] **Step 2: Mount signal hardware in the scene**
+- [x] **Step 2: Mount signal hardware in the scene**
 
 In `SimulationScene.tsx`, mount:
 
@@ -1177,7 +1197,7 @@ In `SimulationScene.tsx`, mount:
 
 Place it after roadway geometry and before traffic density so signal lights are visually available without owning vehicle rendering.
 
-- [ ] **Step 3: Add operator source overlays outside the canvas**
+- [x] **Step 3: Add operator source overlays outside the canvas**
 
 Create `SimulationOverlays.tsx` for DOM overlays inside the viewport container. It must show:
 
@@ -1191,7 +1211,7 @@ queue source: frame, density segment, or fixture fallback
 
 Do not place the safety copy inside the canvas. Keep `Simulation only / No real signal control` in the dashboard DOM.
 
-- [ ] **Step 4: Add verifier and test coverage**
+- [x] **Step 4: Add verifier and test coverage**
 
 Update tests and verifier assertions for:
 
@@ -1202,7 +1222,7 @@ empty signals produce unavailable state instead of fake lights.
 source badges do not overlap the safety copy on desktop or mobile screenshots.
 ```
 
-- [ ] **Step 5: Verification**
+- [x] **Step 5: Verification**
 
 Run:
 
@@ -1214,6 +1234,12 @@ git diff --check
 ```
 
 Expected: tests, build, dashboard verifier, and diff check pass with signal-state evidence in `artifacts/r3f-dashboard-details.json`.
+
+Stage 6B evidence captured 2026-06-18:
+- `SignalHardware.tsx` renders signal heads from `SceneSnapshot.signals`.
+- `SimulationScene.tsx` mounts `SignalHardware` before `TrafficDensityLayer`.
+- `SimulationOverlays.tsx` exposes source badges, and the viewport labels signal state with `data-r3f-signal-state`.
+- `scripts/verify-r3f-dashboard.mjs` asserts `east:green`, `north:red`, scenario ID, and frame queue source in DOM/source badges.
 
 ## Stage 6C: Promote R3F Verification To Default Gates
 
@@ -1227,7 +1253,7 @@ Expected: tests, build, dashboard verifier, and diff check pass with signal-stat
 - Modify: `README.md`
 - Modify: `docs/launch-runbook.md`
 
-- [ ] **Step 1: Add root scripts**
+- [x] **Step 1: Add root scripts**
 
 Update root `package.json` scripts:
 
@@ -1239,7 +1265,7 @@ Update root `package.json` scripts:
 }
 ```
 
-- [ ] **Step 2: Require full proof artifacts**
+- [x] **Step 2: Require full proof artifacts**
 
 Keep `verify-r3f-dashboard.mjs` writing:
 
@@ -1254,7 +1280,7 @@ artifacts/r3f-dashboard-details.json
 
 Fail the verifier when any path in `details.artifacts` is missing after a successful run.
 
-- [ ] **Step 3: Add workflow-as-code**
+- [x] **Step 3: Add workflow-as-code**
 
 Create `.github/workflows/r3f-dashboard-verify.yml` with a normal push and pull request workflow that runs:
 
@@ -1269,11 +1295,11 @@ npm run verify:r3f-dashboard
 
 If CodeQL is already configured outside the visible tree, do not claim it is required by this workflow. Add a note that branch protection or GitHub required-check configuration is an external repository setting and needs explicit user approval before changing.
 
-- [ ] **Step 4: Document local verification**
+- [x] **Step 4: Document local verification**
 
 Update README and launch runbook so `npm run verify` is the normal local quality gate and explicitly includes R3F asset and dashboard proof.
 
-- [ ] **Step 5: Verification**
+- [x] **Step 5: Verification**
 
 Run:
 
@@ -1286,9 +1312,14 @@ git diff --check
 
 Expected: all commands pass and `npm run verify` covers test, build, asset proof, dashboard browser proof, and diff checks.
 
+Stage 6C evidence captured 2026-06-18:
+- Root `package.json` defines `verify:r3f-assets`, `verify:r3f-dashboard`, and `verify` with both R3F proof scripts after tests/build.
+- `.github/workflows/r3f-dashboard-verify.yml` runs API tests, web tests, web build, `verify:r3f-assets`, and `verify:r3f-dashboard` on `push` and `pull_request`.
+- README and launch runbook document `npm run verify` as the normal local quality gate without claiming branch protection or CodeQL settings were changed.
+
 ## Stage 6D: Reconcile README, Runbook, Technote, And Plan State
 
-**Goal:** Remove the Stage 0-era wording that says R3F is only a selected direction, while avoiding a false production-ready claim.
+**Goal:** Reconcile the former Stage 0-era renderer status wording, while avoiding a false production-ready claim.
 
 **Files:**
 - Modify: `README.md`
@@ -1296,7 +1327,7 @@ Expected: all commands pass and `npm run verify` covers test, build, asset proof
 - Modify: `docs/technotes/r3f-photoreal-dashboard-renderer.md`
 - Modify: `docs/superpowers/plans/2026-06-16-r3f-photoreal-dashboard-simulation.md`
 
-- [ ] **Step 1: Add status vocabulary**
+- [x] **Step 1: Add status vocabulary**
 
 Use these terms consistently:
 
@@ -1307,39 +1338,49 @@ gated: included in npm run verify and auditable CI workflow-as-code
 not live truth: fixture or aggregate fallback is still in use
 ```
 
-- [ ] **Step 2: Fix current renderer status copy**
+- [x] **Step 2: Fix current renderer status copy**
 
 Replace Stage 0-only wording with:
 
 ```text
 R3F runtime is implemented through Stage 5 browser visual proof.
-Live simulation truth wiring, dynamic signal visualization, default verification gates, and documentation reconciliation remain the Stage 6 entry work.
+Stage 6A frame wiring, Stage 6B dynamic signal visualization, Stage 6C default verification gates, and Stage 6D documentation reconciliation are implemented in the repo.
 SUMO/TraCI/Tarcl remains simulation truth. Browser rendering may interpolate received state, but it cannot invent traffic truth.
 ```
 
-- [ ] **Step 3: Add committed evidence summary**
+- [x] **Step 3: Add committed evidence summary**
 
 Add a short status table that separates:
 
 ```text
 Stage 1 R3F island: implemented
-Stage 2 frame contract: implemented, viewport wiring pending until Stage 6A
-Stage 3 geometry and density: implemented, dynamic signal layer pending until Stage 6B
-Stage 4 and 4.1 assets/materials: implemented and asset-verified
-Stage 5 browser proof: visual proof exists, default gate pending until Stage 6C
-Stage 6+: not started until Stage 6A through 6D are verified
+Stage 2 frame contract: implemented and consumed by Stage 6A viewport wiring; not live truth
+Stage 3 geometry and density: implemented with labeled density/fixture boundaries
+Stage 4 and 4.1 assets/materials: implemented, asset-verified, and gated
+Stage 5 browser proof: implemented, verified, and gated; not live SUMO/Tarcl binding
+Stage 6A frame wiring: implemented and verified; not live truth
+Stage 6B dynamic signal visualization: implemented and verified; not real signal control
+Stage 6C default verification gates: implemented, verified, and gated
+Stage 6D docs reconciliation: implemented and verified
 ```
 
-- [ ] **Step 4: Verification**
+- [x] **Step 4: Verification**
 
 Run:
 
 ```bash
 git diff --check
 rg -n "does not mean the R3F runtime is already implemented|runtime is not already implemented|not already implemented or enabled" README.md docs/launch-runbook.md docs/technotes/r3f-photoreal-dashboard-renderer.md
+npm run verify:r3f-assets
+npm run verify:r3f-dashboard
 ```
 
-Expected: `git diff --check` passes and the `rg` command returns no stale Stage 0-only wording.
+Expected: `git diff --check` passes, the `rg` command returns no stale Stage 0-only wording, and the R3F asset/dashboard proof commands pass.
+
+Stage 6D evidence captured 2026-06-18:
+- README, launch runbook, R3F technote, and this plan use implemented/verified/gated/not-live-truth vocabulary.
+- Historical Stage 0 through Stage 3 checklist boxes are aligned with the Stage 6D status table, removing the older open-checkbox contradiction.
+- Stage 6E, Stage 6F, and final Stage 6 readiness remain follow-up work.
 
 ## Stage 6E: Asset Runtime Utilization, Compression, And Licensing
 

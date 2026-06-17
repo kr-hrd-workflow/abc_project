@@ -35,10 +35,33 @@ The dashboard simulation viewport chooses renderers in this order:
 
 1. External renderer: `NEXT_PUBLIC_SIMULATION_STREAM_URL` iframe remains highest priority.
 2. Legacy renderer: `NEXT_PUBLIC_UNITY_WEBGL_URL` is used only when the generic stream URL is absent.
-3. Default renderer: internal R3F digital twin when implemented/enabled and WebGL is available.
+3. Default renderer: internal R3F digital twin when enabled and WebGL is available.
 4. Fallback renderer: existing CSS/canvas virtual CCTV when R3F is disabled, unavailable, or WebGL fails.
 
-Stage 0 records the selected path; it does not mean the R3F runtime is already implemented or enabled. SUMO/TraCI/Tarcl remains simulation truth. Browser rendering may interpolate received state, but it cannot invent traffic truth. Image Gen references are visual targets only, not runtime evidence.
+R3F runtime is implemented through Stage 5 browser visual proof. Current repo evidence also implements Stage 6A frame-backed renderer state, Stage 6B signal-state hardware and operator overlays, and Stage 6C default verification gates. SUMO/TraCI/Tarcl remains simulation truth. Browser rendering may interpolate received state, but it cannot invent traffic truth or perform real signal control. Image Gen references are visual targets only, not runtime evidence.
+
+Status vocabulary:
+
+| Term | Meaning |
+|---|---|
+| implemented | Code or documentation exists and is wired locally. |
+| verified | Fresh local tests, build, browser proof, or docs checks passed. |
+| gated | Included in `npm run verify` and the checked-in R3F dashboard workflow. |
+| not live truth | Fixture, aggregate, or received simulation state is being rendered; the browser is not a SUMO/Tarcl authority. |
+
+Current R3F dashboard status:
+
+| Stage | Status | Evidence and boundary |
+|---|---|---|
+| Stage 1 R3F island | implemented, verified | Browser-only R3F island is the internal renderer when enabled and WebGL is available. |
+| Stage 2 frame contract | implemented, verified, not live truth | `/api/simulation/frame` and `SimulationFrameSnapshot` exist. |
+| Stage 3 geometry and density | implemented, verified, not live truth | Procedural roads and density rendering exist without invented traffic truth. |
+| Stage 4/4.1 assets and materials | implemented, verified, gated | Asset manifest, shipped GLBs/textures, proof images, and `verify:r3f-assets` enforce the asset bar. |
+| Stage 5 browser proof | implemented, verified, gated, not live truth | Browser screenshots and verifier artifacts prove the R3F renderer, not live traffic control. |
+| Stage 6A frame wiring | implemented, verified, not live truth | R3F prefers frame-backed snapshots and labels fixture fallback. |
+| Stage 6B dynamic signals | implemented, verified, not live truth | Signal hardware and source badges render received signal state or explicit `unavailable`. |
+| Stage 6C default gates | implemented, verified, gated | Root `npm run verify` and the R3F dashboard workflow include asset and browser proof. |
+| Stage 6D docs reconciliation | implemented, verified | README, runbook, technote, and plan use implemented/verified/gated wording without production-ready claims. |
 
 The hosted simulation render slot can mount any simulator page:
 
@@ -46,7 +69,7 @@ The hosted simulation render slot can mount any simulator page:
 NEXT_PUBLIC_SIMULATION_STREAM_URL=http://127.0.0.1
 ```
 
-When this value is set, the dashboard mounts the stream page in the central simulation viewport. Without it, the dashboard uses the internal R3F path once implemented/enabled and WebGL is available, otherwise it keeps the committed CSS/canvas virtual CCTV fallback.
+When this value is set, the dashboard mounts the stream page in the central simulation viewport. Without it, the dashboard uses the internal R3F path when enabled and WebGL is available, otherwise it keeps the committed CSS/canvas virtual CCTV fallback.
 
 Legacy Unity WebGL exports remain supported through a compatibility alias:
 

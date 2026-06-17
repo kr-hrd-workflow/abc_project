@@ -87,10 +87,33 @@ Renderer precedence for the `/dashboard` simulation viewport:
 
 - External renderer: `NEXT_PUBLIC_SIMULATION_STREAM_URL` iframe remains highest priority.
 - Legacy renderer: `NEXT_PUBLIC_UNITY_WEBGL_URL` is used only when the generic stream URL is absent.
-- Default renderer: internal R3F digital twin when implemented/enabled and WebGL is available.
+- Default renderer: internal R3F digital twin when enabled and WebGL is available.
 - Fallback renderer: existing CSS/canvas virtual CCTV when R3F is disabled, unavailable, or WebGL fails.
 
-Stage 0 records the selected path; it does not mean the R3F runtime is already implemented or enabled. SUMO/TraCI/Tarcl remains simulation truth. Browser rendering may interpolate received state, but it cannot invent traffic truth. Image Gen references are visual targets only, not runtime evidence. Future R3F stages must still meet the photorealistic rendering requirement.
+R3F runtime is implemented through Stage 5 browser visual proof. Current repo evidence also implements Stage 6A frame-backed renderer state, Stage 6B signal-state hardware and operator overlays, and Stage 6C default verification gates. SUMO/TraCI/Tarcl remains simulation truth. Browser rendering may interpolate received state, but it cannot invent traffic truth or perform real signal control. Image Gen references are visual targets only, not runtime evidence.
+
+Status vocabulary:
+
+| Term | Meaning |
+|---|---|
+| implemented | Code or documentation exists and is wired locally. |
+| verified | Fresh local tests, build, browser proof, or docs checks passed. |
+| gated | Included in `npm run verify` and the checked-in R3F dashboard workflow. |
+| not live truth | Fixture, aggregate, or received simulation state is being rendered; the browser is not a SUMO/Tarcl authority. |
+
+Current R3F dashboard status:
+
+| Stage | Status | Evidence and boundary |
+|---|---|---|
+| Stage 1 R3F island | implemented, verified | Browser-only R3F island is the default internal renderer when enabled and WebGL is available. |
+| Stage 2 frame contract | implemented, verified, not live truth | `/api/simulation/frame` and `SimulationFrameSnapshot` exist; viewport binding is Stage 6A, not live SUMO/Tarcl authority. |
+| Stage 3 geometry and density | implemented, verified, not live truth | Procedural roads and density rendering exist; fixture or received density is labeled instead of invented vehicle truth. |
+| Stage 4/4.1 assets and materials | implemented, verified, gated | Asset manifest, GLBs, textures, proof images, and `verify:r3f-assets` enforce the asset bar. |
+| Stage 5 browser proof | implemented, verified, gated, not live truth | `/dashboard` R3F screenshots and verifier artifacts prove browser rendering, not live traffic control. |
+| Stage 6A frame wiring | implemented, verified, not live truth | R3F prefers `SimulationFrameSnapshot` and labels fixture fallback when frame data is absent. |
+| Stage 6B dynamic signals | implemented, verified, not live truth | Signal hardware and source badges render received signal state or explicit `unavailable`. |
+| Stage 6C default gates | implemented, verified, gated | Root `npm run verify` and `.github/workflows/r3f-dashboard-verify.yml` include R3F asset and dashboard proof. |
+| Stage 6D docs reconciliation | implemented, verified | README, launch runbook, R3F technote, and the live plan use implemented/verified/gated wording without production-ready claims. |
 
 ## 랜딩 페이지 3D 방향
 
