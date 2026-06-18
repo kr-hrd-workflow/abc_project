@@ -1,14 +1,22 @@
 "use client";
 
-import { useEffect, useMemo, useRef } from "react";
+import { Suspense, useEffect, useMemo, useRef } from "react";
+import { useGLTF } from "@react-three/drei";
 import {
   AdditiveBlending,
+  BufferGeometry,
   Color,
   DoubleSide,
+  Float32BufferAttribute,
   Object3D,
   Shape,
-  type InstancedMesh
+  type Group,
+  type InstancedMesh,
+  type Material,
+  type Mesh,
+  MeshStandardMaterial
 } from "three";
+import { mergeGeometries } from "three/examples/jsm/utils/BufferGeometryUtils.js";
 
 import type { Direction } from "../../lib/types";
 import type {
@@ -24,6 +32,7 @@ import {
   LANE_WIDTH_METERS
 } from "./roadGeometry";
 import type { Vector3Tuple } from "./roadGeometry";
+import { getR3FAssetEntry, type R3FAssetId } from "./assetManifest";
 
 export type TrafficDensitySourceLabel =
   | "fixture"
@@ -45,6 +54,7 @@ export type TrafficDensityPreciseVehicle = {
 export type TrafficDensityFarVehicle = {
   id: string;
   direction: Direction;
+  assetId: Stage6ERepeatedDensityAssetId;
   sourceLabel: Exclude<TrafficDensitySourceLabel, "snapshot" | "none">;
   position: Vector3Tuple;
   rotationY: number;
@@ -58,6 +68,18 @@ export type TrafficDensityRenderPlan = {
   sourceLabel: TrafficDensitySourceLabel;
   preciseVehicles: TrafficDensityPreciseVehicle[];
   farVehicles: TrafficDensityFarVehicle[];
+};
+
+export type Stage6EDensityAssetGroup = {
+  assetId: Stage6ERepeatedDensityAssetId;
+  vehicles: TrafficDensityFarVehicle[];
+  instanceCount: number;
+};
+
+export type Stage6EDensityRenderPlan = {
+  instancedAssetGroups: Stage6EDensityAssetGroup[];
+  proceduralVehicles: TrafficDensityFarVehicle[];
+  totalInstancedVehicleCount: number;
 };
 
 const DIRECTIONS: Direction[] = ["north", "south", "east", "west"];
@@ -119,6 +141,46 @@ type Stage5TrafficVehicleInstance = {
   profileName: TrafficVehicleProfileName;
 };
 
+export const STAGE6E_REPEATED_DENSITY_GLB_ASSET_IDS = [
+  "vehicles/passenger_car_far",
+  "vehicles/taxi_far",
+  "vehicles/bus_far",
+  "vehicles/truck_far"
+] as const satisfies readonly R3FAssetId[];
+
+export type Stage6ERepeatedDensityAssetId =
+  (typeof STAGE6E_REPEATED_DENSITY_GLB_ASSET_IDS)[number];
+
+type Stage6EInstancedGeometryGroup = {
+  key: string;
+  assetId: Stage6ERepeatedDensityAssetId;
+  geometry: BufferGeometry;
+  material: Material;
+};
+
+const STAGE6E_DENSITY_MATERIAL_COLORS: Record<
+  Stage6ERepeatedDensityAssetId,
+  string
+> = {
+  "vehicles/passenger_car_far": "#748995",
+  "vehicles/taxi_far": "#a78d3a",
+  "vehicles/bus_far": "#668897",
+  "vehicles/truck_far": "#859197"
+};
+
+const STAGE6E_DENSITY_ASSET_BY_PROFILE: Record<
+  TrafficVehicleProfileName,
+  Stage6ERepeatedDensityAssetId
+> = {
+  sedan: "vehicles/passenger_car_far",
+  hatchback: "vehicles/passenger_car_far",
+  taxi: "vehicles/taxi_far",
+  suv: "vehicles/passenger_car_far",
+  van: "vehicles/passenger_car_far",
+  boxTruck: "vehicles/truck_far",
+  cityBus: "vehicles/bus_far"
+};
+
 const TRAFFIC_VEHICLE_PROFILES: TrafficVehicleProfile[] = [
   {
     name: "sedan",
@@ -176,23 +238,47 @@ export function buildTrafficDensityRenderPlan(
   };
 }
 
+export function buildStage6EDensityRenderPlan(
+  vehicles: TrafficDensityFarVehicle[]
+): Stage6EDensityRenderPlan {
+  const instancedAssetGroups = STAGE6E_REPEATED_DENSITY_GLB_ASSET_IDS.map(
+    (assetId) => {
+      const groupVehicles = vehicles.filter(
+        (vehicle) => vehicle.assetId === assetId
+      );
+
+      return {
+        assetId,
+        vehicles: groupVehicles,
+        instanceCount: groupVehicles.length
+      };
+    }
+  ).filter((group) => group.instanceCount > 0);
+
+  return {
+    instancedAssetGroups,
+    proceduralVehicles: [],
+    totalInstancedVehicleCount: instancedAssetGroups.reduce(
+      (total, group) => total + group.instanceCount,
+      0
+    )
+  };
+}
+
 export function TrafficDensityLayer({
   sceneSnapshot
 }: {
   sceneSnapshot: SceneSnapshot;
 }) {
   const plan = buildTrafficDensityRenderPlan(sceneSnapshot);
-  const renderableVehicles: Stage5TrafficVehicleInstance[] = [
-    ...plan.farVehicles.map((vehicle) => ({
-      id: vehicle.id,
-      position: vehicle.position,
-      rotationY: vehicle.rotationY,
-      size: vehicle.size,
-      color: vehicle.color,
-      emergency: false,
-      profileName: getProfileNameFromSize(vehicle.size)
-    })),
-    ...plan.preciseVehicles.map((vehicle) => ({
+  const canUseDensityGlbs = canUseRuntimeDensityAssets();
+  const densityRenderPlan = buildStage6EDensityRenderPlan(plan.farVehicles);
+  const allProceduralFarVehicles =
+    buildStage5TrafficVehicleInstances(plan.farVehicles);
+  const proceduralFallbackVehicles =
+    buildStage5TrafficVehicleInstances(densityRenderPlan.proceduralVehicles);
+  const preciseVehicles: Stage5TrafficVehicleInstance[] =
+    plan.preciseVehicles.map((vehicle) => ({
       id: vehicle.id,
       position: vehicle.position,
       rotationY: vehicle.rotationY,
@@ -200,16 +286,347 @@ export function TrafficDensityLayer({
       color: vehicle.color,
       emergency: vehicle.emergency,
       profileName: getPreciseVehicleProfileName(vehicle.vehicleType)
-    }))
-  ];
+    }));
 
   return (
     <group
       name={`stage5-traffic-density-${plan.mode}`}
-      userData={{ visibleVehicleCount: renderableVehicles.length }}
+      userData={{
+        visibleVehicleCount: plan.farVehicles.length + plan.preciseVehicles.length,
+        densityGlbAssetIds: plan.farVehicles.map((vehicle) => vehicle.assetId),
+        densitySourceLabel: plan.sourceLabel,
+        densityGlbInstancedFamilyCount:
+          densityRenderPlan.instancedAssetGroups.length,
+        densityGlbVehicleCount: canUseDensityGlbs
+          ? densityRenderPlan.totalInstancedVehicleCount
+          : 0,
+        proceduralDensityVehicleCount: canUseDensityGlbs
+          ? densityRenderPlan.proceduralVehicles.length
+          : allProceduralFarVehicles.length
+      }}
     >
-      <Stage5TrafficVehicleInstances vehicles={renderableVehicles} />
+      <Stage5TrafficVehicleInstances vehicles={preciseVehicles} />
+      {canUseDensityGlbs ? (
+        <Suspense
+          fallback={
+            <Stage5TrafficVehicleInstances vehicles={allProceduralFarVehicles} />
+          }
+        >
+          <Stage6EDensityVehicleGlbs
+            assetGroups={densityRenderPlan.instancedAssetGroups}
+          />
+          {densityRenderPlan.proceduralVehicles.length > 0 ? (
+            <Stage5TrafficVehicleInstances vehicles={proceduralFallbackVehicles} />
+          ) : null}
+        </Suspense>
+      ) : (
+        <Stage5TrafficVehicleInstances vehicles={allProceduralFarVehicles} />
+      )}
     </group>
+  );
+}
+
+function buildStage5TrafficVehicleInstances(
+  vehicles: TrafficDensityFarVehicle[]
+): Stage5TrafficVehicleInstance[] {
+  return vehicles.map((vehicle) => ({
+    id: vehicle.id,
+    position: vehicle.position,
+    rotationY: vehicle.rotationY,
+    size: vehicle.size,
+    color: vehicle.color,
+    emergency: false,
+    profileName: getProfileNameFromSize(vehicle.size)
+  }));
+}
+
+function Stage6EDensityVehicleGlbs({
+  assetGroups
+}: {
+  assetGroups: Stage6EDensityAssetGroup[];
+}) {
+  const passengerCar = useGLTF(
+    getR3FAssetEntry("vehicles/passenger_car_far").path
+  );
+  const taxi = useGLTF(getR3FAssetEntry("vehicles/taxi_far").path);
+  const bus = useGLTF(getR3FAssetEntry("vehicles/bus_far").path);
+  const truck = useGLTF(getR3FAssetEntry("vehicles/truck_far").path);
+  const densityScenes: Record<Stage6ERepeatedDensityAssetId, Group> = {
+    "vehicles/passenger_car_far": passengerCar.scene,
+    "vehicles/taxi_far": taxi.scene,
+    "vehicles/bus_far": bus.scene,
+    "vehicles/truck_far": truck.scene
+  };
+  const geometryGroupsByAsset = useMemo(
+    () =>
+      Object.fromEntries(
+        STAGE6E_REPEATED_DENSITY_GLB_ASSET_IDS.map((assetId) => [
+          assetId,
+          buildStage6EInstancedGeometryGroups(assetId, densityScenes[assetId])
+        ])
+      ) as Record<
+        Stage6ERepeatedDensityAssetId,
+        Stage6EInstancedGeometryGroup[]
+      >,
+    [bus.scene, passengerCar.scene, taxi.scene, truck.scene]
+  );
+  const visibleVehicles = useMemo(
+    () => assetGroups.flatMap((group) => group.vehicles),
+    [assetGroups]
+  );
+
+  if (visibleVehicles.length === 0) return null;
+
+  return (
+    <group name="stage6e-manifest-density-glb-vehicles">
+      {assetGroups.flatMap((assetGroup) =>
+        geometryGroupsByAsset[assetGroup.assetId].map((geometryGroup) => (
+          <Stage6EInstancedDensityMesh
+            key={geometryGroup.key}
+            geometryGroup={geometryGroup}
+            vehicles={assetGroup.vehicles}
+          />
+        ))
+      )}
+      <Stage6EDensityContactShadows vehicles={visibleVehicles} />
+    </group>
+  );
+}
+
+function Stage6EInstancedDensityMesh({
+  geometryGroup,
+  vehicles
+}: {
+  geometryGroup: Stage6EInstancedGeometryGroup;
+  vehicles: TrafficDensityFarVehicle[];
+}) {
+  const meshRef = useRef<InstancedMesh>(null);
+  const tempObjectRef = useRef(new Object3D());
+  const tempColorRef = useRef(new Color());
+
+  useEffect(() => {
+    const mesh = meshRef.current;
+    if (!isThreeInstancedMesh(mesh)) return;
+
+    const tempObject = tempObjectRef.current;
+    const tempColor = tempColorRef.current;
+
+    vehicles.forEach((vehicle, index) => {
+      tempObject.position.set(vehicle.position[0], 0.04, vehicle.position[2]);
+      tempObject.rotation.set(0, vehicle.rotationY, 0);
+      tempObject.scale.set(1, 1, 1);
+      tempObject.updateMatrix();
+      mesh.setMatrixAt(index, tempObject.matrix);
+      mesh.setColorAt(index, tempColor.set(vehicle.color));
+    });
+
+    mesh.instanceMatrix.needsUpdate = true;
+    if (mesh.instanceColor) {
+      mesh.instanceColor.needsUpdate = true;
+    }
+  }, [vehicles]);
+
+  if (vehicles.length === 0) return null;
+
+  return (
+    <instancedMesh
+      ref={meshRef}
+      args={[geometryGroup.geometry, geometryGroup.material, vehicles.length]}
+      castShadow={false}
+      receiveShadow={false}
+      userData={{
+        densityAssetId: geometryGroup.assetId,
+        densitySilhouetteGroupKey: geometryGroup.key,
+        aggregateDensityOnly: true,
+        instancedDensityVehicleCount: vehicles.length
+      }}
+    />
+  );
+}
+
+function Stage6EDensityContactShadows({
+  vehicles
+}: {
+  vehicles: TrafficDensityFarVehicle[];
+}) {
+  const shadowRef = useRef<InstancedMesh>(null);
+  const tempObjectRef = useRef(new Object3D());
+
+  useEffect(() => {
+    const mesh = shadowRef.current;
+    if (!isThreeInstancedMesh(mesh)) return;
+
+    const tempObject = tempObjectRef.current;
+
+    vehicles.forEach((vehicle, index) => {
+      tempObject.position.set(vehicle.position[0], 0.018, vehicle.position[2]);
+      tempObject.rotation.set(-Math.PI / 2, vehicle.rotationY, 0);
+      tempObject.scale.set(vehicle.size[0] * 1.24, vehicle.size[2] * 1.06, 1);
+      tempObject.updateMatrix();
+      mesh.setMatrixAt(index, tempObject.matrix);
+    });
+
+    mesh.instanceMatrix.needsUpdate = true;
+  }, [vehicles]);
+
+  if (vehicles.length === 0) return null;
+
+  return (
+    <instancedMesh
+      ref={shadowRef}
+      args={[undefined, undefined, vehicles.length]}
+      castShadow={false}
+      receiveShadow={false}
+    >
+      <circleGeometry args={[0.5, 24]} />
+      <meshBasicMaterial
+        color="#020617"
+        transparent
+        opacity={0.34}
+        depthWrite={false}
+      />
+    </instancedMesh>
+  );
+}
+
+export function buildStage6EInstancedGeometryGroups(
+  assetId: Stage6ERepeatedDensityAssetId,
+  scene: Group
+): Stage6EInstancedGeometryGroup[] {
+  const geometries: BufferGeometry[] = [];
+
+  scene.updateMatrixWorld(true);
+  scene.traverse((object) => {
+    if (!isRenderableMesh(object)) return;
+
+    const geometry = normalizeStage6EDensityGeometryForMerge(object.geometry);
+    geometry.applyMatrix4(object.matrixWorld);
+
+    if (geometry.attributes.position) {
+      geometries.push(geometry);
+    }
+  });
+
+  if (geometries.length === 0) return [];
+
+  const geometry =
+    geometries.length === 1
+      ? geometries[0]
+      : canMergeStage6EGeometries(geometries)
+        ? mergeGeometries(geometries)
+        : geometries[0];
+
+  if (!geometry) return [];
+
+  return [
+    {
+      key: `${assetId}:silhouette`,
+      assetId,
+      geometry,
+      material: createStage6EDensityMaterial(assetId)
+    }
+  ];
+}
+
+export function normalizeStage6EDensityGeometryForMerge(
+  geometry: BufferGeometry
+): BufferGeometry {
+  const sourceGeometry = geometry.index ? geometry.toNonIndexed() : geometry;
+  const position = sourceGeometry.getAttribute("position");
+  const positions: number[] = [];
+
+  if (!position) return new BufferGeometry();
+
+  for (let index = 0; index < position.count; index += 1) {
+    positions.push(
+      position.getX(index),
+      position.getY(index),
+      position.getZ(index)
+    );
+  }
+
+  const normalizedGeometry = new BufferGeometry();
+
+  normalizedGeometry.setAttribute(
+    "position",
+    new Float32BufferAttribute(positions, 3)
+  );
+  normalizedGeometry.computeVertexNormals();
+  normalizedGeometry.clearGroups();
+
+  return normalizedGeometry;
+}
+
+function createStage6EDensityMaterial(assetId: Stage6ERepeatedDensityAssetId) {
+  return new MeshStandardMaterial({
+    color: STAGE6E_DENSITY_MATERIAL_COLORS[assetId],
+    roughness: 0.62,
+    metalness: 0.14,
+    envMapIntensity: 0.68
+  });
+}
+
+function canMergeStage6EGeometries(geometries: BufferGeometry[]) {
+  if (geometries.length < 2) return false;
+
+  const firstSignature = getStage6EGeometryMergeSignature(geometries[0]);
+
+  return geometries.every(
+    (geometry) =>
+      geometry.index === null &&
+      geometry.attributes.position &&
+      getStage6EGeometryMergeSignature(geometry) === firstSignature
+  );
+}
+
+function getStage6EGeometryMergeSignature(geometry: BufferGeometry) {
+  const attributeSignature = Object.keys(geometry.attributes)
+    .sort()
+    .map((name) => {
+      const attribute = geometry.attributes[name];
+
+      return `${name}:${getStage6EAttributeMergeSignature(attribute)}`;
+    })
+    .join("|");
+  const morphSignature = Object.entries(geometry.morphAttributes)
+    .sort(([leftName], [rightName]) => leftName.localeCompare(rightName))
+    .map(([name, morphAttributes]) => {
+      return `${name}[${(morphAttributes ?? [])
+        .map(getStage6EAttributeMergeSignature)
+        .join(",")}]`;
+    })
+    .join("|");
+
+  return [
+    "index:none",
+    `attributes:${attributeSignature}`,
+    `morphRelative:${geometry.morphTargetsRelative ? "true" : "false"}`,
+    `morph:${morphSignature}`
+  ].join(";");
+}
+
+function getStage6EAttributeMergeSignature(
+  attribute: BufferGeometry["attributes"][string]
+) {
+  const arrayType =
+    "array" in attribute && attribute.array
+      ? attribute.array.constructor.name
+      : "interleaved";
+  const gpuType = "gpuType" in attribute ? attribute.gpuType : "none";
+
+  return [
+    arrayType,
+    `size:${attribute.itemSize}`,
+    `normalized:${attribute.normalized ? "true" : "false"}`,
+    `gpu:${gpuType}`
+  ].join("/");
+}
+
+function isRenderableMesh(object: Object3D): object is Mesh {
+  return Boolean(
+    (object as Mesh).isMesh &&
+      (object as Mesh).geometry &&
+      (object as Mesh).material
   );
 }
 
@@ -875,6 +1292,7 @@ function buildFixtureQueueVehicles(
       return {
         id: `fixture-${direction}-queue-${index}`,
         direction,
+        assetId: STAGE6E_DENSITY_ASSET_BY_PROFILE[profile.name],
         sourceLabel: "fixture",
         position: transform.position,
         rotationY: transform.rotationY,
@@ -947,6 +1365,7 @@ function buildDensitySegmentVehicles(
     return {
       id: `${segment.segment_id}-density-${index}`,
       direction: segment.approach,
+      assetId: STAGE6E_DENSITY_ASSET_BY_PROFILE[profile.name],
       sourceLabel: segment.source,
       position: transform.position,
       rotationY: transform.rotationY,
@@ -1193,4 +1612,11 @@ function getPreciseVehicleColor(vehicle: SimulationVehicleSnapshot) {
 
 function degreesToRadians(degrees: number) {
   return (degrees * Math.PI) / 180;
+}
+
+function canUseRuntimeDensityAssets() {
+  return (
+    typeof window !== "undefined" &&
+    !/jsdom/i.test(window.navigator.userAgent)
+  );
 }

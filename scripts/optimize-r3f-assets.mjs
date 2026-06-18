@@ -1,0 +1,228 @@
+#!/usr/bin/env node
+
+import { stat, readFile } from "node:fs/promises";
+import path from "node:path";
+import { fileURLToPath } from "node:url";
+
+const scriptDir = path.dirname(fileURLToPath(import.meta.url));
+const repoRoot = path.resolve(scriptDir, "..");
+const publicRoot = path.join(repoRoot, "apps", "web", "public");
+const assetsRoot = path.join(publicRoot, "simulation", "r3f", "assets");
+const manifestPath = path.join(assetsRoot, "manifest.json");
+const firstPassPayloadLimitBytes = 25 * 1024 * 1024;
+const checkMode = process.argv.includes("--check");
+const stage6EFirstPassRuntimeAssetIds = new Set([
+  "vehicles/bus_near",
+  "vehicles/emergency_ambulance_medium",
+  "vehicles/passenger_car_near",
+  "vehicles/taxi_near",
+  "vehicles/truck_near",
+  "props/streetlight",
+  "props/tree_cluster",
+  "props/curb_details",
+  "vehicles/passenger_car_far",
+  "vehicles/taxi_far",
+  "vehicles/bus_far",
+  "vehicles/truck_far",
+  "textures/wet_asphalt_albedo",
+  "textures/wet_asphalt_roughness",
+  "decals/worn_lane_markings",
+  "decals/crosswalk_wear",
+  "decals/curb_grime",
+  "textures/sidewalk_paver_variation",
+  "textures/facade_window_emissive"
+]);
+
+const failures = [];
+const reports = [];
+const seenStage6EFirstPassAssetIds = new Set();
+let allManifestPayloadBytes = 0;
+let stage6EFirstPassPayloadBytes = 0;
+
+function addFailure(message) {
+  failures.push(message);
+}
+
+function isRecord(value) {
+  return Boolean(value) && typeof value === "object" && !Array.isArray(value);
+}
+
+function formatBytes(bytes) {
+  return `${(bytes / (1024 * 1024)).toFixed(2)} MB`;
+}
+
+function toRepoRelative(localPath) {
+  return path.relative(repoRoot, localPath).replace(/\\/g, "/");
+}
+
+function toAssetLocalPath(assetPath) {
+  const normalizedPath = String(assetPath ?? "").replace(/\\/g, "/");
+  const relativePath = normalizedPath.startsWith("/")
+    ? normalizedPath.slice(1)
+    : normalizedPath;
+
+  return path.resolve(publicRoot, relativePath);
+}
+
+function isInsideDirectory(childPath, parentPath) {
+  const relativePath = path.relative(parentPath, childPath);
+
+  return relativePath === "" || (!relativePath.startsWith("..") && !path.isAbsolute(relativePath));
+}
+
+function getSuggestedOptimizedPath(localPath) {
+  const extension = path.extname(localPath);
+  const basePath = localPath.slice(0, -extension.length);
+
+  return `${basePath}.optimized${extension}`;
+}
+
+function getGltfTransformCommand(inputPath, outputPath) {
+  return [
+    "npm --workspace apps/web exec gltf-transform -- optimize",
+    toRepoRelative(inputPath),
+    toRepoRelative(outputPath),
+    "--compress meshopt"
+  ].join(" ");
+}
+
+async function readManifest() {
+  const rawManifest = await readFile(manifestPath, "utf8");
+  const manifest = JSON.parse(rawManifest);
+
+  if (!isRecord(manifest)) {
+    throw new Error("manifest root must be an object keyed by asset IDs");
+  }
+
+  return manifest;
+}
+
+async function checkOptimizedPath(assetId, entry) {
+  if (typeof entry.optimizedPath !== "string" || entry.optimizedPath.trim() === "") {
+    return null;
+  }
+
+  const optimizedLocalPath = toAssetLocalPath(entry.optimizedPath);
+
+  if (!isInsideDirectory(optimizedLocalPath, assetsRoot)) {
+    addFailure(`${assetId}: optimizedPath escapes the R3F assets directory`);
+    return optimizedLocalPath;
+  }
+
+  try {
+    const optimizedStat = await stat(optimizedLocalPath);
+
+    if (!optimizedStat.isFile()) {
+      addFailure(`${assetId}: optimizedPath is not a file (${entry.optimizedPath})`);
+    }
+  } catch {
+    addFailure(`${assetId}: optimized output missing at ${entry.optimizedPath}`);
+  }
+
+  return optimizedLocalPath;
+}
+
+async function main() {
+  const manifest = await readManifest();
+  const entries = Object.entries(manifest);
+
+  for (const [assetId, entry] of entries) {
+    if (!isRecord(entry) || typeof entry.path !== "string") {
+      addFailure(`${assetId}: manifest entry path is required`);
+      continue;
+    }
+
+    const localPath = toAssetLocalPath(entry.path);
+
+    if (!isInsideDirectory(localPath, assetsRoot)) {
+      addFailure(`${assetId}: resolved path escapes the R3F assets directory`);
+      continue;
+    }
+
+    let fileStat;
+
+    try {
+      fileStat = await stat(localPath);
+    } catch {
+      addFailure(`${assetId}: missing asset file at ${entry.path}`);
+      continue;
+    }
+
+    if (!fileStat.isFile()) {
+      addFailure(`${assetId}: asset path is not a file`);
+      continue;
+    }
+
+    allManifestPayloadBytes += fileStat.size;
+
+    if (stage6EFirstPassRuntimeAssetIds.has(assetId)) {
+      seenStage6EFirstPassAssetIds.add(assetId);
+      stage6EFirstPassPayloadBytes += fileStat.size;
+    }
+
+    if (path.extname(localPath).toLowerCase() !== ".glb") {
+      continue;
+    }
+
+    const optimizedLocalPath =
+      (await checkOptimizedPath(assetId, entry)) ?? getSuggestedOptimizedPath(localPath);
+
+    reports.push({
+      assetId,
+      bytes: fileStat.size,
+      command: getGltfTransformCommand(localPath, optimizedLocalPath),
+      hasDeclaredOptimizedPath: typeof entry.optimizedPath === "string"
+    });
+  }
+
+  for (const assetId of stage6EFirstPassRuntimeAssetIds) {
+    if (!seenStage6EFirstPassAssetIds.has(assetId)) {
+      addFailure(`Stage 6E first-pass asset ${assetId} is missing from manifest`);
+    }
+  }
+
+  if (stage6EFirstPassPayloadBytes > firstPassPayloadLimitBytes) {
+    addFailure(
+      `Stage 6E first-pass runtime payload ${formatBytes(stage6EFirstPassPayloadBytes)} exceeds ${formatBytes(firstPassPayloadLimitBytes)}`
+    );
+  }
+}
+
+try {
+  await main();
+} catch (error) {
+  addFailure(`optimizer: ${error.message}`);
+}
+
+console.log(
+  checkMode
+    ? "R3F asset optimization check mode: no files rewritten."
+    : "R3F asset optimization audit: no files rewritten by this script."
+);
+
+for (const report of reports) {
+  console.log(
+    `${report.assetId}: raw ${report.bytes} bytes (${formatBytes(report.bytes)})`
+  );
+  console.log(`  optimize: ${report.command}`);
+  if (report.hasDeclaredOptimizedPath) {
+    console.log("  optimized output declared and checked.");
+  }
+}
+
+console.log(
+  `All manifest payload: ${formatBytes(allManifestPayloadBytes)}.`
+);
+console.log(
+  `Stage 6E first-pass runtime payload: ${formatBytes(stage6EFirstPassPayloadBytes)} / ${formatBytes(firstPassPayloadLimitBytes)}.`
+);
+
+if (failures.length > 0) {
+  console.error("R3F asset optimization check failed:");
+
+  for (const failure of failures) {
+    console.error(`- ${failure}`);
+  }
+
+  process.exitCode = 1;
+}

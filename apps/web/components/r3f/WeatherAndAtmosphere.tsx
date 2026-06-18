@@ -49,11 +49,11 @@ export type DistantCityBackdropSpec = {
 };
 
 export const STAGE5_ATMOSPHERE = {
-  background: "#172126",
-  fog: "#28343a",
-  fogNear: 52,
-  fogFar: 300,
-  haze: "#b9c4bf"
+  background: "#182429",
+  fog: "#303d42",
+  fogNear: 42,
+  fogFar: 230,
+  haze: "#c2cbc7"
 } as const;
 
 const REFLECTION_TINTS = {
@@ -71,7 +71,7 @@ const DISTANT_CITY_BACKDROP: DistantCityBackdropSpec = {
   position: [0, 42, -210],
   size: [360, 120],
   color: "#2d3a40",
-  opacity: 0.74
+  opacity: 0.5
 };
 
 export const WET_ROAD_REFLECTION_HIGHLIGHTS: WetRoadHighlightSpec[] = [
@@ -126,28 +126,28 @@ export const HAZE_PLANES: HazePlaneSpec[] = [
     position: [0, HAZE_HEIGHT, -118],
     rotation: [0, 0, 0],
     size: [82, 42],
-    opacity: 0.16
+    opacity: 0.2
   },
   {
     id: "south-corridor-depth-haze",
     position: [0, HAZE_HEIGHT, 105],
     rotation: [0, Math.PI, 0],
     size: [78, 40],
-    opacity: 0.125
+    opacity: 0.16
   },
   {
     id: "east-corridor-depth-haze",
     position: [118, HAZE_HEIGHT, 0],
     rotation: [0, Math.PI / 2, 0],
     size: [76, 38],
-    opacity: 0.115
+    opacity: 0.15
   },
   {
     id: "west-corridor-depth-haze",
     position: [-112, HAZE_HEIGHT, 0],
     rotation: [0, -Math.PI / 2, 0],
     size: [76, 38],
-    opacity: 0.12
+    opacity: 0.155
   }
 ];
 
@@ -336,8 +336,8 @@ function createDistantCityCanvas() {
 
   const skyGradient = context.createLinearGradient(0, 0, 0, canvas.height);
   skyGradient.addColorStop(0, "rgba(74, 94, 104, 0)");
-  skyGradient.addColorStop(0.18, "rgba(74, 94, 104, 0.46)");
-  skyGradient.addColorStop(0.56, "rgba(48, 66, 74, 0.44)");
+  skyGradient.addColorStop(0.18, "rgba(74, 94, 104, 0.34)");
+  skyGradient.addColorStop(0.56, "rgba(48, 66, 74, 0.32)");
   skyGradient.addColorStop(1, "rgba(18, 27, 32, 0)");
   context.fillStyle = skyGradient;
   context.fillRect(0, 0, canvas.width, canvas.height);
@@ -357,8 +357,8 @@ function createDistantCityCanvas() {
     const y = canvas.height - building.height;
     context.fillStyle =
       buildingIndex % 2 === 0
-        ? "rgba(18, 27, 32, 0.62)"
-        : "rgba(24, 35, 40, 0.58)";
+        ? "rgba(18, 27, 32, 0.44)"
+        : "rgba(24, 35, 40, 0.4)";
     context.fillRect(building.x, y, building.width, building.height);
 
     for (let row = 0; row < Math.floor(building.height / 11); row += 1) {
@@ -370,8 +370,8 @@ function createDistantCityCanvas() {
         const windowY = y + 8 + row * 11;
         const warm = (row + buildingIndex) % 3 !== 0;
         context.fillStyle = warm
-          ? "rgba(255, 232, 184, 0.86)"
-          : "rgba(188, 228, 248, 0.78)";
+          ? "rgba(255, 232, 184, 0.68)"
+          : "rgba(188, 228, 248, 0.6)";
         context.fillRect(windowX, windowY, 4, 2);
       }
     }

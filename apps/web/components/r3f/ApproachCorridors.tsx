@@ -4,7 +4,6 @@ import { Object3D, type InstancedMesh } from "three";
 
 import {
   APPROACH_CORRIDORS,
-  BUILDING_EDGE_BLOCKS,
   type BoxPrimitiveSpec,
   CURB_SEGMENTS,
   LANE_WIDTH_METERS,
@@ -12,7 +11,8 @@ import {
   type PlanePrimitiveSpec,
   QUEUE_ZONES,
   ROAD_WIDTH_METERS,
-  SIDEWALK_SLABS
+  SIDEWALK_SLABS,
+  STAGE6E_CITY_EDGE_BLOCKS
 } from "./roadGeometry";
 import type { Vector3Tuple } from "./roadGeometry";
 import { useStage5RoadMaterials } from "./roadMaterials";
@@ -140,17 +140,7 @@ const EDGE_GRIME_BANDS: PlaneBatchSpec[] = APPROACH_CORRIDORS.flatMap(
   }
 );
 
-const CITY_EDGE_BLOCKS: BoxPrimitiveSpec[] = BUILDING_EDGE_BLOCKS.map(
-  (building) => ({
-    ...building,
-    position: [
-      building.position[0],
-      1.05,
-      building.position[2]
-    ] as Vector3Tuple,
-    size: [building.size[0], 2.1, building.size[2]] as Vector3Tuple
-  })
-);
+const CITY_EDGE_BLOCKS: BoxPrimitiveSpec[] = STAGE6E_CITY_EDGE_BLOCKS;
 
 const BUILDING_BASE_WET_SHADOWS: PlaneBatchSpec[] = CITY_EDGE_BLOCKS.map(
   (building) => {

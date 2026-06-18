@@ -9,6 +9,12 @@ const repoRoot = path.resolve(scriptDir, "..");
 const publicRoot = path.join(repoRoot, "apps", "web", "public");
 const assetsRoot = path.join(publicRoot, "simulation", "r3f", "assets");
 const manifestPath = path.join(assetsRoot, "manifest.json");
+const complianceDocPath = path.join(
+  repoRoot,
+  "docs",
+  "compliance",
+  "r3f-asset-licenses.md"
+);
 
 const requiredFields = [
   "id",
@@ -16,6 +22,7 @@ const requiredFields = [
   "kind",
   "source",
   "license",
+  "authorship",
   "units",
   "pbr",
   "lod",
@@ -25,6 +32,7 @@ const requiredFields = [
 ];
 const allowedKinds = new Set(["vehicle", "prop", "texture", "decal"]);
 const allowedLods = new Set(["hero", "near", "medium", "far", "material", "decal"]);
+const allowedAuthorship = new Set(["project-authored", "generated", "third-party"]);
 const imageExtensions = new Set([".png", ".jpg", ".jpeg", ".webp"]);
 const bannedNameTerms = [
   "toy",
@@ -92,8 +100,44 @@ function hasText(value) {
   return typeof value === "string" && value.trim().length > 0;
 }
 
+function isValidDocumentationUrl(value) {
+  if (!hasText(value)) {
+    return false;
+  }
+
+  try {
+    const url = new URL(value.trim());
+
+    return url.protocol === "http:" || url.protocol === "https:";
+  } catch {
+    return false;
+  }
+}
+
 function hasNonEmptyArray(value) {
   return Array.isArray(value) && value.length > 0;
+}
+
+function getProvenanceNote(entry) {
+  if (!isRecord(entry?.details)) {
+    return "";
+  }
+
+  return entry.details.provenance ?? entry.details.sourceNote ?? "";
+}
+
+function getThirdPartySourceUrl(entry) {
+  const sourceUrl = isRecord(entry.details) ? entry.details.sourceUrl : undefined;
+
+  if (hasText(sourceUrl)) {
+    return sourceUrl;
+  }
+
+  return isValidDocumentationUrl(entry.source) ? entry.source : "";
+}
+
+function getThirdPartyLicenseDocumentation(entry) {
+  return isRecord(entry.details) ? entry.details.licenseDocumentation : undefined;
 }
 
 function normalizeNameText(value) {
@@ -110,6 +154,44 @@ function findBannedNameTerm(value) {
 
 function formatBytes(bytes) {
   return `${(bytes / (1024 * 1024)).toFixed(2)} MB`;
+}
+
+function validateProvenanceFields(assetId, entry) {
+  if (!allowedAuthorship.has(entry.authorship)) {
+    addFailure(
+      `${assetId}: authorship must be one of ${Array.from(allowedAuthorship).join(", ")}`
+    );
+  }
+
+  const provenanceNote = getProvenanceNote(entry);
+
+  if (!hasText(provenanceNote)) {
+    addFailure(`${assetId}: details.provenance or details.sourceNote is required`);
+  }
+
+  if (entry.authorship !== "third-party") {
+    return;
+  }
+
+  const sourceUrl = getThirdPartySourceUrl(entry);
+  const licenseDocumentation = getThirdPartyLicenseDocumentation(entry);
+  const combinedText = `${entry.source} ${entry.license} ${provenanceNote}`.toLowerCase();
+
+  if (!isValidDocumentationUrl(sourceUrl)) {
+    addFailure(
+      `${assetId}: third-party assets require a valid http(s) details.sourceUrl or URL source`
+    );
+  }
+
+  if (!isValidDocumentationUrl(licenseDocumentation)) {
+    addFailure(
+      `${assetId}: third-party assets require a valid http(s) details.licenseDocumentation`
+    );
+  }
+
+  if (/undocumented|unknown|tbd|or-documented/.test(combinedText)) {
+    addFailure(`${assetId}: third-party asset source/license/provenance is undocumented`);
+  }
 }
 
 function readUInt24LE(buffer, offset) {
@@ -602,6 +684,8 @@ function validateEntryShape(assetId, entry) {
     addFailure(`${assetId}: license is required`);
   }
 
+  validateProvenanceFields(assetId, entry);
+
   if (entry.units !== "meters") {
     addFailure(`${assetId}: units must be "meters"`);
   }
@@ -995,6 +1079,134 @@ async function readManifest() {
   }
 }
 
+async function readComplianceDoc() {
+  try {
+    return await readFile(complianceDocPath, "utf8");
+  } catch (error) {
+    addFailure(
+      `compliance: could not read docs/compliance/r3f-asset-licenses.md (${error.message})`
+    );
+    return "";
+  }
+}
+
+function normalizeComplianceValue(value) {
+  return String(value ?? "")
+    .trim()
+    .replace(/^`|`$/g, "")
+    .replace(/\s+/g, " ");
+}
+
+function parseComplianceDocRows(complianceDocText) {
+  const rowsByAssetId = new Map();
+
+  for (const line of complianceDocText.split(/\r?\n/)) {
+    if (!line.startsWith("| `")) {
+      continue;
+    }
+
+    const cells = line
+      .split("|")
+      .slice(1, -1)
+      .map(normalizeComplianceValue);
+
+    if (cells.length < 7) {
+      continue;
+    }
+
+    const [
+      assetId,
+      runtimePath,
+      kind,
+      source,
+      license,
+      provenance,
+      status,
+      sourceUrl = "",
+      licenseDocumentation = ""
+    ] = cells;
+
+    if (rowsByAssetId.has(assetId)) {
+      addFailure(`${assetId}: duplicate rows in docs/compliance/r3f-asset-licenses.md`);
+      continue;
+    }
+
+    rowsByAssetId.set(assetId, {
+      runtimePath,
+      kind,
+      source,
+      license,
+      provenance,
+      status,
+      sourceUrl,
+      licenseDocumentation
+    });
+  }
+
+  return rowsByAssetId;
+}
+
+function validateComplianceDocCoverage(entriesById, complianceDocText) {
+  if (!hasText(complianceDocText)) {
+    return;
+  }
+
+  const rowsByAssetId = parseComplianceDocRows(complianceDocText);
+
+  for (const [assetId, entry] of entriesById) {
+    const row = rowsByAssetId.get(assetId);
+    const expectedStatus = isRecord(entry) ? entry.authorship : "";
+
+    if (!row) {
+      addFailure(`${assetId}: missing from docs/compliance/r3f-asset-licenses.md`);
+      continue;
+    }
+
+    if (!isRecord(entry)) {
+      continue;
+    }
+
+    const expectedFields = {
+      runtimePath: entry.path,
+      kind: entry.kind,
+      source: entry.source,
+      license: entry.license,
+      provenance: getProvenanceNote(entry),
+      status: entry.authorship
+    };
+
+    if (entry.authorship === "third-party") {
+      expectedFields.sourceUrl = getThirdPartySourceUrl(entry);
+      expectedFields.licenseDocumentation =
+        getThirdPartyLicenseDocumentation(entry);
+    }
+
+    for (const [field, expectedValue] of Object.entries(expectedFields)) {
+      const actualValue = row[field];
+
+      if (
+        normalizeComplianceValue(actualValue) !==
+        normalizeComplianceValue(expectedValue)
+      ) {
+        addFailure(
+          `${assetId}: compliance doc ${field} "${actualValue}" does not match manifest "${expectedValue}"`
+        );
+      }
+    }
+
+    if (
+      entry.authorship === "third-party" &&
+      !complianceDocText.includes("third-party")
+    ) {
+      addFailure(`${assetId}: third-party status is missing from compliance doc`);
+    }
+
+    if (hasText(expectedStatus) && !complianceDocText.includes(expectedStatus)) {
+      addFailure(`${assetId}: authorship status ${expectedStatus} is missing from compliance doc`);
+    }
+  }
+}
+
 async function main() {
   const manifest = await readManifest();
 
@@ -1015,11 +1227,13 @@ async function main() {
   }
 
   const entriesById = new Map(entries);
+  const complianceDocText = await readComplianceDoc();
 
   for (const [assetId, entry] of entriesById) {
     validateEntryShape(assetId, entry);
   }
 
+  validateComplianceDocCoverage(entriesById, complianceDocText);
   validateVehicleLods(entriesById);
 
   for (const [assetId, entry] of entriesById) {

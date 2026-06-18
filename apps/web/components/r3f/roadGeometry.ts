@@ -21,6 +21,10 @@ export type BoxPrimitiveSpec = {
   size: Vector3Tuple;
 };
 
+export type CityEdgeBlockSpec = BoxPrimitiveSpec & {
+  sourceBuildingId: string;
+};
+
 export type PlanePrimitiveSpec = {
   id: string;
   direction: Direction;
@@ -301,6 +305,9 @@ export const BUILDING_EDGE_BLOCKS = APPROACH_CORRIDORS.flatMap((corridor) => {
   }));
 });
 
+export const STAGE6E_CITY_EDGE_BLOCKS: CityEdgeBlockSpec[] =
+  buildStage6ECityEdgeBlocks();
+
 export const CROSSWALK_STRIPES: PlanePrimitiveSpec[] = buildCrosswalkStripes();
 
 export const TURN_ARROW_MARKINGS: TurnArrowMarking[] = [
@@ -434,4 +441,62 @@ function buildHorizontalTurnArrow(
       }
     ]
   };
+}
+
+function buildStage6ECityEdgeBlocks(): CityEdgeBlockSpec[] {
+  return BUILDING_EDGE_BLOCKS.flatMap((building) => {
+    const [width, , depth] = building.size;
+    const [x, , z] = building.position;
+    const isNorthSouthBlock = depth > width;
+    const longSize = isNorthSouthBlock ? depth : width;
+    const segmentCount = Math.max(4, Math.round(longSize / 26));
+    const segmentStep = longSize / segmentCount;
+    const segmentLength = segmentStep * 0.78;
+
+    return Array.from({ length: segmentCount }, (_, index) => {
+      const offset = -longSize / 2 + segmentStep * (index + 0.5);
+      const height = getStage6ECityEdgeHeight(building.id, index);
+      const depthScale = getStage6ECityEdgeDepthScale(building.id, index);
+      const size = isNorthSouthBlock
+        ? ([width * depthScale, height, segmentLength] as Vector3Tuple)
+        : ([segmentLength, height, depth * depthScale] as Vector3Tuple);
+      const position = isNorthSouthBlock
+        ? ([x, height / 2, z + offset] as Vector3Tuple)
+        : ([x + offset, height / 2, z] as Vector3Tuple);
+
+      return {
+        id: `${building.id}-stage6e-segment-${index}`,
+        sourceBuildingId: building.id,
+        direction: building.direction,
+        position,
+        size
+      };
+    });
+  });
+}
+
+function getStage6ECityEdgeHeight(buildingId: string, segmentIndex: number) {
+  const heights = [4.8, 6.2, 5.4, 7.1, 5.0, 6.6, 4.5] as const;
+  return heights[getStage6EPatternIndex(buildingId, segmentIndex, heights.length)];
+}
+
+function getStage6ECityEdgeDepthScale(
+  buildingId: string,
+  segmentIndex: number
+) {
+  const scales = [0.84, 1, 0.92, 1.08, 0.88, 1.02] as const;
+  return scales[getStage6EPatternIndex(buildingId, segmentIndex, scales.length)];
+}
+
+function getStage6EPatternIndex(
+  id: string,
+  index: number,
+  patternLength: number
+) {
+  let hash = index;
+  for (let charIndex = 0; charIndex < id.length; charIndex += 1) {
+    hash = (hash * 33 + id.charCodeAt(charIndex)) >>> 0;
+  }
+
+  return hash % patternLength;
 }

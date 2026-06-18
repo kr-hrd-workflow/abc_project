@@ -5,6 +5,7 @@ export type R3FAssetLod = "hero" | "near" | "medium" | "far" | "material" | "dec
 export type R3FAssetPath = `/simulation/r3f/assets/${string}`;
 export type R3FAssetId = keyof typeof manifestJson & string;
 export type R3FAssetRealismStatus = "stage4_1_ready";
+export type R3FAssetAuthorship = "project-authored" | "generated" | "third-party";
 
 export type R3FAssetDetails = {
   readonly wheels?: number;
@@ -33,6 +34,7 @@ export type R3FAssetEntry = {
   readonly kind: R3FAssetKind;
   readonly source: string;
   readonly license: string;
+  readonly authorship: R3FAssetAuthorship;
   readonly units: "meters";
   readonly pbr: boolean;
   readonly lod: R3FAssetLod;

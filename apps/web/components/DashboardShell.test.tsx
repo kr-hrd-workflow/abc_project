@@ -97,7 +97,11 @@ import {
   STAGE5_VISIBLE_TRAFFIC_GLB_PLACEMENTS
 } from "./r3f/Stage5SceneAssets";
 import { STAGE5_TEXTURE_PATHS } from "./r3f/roadMaterials";
-import { STAGE5_CAMERA, TURN_ARROW_MARKINGS } from "./r3f/roadGeometry";
+import {
+  STAGE5_CAMERA,
+  STAGE6E_CITY_EDGE_BLOCKS,
+  TURN_ARROW_MARKINGS
+} from "./r3f/roadGeometry";
 import type {
   ChatResponse,
   AnalysisFixture,
@@ -1006,22 +1010,30 @@ describe("DashboardShell", () => {
 
   test("uses Stage 4.1 GLB assets and facade panels for Stage 5 foreground realism", () => {
     expect(STAGE5_HERO_GLB_ASSET_IDS).toEqual([
-      "vehicles/bus_far",
-      "vehicles/emergency_ambulance_medium"
+      "vehicles/bus_near",
+      "vehicles/emergency_ambulance_medium",
+      "vehicles/passenger_car_near",
+      "vehicles/taxi_near",
+      "vehicles/truck_near"
     ]);
     expect(STAGE5_VISIBLE_TRAFFIC_GLB_ASSET_IDS).toEqual([
-      "vehicles/bus_far",
-      "vehicles/emergency_ambulance_medium"
+      "vehicles/bus_near",
+      "vehicles/emergency_ambulance_medium",
+      "vehicles/passenger_car_near",
+      "vehicles/taxi_near",
+      "vehicles/truck_near"
     ]);
-    expect(STAGE5_HERO_VEHICLE_PLACEMENTS).toHaveLength(2);
+    expect(STAGE5_HERO_VEHICLE_PLACEMENTS).toHaveLength(5);
     expect(STAGE5_VISIBLE_TRAFFIC_GLB_PLACEMENTS).toEqual(
       STAGE5_HERO_VEHICLE_PLACEMENTS
     );
     expect(STAGE5_STREET_FURNITURE_GLB_ASSET_IDS).toEqual([
-      "props/streetlight"
+      "props/streetlight",
+      "props/tree_cluster",
+      "props/curb_details"
     ]);
-    expect(STAGE5_STREET_FURNITURE_PLACEMENTS).toHaveLength(2);
-    expect(STAGE5_STREET_FURNITURE_CONTACT_SHADOW_PLACEMENTS).toHaveLength(2);
+    expect(STAGE5_STREET_FURNITURE_PLACEMENTS).toHaveLength(6);
+    expect(STAGE5_STREET_FURNITURE_CONTACT_SHADOW_PLACEMENTS).toHaveLength(6);
     expect(
       new Set(
         STAGE5_STREET_FURNITURE_CONTACT_SHADOW_PLACEMENTS.map(
@@ -1029,10 +1041,13 @@ describe("DashboardShell", () => {
         )
       )
     ).toEqual(new Set(STAGE5_STREET_FURNITURE_PLACEMENTS.map((light) => light.id)));
-    expect(STAGE5_FACADE_PANELS.length).toBeGreaterThanOrEqual(8);
+    expect(STAGE5_FACADE_PANELS).toHaveLength(STAGE6E_CITY_EDGE_BLOCKS.length);
+    expect(STAGE5_FACADE_PANELS.length).toBeGreaterThan(8);
+    expect(new Set(STAGE5_FACADE_PANELS.map((panel) => panel.size[1])).size)
+      .toBeGreaterThan(1);
     expect(
       Math.max(...STAGE5_FACADE_PANELS.map((panel) => panel.size[1]))
-    ).toBeLessThanOrEqual(5.5);
+    ).toBeLessThanOrEqual(7.2);
 
     STAGE5_VISIBLE_TRAFFIC_GLB_ASSET_IDS.forEach((assetId) => {
       const asset = getR3FAssetEntry(assetId);
@@ -1050,6 +1065,330 @@ describe("DashboardShell", () => {
       expect(asset.realisticSilhouette).toBe(true);
       expect(asset.visualRejectIfToyLike).toBe(true);
     });
+  });
+
+  test("defines the Stage 6E manifest-backed runtime asset and preload contract", async () => {
+    const stage5Assets = await import("./r3f/Stage5SceneAssets");
+    const buildStage6EAssetRuntimePlan = (
+      stage5Assets as typeof stage5Assets & {
+        buildStage6EAssetRuntimePlan?: () => {
+          firstPassAssetIds: string[];
+          preloadAssetIds: string[];
+          densityAssetIds: string[];
+          byKind: Record<string, string[]>;
+          byLod: Record<string, string[]>;
+          byDensityEligibility: Record<string, string[]>;
+          byMaxFileSizeBucket: Record<string, string[]>;
+          firstPassPayloadBytes: number;
+          firstPassPayloadLimitBytes: number;
+        };
+      }
+    ).buildStage6EAssetRuntimePlan;
+
+    expect(typeof buildStage6EAssetRuntimePlan).toBe("function");
+
+    const runtimePlan = buildStage6EAssetRuntimePlan();
+    const requiredRuntimeAssetIds = [
+      "vehicles/bus_near",
+      "vehicles/emergency_ambulance_medium",
+      "vehicles/passenger_car_near",
+      "vehicles/taxi_near",
+      "vehicles/truck_near",
+      "props/streetlight",
+      "props/tree_cluster",
+      "props/curb_details"
+    ];
+
+    expect(new Set(runtimePlan.firstPassAssetIds)).toEqual(
+      new Set(requiredRuntimeAssetIds)
+    );
+    expect(new Set(runtimePlan.preloadAssetIds)).toEqual(
+      new Set([
+        ...requiredRuntimeAssetIds,
+        "vehicles/passenger_car_far",
+        "vehicles/taxi_far",
+        "vehicles/bus_far",
+        "vehicles/truck_far",
+        "vehicles/emergency_ambulance_medium"
+      ])
+    );
+    expect(runtimePlan.byKind.vehicle).toEqual(
+      expect.arrayContaining([
+        "vehicles/bus_near",
+        "vehicles/emergency_ambulance_medium",
+        "vehicles/passenger_car_near",
+        "vehicles/taxi_near",
+        "vehicles/truck_near"
+      ])
+    );
+    expect(runtimePlan.byKind.prop).toEqual(
+      expect.arrayContaining([
+        "props/streetlight",
+        "props/tree_cluster",
+        "props/curb_details"
+      ])
+    );
+    expect(runtimePlan.byLod.near).toEqual(
+      expect.arrayContaining([
+        "vehicles/bus_near",
+        "vehicles/passenger_car_near",
+        "vehicles/taxi_near",
+        "vehicles/truck_near"
+      ])
+    );
+    expect(runtimePlan.byLod.medium).toEqual(
+      expect.arrayContaining(["vehicles/emergency_ambulance_medium"])
+    );
+    expect(runtimePlan.densityAssetIds).toEqual(
+      expect.arrayContaining([
+        "vehicles/passenger_car_far",
+        "vehicles/taxi_far",
+        "vehicles/bus_far",
+        "vehicles/truck_far",
+        "vehicles/emergency_ambulance_medium"
+      ])
+    );
+    expect(runtimePlan.byDensityEligibility.eligible).toEqual(
+      runtimePlan.densityAssetIds
+    );
+    expect(runtimePlan.byMaxFileSizeBucket.firstPassUnder1Mb).toEqual(
+      expect.arrayContaining([
+        "vehicles/emergency_ambulance_medium",
+        "props/streetlight",
+        "props/tree_cluster",
+        "props/curb_details"
+      ])
+    );
+    expect(runtimePlan.byMaxFileSizeBucket.firstPassUnder2Mb).toEqual(
+      expect.arrayContaining([
+        "vehicles/bus_near",
+        "vehicles/passenger_car_near",
+        "vehicles/taxi_near",
+        "vehicles/truck_near"
+      ])
+    );
+    expect(runtimePlan.firstPassPayloadBytes).toBeLessThanOrEqual(
+      runtimePlan.firstPassPayloadLimitBytes
+    );
+
+    runtimePlan.firstPassAssetIds.forEach((assetId) => {
+      const asset = getR3FAssetEntry(assetId);
+
+      expect(asset.path).toMatch(/^\/simulation\/r3f\/assets\/glb\//);
+      expect(asset.details?.provenance).toMatch(/project-authored/i);
+    });
+  });
+
+  test("plans Stage 6E first-pass GLBs as instanced silhouette families", async () => {
+    const stage5Assets = await import("./r3f/Stage5SceneAssets");
+    const buildStage6EFirstPassInstancingPlan = (
+      stage5Assets as typeof stage5Assets & {
+        buildStage6EFirstPassInstancingPlan?: () => {
+          assetGroups: Array<{
+            assetId: string;
+            placementCount: number;
+            placementIds: string[];
+            renderMode: string;
+          }>;
+          clonePlacements?: unknown[];
+          drawCallUpperBound: number;
+        };
+      }
+    ).buildStage6EFirstPassInstancingPlan;
+
+    expect(typeof buildStage6EFirstPassInstancingPlan).toBe("function");
+
+    const instancingPlan = buildStage6EFirstPassInstancingPlan();
+    const expectedAssetIds = [
+      ...STAGE5_VISIBLE_TRAFFIC_GLB_ASSET_IDS,
+      ...STAGE5_STREET_FURNITURE_GLB_ASSET_IDS
+    ];
+    const expectedPlacementCount =
+      STAGE5_VISIBLE_TRAFFIC_GLB_PLACEMENTS.length +
+      STAGE5_STREET_FURNITURE_PLACEMENTS.length;
+
+    expect(instancingPlan.assetGroups.map((group) => group.assetId)).toEqual(
+      expectedAssetIds
+    );
+    expect(instancingPlan.clonePlacements ?? []).toHaveLength(0);
+    expect(
+      instancingPlan.assetGroups.reduce(
+        (total, group) => total + group.placementCount,
+        0
+      )
+    ).toBe(expectedPlacementCount);
+    expect(instancingPlan.drawCallUpperBound).toBe(
+      STAGE5_VISIBLE_TRAFFIC_GLB_ASSET_IDS.length +
+        STAGE5_STREET_FURNITURE_GLB_ASSET_IDS.length +
+        1
+    );
+    instancingPlan.assetGroups.forEach((group) => {
+      const expectedCount =
+        STAGE5_VISIBLE_TRAFFIC_GLB_PLACEMENTS.filter(
+          (placement) => placement.assetId === group.assetId
+        ).length +
+        STAGE5_STREET_FURNITURE_PLACEMENTS.filter(
+          (placement) => placement.assetId === group.assetId
+        ).length;
+
+      expect(group.renderMode).toBe("instanced_silhouette");
+      expect(group.placementCount).toBe(expectedCount);
+      expect(group.placementIds).toHaveLength(expectedCount);
+    });
+  });
+
+  test("assigns manifest far-LOD GLBs to repeated density vehicles without changing truth labels", () => {
+    const scene = buildFixtureSceneSnapshot({
+      queues: status.queues,
+      events
+    });
+    const plan = buildTrafficDensityRenderPlan(scene);
+    const densityAssetIds = plan.farVehicles.map(
+      (vehicle) => (vehicle as typeof vehicle & { assetId?: string }).assetId
+    );
+
+    expect(plan.mode).toBe("fixture_queues");
+    expect(new Set(plan.farVehicles.map((vehicle) => vehicle.sourceLabel))).toEqual(
+      new Set(["fixture"])
+    );
+    expect(densityAssetIds.every(Boolean)).toBe(true);
+    expect(densityAssetIds).toEqual(
+      expect.arrayContaining([
+        "vehicles/passenger_car_far",
+        "vehicles/taxi_far",
+        "vehicles/bus_far",
+        "vehicles/truck_far"
+      ])
+    );
+
+    densityAssetIds.forEach((assetId) => {
+      const asset = getR3FAssetEntry(assetId ?? "");
+
+      expect(asset.kind).toBe("vehicle");
+      expect(asset.lod).toBe("far");
+      expect(asset.densityEligible).toBe(true);
+    });
+  });
+
+  test("groups all repeated density GLBs into manifest-backed instanced families", async () => {
+    const trafficDensity = await import("./r3f/TrafficDensityLayer");
+    const buildStage6EDensityRenderPlan = (
+      trafficDensity as typeof trafficDensity & {
+        buildStage6EDensityRenderPlan?: (vehicles: Array<{
+          id: string;
+          assetId: string;
+          sourceLabel: string;
+        }>) => {
+          instancedAssetGroups: Array<{
+            assetId: string;
+            instanceCount: number;
+            vehicles: Array<{ id: string; assetId: string; sourceLabel: string }>;
+          }>;
+          proceduralVehicles: Array<{ assetId: string; sourceLabel: string }>;
+          totalInstancedVehicleCount: number;
+          glbVehicles?: unknown[];
+          maxGlbVehicles?: number;
+        };
+      }
+    ).buildStage6EDensityRenderPlan;
+    const scene = buildFixtureSceneSnapshot({
+      queues: status.queues,
+      events
+    });
+    const plan = buildTrafficDensityRenderPlan(scene);
+
+    expect(typeof buildStage6EDensityRenderPlan).toBe("function");
+
+    const densityRenderPlan = buildStage6EDensityRenderPlan(plan.farVehicles);
+    const instancedAssetIds = densityRenderPlan.instancedAssetGroups.map(
+      (group) => group.assetId
+    );
+
+    expect(densityRenderPlan.glbVehicles ?? []).toHaveLength(0);
+    expect(densityRenderPlan.maxGlbVehicles).toBeUndefined();
+    expect(densityRenderPlan.proceduralVehicles).toHaveLength(0);
+    expect(densityRenderPlan.totalInstancedVehicleCount).toBe(
+      plan.farVehicles.length
+    );
+    expect(
+      densityRenderPlan.instancedAssetGroups.reduce(
+        (total, group) => total + group.instanceCount,
+        0
+      )
+    ).toBe(plan.farVehicles.length);
+    expect(instancedAssetIds).toEqual([
+      "vehicles/passenger_car_far",
+      "vehicles/taxi_far",
+      "vehicles/bus_far",
+      "vehicles/truck_far"
+    ]);
+
+    densityRenderPlan.instancedAssetGroups.forEach((group) => {
+      expect(group.vehicles).toHaveLength(group.instanceCount);
+      expect(group.vehicles.every((vehicle) => vehicle.assetId === group.assetId)).toBe(
+        true
+      );
+      expect(group.vehicles.every((vehicle) => vehicle.sourceLabel === "fixture")).toBe(
+        true
+      );
+    });
+  });
+
+  test("collapses mixed-material density GLB geometry into one asset silhouette", async () => {
+    const {
+      BoxGeometry,
+      BufferGeometry,
+      Float32BufferAttribute,
+      Group,
+      Mesh,
+      MeshBasicMaterial
+    } = await import("three");
+    const trafficDensity = await import("./r3f/TrafficDensityLayer");
+    const buildStage6EInstancedGeometryGroups = (
+      trafficDensity as typeof trafficDensity & {
+        buildStage6EInstancedGeometryGroups?: (
+          assetId: string,
+          scene: InstanceType<typeof Group>
+        ) => Array<{ geometry: InstanceType<typeof BufferGeometry> }>;
+      }
+    ).buildStage6EInstancedGeometryGroups;
+    const bodyMaterial = new MeshBasicMaterial({ color: "#94a3b8" });
+    const glassMaterial = new MeshBasicMaterial({ color: "#38bdf8" });
+    const nonIndexedTriangle = new BufferGeometry();
+
+    nonIndexedTriangle.setAttribute(
+      "position",
+      new Float32BufferAttribute(
+        [-0.5, 0, 0, 0.5, 0, 0, 0, 0.75, 0],
+        3
+      )
+    );
+    nonIndexedTriangle.setAttribute(
+      "normal",
+      new Float32BufferAttribute([0, 1, 0, 0, 1, 0, 0, 1, 0], 3)
+    );
+    nonIndexedTriangle.setAttribute(
+      "uv",
+      new Float32BufferAttribute([0, 0, 1, 0, 0.5, 1], 2)
+    );
+
+    const scene = new Group();
+
+    scene.add(new Mesh(new BoxGeometry(1, 1, 1), bodyMaterial));
+    scene.add(new Mesh(nonIndexedTriangle, glassMaterial));
+
+    const errorSpy = vi.spyOn(console, "error").mockImplementation(() => undefined);
+
+    expect(typeof buildStage6EInstancedGeometryGroups).toBe("function");
+
+    const geometryGroups = buildStage6EInstancedGeometryGroups(
+      "vehicles/passenger_car_far",
+      scene
+    );
+
+    expect(errorSpy).not.toHaveBeenCalled();
+    expect(geometryGroups).toHaveLength(1);
+    expect(geometryGroups[0].geometry.index).toBeNull();
   });
 
   test("mounts frame-backed browser-only R3F when it is enabled and WebGL is supported", async () => {
@@ -1083,8 +1422,8 @@ describe("DashboardShell", () => {
     expect(
       Number(viewport.getAttribute("data-r3f-visible-vehicle-count"))
     ).toBeGreaterThan(0);
-    expect(viewport.getAttribute("data-r3f-glb-vehicle-count")).toBe("2");
-    expect(viewport.getAttribute("data-r3f-street-shadow-count")).toBe("2");
+    expect(viewport.getAttribute("data-r3f-glb-vehicle-count")).toBe("5");
+    expect(viewport.getAttribute("data-r3f-street-shadow-count")).toBe("6");
     expect(viewport.getAttribute("data-r3f-vehicle-silhouette-part-count")).toBe("14");
   });
 

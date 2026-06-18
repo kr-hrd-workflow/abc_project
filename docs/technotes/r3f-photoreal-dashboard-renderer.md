@@ -2,7 +2,7 @@
 
 ## Decision
 
-R3F is the active dashboard renderer path. The runtime is implemented through Stage 5 browser visual proof, with Stage 6A frame-backed renderer state, Stage 6B signal-state hardware and operator overlays, and Stage 6C default verification gates now present in the repo.
+R3F is the active dashboard renderer path. The runtime is implemented through Stage 5 browser visual proof, with Stage 6A frame-backed renderer state, Stage 6B signal-state hardware and operator overlays, Stage 6C default verification gates, and Stage 6E manifest-backed runtime asset utilization now present in the repo.
 
 Unreal/Pixel Streaming remains archived.
 
@@ -47,6 +47,7 @@ Photorealistic rendering remains required. Runtime evidence must come from actua
 | Stage 6B dynamic signals | implemented, verified, not live truth | `SignalHardware` and `SimulationOverlays` render received signal state or explicit `unavailable`. |
 | Stage 6C default gates | implemented, verified, gated | Root `npm run verify` and `.github/workflows/r3f-dashboard-verify.yml` include R3F asset and dashboard proof. |
 | Stage 6D docs reconciliation | implemented, verified | README, runbook, technote, and plan now use implemented/verified/gated wording without production-ready claims. |
+| Stage 6E runtime assets, compression checks, and licensing | implemented, verified, gated, not live truth | Manifest-backed assets are used by explicit ID in the runtime scene; optimizer, asset verifier, web build, and browser proof passed locally. |
 
 ## Stage 4 And 4.1 Asset Pipeline Evidence
 
@@ -88,6 +89,39 @@ Current Stage 4.1 payload budget:
 - GLB payload: 8.06 MB
 - Texture/decal payload: 1.56 MB
 - First-pass total: 9.62 MB / 25.00 MB
+
+## Stage 6E Runtime Asset Utilization Evidence
+
+Stage 6E expands runtime usage of the existing manifest-backed asset kit without changing the simulation truth boundary. Vehicles and props are loaded by explicit manifest IDs, then rendered through draw-call-bounded GLB-derived instanced silhouettes:
+
+- First-pass families: bus, emergency ambulance, passenger car, taxi, truck, streetlight, tree cluster, and curb details
+- Repeated density families: passenger car far LOD, taxi far LOD, bus far LOD, and truck far LOD
+- Facade/window material panels remain instanced and visible in the browser proof
+- Stage 6E runtime polish adds per-instance vehicle color variation, less toy-saturated GLB silhouette materials, softened distant-city haze, and segmented city-edge building massing
+
+The renderer still labels aggregate or fixture-derived density as such. It does not invent precise vehicle truth and does not perform real signal control.
+
+Stage 6E proof, final browser artifact generated at `2026-06-18T01:21:56.672Z`:
+
+- `npm --workspace apps/web exec gltf-transform -- --version`: `4.4.0`
+- `node scripts/optimize-r3f-assets.mjs --check`: all manifest payload `9.62 MB`; Stage 6E first-pass runtime payload `7.86 MB / 25.00 MB`
+- `node scripts/verify-r3f-assets.mjs`: passed, first-pass GLB + texture payload `9.62 MB / 25.00 MB`
+- `npm --workspace apps/web run test -- components/DashboardShell.test.tsx components/r3f/SimulationCanvas.test.tsx`: 70 tests passed
+- `npm run build:web`: passed
+- `node scripts/verify-r3f-dashboard.mjs`: passed with `drawCalls=94/250`, `visibleVehicleCount=160`, `glbVehicleCount=5`, `streetFurnitureShadowCount=6`, no blocking console failures, and no WebGL context-loss errors
+- `git diff --check`: passed with line-ending warnings only
+
+Fresh browser proof artifacts:
+
+- `artifacts/r3f-dashboard-desktop.png`
+- `artifacts/r3f-dashboard-mobile.png`
+- `artifacts/r3f-dashboard-desktop-canvas.png`
+- `artifacts/r3f-dashboard-mobile-canvas.png`
+- `artifacts/r3f-dashboard-mobile-overlays.png`
+- `artifacts/r3f-dashboard-webgl-off.png`
+- `artifacts/r3f-dashboard-details.json`
+
+Human-view inspection compared the fresh desktop/mobile canvas crops with the committed Stage 5 baseline. The Stage 6E crops retain the wet road and facade lighting while adding visibly broader vehicle families, denser manifest-backed traffic silhouettes with per-instance color variation, street furniture, trees, curb details, and segmented city-edge massing. This is runtime browser evidence, not Image Gen or asset-only proof.
 
 ## Stage 4.1 Texture And Decal Provenance
 

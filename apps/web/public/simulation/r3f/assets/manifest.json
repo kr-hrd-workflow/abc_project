@@ -3,8 +3,8 @@
     "id": "vehicles/passenger_car_near",
     "path": "/simulation/r3f/assets/glb/vehicles/passenger_car_near.glb",
     "kind": "vehicle",
-    "source": "project-authored-or-documented-license",
-    "license": "Project-authored or documented compatible license",
+    "source": "project-authored-local-glb",
+    "license": "Project-authored runtime GLB; no external third-party model source",
     "units": "meters",
     "pbr": true,
     "lod": "near",
@@ -35,15 +35,17 @@
         "wheel arch trim"
       ],
       "triangleCount": 13664,
-      "fileSizeBytes": 1147480
-    }
+      "fileSizeBytes": 1147480,
+      "provenance": "Project-authored local GLB generated for the R3F dashboard asset pipeline; no external downloads, stock models, paid asset stores, or archived Unreal assets were used."
+    },
+    "authorship": "project-authored"
   },
   "vehicles/passenger_car_medium": {
     "id": "vehicles/passenger_car_medium",
     "path": "/simulation/r3f/assets/glb/vehicles/passenger_car_medium.glb",
     "kind": "vehicle",
-    "source": "project-authored-or-documented-license",
-    "license": "Project-authored or documented compatible license",
+    "source": "project-authored-local-glb",
+    "license": "Project-authored runtime GLB; no external third-party model source",
     "units": "meters",
     "pbr": true,
     "lod": "medium",
@@ -74,15 +76,17 @@
         "reduced detail real traffic LOD"
       ],
       "triangleCount": 10536,
-      "fileSizeBytes": 900772
-    }
+      "fileSizeBytes": 900772,
+      "provenance": "Project-authored local GLB generated for the R3F dashboard asset pipeline; no external downloads, stock models, paid asset stores, or archived Unreal assets were used."
+    },
+    "authorship": "project-authored"
   },
   "vehicles/passenger_car_far": {
     "id": "vehicles/passenger_car_far",
     "path": "/simulation/r3f/assets/glb/vehicles/passenger_car_far.glb",
     "kind": "vehicle",
-    "source": "project-authored-or-documented-license",
-    "license": "Project-authored or documented compatible license",
+    "source": "project-authored-local-glb",
+    "license": "Project-authored runtime GLB; no external third-party model source",
     "units": "meters",
     "pbr": true,
     "lod": "far",
@@ -118,15 +122,17 @@
         "four wheel cylinders",
         "front and rear glass",
         "headlight and taillight color blocks"
-      ]
-    }
+      ],
+      "provenance": "Project-authored local GLB generated for the R3F dashboard asset pipeline; no external downloads, stock models, paid asset stores, or archived Unreal assets were used."
+    },
+    "authorship": "project-authored"
   },
   "vehicles/taxi_near": {
     "id": "vehicles/taxi_near",
     "path": "/simulation/r3f/assets/glb/vehicles/taxi_near.glb",
     "kind": "vehicle",
-    "source": "project-authored-or-documented-license",
-    "license": "Project-authored or documented compatible license",
+    "source": "project-authored-local-glb",
+    "license": "Project-authored runtime GLB; no external third-party model source",
     "units": "meters",
     "pbr": true,
     "lod": "near",
@@ -157,15 +163,17 @@
         "wheel arch trim"
       ],
       "triangleCount": 14396,
-      "fileSizeBytes": 1221976
-    }
+      "fileSizeBytes": 1221976,
+      "provenance": "Project-authored local GLB generated for the R3F dashboard asset pipeline; no external downloads, stock models, paid asset stores, or archived Unreal assets were used."
+    },
+    "authorship": "project-authored"
   },
   "vehicles/taxi_far": {
     "id": "vehicles/taxi_far",
     "path": "/simulation/r3f/assets/glb/vehicles/taxi_far.glb",
     "kind": "vehicle",
-    "source": "project-authored-or-documented-license",
-    "license": "Project-authored or documented compatible license",
+    "source": "project-authored-local-glb",
+    "license": "Project-authored runtime GLB; no external third-party model source",
     "units": "meters",
     "pbr": true,
     "lod": "far",
@@ -202,15 +210,17 @@
         "front and rear glass",
         "headlight and taillight color blocks",
         "roof sign"
-      ]
-    }
+      ],
+      "provenance": "Project-authored local GLB generated for the R3F dashboard asset pipeline; no external downloads, stock models, paid asset stores, or archived Unreal assets were used."
+    },
+    "authorship": "project-authored"
   },
   "vehicles/bus_near": {
     "id": "vehicles/bus_near",
     "path": "/simulation/r3f/assets/glb/vehicles/bus_near.glb",
     "kind": "vehicle",
-    "source": "project-authored-or-documented-license",
-    "license": "Project-authored or documented compatible license",
+    "source": "project-authored-local-glb",
+    "license": "Project-authored runtime GLB; no external third-party model source",
     "units": "meters",
     "pbr": true,
     "lod": "near",
@@ -243,15 +253,17 @@
         "front and rear doors"
       ],
       "triangleCount": 10044,
-      "fileSizeBytes": 700664
-    }
+      "fileSizeBytes": 700664,
+      "provenance": "Project-authored local GLB generated for the R3F dashboard asset pipeline; no external downloads, stock models, paid asset stores, or archived Unreal assets were used."
+    },
+    "authorship": "project-authored"
   },
   "vehicles/bus_far": {
     "id": "vehicles/bus_far",
     "path": "/simulation/r3f/assets/glb/vehicles/bus_far.glb",
     "kind": "vehicle",
-    "source": "project-authored-or-documented-license",
-    "license": "Project-authored or documented compatible license",
+    "source": "project-authored-local-glb",
+    "license": "Project-authored runtime GLB; no external third-party model source",
     "units": "meters",
     "pbr": true,
     "lod": "far",
@@ -288,15 +300,17 @@
         "four wheel cylinders",
         "window row bands",
         "headlight and taillight color blocks"
-      ]
-    }
+      ],
+      "provenance": "Project-authored local GLB generated for the R3F dashboard asset pipeline; no external downloads, stock models, paid asset stores, or archived Unreal assets were used."
+    },
+    "authorship": "project-authored"
   },
   "vehicles/truck_near": {
     "id": "vehicles/truck_near",
     "path": "/simulation/r3f/assets/glb/vehicles/truck_near.glb",
     "kind": "vehicle",
-    "source": "project-authored-or-documented-license",
-    "license": "Project-authored or documented compatible license",
+    "source": "project-authored-local-glb",
+    "license": "Project-authored runtime GLB; no external third-party model source",
     "units": "meters",
     "pbr": true,
     "lod": "near",
@@ -328,15 +342,17 @@
         "step boards and wheel arches"
       ],
       "triangleCount": 12108,
-      "fileSizeBytes": 890804
-    }
+      "fileSizeBytes": 890804,
+      "provenance": "Project-authored local GLB generated for the R3F dashboard asset pipeline; no external downloads, stock models, paid asset stores, or archived Unreal assets were used."
+    },
+    "authorship": "project-authored"
   },
   "vehicles/truck_far": {
     "id": "vehicles/truck_far",
     "path": "/simulation/r3f/assets/glb/vehicles/truck_far.glb",
     "kind": "vehicle",
-    "source": "project-authored-or-documented-license",
-    "license": "Project-authored or documented compatible license",
+    "source": "project-authored-local-glb",
+    "license": "Project-authored runtime GLB; no external third-party model source",
     "units": "meters",
     "pbr": true,
     "lod": "far",
@@ -372,15 +388,17 @@
         "four wheel cylinders",
         "cab glass band",
         "headlight and taillight color blocks"
-      ]
-    }
+      ],
+      "provenance": "Project-authored local GLB generated for the R3F dashboard asset pipeline; no external downloads, stock models, paid asset stores, or archived Unreal assets were used."
+    },
+    "authorship": "project-authored"
   },
   "vehicles/emergency_ambulance_near": {
     "id": "vehicles/emergency_ambulance_near",
     "path": "/simulation/r3f/assets/glb/vehicles/emergency_ambulance_near.glb",
     "kind": "vehicle",
-    "source": "project-authored-or-documented-license",
-    "license": "Project-authored or documented compatible license",
+    "source": "project-authored-local-glb",
+    "license": "Project-authored runtime GLB; no external third-party model source",
     "units": "meters",
     "pbr": true,
     "lod": "near",
@@ -412,15 +430,17 @@
         "side service window and door seams"
       ],
       "triangleCount": 10356,
-      "fileSizeBytes": 835976
-    }
+      "fileSizeBytes": 835976,
+      "provenance": "Project-authored local GLB generated for the R3F dashboard asset pipeline; no external downloads, stock models, paid asset stores, or archived Unreal assets were used."
+    },
+    "authorship": "project-authored"
   },
   "vehicles/emergency_ambulance_medium": {
     "id": "vehicles/emergency_ambulance_medium",
     "path": "/simulation/r3f/assets/glb/vehicles/emergency_ambulance_medium.glb",
     "kind": "vehicle",
-    "source": "project-authored-or-documented-license",
-    "license": "Project-authored or documented compatible license",
+    "source": "project-authored-local-glb",
+    "license": "Project-authored runtime GLB; no external third-party model source",
     "units": "meters",
     "pbr": true,
     "lod": "medium",
@@ -452,15 +472,17 @@
       ],
       "triangleCount": 5940,
       "fileSizeBytes": 489488,
-      "mirrorReason": "medium ambulance LOD intentionally omits mirrors while preserving emergency markings and lightbar"
-    }
+      "mirrorReason": "medium ambulance LOD intentionally omits mirrors while preserving emergency markings and lightbar",
+      "provenance": "Project-authored local GLB generated for the R3F dashboard asset pipeline; no external downloads, stock models, paid asset stores, or archived Unreal assets were used."
+    },
+    "authorship": "project-authored"
   },
   "props/traffic_signal_pole": {
     "id": "props/traffic_signal_pole",
     "path": "/simulation/r3f/assets/glb/props/traffic_signal_pole.glb",
     "kind": "prop",
-    "source": "project-authored-or-documented-license",
-    "license": "Project-authored or documented compatible license",
+    "source": "project-authored-local-glb",
+    "license": "Project-authored runtime GLB; no external third-party model source",
     "units": "meters",
     "pbr": true,
     "lod": "hero",
@@ -502,15 +524,17 @@
       ],
       "realismNotes": "brighter galvanized mast/arm, base plate, bolts, conduit, brace, cable box, gusset plates, clamps, hanger stubs, and service hatch improve readability in dark proof projections",
       "triangleCount": 968,
-      "fileSizeBytes": 51688
-    }
+      "fileSizeBytes": 51688,
+      "provenance": "Project-authored local GLB generated for the R3F dashboard asset pipeline; no external downloads, stock models, paid asset stores, or archived Unreal assets were used."
+    },
+    "authorship": "project-authored"
   },
   "props/traffic_signal_heads": {
     "id": "props/traffic_signal_heads",
     "path": "/simulation/r3f/assets/glb/props/traffic_signal_heads.glb",
     "kind": "prop",
-    "source": "project-authored-or-documented-license",
-    "license": "Project-authored or documented compatible license",
+    "source": "project-authored-local-glb",
+    "license": "Project-authored runtime GLB; no external third-party model source",
     "units": "meters",
     "pbr": true,
     "lod": "hero",
@@ -522,7 +546,7 @@
     "visualRejectIfToyLike": true,
     "details": {
       "scaleReferenceMeters": {
-        "assemblyHeight": 2.0,
+        "assemblyHeight": 2,
         "housingWidth": 0.68,
         "housingDepthWithHoods": 0.65,
         "lensDiameter": 0.32
@@ -564,15 +588,17 @@
       ],
       "realismNotes": "three-aspect signal head keeps charcoal housing but adds separated rear rails, rear service panels, face plates, hinge/latch strips, side color markers, and stronger red/yellow/green lens contrast for dark contact-sheet readability",
       "triangleCount": 684,
-      "fileSizeBytes": 54820
-    }
+      "fileSizeBytes": 54820,
+      "provenance": "Project-authored local GLB generated for the R3F dashboard asset pipeline; no external downloads, stock models, paid asset stores, or archived Unreal assets were used."
+    },
+    "authorship": "project-authored"
   },
   "props/streetlight": {
     "id": "props/streetlight",
     "path": "/simulation/r3f/assets/glb/props/streetlight.glb",
     "kind": "prop",
-    "source": "project-authored-or-documented-license",
-    "license": "Project-authored or documented compatible license",
+    "source": "project-authored-local-glb",
+    "license": "Project-authored runtime GLB; no external third-party model source",
     "units": "meters",
     "pbr": true,
     "lod": "hero",
@@ -611,15 +637,17 @@
       ],
       "realismNotes": "streetlight now uses brighter metal, a taller tapered pole, separated arm/downrod/lamp housing, base hardware, and a clear warm emitter panel so it does not collapse into a dark icon",
       "triangleCount": 760,
-      "fileSizeBytes": 38268
-    }
+      "fileSizeBytes": 38268,
+      "provenance": "Project-authored local GLB generated for the R3F dashboard asset pipeline; no external downloads, stock models, paid asset stores, or archived Unreal assets were used."
+    },
+    "authorship": "project-authored"
   },
   "props/tree_cluster": {
     "id": "props/tree_cluster",
     "path": "/simulation/r3f/assets/glb/props/tree_cluster.glb",
     "kind": "prop",
-    "source": "project-authored-or-documented-license",
-    "license": "Project-authored or documented compatible license",
+    "source": "project-authored-local-glb",
+    "license": "Project-authored runtime GLB; no external third-party model source",
     "units": "meters",
     "pbr": true,
     "lod": "medium",
@@ -657,15 +685,17 @@
       ],
       "realismNotes": "cluster is widened into distinct roadside trees and shrubs with visible trunk/branch gaps, separated crowns, varied heights, and leaf material variation to avoid the prior single-sphere silhouette",
       "triangleCount": 2344,
-      "fileSizeBytes": 77336
-    }
+      "fileSizeBytes": 77336,
+      "provenance": "Project-authored local GLB generated for the R3F dashboard asset pipeline; no external downloads, stock models, paid asset stores, or archived Unreal assets were used."
+    },
+    "authorship": "project-authored"
   },
   "props/curb_details": {
     "id": "props/curb_details",
     "path": "/simulation/r3f/assets/glb/props/curb_details.glb",
     "kind": "prop",
-    "source": "project-authored-or-documented-license",
-    "license": "Project-authored or documented compatible license",
+    "source": "project-authored-local-glb",
+    "license": "Project-authored runtime GLB; no external third-party model source",
     "units": "meters",
     "pbr": true,
     "lod": "near",
@@ -708,15 +738,17 @@
       ],
       "realismNotes": "curb run uses lighter concrete, clearer drain bars, muted tactile paver detail, brighter bollards, chips, and grime strips to reduce icon-like dark/orange massing",
       "triangleCount": 1000,
-      "fileSizeBytes": 68324
-    }
+      "fileSizeBytes": 68324,
+      "provenance": "Project-authored local GLB generated for the R3F dashboard asset pipeline; no external downloads, stock models, paid asset stores, or archived Unreal assets were used."
+    },
+    "authorship": "project-authored"
   },
   "textures/wet_asphalt_albedo": {
     "id": "textures/wet_asphalt_albedo",
     "path": "/simulation/r3f/assets/textures/wet_asphalt_albedo.webp",
     "kind": "texture",
-    "source": "project-authored-or-documented-license",
-    "license": "Project-authored or documented compatible license",
+    "source": "project-authored-procedural-texture",
+    "license": "Project-authored generated runtime texture/decal; no external third-party texture source",
     "units": "meters",
     "pbr": true,
     "lod": "material",
@@ -736,14 +768,15 @@
         "nonrepeating large patch variation"
       ],
       "provenance": "Project-authored deterministic Sharp texture regenerated for Stage 4.1; Image Gen used only as non-runtime material direction and runtime proof is deferred to later browser screenshots."
-    }
+    },
+    "authorship": "generated"
   },
   "textures/wet_asphalt_roughness": {
     "id": "textures/wet_asphalt_roughness",
     "path": "/simulation/r3f/assets/textures/wet_asphalt_roughness.webp",
     "kind": "texture",
-    "source": "project-authored-or-documented-license",
-    "license": "Project-authored or documented compatible license",
+    "source": "project-authored-procedural-texture",
+    "license": "Project-authored generated runtime texture/decal; no external third-party texture source",
     "units": "meters",
     "pbr": true,
     "lod": "material",
@@ -763,14 +796,15 @@
         "vehicle-track scuff variation"
       ],
       "provenance": "Project-authored deterministic Sharp texture regenerated for Stage 4.1; Image Gen used only as non-runtime material direction and runtime proof is deferred to later browser screenshots."
-    }
+    },
+    "authorship": "generated"
   },
   "decals/worn_lane_markings": {
     "id": "decals/worn_lane_markings",
     "path": "/simulation/r3f/assets/textures/worn_lane_markings.png",
     "kind": "decal",
-    "source": "project-authored-or-documented-license",
-    "license": "Project-authored or documented compatible license",
+    "source": "project-authored-procedural-texture",
+    "license": "Project-authored generated runtime texture/decal; no external third-party texture source",
     "units": "meters",
     "pbr": true,
     "lod": "decal",
@@ -790,14 +824,15 @@
         "stop bar fragments and arrow marking wear"
       ],
       "provenance": "Project-authored deterministic Sharp decal regenerated for Stage 4.1; Image Gen used only as non-runtime material direction and runtime proof is deferred to later browser screenshots."
-    }
+    },
+    "authorship": "generated"
   },
   "decals/crosswalk_wear": {
     "id": "decals/crosswalk_wear",
     "path": "/simulation/r3f/assets/textures/crosswalk_wear.png",
     "kind": "decal",
-    "source": "project-authored-or-documented-license",
-    "license": "Project-authored or documented compatible license",
+    "source": "project-authored-procedural-texture",
+    "license": "Project-authored generated runtime texture/decal; no external third-party texture source",
     "units": "meters",
     "pbr": true,
     "lod": "decal",
@@ -817,14 +852,15 @@
         "nonuniform opacity"
       ],
       "provenance": "Project-authored deterministic Sharp decal regenerated for Stage 4.1; Image Gen used only as non-runtime material direction and runtime proof is deferred to later browser screenshots."
-    }
+    },
+    "authorship": "generated"
   },
   "decals/curb_grime": {
     "id": "decals/curb_grime",
     "path": "/simulation/r3f/assets/textures/curb_grime.png",
     "kind": "decal",
-    "source": "project-authored-or-documented-license",
-    "license": "Project-authored or documented compatible license",
+    "source": "project-authored-procedural-texture",
+    "license": "Project-authored generated runtime texture/decal; no external third-party texture source",
     "units": "meters",
     "pbr": true,
     "lod": "decal",
@@ -844,14 +880,15 @@
         "transparent alpha strip for concrete edges"
       ],
       "provenance": "Project-authored deterministic Sharp decal regenerated for Stage 4.1; Image Gen used only as non-runtime material direction and runtime proof is deferred to later browser screenshots."
-    }
+    },
+    "authorship": "generated"
   },
   "textures/sidewalk_paver_variation": {
     "id": "textures/sidewalk_paver_variation",
     "path": "/simulation/r3f/assets/textures/sidewalk_paver_variation.webp",
     "kind": "texture",
-    "source": "project-authored-or-documented-license",
-    "license": "Project-authored or documented compatible license",
+    "source": "project-authored-procedural-texture",
+    "license": "Project-authored generated runtime texture/decal; no external third-party texture source",
     "units": "meters",
     "pbr": true,
     "lod": "material",
@@ -871,14 +908,15 @@
         "small crack network"
       ],
       "provenance": "Project-authored deterministic Sharp texture regenerated for Stage 4.1; Image Gen used only as non-runtime material direction and runtime proof is deferred to later browser screenshots."
-    }
+    },
+    "authorship": "generated"
   },
   "textures/facade_window_emissive": {
     "id": "textures/facade_window_emissive",
     "path": "/simulation/r3f/assets/textures/facade_window_emissive.webp",
     "kind": "texture",
-    "source": "project-authored-or-documented-license",
-    "license": "Project-authored or documented compatible license",
+    "source": "project-authored-procedural-texture",
+    "license": "Project-authored generated runtime texture/decal; no external third-party texture source",
     "units": "meters",
     "pbr": true,
     "lod": "material",
@@ -898,6 +936,7 @@
         "subtle blind-line variation"
       ],
       "provenance": "Project-authored deterministic Sharp texture regenerated for Stage 4.1; Image Gen used only as non-runtime material direction and runtime proof is deferred to later browser screenshots."
-    }
+    },
+    "authorship": "generated"
   }
 }

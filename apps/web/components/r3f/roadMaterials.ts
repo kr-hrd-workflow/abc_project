@@ -8,18 +8,35 @@ import {
   type Texture
 } from "three";
 
+import { getR3FAssetEntry, type R3FAssetId } from "./assetManifest";
+
 type RoadMaterialProps = ThreeElements["meshStandardMaterial"];
 
+export const STAGE5_TEXTURE_ASSET_IDS = {
+  wetAsphaltAlbedo: "textures/wet_asphalt_albedo",
+  wetAsphaltRoughness: "textures/wet_asphalt_roughness",
+  wornLaneMarkings: "decals/worn_lane_markings",
+  crosswalkWear: "decals/crosswalk_wear",
+  curbGrime: "decals/curb_grime",
+  sidewalkPaverVariation: "textures/sidewalk_paver_variation",
+  facadeWindowEmissive: "textures/facade_window_emissive"
+} as const satisfies Record<string, R3FAssetId>;
+
 export const STAGE5_TEXTURE_PATHS = {
-  wetAsphaltAlbedo: "/simulation/r3f/assets/textures/wet_asphalt_albedo.webp",
-  wetAsphaltRoughness: "/simulation/r3f/assets/textures/wet_asphalt_roughness.webp",
-  wornLaneMarkings: "/simulation/r3f/assets/textures/worn_lane_markings.png",
-  crosswalkWear: "/simulation/r3f/assets/textures/crosswalk_wear.png",
-  curbGrime: "/simulation/r3f/assets/textures/curb_grime.png",
-  sidewalkPaverVariation:
-    "/simulation/r3f/assets/textures/sidewalk_paver_variation.webp",
-  facadeWindowEmissive:
-    "/simulation/r3f/assets/textures/facade_window_emissive.webp"
+  wetAsphaltAlbedo: getR3FAssetEntry(STAGE5_TEXTURE_ASSET_IDS.wetAsphaltAlbedo).path,
+  wetAsphaltRoughness: getR3FAssetEntry(
+    STAGE5_TEXTURE_ASSET_IDS.wetAsphaltRoughness
+  ).path,
+  wornLaneMarkings: getR3FAssetEntry(STAGE5_TEXTURE_ASSET_IDS.wornLaneMarkings)
+    .path,
+  crosswalkWear: getR3FAssetEntry(STAGE5_TEXTURE_ASSET_IDS.crosswalkWear).path,
+  curbGrime: getR3FAssetEntry(STAGE5_TEXTURE_ASSET_IDS.curbGrime).path,
+  sidewalkPaverVariation: getR3FAssetEntry(
+    STAGE5_TEXTURE_ASSET_IDS.sidewalkPaverVariation
+  ).path,
+  facadeWindowEmissive: getR3FAssetEntry(
+    STAGE5_TEXTURE_ASSET_IDS.facadeWindowEmissive
+  ).path
 } as const;
 
 type Stage5TextureKey = keyof typeof STAGE5_TEXTURE_PATHS;
@@ -31,17 +48,17 @@ const STAGE5_TEXTURE_ENTRIES = Object.entries(STAGE5_TEXTURE_PATHS) as Array<
 
 export const ROAD_MATERIALS = {
   asphalt: {
-    color: "#37464a",
-    roughness: 0.31,
-    metalness: 0.035,
-    envMapIntensity: 1.08,
+    color: "#334145",
+    roughness: 0.21,
+    metalness: 0.055,
+    envMapIntensity: 1.32,
     dithering: true
   },
   intersectionAsphalt: {
-    color: "#303d41",
-    roughness: 0.29,
-    metalness: 0.05,
-    envMapIntensity: 1.16,
+    color: "#2d3a3e",
+    roughness: 0.2,
+    metalness: 0.07,
+    envMapIntensity: 1.4,
     dithering: true
   },
   asphaltPatch: {
@@ -130,19 +147,19 @@ export const ROAD_MATERIALS = {
     dithering: true
   },
   cityGround: {
-    color: "#253237",
-    roughness: 0.86,
+    color: "#2d393d",
+    roughness: 0.78,
     metalness: 0.025,
-    envMapIntensity: 0.48,
+    envMapIntensity: 0.62,
     dithering: true
   },
   buildingEdge: {
-    color: "#29363c",
-    roughness: 0.5,
-    metalness: 0.12,
+    color: "#324046",
+    roughness: 0.44,
+    metalness: 0.14,
     emissive: "#42382c",
-    emissiveIntensity: 0.52,
-    envMapIntensity: 0.72,
+    emissiveIntensity: 0.44,
+    envMapIntensity: 0.86,
     dithering: true
   }
 } satisfies Record<string, RoadMaterialProps>;
@@ -214,7 +231,7 @@ export function useStage5RoadMaterials(): Stage5RoadMaterialSet {
             [18, 44],
             NoColorSpace
           ),
-          bumpScale: 0.045
+          bumpScale: 0.058
         },
         intersectionAsphalt: {
           ...ROAD_MATERIALS.intersectionAsphalt,
@@ -229,7 +246,7 @@ export function useStage5RoadMaterials(): Stage5RoadMaterialSet {
             [12, 12],
             NoColorSpace
           ),
-          bumpScale: 0.038
+          bumpScale: 0.05
         },
         asphaltPatch: {
           ...ROAD_MATERIALS.asphaltPatch,

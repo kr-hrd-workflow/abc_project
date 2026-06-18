@@ -1396,7 +1396,7 @@ Stage 6D evidence captured 2026-06-18:
 - Create: `docs/compliance/r3f-asset-licenses.md`
 - Modify: `docs/technotes/r3f-photoreal-dashboard-renderer.md`
 
-- [ ] **Step 1: Expand runtime asset use**
+- [x] **Step 1: Expand runtime asset use**
 
 Load manifest assets by explicit IDs, not by scanning arbitrary public paths. The first pass should render at least:
 
@@ -1411,7 +1411,7 @@ all existing facade/window material panels
 
 If an asset family is not present in `manifest.json`, record that absence in the implementation notes instead of inventing a placeholder.
 
-- [ ] **Step 1A: Harden runtime visual proof against the Stage 5 baseline**
+- [x] **Step 1A: Harden runtime visual proof against the Stage 5 baseline**
 
 Use the committed Stage 5 browser canvas artifacts as the before baseline, then improve the runtime scene so the accepted Stage 6E canvas no longer reads as a flat blockout to a human reviewer. The pass must visibly reduce:
 
@@ -1426,7 +1426,7 @@ Prefer manifest-backed GLB assets, existing texture/decal assets, material tunin
 
 The Stage 6E verifier/review gate must compare current screenshots against the Stage 5 baseline and fail if the runtime canvas is not materially more realistic to a human reviewer, even when numeric photorealism metrics pass.
 
-- [ ] **Step 2: Add manifest-driven preload and tiering**
+- [x] **Step 2: Add manifest-driven preload and tiering**
 
 Add a small helper in `Stage5SceneAssets.tsx` that groups entries by:
 
@@ -1439,7 +1439,7 @@ maxFileSizeBytes
 
 Use far LODs for repeated traffic density and medium/near assets only for foreground or operator-relevant vehicles. Do not exceed the existing 25 MB first-pass payload budget.
 
-- [ ] **Step 3: Add asset optimization script**
+- [x] **Step 3: Add asset optimization script**
 
 Create `scripts/optimize-r3f-assets.mjs` that can run in `--check` mode without rewriting files. It must:
 
@@ -1460,7 +1460,7 @@ npm --workspace apps/web exec gltf-transform -- --version
 
 If meshopt, Draco, KTX2, or texture encoder tooling is missing at execution time, stop and ask for approval before installing or downloading anything.
 
-- [ ] **Step 4: Consolidate asset licensing**
+- [x] **Step 4: Consolidate asset licensing**
 
 Create `docs/compliance/r3f-asset-licenses.md` from the manifest and texture provenance. It must list:
 
@@ -1476,7 +1476,7 @@ whether it is project-authored, generated, or third-party
 
 Update `verify-r3f-assets.mjs` to fail if a manifest entry lacks source, license, provenance/source note, or points to an undocumented third-party asset.
 
-- [ ] **Step 5: Verification**
+- [x] **Step 5: Verification**
 
 Run:
 
@@ -1490,6 +1490,18 @@ git diff --check
 ```
 
 Expected: optimization check, asset verifier, dashboard browser proof, web build, and diff check pass without external downloads. Desktop/mobile canvas artifacts show materially improved runtime realism versus the committed Stage 5 baseline, not merely denser traffic or passing metadata.
+
+**Stage 6E completion evidence, 2026-06-18:**
+
+- Runtime asset use expanded by explicit manifest IDs in `Stage5SceneAssets.tsx` and `TrafficDensityLayer.tsx`: bus, emergency ambulance, passenger car, taxi, truck, streetlight, tree cluster, curb details, facade/window panels, and far-LOD density families render through draw-call-bounded GLB-derived instanced silhouettes. Final polish added per-instance vehicle color variation, less toy-saturated silhouette materials, softened distant-city haze, and segmented city-edge building massing.
+- `npm --workspace apps/web exec gltf-transform -- --version` reported `4.4.0`.
+- `node scripts/optimize-r3f-assets.mjs --check` passed with all manifest payload `9.62 MB` and Stage 6E first-pass runtime payload `7.86 MB / 25.00 MB`.
+- `node scripts/verify-r3f-assets.mjs` passed with first-pass GLB + texture payload `9.62 MB / 25.00 MB`.
+- `npm --workspace apps/web run test -- components/DashboardShell.test.tsx components/r3f/SimulationCanvas.test.tsx` passed: 70 tests.
+- `npm run build:web` passed.
+- `node scripts/verify-r3f-dashboard.mjs` passed with final artifact timestamp `2026-06-18T01:21:56.672Z`, `drawCalls=94/250`, `visibleVehicleCount=160`, `glbVehicleCount=5`, `streetFurnitureShadowCount=6`, no blocking console failures, no WebGL context-loss errors, and fresh desktop/mobile proof artifacts.
+- `git diff --check` passed with line-ending warnings only.
+- Fresh canvas artifacts inspected against the committed Stage 5 baseline: `artifacts/r3f-dashboard-desktop-canvas.png` and `artifacts/r3f-dashboard-mobile-canvas.png` now show broader manifest-backed vehicle families, denser color-varied traffic silhouettes, street furniture, trees, curb details, segmented city-edge massing, and retained wet-road/facade lighting. This is browser runtime proof only, not live SUMO/Tarcl binding.
 
 ## Stage 6F: Operations, Telemetry, Security, Artifact Hygiene, And Release Discipline
 
