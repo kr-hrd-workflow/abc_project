@@ -1,17 +1,20 @@
 "use client";
 
 import type { SceneSnapshot } from "./buildSceneSnapshot";
+import type { SimulationFrameTelemetry } from "../../lib/simulationSnapshot";
 
 type SimulationOverlaysProps = {
   simulationSource: string;
   sceneSnapshot: SceneSnapshot;
   signalState: string;
+  frameTelemetry: SimulationFrameTelemetry;
 };
 
 export function SimulationOverlays({
   simulationSource,
   sceneSnapshot,
-  signalState
+  signalState,
+  frameTelemetry
 }: SimulationOverlaysProps) {
   return (
     <div
@@ -40,6 +43,13 @@ export function SimulationOverlays({
         value={sceneSnapshot.queueSource}
         testId="r3f-queue-source-badge"
       />
+      {frameTelemetry.stale ? (
+        <OverlayBadge
+          label="Frame"
+          value={formatFrameStaleValue(frameTelemetry.staleReason)}
+          testId="r3f-frame-stale-badge"
+        />
+      ) : null}
       {sceneSnapshot.scenarioId ? (
         <OverlayBadge
           label="Scenario"
@@ -49,6 +59,13 @@ export function SimulationOverlays({
       ) : null}
     </div>
   );
+}
+
+function formatFrameStaleValue(reason: string | null) {
+  if (reason === "degraded_source") return "degraded";
+  if (reason === "missing_next_frame") return "stale missing-next";
+  if (reason === "frame_age") return "stale age";
+  return "stale";
 }
 
 function OverlayBadge({

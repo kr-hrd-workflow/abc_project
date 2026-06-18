@@ -165,6 +165,32 @@ def test_settings_accept_env_example_variables(tmp_path) -> None:
     assert settings.knowledge_search_mode == "pgvector"
 
 
+def test_sumo_runtime_settings_support_live_modes_and_bounds() -> None:
+    default_settings = Settings()
+
+    assert default_settings.sumo_simulation_mode == "fixture"
+    assert default_settings.sumo_binary_path is None
+    assert default_settings.sumo_config_dir is None
+    assert default_settings.sumo_runtime_ttl_seconds == 300
+    assert default_settings.sumo_authoritative_hz == 10
+    assert default_settings.sumo_frame_cache_ttl_ms == 1000
+    assert default_settings.sumo_interpolation_delay_ms == 150
+
+    libsumo_settings = Settings(
+        sumo_simulation_mode="sumo_libsumo",
+        sumo_authoritative_hz=5,
+    )
+
+    assert libsumo_settings.sumo_simulation_mode == "sumo_libsumo"
+    assert libsumo_settings.sumo_authoritative_hz == 5
+
+    with pytest.raises(ValidationError):
+        Settings(sumo_authoritative_hz=4)
+
+    with pytest.raises(ValidationError):
+        Settings(sumo_authoritative_hz=11)
+
+
 def test_sqlalchemy_metadata_matches_required_tables() -> None:
     expected_columns = {
         "intersections": {"id", "name", "location_label", "created_at"},

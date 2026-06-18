@@ -25,6 +25,20 @@ Renderer precedence for the `/dashboard` simulation viewport:
 
 Photorealistic rendering remains required. Runtime evidence must come from actual browser-rendered R3F screenshots, not from Image Gen references or archived Unreal proof.
 
+## Source Modes And Safety Copy
+
+The R3F renderer must keep its source mode visible to the operator:
+
+- `simulation_snapshot_fixture`: deterministic fixture/regression source.
+- `sumo_traci`: opt-in live SUMO frame source through a warm TraCI session.
+- `sumo_libsumo`: opt-in live SUMO frame source through a warm libsumo session.
+- `sumo_last_good`: stale last-good SUMO frame after live runtime failure.
+- fixture fallback after live failure: supported fallback when no fresh last-good frame is within `SUMO_FRAME_CACHE_TTL_MS`.
+
+The dashboard is a simulation visualization. It is not live CCTV, does not
+control real signals, and must keep the source badge plus stale/fallback label
+visible whenever the frame source is degraded or fixture-backed.
+
 ## Status Vocabulary
 
 | Term | Meaning |
@@ -62,7 +76,24 @@ Asset contract:
 - Runtime GLBs: `apps/web/public/simulation/r3f/assets/glb/`
 - Runtime textures and decals: `apps/web/public/simulation/r3f/assets/textures/`
 
-Every manifest entry records a stable ID, runtime path, kind, source, license, meter units, PBR flag, LOD, maximum texture size, maximum triangle budget, and maximum file-size budget. Stage 4.1 entries also record realism metadata: `realismStatus="stage4_1_ready"`, `visualRejectIfToyLike=true`, vehicle silhouette/detail fields, prop scale/functional parts, and texture/decal material features plus provenance.
+Every manifest entry records a stable ID, runtime path, kind, source or local
+generation note, license, authorship, meter units, PBR flag, PBR channel
+coverage, LOD, maximum texture size, maximum triangle budget, maximum file-size
+budget, compression status, and provenance evidence path. Stage 4.1 entries
+also record realism metadata: `realismStatus="stage4_1_ready"`,
+`visualRejectIfToyLike=true`, vehicle silhouette/detail fields, prop
+scale/functional parts, and texture/decal material features plus provenance.
+
+The addition pipeline for future assets is: Blender/export source, glTF
+validation, `gltf-transform resize`, meshopt or draco compression when tooling
+is approved, KTX2 texture transform when the decoder path is verified, manifest
+regeneration, visual QA screenshot, and verifier merge. Current R3F runtime
+assets remain project-authored/generated and under budget without adding new
+downloads.
+
+Loader policy remains WebGL2. Use `GLTFLoader`/Drei for GLBs. Add
+`DRACOLoader` or `KTX2Loader` only after verified assets and approved packages
+exist. Treat WebGPU as future research.
 
 The verifier fails on invalid JSON, missing files, paths outside `/simulation/r3f/assets/`, archive paths, missing source/license fields, budget violations, non-power-of-two texture dimensions without an explicit exception, missing lower-detail vehicle options, near/hero assets without `pbr=true`, placeholder-style names, missing Stage 4.1 realism metadata, GLB node/material banned names, GLB names that contradict wheel/glass/light/body-panel/mirror metadata, weak near-vehicle triangle floors, far LOD triangle counts that are not lower than their source LODs, missing proof PNGs, and first-pass GLB + texture payloads at or above 25 MB.
 
@@ -128,25 +159,47 @@ Human-view inspection compared the fresh desktop/mobile canvas crops with the co
 
 Stage 6F adds operational proof surfaces without adding a production monitoring vendor, release automation, real SUMO/Tarcl binding, or real signal control.
 
-Runtime telemetry is published from the existing R3F canvas proof path and captured in `artifacts/r3f-dashboard-details.json`. Fresh primary-run proof generated at `2026-06-18T01:48:44.873Z` recorded:
+Runtime telemetry is published from the existing R3F canvas proof path and captured in `artifacts/r3f-dashboard-details.json`. Fresh primary-run proof generated at `2026-06-18T07:53:34.477Z` recorded:
 
 - `renderer_mode=r3f_photoreal_stage5`
 - `snapshot_source=simulation_snapshot_fixture`
 - `frame_bound=true`
-- `draw_call_count=94`
+- `draw_call_count=171`
 - `webgl_context_loss_count=0`
 - `fallback_reason=null`
 - `visible_vehicle_count=160`
+- `frame_age_ms=8323`
+- `network_latency_ms=8600`
+- `frame_stale=true`
+- `shadow_enabled=true`
+- `shadow_caster_count=18`
+- `fps` and `average_frame_time_ms` browser samples for desktop/mobile
+- `normal_draw_calls<=180` and `peak_draw_calls<=250` gates
 
 Validation:
 
 - `npm --workspace apps/web run test -- lib/r3fTelemetry.test.ts`: 1 test passed after the RED missing-module failure.
 - `npm --workspace apps/web run test -- components/r3f/SimulationCanvas.test.tsx`: 6 tests passed after the RED missing-telemetry failure.
-- `npm run verify:security`: runs moderate-or-higher npm audit gates, Python third-party dependency audit with skipped dependencies rejected, CycloneDX SBOM generation, R3F asset provenance verification, and a tracked-file secret scan; the final readiness report is written to `artifacts/r3f-security-gates.json` with `blocked_requires_tooling=[]` when the gate passes.
+- `npm run verify:security`: runs moderate-or-higher npm audit gates, Python third-party dependency audit with skipped dependencies rejected, CycloneDX SBOM generation, R3F asset provenance verification, and a workspace secret scan covering tracked plus untracked non-ignored scannable files; the final readiness report is written to `artifacts/r3f-security-gates.json` with `blocked_requires_tooling=[]` when the gate passes.
 - `node scripts/verify-r3f-dashboard.mjs`: passed with telemetry evidence in the details JSON.
-- `npm run verify`: passed API tests, web tests, web build, R3F asset verification, dashboard browser proof, security verification, and `git diff --check` with no line-ending warnings after the final-gate concern closure.
+- `npm run verify`: passed API tests, web tests, web build, R3F asset verification, dashboard browser proof, security verification, and `git diff --check` with LF/CRLF warnings only after the final-gate concern closure.
 
 Operational docs now classify proof artifacts, details JSON, Playwright/test output, and generated scratch files. Release checklist and PR template require verification commands, browser artifacts, truth-source labels, no real signal control claim, asset license/provenance evidence, and generated-output hygiene.
+
+Post-Stage-6 dashboard verifier evidence must include source mode,
+frame-bound state, fallback/stale reason, signal state, no-overflow evidence,
+draw calls, visible vehicle count, frame age, network latency,
+sim-to-render delay, authoritative Hz, authoritative tick drift, frame
+staleness, shadow enabled state, shadow caster count, FPS/frame-time samples,
+and normal/peak draw calls. In headless static `frameloop="demand"` proof runs,
+Chromium may throttle `requestAnimationFrame`; the verifier records the raw
+sample and marks FPS/frame-time as unmeasurable only with an explicit reason,
+while still enforcing normal/peak draw-call budgets and recording triangles,
+heap when available, frame timing telemetry, and raw rAF data.
+The verifier fails on blank canvas proof, source-label mismatch, stale live
+frames without a visible stale/degraded label, horizontal overflow, draw-call
+budget breach, missing telemetry, missing signal proof, or shadow caster budget
+breach.
 
 ## Stage 4.1 Texture And Decal Provenance
 

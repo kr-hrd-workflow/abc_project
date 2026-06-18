@@ -3,6 +3,7 @@ import {
   LANE_WIDTH_METERS,
   ROAD_WIDTH_METERS
 } from "./roadGeometry";
+import { STAGE5_SHADOWS_ENABLED } from "./shadowPolicy";
 import type { Vector3Tuple } from "./roadGeometry";
 
 export type StreetlightPoolSpec = {
@@ -182,18 +183,20 @@ export function LightingRig() {
       />
       <directionalLight
         name="soft-overcast-key-light"
-        position={[64, 92, 48]}
+        position={[48, 84, 42]}
         color={STAGE5_LIGHT_COLORS.coolMoon}
-        intensity={0.82}
-        castShadow
-        shadow-mapSize-width={2048}
-        shadow-mapSize-height={2048}
-        shadow-camera-left={-120}
-        shadow-camera-right={120}
-        shadow-camera-top={120}
-        shadow-camera-bottom={-120}
-        shadow-camera-near={12}
-        shadow-camera-far={210}
+        intensity={0.76}
+        castShadow={STAGE5_SHADOWS_ENABLED}
+        shadow-mapSize-width={1024}
+        shadow-mapSize-height={1024}
+        shadow-camera-left={-72}
+        shadow-camera-right={72}
+        shadow-camera-top={86}
+        shadow-camera-bottom={-72}
+        shadow-camera-near={18}
+        shadow-camera-far={150}
+        shadow-bias={-0.00022}
+        shadow-normalBias={0.018}
       />
 
       {STREETLIGHT_POOLS.map((light) => (

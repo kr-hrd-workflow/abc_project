@@ -70,44 +70,11 @@ def get_runtime_readiness(
                 ),
             ],
         ),
-        "simulation": _section(
-            mode=settings.sumo_simulation_mode,
-            checks=[
-                _check(
-                    "python module traci",
-                    module_available("traci"),
-                    detail=(
-                        "install the API simulation extra before enabling "
-                        "sumo_traci mode"
-                    ),
-                ),
-                _check(
-                    "python module sumolib",
-                    module_available("sumolib"),
-                    detail=(
-                        "install the API simulation extra before enabling "
-                        "sumo_traci mode"
-                    ),
-                ),
-                _check(
-                    f"binary {settings.sumo_binary}",
-                    binary_available(settings.sumo_binary),
-                    detail=(
-                        "install SUMO system binaries and keep SUMO_BINARY "
-                        "configured"
-                    ),
-                ),
-                _check(
-                    "binary netconvert",
-                    binary_available("netconvert"),
-                    detail="install SUMO system binaries",
-                ),
-                _check(
-                    f"SUMO config {settings.sumo_config_path}",
-                    path_exists(settings.sumo_config_path),
-                    detail="set SUMO_CONFIG_PATH to a local .sumocfg file",
-                ),
-            ],
+        "simulation": _simulation_section(
+            settings,
+            module_available=module_available,
+            binary_available=binary_available,
+            path_exists=path_exists,
         ),
         "openai": _section(
             mode=settings.openai_model,
@@ -183,6 +150,105 @@ def _check(name: str, available: bool, *, detail: str | None = None) -> RuntimeC
     if detail is not None:
         payload["detail"] = detail
     return payload
+
+
+def _simulation_section(
+    settings: Settings,
+    *,
+    module_available: Callable[[str], bool],
+    binary_available: Callable[[str], bool],
+    path_exists: Callable[[str], bool],
+) -> RuntimeSection:
+    if settings.sumo_simulation_mode == "fixture":
+        return _section(
+            mode=settings.sumo_simulation_mode,
+            checks=[
+                _check(
+                    "fixture simulation frame provider",
+                    True,
+                    detail="deterministic fixture snapshots; not live SUMO truth",
+                )
+            ],
+        )
+
+    module_checks = (
+        [
+            _check(
+                "python module traci",
+                module_available("traci"),
+                detail=(
+                    "install the API simulation extra before enabling "
+                    "sumo_traci mode"
+                ),
+            ),
+            _check(
+                "python module sumolib",
+                module_available("sumolib"),
+                detail=(
+                    "install the API simulation extra before enabling "
+                    "sumo_traci mode"
+                ),
+            ),
+        ]
+        if settings.sumo_simulation_mode == "sumo_traci"
+        else [
+            _check(
+                "python module libsumo",
+                module_available("libsumo"),
+                detail=(
+                    "install the API simulation extra before enabling "
+                    "sumo_libsumo mode"
+                ),
+            )
+        ]
+    )
+    binary_name = settings.sumo_binary_path or settings.sumo_binary
+    binary_check = (
+        path_exists(binary_name)
+        if settings.sumo_binary_path
+        else binary_available(binary_name)
+    )
+    binary_detail = (
+        "install SUMO system binaries and keep SUMO_BINARY_PATH configured"
+        if settings.sumo_binary_path
+        else "install SUMO system binaries and keep SUMO_BINARY configured"
+    )
+    config_name = (
+        f"SUMO config dir {settings.sumo_config_dir}"
+        if settings.sumo_config_dir
+        else f"SUMO config {settings.sumo_config_path}"
+    )
+    config_available = (
+        path_exists(settings.sumo_config_dir)
+        if settings.sumo_config_dir
+        else path_exists(settings.sumo_config_path)
+    )
+    config_detail = (
+        "set SUMO_CONFIG_DIR to a directory of scenario .sumocfg files"
+        if settings.sumo_config_dir
+        else "set SUMO_CONFIG_PATH to a local .sumocfg file"
+    )
+    return _section(
+        mode=settings.sumo_simulation_mode,
+        checks=[
+            *module_checks,
+            _check(
+                f"binary {binary_name}",
+                binary_check,
+                detail=binary_detail,
+            ),
+            _check(
+                "binary netconvert",
+                binary_available("netconvert"),
+                detail="install SUMO system binaries",
+            ),
+            _check(
+                config_name,
+                config_available,
+                detail=config_detail,
+            ),
+        ],
+    )
 
 
 def _module_available(module_name: str) -> bool:

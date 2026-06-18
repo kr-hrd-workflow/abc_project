@@ -82,7 +82,7 @@ export function getStage5CameraForAspect(aspect: number) {
     return STAGE5_CAMERA;
   }
 
-  return aspect < 0.82 ? STAGE5_TALL_VIEWPORT_CAMERA : STAGE5_CAMERA;
+  return aspect < 1.08 ? STAGE5_TALL_VIEWPORT_CAMERA : STAGE5_CAMERA;
 }
 
 export const INTERSECTION_BOX_METERS = 32;

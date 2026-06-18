@@ -22,6 +22,7 @@ import type {
   UploadAnalysisResult
 } from "../lib/types";
 import type { SimulationFrameSnapshot } from "../lib/simulationSnapshot";
+import type { SimulationFrameBufferEntry } from "../lib/simulationSnapshot";
 import type { Locale } from "../lib/i18n";
 import { copy } from "../lib/i18n";
 import { AnalysisIntakePanel } from "./AnalysisIntakePanel";
@@ -38,6 +39,7 @@ export type DashboardShellProps = {
   recommendation: Recommendation;
   simulation: SimulationComparison;
   simulationFrame: SimulationFrameSnapshot | null;
+  simulationFrameEntries?: SimulationFrameBufferEntry[];
   report: Report;
   chat: ChatResponse | null;
   fixtures: AnalysisFixture[];
@@ -66,6 +68,7 @@ export function DashboardShell({
   recommendation,
   simulation,
   simulationFrame,
+  simulationFrameEntries,
   report,
   chat,
   fixtures,
@@ -324,6 +327,8 @@ export function DashboardShell({
             events={events}
             simulation={simulation}
             simulationFrame={simulationFrame}
+            simulationFrameEntries={simulationFrameEntries}
+            selectedScenarioId={selectedScenarioId}
             runtimeReadiness={runtimeReadiness}
             locale={locale}
             onRunSimulation={onRunSimulation}

@@ -2,24 +2,42 @@
 
 import {
   ACESFilmicToneMapping,
+  PCFSoftShadowMap,
   SRGBColorSpace,
   type WebGLRenderer
 } from "three";
+import { Children, isValidElement, type ReactElement } from "react";
 import { describe, expect, test, vi } from "vitest";
 
 import {
   STAGE5_DRAW_CALL_BUDGET,
+  STAGE5_NORMAL_DRAW_CALL_BUDGET,
+  STAGE5_SHADOWS_ENABLED,
   STAGE5_TONE_MAPPING_EXPOSURE,
   buildStage5CanvasProof,
   configureStage5Renderer,
   markStage5CanvasCurrent,
   publishStage5CanvasProof
 } from "./SimulationCanvas";
+import type { SceneSnapshot } from "./buildSceneSnapshot";
+import { buildFixtureSceneSnapshot } from "./buildSceneSnapshot";
+import {
+  STAGE5_NEAR_VEHICLE_SHADOW_LIMIT,
+  STAGE5_SHADOW_CASTER_LIMIT,
+  STAGE5_STREETLIGHT_SHADOW_CASTER_COUNT,
+  getStage5ShadowCasterCount
+} from "./shadowPolicy";
 import {
   STAGE3_CAMERA,
   STAGE5_CAMERA,
   getStage5CameraForAspect
 } from "./roadGeometry";
+import { SimulationScene } from "./SimulationScene";
+import type {
+  SimulationDensitySegment,
+  SimulationSignalSnapshot,
+  SimulationVehicleSnapshot
+} from "../../lib/simulationSnapshot";
 
 function createWebGLContextMock(
   contextLost = false
@@ -84,6 +102,7 @@ describe("SimulationCanvas Stage 5 telemetry", () => {
   test("widens and recenters the Stage 5 camera on tall mobile viewports", () => {
     const desktopCamera = getStage5CameraForAspect(914 / 680);
     const mobileCamera = getStage5CameraForAspect(390 / 844);
+    const mobileProofCanvasCamera = getStage5CameraForAspect(552 / 561);
     const desktopHorizontalDistance = Math.hypot(
       STAGE5_CAMERA.position[0] - STAGE5_CAMERA.target[0],
       STAGE5_CAMERA.position[2] - STAGE5_CAMERA.target[2]
@@ -95,6 +114,7 @@ describe("SimulationCanvas Stage 5 telemetry", () => {
 
     expect(desktopCamera).toBe(STAGE5_CAMERA);
     expect(mobileCamera).not.toBe(STAGE5_CAMERA);
+    expect(mobileProofCanvasCamera).toBe(mobileCamera);
     expect(Math.abs(mobileCamera.position[0])).toBeLessThan(
       Math.abs(STAGE5_CAMERA.position[0])
     );
@@ -117,6 +137,8 @@ describe("SimulationCanvas Stage 5 telemetry", () => {
     viewport.setAttribute("data-r3f-snapshot-source", "simulation_snapshot_fixture");
     viewport.setAttribute("data-r3f-frame-bound", "true");
     viewport.setAttribute("data-r3f-visible-vehicle-count", "160");
+    viewport.setAttribute("data-r3f-shadow-enabled", "true");
+    viewport.setAttribute("data-r3f-shadow-caster-count", "18");
     viewport.append(renderer.domElement);
     document.body.append(viewport);
 
@@ -126,14 +148,26 @@ describe("SimulationCanvas Stage 5 telemetry", () => {
     expect(renderer.outputColorSpace).toBe(SRGBColorSpace);
     expect(renderer.toneMapping).toBe(ACESFilmicToneMapping);
     expect(renderer.toneMappingExposure).toBe(STAGE5_TONE_MAPPING_EXPOSURE);
-    expect(renderer.shadowMap.enabled).toBe(false);
+    expect(renderer.shadowMap.enabled).toBe(STAGE5_SHADOWS_ENABLED);
+    expect(renderer.shadowMap.type).toBe(PCFSoftShadowMap);
     expect(proof).toEqual(
       expect.objectContaining({
         renderer: "r3f",
         stage: 5,
+        normalDrawCallBudget: STAGE5_NORMAL_DRAW_CALL_BUDGET,
         drawCallBudget: STAGE5_DRAW_CALL_BUDGET,
         drawCalls: 128,
+        peakDrawCalls: 128,
+        shadowEnabled: true,
+        shadowCasterCount: 18,
         triangles: 42000,
+        averageFrameTimeMs: expect.any(Number),
+        fps: expect.any(Number),
+        cpuFrameTimeMs: expect.any(Number),
+        gpuFrameTimeMs: null,
+        textureMemoryBytes: null,
+        jsHeapBytes: null,
+        authoritativeTickDriftMs: 0,
         lines: 12,
         canvasWidth: 640,
         canvasHeight: 360,
@@ -156,6 +190,52 @@ describe("SimulationCanvas Stage 5 telemetry", () => {
         visible_vehicle_count: 160
       })
     );
+  });
+
+  test("keeps renderer shadows behind the explicit whitelist gate", () => {
+    const enabledRenderer = createRenderer();
+    const disabledRenderer = createRenderer();
+
+    configureStage5Renderer(enabledRenderer, { shadowsEnabled: true });
+    configureStage5Renderer(disabledRenderer, { shadowsEnabled: false });
+
+    expect(enabledRenderer.shadowMap.enabled).toBe(true);
+    expect(enabledRenderer.shadowMap.type).toBe(PCFSoftShadowMap);
+    expect(disabledRenderer.shadowMap.enabled).toBe(false);
+  });
+
+  test("bounds real shadow casters to near vehicles, signal hardware, and streetlights", () => {
+    const sceneSnapshot = buildShadowCountSceneSnapshot({
+      vehicleCount: STAGE5_NEAR_VEHICLE_SHADOW_LIMIT + 9,
+      includeDensity: true
+    });
+    const withoutDensity = {
+      ...sceneSnapshot,
+      densitySegments: []
+    } satisfies SceneSnapshot;
+    const expectedCasterCount =
+      STAGE5_NEAR_VEHICLE_SHADOW_LIMIT +
+      8 +
+      STAGE5_STREETLIGHT_SHADOW_CASTER_COUNT;
+
+    expect(getStage5ShadowCasterCount(sceneSnapshot)).toBe(expectedCasterCount);
+    expect(getStage5ShadowCasterCount(withoutDensity)).toBe(expectedCasterCount);
+    expect(getStage5ShadowCasterCount(sceneSnapshot)).toBeLessThanOrEqual(
+      STAGE5_SHADOW_CASTER_LIMIT
+    );
+  });
+
+  test("composes the R3F scene through stable static and dynamic layers", () => {
+    const sceneSnapshot = buildShadowCountSceneSnapshot({ vehicleCount: 2 });
+    const scene = SimulationScene({ sceneSnapshot });
+
+    expect(getChildDisplayNames(scene)).toEqual([
+      "Stage3CameraRig",
+      "EnvironmentLayer",
+      "StaticRoadLayer",
+      "DynamicVehicleLayer",
+      "SignalLayer"
+    ]);
   });
 
   test("marks context loss in the browser-readable proof object", () => {
@@ -183,3 +263,88 @@ describe("SimulationCanvas Stage 5 telemetry", () => {
     expect(window.__r3fSimulationCanvasProof).toBe(currentProof);
   });
 });
+
+function buildShadowCountSceneSnapshot({
+  vehicleCount,
+  includeDensity = false
+}: {
+  vehicleCount: number;
+  includeDensity?: boolean;
+}): SceneSnapshot {
+  const baseSnapshot = buildFixtureSceneSnapshot({
+    queues: { north: 0, south: 0, east: 0, west: 0 },
+    events: []
+  });
+
+  return {
+    ...baseSnapshot,
+    source: "simulation_snapshot_fixture",
+    vehicles: buildVehicles(vehicleCount),
+    densitySegments: includeDensity ? [buildDensitySegment()] : [],
+    signals: buildSignals(),
+    preciseVehicleSource: vehicleCount > 0 ? "simulation_frame_snapshot" : "none",
+    allowsDensityFill: includeDensity,
+    densityFillSource: includeDensity ? "density_segments" : "none",
+    trafficDensityMode: includeDensity ? "density_segments" : "snapshot_vehicles",
+    queueSource: "frame"
+  };
+}
+
+function buildVehicles(count: number): SimulationVehicleSnapshot[] {
+  return Array.from({ length: count }, (_, index) => ({
+    id: `vehicle-${index}`,
+    vehicle_type: index % 5 === 0 ? "bus" : "car",
+    lane_id: `lane-${index}`,
+    x_meters: index % 2 === 0 ? index : -index,
+    y_meters: 12 + index,
+    heading_degrees: index % 2 === 0 ? 180 : 0,
+    speed_mps: 2,
+    waiting_seconds: index,
+    emergency: false
+  }));
+}
+
+function buildSignals(): SimulationSignalSnapshot[] {
+  return (["north", "south", "east", "west"] as const).map(
+    (direction, index) => ({
+      signal_id: `${direction}-main`,
+      direction,
+      state: index === 0 ? "green" : "red",
+      seconds_remaining: 20
+    })
+  );
+}
+
+function buildDensitySegment(): SimulationDensitySegment {
+  return {
+    segment_id: "north-heavy-density",
+    approach: "north",
+    start_meters_from_stop_line: 10,
+    end_meters_from_stop_line: 120,
+    lane_count: 3,
+    vehicle_count: 999,
+    average_speed_mps: 2.2,
+    source: "aggregate_density_proxy"
+  };
+}
+
+function getChildDisplayNames(element: ReactElement) {
+  return Children.toArray(element.props.children)
+    .filter(isValidElement)
+    .map((child) => getElementDisplayName(child as ReactElement));
+}
+
+function getElementDisplayName(element: ReactElement) {
+  const type = element.type;
+
+  if (typeof type === "string") return type;
+  if (typeof type === "symbol") return type.description ?? "symbol";
+  if ("displayName" in type && typeof type.displayName === "string") {
+    return type.displayName;
+  }
+  if ("name" in type && typeof type.name === "string") {
+    return type.name;
+  }
+
+  return "unknown";
+}

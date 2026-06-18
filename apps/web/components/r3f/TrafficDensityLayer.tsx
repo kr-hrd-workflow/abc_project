@@ -26,6 +26,10 @@ import type {
 } from "../../lib/simulationSnapshot";
 import type { SceneSnapshot, SceneTrafficDensityMode } from "./buildSceneSnapshot";
 import {
+  STAGE5_NEAR_VEHICLE_SHADOW_LIMIT,
+  STAGE5_SHADOWS_ENABLED
+} from "./shadowPolicy";
+import {
   CORRIDOR_LENGTH_METERS,
   INBOUND_LANE_COUNT,
   INTERSECTION_BOX_METERS,
@@ -287,6 +291,14 @@ export function TrafficDensityLayer({
       emergency: vehicle.emergency,
       profileName: getPreciseVehicleProfileName(vehicle.vehicleType)
     }));
+  const preciseShadowVehicles =
+    selectNearVehicleShadowCasters(preciseVehicles);
+  const preciseShadowVehicleIds = new Set(
+    preciseShadowVehicles.map((vehicle) => vehicle.id)
+  );
+  const preciseContactOnlyVehicles = preciseVehicles.filter(
+    (vehicle) => !preciseShadowVehicleIds.has(vehicle.id)
+  );
 
   return (
     <group
@@ -305,25 +317,56 @@ export function TrafficDensityLayer({
           : allProceduralFarVehicles.length
       }}
     >
-      <Stage5TrafficVehicleInstances vehicles={preciseVehicles} />
+      <Stage5TrafficVehicleInstances
+        name="stage5-near-precise-shadow-vehicles"
+        vehicles={preciseShadowVehicles}
+        castRealShadows={STAGE5_SHADOWS_ENABLED}
+      />
+      <Stage5TrafficVehicleInstances
+        name="stage5-precise-contact-shadow-vehicles"
+        vehicles={preciseContactOnlyVehicles}
+      />
       {canUseDensityGlbs ? (
         <Suspense
           fallback={
-            <Stage5TrafficVehicleInstances vehicles={allProceduralFarVehicles} />
+            <Stage5TrafficVehicleInstances
+              name="stage5-density-procedural-contact-shadow-fallback"
+              vehicles={allProceduralFarVehicles}
+            />
           }
         >
           <Stage6EDensityVehicleGlbs
             assetGroups={densityRenderPlan.instancedAssetGroups}
           />
           {densityRenderPlan.proceduralVehicles.length > 0 ? (
-            <Stage5TrafficVehicleInstances vehicles={proceduralFallbackVehicles} />
+            <Stage5TrafficVehicleInstances
+              name="stage5-density-procedural-contact-shadow-vehicles"
+              vehicles={proceduralFallbackVehicles}
+            />
           ) : null}
         </Suspense>
       ) : (
-        <Stage5TrafficVehicleInstances vehicles={allProceduralFarVehicles} />
+        <Stage5TrafficVehicleInstances
+          name="stage5-density-procedural-contact-shadow-vehicles"
+          vehicles={allProceduralFarVehicles}
+        />
       )}
     </group>
   );
+}
+
+function selectNearVehicleShadowCasters(
+  vehicles: Stage5TrafficVehicleInstance[]
+) {
+  if (!STAGE5_SHADOWS_ENABLED || vehicles.length === 0) return [];
+
+  return [...vehicles]
+    .sort(
+      (left, right) =>
+        getIntersectionDistanceSquared(left.position) -
+        getIntersectionDistanceSquared(right.position)
+    )
+    .slice(0, STAGE5_NEAR_VEHICLE_SHADOW_LIMIT);
 }
 
 function buildStage5TrafficVehicleInstances(
@@ -631,9 +674,13 @@ function isRenderableMesh(object: Object3D): object is Mesh {
 }
 
 function Stage5TrafficVehicleInstances({
-  vehicles
+  vehicles,
+  castRealShadows = false,
+  name = "stage5-instanced-traffic-vehicles"
 }: {
   vehicles: Stage5TrafficVehicleInstance[];
+  castRealShadows?: boolean;
+  name?: string;
 }) {
   const bodyRef = useRef<InstancedMesh>(null);
   const cabinRef = useRef<InstancedMesh>(null);
@@ -871,7 +918,13 @@ function Stage5TrafficVehicleInstances({
   if (vehicles.length === 0) return null;
 
   return (
-    <group name="stage5-instanced-traffic-vehicles">
+    <group
+      name={name}
+      userData={{
+        vehicleCount: vehicles.length,
+        castsRealShadows: castRealShadows
+      }}
+    >
       <instancedMesh
         ref={contactShadowRef}
         args={[undefined, undefined, vehicles.length]}
@@ -888,30 +941,36 @@ function Stage5TrafficVehicleInstances({
       <instancedMesh
         ref={bodyRef}
         args={[undefined, undefined, vehicles.length]}
-        castShadow
+        castShadow={castRealShadows}
         receiveShadow
       >
         <Stage5VehiclePartGeometry partName="body" />
-        <meshStandardMaterial
+        <meshPhysicalMaterial
           color="#ffffff"
-          roughness={0.36}
-          metalness={0.22}
+          roughness={0.28}
+          metalness={0.28}
+          clearcoat={0.48}
+          clearcoatRoughness={0.24}
+          envMapIntensity={0.98}
           emissive="#1d2a30"
-          emissiveIntensity={0.16}
+          emissiveIntensity={0.12}
           vertexColors
         />
       </instancedMesh>
       <instancedMesh
         ref={cabinRef}
         args={[undefined, undefined, vehicles.length]}
-        castShadow
+        castShadow={castRealShadows}
         receiveShadow
       >
         <Stage5VehiclePartGeometry partName="cabin" />
-        <meshStandardMaterial
+        <meshPhysicalMaterial
           color="#7fb2c3"
-          roughness={0.2}
+          roughness={0.16}
           metalness={0.04}
+          transmission={0.12}
+          thickness={0.08}
+          envMapIntensity={1.18}
           emissive="#17313c"
           emissiveIntensity={0.26}
           transparent
@@ -936,12 +995,15 @@ function Stage5TrafficVehicleInstances({
         args={[undefined, undefined, vehicles.length]}
       >
         <Stage5VehiclePartGeometry partName="windshield" />
-        <meshStandardMaterial
+        <meshPhysicalMaterial
           color="#376175"
           emissive="#183542"
           emissiveIntensity={0.34}
-          roughness={0.18}
+          roughness={0.12}
           metalness={0.05}
+          transmission={0.16}
+          thickness={0.05}
+          envMapIntensity={1.24}
           transparent
           opacity={0.78}
           side={DoubleSide}
@@ -952,12 +1014,15 @@ function Stage5TrafficVehicleInstances({
         args={[undefined, undefined, vehicles.length]}
       >
         <Stage5VehiclePartGeometry partName="rearGlass" />
-        <meshStandardMaterial
+        <meshPhysicalMaterial
           color="#2d5264"
           emissive="#142c37"
           emissiveIntensity={0.3}
-          roughness={0.2}
+          roughness={0.14}
           metalness={0.04}
+          transmission={0.14}
+          thickness={0.05}
+          envMapIntensity={1.16}
           transparent
           opacity={0.74}
           side={DoubleSide}
@@ -968,11 +1033,14 @@ function Stage5TrafficVehicleInstances({
         args={[undefined, undefined, vehicles.length * 2]}
       >
         <Stage5VehiclePartGeometry partName="sideGlass" />
-        <meshStandardMaterial
+        <meshPhysicalMaterial
           color="#244a5b"
           emissive="#102831"
           emissiveIntensity={0.24}
-          roughness={0.22}
+          roughness={0.16}
+          transmission={0.14}
+          thickness={0.04}
+          envMapIntensity={1.12}
           transparent
           opacity={0.68}
           side={DoubleSide}
@@ -1008,7 +1076,7 @@ function Stage5TrafficVehicleInstances({
       <instancedMesh
         ref={wheelArchRef}
         args={[undefined, undefined, vehicles.length * 4]}
-        castShadow
+        castShadow={castRealShadows}
         receiveShadow
       >
         <Stage5VehiclePartGeometry partName="wheelArch" />
@@ -1017,7 +1085,7 @@ function Stage5TrafficVehicleInstances({
       <instancedMesh
         ref={wheelRef}
         args={[undefined, undefined, vehicles.length * 4]}
-        castShadow
+        castShadow={castRealShadows}
         receiveShadow
       >
         <Stage5VehiclePartGeometry partName="wheel" />
@@ -1205,6 +1273,10 @@ function rotateLocalOffset(offset: Vector3Tuple, rotationY: number): Vector3Tupl
     offset[1],
     -offset[0] * sin + offset[2] * cos
   ];
+}
+
+function getIntersectionDistanceSquared(position: Vector3Tuple) {
+  return position[0] * position[0] + position[2] * position[2];
 }
 
 function buildPreciseVehicles(

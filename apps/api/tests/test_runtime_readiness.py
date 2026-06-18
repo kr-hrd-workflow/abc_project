@@ -100,6 +100,48 @@ def test_runtime_readiness_marks_runtime_gates_ready_when_requirements_exist() -
     assert "sk-test-secret" not in str(readiness)
 
 
+def test_runtime_readiness_reports_fixture_mode_without_live_sumo_claim() -> None:
+    readiness = get_runtime_readiness(
+        Settings(sumo_simulation_mode="fixture"),
+        module_available=lambda _module_name: False,
+        binary_available=lambda _binary_name: False,
+        path_exists=lambda _path: False,
+        env={},
+        vector_extension_verified=lambda: False,
+    )
+
+    assert readiness["simulation"]["ready"] is True
+    assert readiness["simulation"]["mode"] == "fixture"
+    assert readiness["simulation"]["missing"] == []
+    assert readiness["simulation"]["checks"] == [
+        {
+            "name": "fixture simulation frame provider",
+            "available": True,
+            "detail": "deterministic fixture snapshots; not live SUMO truth",
+        }
+    ]
+
+
+def test_runtime_readiness_checks_libsumo_mode_without_traci_requirement() -> None:
+    readiness = get_runtime_readiness(
+        Settings(sumo_simulation_mode="sumo_libsumo"),
+        module_available=lambda module_name: module_name == "libsumo",
+        binary_available=lambda _binary_name: True,
+        path_exists=lambda _path: True,
+        env={},
+        vector_extension_verified=lambda: False,
+    )
+
+    assert readiness["simulation"]["ready"] is True
+    assert readiness["simulation"]["mode"] == "sumo_libsumo"
+    assert [check["name"] for check in readiness["simulation"]["checks"]] == [
+        "python module libsumo",
+        "binary sumo",
+        "binary netconvert",
+        "SUMO config networks/intersection.sumocfg",
+    ]
+
+
 def test_binary_available_finds_python_environment_scripts(
     tmp_path: Path,
     monkeypatch,

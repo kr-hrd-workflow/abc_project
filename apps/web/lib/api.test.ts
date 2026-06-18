@@ -7,6 +7,7 @@ import {
   getIntersectionStatus,
   getSimulationFrame,
   getRuntimeReadiness,
+  isSimulationFrameRouteMissingError,
   normalizeApiBaseUrl,
   recommendSignal
 } from "./api";
@@ -167,6 +168,19 @@ describe("API client", () => {
       "http://127.0.0.1:8000/api/simulation/frame?scenario_id=emergency",
       expect.objectContaining({ cache: "no-store" })
     );
+  });
+
+  test("recognizes missing simulation frame route errors with scenario query params", () => {
+    expect(
+      isSimulationFrameRouteMissingError(
+        new Error("API request failed: 404 /api/simulation/frame?scenario_id=emergency")
+      )
+    ).toBe(true);
+    expect(
+      isSimulationFrameRouteMissingError(
+        new Error("API request failed: 500 /api/simulation/frame?scenario_id=emergency")
+      )
+    ).toBe(false);
   });
 
   test("uses simulation-only fallback recommendation when control route is missing", async () => {

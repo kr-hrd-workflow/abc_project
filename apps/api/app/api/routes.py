@@ -46,6 +46,7 @@ from app.services.openai_clients import (
     require_openai_monthly_budget,
 )
 from app.services.persistence import (
+    build_events,
     create_chat_log,
     create_recommendation,
     create_report,
@@ -65,7 +66,7 @@ from app.services.runtime_readiness import (
     get_runtime_readiness,
     is_vector_extension_enabled,
 )
-from app.services.simulation_snapshot import build_fixture_simulation_frame
+from app.services.simulation_frame_provider import get_simulation_frame_provider
 
 router = APIRouter()
 vision_adapter = ScenarioVisionAnalysisAdapter()
@@ -257,15 +258,35 @@ def get_events(
 @router.get("/api/simulation/frame")
 def get_simulation_frame(
     scenario_id: str = "emergency",
-    session: Session = Depends(get_session),
 ) -> SimulationFrameSnapshot:
     observation = vision_adapter.analyze(scenario_id)
-    _status, events = ensure_scenario_snapshot(session, observation)
-    event_reads = [
-        TrafficEventRead(**event_to_payload(event))
-        for event in events
+    provider = get_simulation_frame_provider(settings)
+    return provider.build_frame(
+        scenario_id,
+        observation,
+        _event_reads_from_observation(observation),
+    )
+
+
+def _event_reads_from_observation(
+    observation: VisionObservation,
+) -> list[TrafficEventRead]:
+    return [
+        TrafficEventRead(
+            id=index,
+            intersection_id=event.intersection_id,
+            occurred_at=event.occurred_at,
+            direction=event.direction,
+            event_type=event.event_type,
+            severity=event.severity,
+            object_count=event.object_count,
+            ai_summary=event.ai_summary,
+            recommendation=event.recommendation,
+            status=event.status,
+            source=event.source,
+        )
+        for index, event in enumerate(build_events(observation), start=1)
     ]
-    return build_fixture_simulation_frame(scenario_id, observation, event_reads)
 
 
 @router.post("/api/scenarios/{scenario_id}/load")

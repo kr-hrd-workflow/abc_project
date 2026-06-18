@@ -4,6 +4,11 @@
 
 The project is a non-commercial test project, but the committed asset set is still restricted to legally downloadable assets. This pass integrates real downloaded **Poly Haven CC0** assets instead of scraped or paid Marketplace/Fab content.
 
+This document records the archived Unreal-side Poly Haven integration. The active
+R3F `/dashboard` runtime does not currently ship Poly Haven files; its manifest
+entries are project-authored GLBs or generated textures/decals unless a future
+manifest entry explicitly records a Poly Haven source URL and CC0 evidence.
+
 ## Asset source
 
 Provider: Poly Haven
@@ -106,3 +111,13 @@ The first proof set passed semantic map checks but looked too similar because th
 ## Important note
 
 Because the requested project is non-commercial, these CC0 assets are safe for testing and remain safe even if the project later becomes commercial. Paid Marketplace/Fab assets can be added only if the user signs in through the official launcher/plugin flow and the license allows repository storage or local machine use. This repo now has a clean seam for such assets under `/Game/ExternalLicensedKit/...`.
+
+For the active browser renderer, the source policy is stricter:
+
+- Prefer Poly Haven CC0 for future HDRI or tileable texture work.
+- Re-check Fab/Megascans terms for this repo and redistribution path before use.
+- Use Sketchfab only when commercial use, modification, and redistribution are
+  explicitly allowed and recorded in the R3F asset manifest.
+- Do not ship any third-party R3F asset until `details.sourceUrl`,
+  `details.licenseDocumentation`, `license`, `authorship`, `compression`, and
+  `provenanceEvidencePath` are present and `npm run verify:r3f-assets` passes.

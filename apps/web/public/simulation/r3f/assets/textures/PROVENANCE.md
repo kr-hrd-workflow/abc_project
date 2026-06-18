@@ -8,6 +8,11 @@ Image Gen was used only for non-runtime material direction. Prompt summary: a se
 
 Runtime proof comes later from browser-rendered `/dashboard` R3F screenshots, not from Image Gen output or this provenance note.
 
+The asset manifest is the authoritative runtime record for each shipped texture
+or decal. Every entry must name its PBR channel coverage, texture budget,
+compression status, license/authorship, and this provenance evidence path before
+`npm run verify:r3f-assets` can pass.
+
 Seed: `0x7419d2ab`
 
 Runtime maps:
@@ -18,3 +23,8 @@ Runtime maps:
 - `curb_grime.png`: transparent curb grime strip with road-contact dirt buildup, vertical runoff drips, seam grime, and chipped lower-edge variation.
 - `sidewalk_paver_variation.webp`: paver material variation with offset slab seams, concrete mottling, stains, and small cracks.
 - `facade_window_emissive.webp`: facade/window emissive sheet with dark mullions, varied warm/cool lit panes, unlit panes, and subtle blind-line variation.
+
+Compression status:
+- WebP material sheets ship as runtime WebP assets.
+- PNG decal sheets keep alpha transparency and are budgeted as `png-alpha-runtime`.
+- KTX2/BasisU remains future tooling until the decoder path and encoder are approved and verified.

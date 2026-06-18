@@ -52,3 +52,6 @@ jobs:
       - name: Verify R3F dashboard browser proof
         timeout-minutes: 15
         run: npm run verify:r3f-dashboard
+
+      - name: Verify security gates
+        run: npm run verify:security

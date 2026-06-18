@@ -3,10 +3,16 @@
 import { useMemo } from "react";
 
 import type { SimulationViewportProps } from "../SimulationViewportFallback";
+import type { SimulationFrameBufferEntry } from "../../lib/simulationSnapshot";
 import { buildFixtureSceneSnapshot, buildSceneSnapshot } from "./buildSceneSnapshot";
 import { getCorridorLengthDataAttribute } from "./roadGeometry";
+import {
+  STAGE5_SHADOWS_ENABLED,
+  getStage5ShadowCasterCount
+} from "./shadowPolicy";
 import { SimulationCanvas } from "./SimulationCanvas";
 import { SimulationOverlays } from "./SimulationOverlays";
+import { useInterpolatedSimulationFrame } from "./useInterpolatedSimulationFrame";
 import {
   STAGE5_TRAFFIC_VEHICLE_SILHOUETTE_PARTS,
   buildTrafficDensityRenderPlan
@@ -22,11 +28,25 @@ export function R3FSimulationViewport({
   status,
   events,
   simulation,
-  simulationFrame
+  simulationFrame,
+  simulationFrameEntries,
+  selectedScenarioId
 }: SimulationViewportProps) {
-  const frameSceneSnapshot = useMemo(
-    () => buildSceneSnapshot(simulationFrame),
+  const staticFrameEntries = useMemo(
+    () => buildStaticFrameEntries(simulationFrame),
     [simulationFrame]
+  );
+  const liveFrameEntries =
+    simulationFrameEntries && simulationFrameEntries.length > 0
+      ? simulationFrameEntries
+      : staticFrameEntries;
+  const { frame: interpolatedFrame, telemetry: frameTelemetry } =
+    useInterpolatedSimulationFrame(liveFrameEntries, {
+      scenarioId: selectedScenarioId
+    });
+  const frameSceneSnapshot = useMemo(
+    () => buildSceneSnapshot(interpolatedFrame),
+    [interpolatedFrame]
   );
   const fallbackSceneSnapshot = useMemo(
     () => buildFixtureSceneSnapshot({ queues: status.queues, events }),
@@ -43,6 +63,7 @@ export function R3FSimulationViewport({
   const visibleVehiclePartCount =
     STAGE5_TRAFFIC_VEHICLE_SILHOUETTE_PARTS.filter((part) => part.visible).length;
   const signalState = buildSignalStateDataAttribute(sceneSnapshot.signals);
+  const shadowCasterCount = getStage5ShadowCasterCount(sceneSnapshot);
 
   return (
     <div
@@ -58,8 +79,22 @@ export function R3FSimulationViewport({
       data-r3f-signal-state={signalState}
       data-r3f-scenario-id={sceneSnapshot.scenarioId ?? undefined}
       data-r3f-queue-source={sceneSnapshot.queueSource}
+      data-r3f-frame-age-ms={formatTelemetryNumber(frameTelemetry.frameAgeMs)}
+      data-r3f-network-latency-ms={formatTelemetryNumber(
+        frameTelemetry.networkLatencyMs
+      )}
+      data-r3f-sim-to-render-delay-ms={formatTelemetryNumber(
+        frameTelemetry.simToRenderDelayMs
+      )}
+      data-r3f-authoritative-hz={frameTelemetry.authoritativeHz}
+      data-r3f-authoritative-tick-drift-ms={formatTelemetryNumber(
+        frameTelemetry.authoritativeTickDriftMs
+      )}
+      data-r3f-frame-stale={frameTelemetry.stale ? "true" : "false"}
       data-r3f-visible-vehicle-count={visibleVehicleCount}
       data-r3f-glb-vehicle-count={STAGE5_VISIBLE_TRAFFIC_GLB_PLACEMENTS.length}
+      data-r3f-shadow-enabled={STAGE5_SHADOWS_ENABLED ? "true" : "false"}
+      data-r3f-shadow-caster-count={shadowCasterCount}
       data-r3f-street-shadow-count={
         STAGE5_STREET_FURNITURE_CONTACT_SHADOW_PLACEMENTS.length
       }
@@ -70,6 +105,7 @@ export function R3FSimulationViewport({
         simulationSource={simulation.source}
         sceneSnapshot={sceneSnapshot}
         signalState={signalState}
+        frameTelemetry={frameTelemetry}
       />
       <div className="playback-badge">
         <strong>R3F digital twin</strong>
@@ -82,6 +118,38 @@ export function R3FSimulationViewport({
       </div>
     </div>
   );
+}
+
+function buildStaticFrameEntries(
+  frame: SimulationViewportProps["simulationFrame"]
+): SimulationFrameBufferEntry[] {
+  if (!frame) return [];
+
+  const nowMs = readNowMs();
+  const capturedAtMs = Date.parse(frame.captured_at);
+
+  return [
+    {
+      frame,
+      receivedAtMs: nowMs,
+      networkLatencyMs: 0,
+      capturedAtMs: Number.isFinite(capturedAtMs) ? capturedAtMs : nowMs
+    }
+  ];
+}
+
+function formatTelemetryNumber(value: number | null) {
+  return typeof value === "number" && Number.isFinite(value)
+    ? String(Math.round(value))
+    : "none";
+}
+
+function readNowMs() {
+  if (typeof performance !== "undefined" && typeof performance.now === "function") {
+    return performance.now();
+  }
+
+  return Date.now();
 }
 
 function buildSignalStateDataAttribute(

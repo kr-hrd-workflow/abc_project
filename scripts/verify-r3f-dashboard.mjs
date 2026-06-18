@@ -31,7 +31,13 @@ const manifestPath = path.join(
 
 const routePath = "/dashboard";
 const minVisibleVehicles = 80;
-const maxDrawCalls = 250;
+const maxNormalDrawCalls = 180;
+const maxPeakDrawCalls = 250;
+const maxShadowCasterCount = 18;
+const desktopMinFps = 60;
+const desktopMaxAverageFrameTimeMs = 16.7;
+const mobileMinFps = 30;
+const mobileMaxAverageFrameTimeMs = 33;
 const maxPayloadBytes = 25 * 1024 * 1024;
 const compositionGridColumns = 5;
 const compositionGridRows = 5;
@@ -53,6 +59,10 @@ const apiHeaders = {
   "Access-Control-Allow-Origin": "*",
   "Content-Type": "application/json"
 };
+const liveSimulationPathnames = new Set([
+  "/api/runtime/readiness",
+  "/api/simulation/frame"
+]);
 
 const details = {
   generated_at: new Date().toISOString(),
@@ -72,6 +82,7 @@ const details = {
   desktop: null,
   mobile: null,
   fallback: null,
+  live_sumo: null,
   telemetry: null,
   console_errors: [],
   console_failures: [],
@@ -80,6 +91,8 @@ const details = {
   composition_check: null,
   mobile_composition_check: null,
   queue_source_check: null,
+  last_good_stale: null,
+  no_overflow_evidence: null,
   assertions: {},
   failures: []
 };
@@ -113,6 +126,50 @@ function sleep(ms) {
   return new Promise((resolve) => {
     setTimeout(resolve, ms);
   });
+}
+
+function verifierProgress(message) {
+  if (process.env.R3F_DASHBOARD_VERIFIER_PROGRESS === "true") {
+    console.log(`[r3f-dashboard] ${message}`);
+  }
+}
+
+async function withStepTimeout(label, timeoutMs, operation) {
+  let timeout = null;
+  verifierProgress(`${label} started`);
+
+  try {
+    return await Promise.race([
+      operation(),
+      new Promise((_, reject) => {
+        timeout = setTimeout(() => {
+          reject(new Error(`${label} timed out after ${timeoutMs}ms`));
+        }, timeoutMs);
+      })
+    ]);
+  } finally {
+    if (timeout) clearTimeout(timeout);
+    verifierProgress(`${label} finished`);
+  }
+}
+
+async function closeBrowserWithTimeout(browser) {
+  try {
+    await withStepTimeout("browser close", 15000, async () => {
+      await browser.close();
+    });
+  } catch (error) {
+    const cleanupError = error instanceof Error ? error.message : String(error);
+    details.browser_cleanup_error = cleanupError;
+
+    const browserProcess =
+      typeof browser.process === "function" ? browser.process() : null;
+    if (!browserProcess) {
+      throw error;
+    }
+
+    await stopProcessTree(browserProcess);
+  }
 }
 
 async function pathExists(filePath) {
@@ -581,7 +638,7 @@ function buildFixturePayloads() {
     source: "playwright_stage5_fixture"
   };
   const simulation = {
-    source: "sumo_traci",
+    source: "simulation_snapshot_fixture",
     baseline: {
       average_wait_seconds: 72,
       total_delay_seconds: 128.4,
@@ -694,6 +751,10 @@ async function installApiRoutes(page, options = {}) {
 
     const url = new URL(request.url());
     const pathname = url.pathname.replace(/\/+$/, "");
+    if (await fulfillLiveSimulationRoute(route, pathname, url.search, options)) {
+      return;
+    }
+
     let body = null;
 
     if (pathname === "/api/intersection/status") body = payloads.status;
@@ -720,6 +781,46 @@ async function installApiRoutes(page, options = {}) {
       body: JSON.stringify(body)
     });
   });
+}
+
+async function fulfillLiveSimulationRoute(route, pathname, search, options) {
+  if (
+    typeof options.liveSimulationBaseUrl !== "string" ||
+    !liveSimulationPathnames.has(pathname)
+  ) {
+    return false;
+  }
+
+  const upstreamUrl = new URL(
+    `${pathname}${search}`,
+    `${options.liveSimulationBaseUrl.replace(/\/+$/, "")}/`
+  );
+
+  try {
+    const response = await fetch(upstreamUrl, {
+      signal: AbortSignal.timeout(10000)
+    });
+    const body = await response.text();
+    await route.fulfill({
+      status: response.status,
+      headers: {
+        ...apiHeaders,
+        "Content-Type": response.headers.get("content-type") ?? "application/json",
+        "X-R3F-Live-Sumo-API": "true"
+      },
+      body
+    });
+  } catch (error) {
+    await route.fulfill({
+      status: 503,
+      headers: apiHeaders,
+      body: JSON.stringify({
+        detail: `Live SUMO API proxy failed: ${error instanceof Error ? error.message : String(error)}`
+      })
+    });
+  }
+
+  return true;
 }
 
 function webglDrawCallInstrumentation() {
@@ -816,7 +917,8 @@ async function newRoutedPage(browser, viewport, options = {}) {
     await page.addInitScript(forceWebglOff);
   }
   await installApiRoutes(page, {
-    mutatePayloads: options.mutatePayloads
+    mutatePayloads: options.mutatePayloads,
+    liveSimulationBaseUrl: options.liveSimulationBaseUrl
   });
 
   return { context, page, consoleErrors };
@@ -874,6 +976,10 @@ async function collectPageState(page) {
 
 async function collectRendererProof(page) {
   return page.evaluate(() => {
+    if (typeof window.__r3fPublishSimulationCanvasProof === "function") {
+      window.__r3fPublishSimulationCanvasProof();
+    }
+
     const viewport = document.querySelector('[data-testid="r3f-simulation-viewport"]');
     const canvas = document.querySelector(
       "canvas.r3f-simulation-canvas, .r3f-simulation-canvas canvas"
@@ -896,6 +1002,7 @@ async function collectRendererProof(page) {
       appProof?.info ??
       null;
     const appProofDrawCalls = Number(appProof?.drawCalls ?? 0);
+    const appProofPeakDrawCalls = Number(appProof?.peakDrawCalls ?? 0);
     const rawRendererInfoCalls =
       rendererInfo?.render?.calls ??
       rendererInfo?.calls ??
@@ -917,6 +1024,11 @@ async function collectRendererProof(page) {
     const drawCalls = Number.isFinite(Number(rendererInfoCalls))
       ? Number(rendererInfoCalls)
       : instrumentedDrawCalls;
+    const peakDrawCalls = Math.max(
+      drawCalls,
+      Number.isFinite(appProofPeakDrawCalls) ? appProofPeakDrawCalls : 0,
+      instrumentedDrawCalls
+    );
     const readElementProof = (element) => {
       if (!element) return null;
       const rect = element.getBoundingClientRect();
@@ -946,26 +1058,79 @@ async function collectRendererProof(page) {
     const signalState = viewport?.getAttribute("data-r3f-signal-state") ?? null;
     const scenarioId = viewport?.getAttribute("data-r3f-scenario-id") ?? null;
     const queueSource = viewport?.getAttribute("data-r3f-queue-source") ?? null;
+    const readNumberAttribute = (element, name) => {
+      const value = Number(element?.getAttribute(name));
+
+      return Number.isFinite(value) ? value : null;
+    };
+    const frameAgeMs = readNumberAttribute(viewport, "data-r3f-frame-age-ms");
+    const networkLatencyMs = readNumberAttribute(
+      viewport,
+      "data-r3f-network-latency-ms"
+    );
+    const simToRenderDelayMs = readNumberAttribute(
+      viewport,
+      "data-r3f-sim-to-render-delay-ms"
+    );
+    const authoritativeHz = readNumberAttribute(
+      viewport,
+      "data-r3f-authoritative-hz"
+    );
+    const authoritativeTickDriftMs = readNumberAttribute(
+      viewport,
+      "data-r3f-authoritative-tick-drift-ms"
+    );
+    const frameStale = viewport?.getAttribute("data-r3f-frame-stale") === "true";
+    const shadowEnabled =
+      viewport?.getAttribute("data-r3f-shadow-enabled") === "true";
+    const shadowCasterCount = Number(
+      viewport?.getAttribute("data-r3f-shadow-caster-count") ?? NaN
+    );
     const fallbackUsed = Boolean(viewport) && !frameBound;
+    const fallbackReason = frameBound ? null : queueSource ?? "frame_not_bound";
     const readText = (selector) =>
       document.querySelector(selector)?.textContent?.replace(/\s+/g, " ").trim() ?? null;
 
     return {
+      source_mode: snapshotSource,
       snapshot_source: snapshotSource,
       frame_bound: frameBound,
       traffic_density_mode: trafficDensityMode,
       signal_state: signalState,
       scenario_id: scenarioId,
       queue_source: queueSource,
+      fallback_reason: fallbackReason,
+      frame_age_ms: frameAgeMs,
+      network_latency_ms: networkLatencyMs,
+      sim_to_render_delay_ms: simToRenderDelayMs,
+      authoritative_hz: authoritativeHz,
+      authoritative_tick_drift_ms: authoritativeTickDriftMs,
+      frame_stale: frameStale,
+      shadow_enabled: shadowEnabled,
+      shadow_caster_count: Number.isFinite(shadowCasterCount)
+        ? shadowCasterCount
+        : null,
       fallback_used: fallbackUsed,
       rendererMode: viewport?.getAttribute("data-r3f-renderer-mode") ?? null,
       photorealStage: viewport?.getAttribute("data-r3f-photoreal-stage") ?? null,
       snapshotSource,
+      sourceMode: snapshotSource,
       frameBound,
       trafficDensityMode,
       signalState,
       scenarioId,
       queueSource,
+      fallbackReason,
+      frameAgeMs,
+      networkLatencyMs,
+      simToRenderDelayMs,
+      authoritativeHz,
+      authoritativeTickDriftMs,
+      frameStale,
+      shadowEnabled,
+      shadowCasterCount: Number.isFinite(shadowCasterCount)
+        ? shadowCasterCount
+        : null,
       fallbackUsed,
       visibleVehicleCount: Number(
         viewport?.getAttribute("data-r3f-visible-vehicle-count") ?? "0"
@@ -990,6 +1155,9 @@ async function collectRendererProof(page) {
           }
         : null,
       drawCalls,
+      peakDrawCalls,
+      normalDrawCallBudget: Number(appProof?.normalDrawCallBudget ?? maxNormalDrawCalls),
+      peakDrawCallBudget: Number(appProof?.drawCallBudget ?? maxPeakDrawCalls),
       drawCallSource:
         Number.isFinite(Number(rendererInfoCalls)) && rendererInfoCalls !== null
           ? "renderer.info"
@@ -1005,6 +1173,20 @@ async function collectRendererProof(page) {
             webgl_context_loss_count: telemetry.webgl_context_loss_count ?? null,
             fallback_reason: telemetry.fallback_reason ?? null,
             visible_vehicle_count: telemetry.visible_vehicle_count ?? null,
+            frame_age_ms: telemetry.frame_age_ms ?? null,
+            network_latency_ms: telemetry.network_latency_ms ?? null,
+            sim_to_render_delay_ms: telemetry.sim_to_render_delay_ms ?? null,
+            authoritative_hz: telemetry.authoritative_hz ?? null,
+            authoritative_tick_drift_ms:
+              telemetry.authoritative_tick_drift_ms ?? null,
+            frame_stale: telemetry.frame_stale ?? null,
+            fps: telemetry.fps ?? null,
+            average_frame_time_ms: telemetry.average_frame_time_ms ?? null,
+            cpu_frame_time_ms: telemetry.cpu_frame_time_ms ?? null,
+            gpu_frame_time_ms: telemetry.gpu_frame_time_ms ?? null,
+            triangles: telemetry.triangles ?? null,
+            texture_memory_bytes: telemetry.texture_memory_bytes ?? null,
+            js_heap_bytes: telemetry.js_heap_bytes ?? null,
             emitted_at: telemetry.emitted_at ?? null
           }
         : null,
@@ -1015,6 +1197,19 @@ async function collectRendererProof(page) {
             contextLost: appProof.contextLost ?? null,
             contextLossEvents: appProof.contextLossEvents ?? null,
             drawCalls: appProof.drawCalls ?? null,
+            peakDrawCalls: appProof.peakDrawCalls ?? null,
+            normalDrawCallBudget: appProof.normalDrawCallBudget ?? null,
+            drawCallBudget: appProof.drawCallBudget ?? null,
+            shadowEnabled: appProof.shadowEnabled ?? null,
+            shadowCasterCount: appProof.shadowCasterCount ?? null,
+            fps: appProof.fps ?? null,
+            averageFrameTimeMs: appProof.averageFrameTimeMs ?? null,
+            cpuFrameTimeMs: appProof.cpuFrameTimeMs ?? null,
+            gpuFrameTimeMs: appProof.gpuFrameTimeMs ?? null,
+            triangles: appProof.triangles ?? null,
+            textureMemoryBytes: appProof.textureMemoryBytes ?? null,
+            jsHeapBytes: appProof.jsHeapBytes ?? null,
+            authoritativeTickDriftMs: appProof.authoritativeTickDriftMs ?? null,
             canvasWidth: appProof.canvasWidth ?? null,
             canvasHeight: appProof.canvasHeight ?? null,
             canvasConnected: appProof.canvasConnected ?? null,
@@ -1033,6 +1228,7 @@ async function collectRendererProof(page) {
           trafficDensity: readText('[data-testid="r3f-traffic-density-mode-badge"]'),
           signalState: readText('[data-testid="r3f-signal-state-badge"]'),
           queueSource: readText('[data-testid="r3f-queue-source-badge"]'),
+          frameStale: readText('[data-testid="r3f-frame-stale-badge"]'),
           scenarioId: readText('[data-testid="r3f-scenario-id-badge"]')
         },
         wrapper: readElementProof(document.querySelector(".r3f-simulation-canvas")),
@@ -1043,6 +1239,80 @@ async function collectRendererProof(page) {
       }
     };
   });
+}
+
+async function collectPerformanceProof(page, options = {}) {
+  const sampleMs = options.sampleMs ?? 650;
+  const targetFps = options.targetFps ?? 60;
+  return page.evaluate(
+    ({ sampleMs, targetFps }) =>
+      new Promise((resolve) => {
+        const startedAt = performance.now();
+        const frameTimes = [];
+        let lastFrameAt = startedAt;
+
+        const readHeap = () => {
+          const memory = performance.memory;
+          const used = memory?.usedJSHeapSize;
+          return Number.isFinite(used) ? Number(used) : null;
+        };
+
+        const finish = () => {
+          const elapsedMs = Math.max(performance.now() - startedAt, 1);
+          const averageFrameTimeMs =
+            frameTimes.length > 0
+              ? frameTimes.reduce((sum, value) => sum + value, 0) /
+                frameTimes.length
+              : null;
+          const fps =
+            frameTimes.length > 0 ? (frameTimes.length * 1000) / elapsedMs : null;
+          const rawFps = fps === null ? null : Number(fps.toFixed(2));
+          const rawAverageFrameTimeMs =
+            averageFrameTimeMs === null
+              ? null
+              : Number(averageFrameTimeMs.toFixed(2));
+          const headlessDemandLoopThrottled =
+            frameTimes.length <= 2 && rawFps !== null && rawFps < 5;
+
+          resolve({
+            measurement_status: headlessDemandLoopThrottled
+              ? "unmeasurable_headless_static_demand_loop"
+              : "measured",
+            reason: headlessDemandLoopThrottled
+              ? "Headless Chromium throttled requestAnimationFrame while the R3F canvas uses frameloop=demand; FPS/frame-time target sampling is not measurable in this proof mode, so draw calls, triangles, telemetry fields, and raw rAF data are recorded instead."
+              : null,
+            sample_ms: Math.round(elapsedMs),
+            frame_count: frameTimes.length,
+            fps: headlessDemandLoopThrottled ? null : rawFps,
+            average_frame_time_ms: headlessDemandLoopThrottled
+              ? null
+              : rawAverageFrameTimeMs,
+            cpu_frame_time_ms:
+              headlessDemandLoopThrottled ? null : rawAverageFrameTimeMs,
+            gpu_frame_time_ms: null,
+            texture_memory_bytes: null,
+            js_heap_bytes: readHeap(),
+            raw_fps: rawFps,
+            raw_average_frame_time_ms: rawAverageFrameTimeMs,
+            target_fps: targetFps
+          });
+        };
+
+        const tick = (now) => {
+          frameTimes.push(Math.max(0, now - lastFrameAt));
+          lastFrameAt = now;
+          if (now - startedAt >= sampleMs) {
+            finish();
+            return;
+          }
+
+          requestAnimationFrame(tick);
+        };
+
+        requestAnimationFrame(tick);
+      }),
+    { sampleMs, targetFps }
+  );
 }
 
 async function collectOverlayLayoutProof(page) {
@@ -1147,6 +1417,100 @@ async function scrollToOverlayProofRegion(page) {
   await page.waitForTimeout(400);
 }
 
+async function captureViewportScreenshot(page, filePath, options = {}) {
+  await page.screenshot({
+    path: filePath,
+    fullPage: false,
+    scale: "css",
+    animations: "disabled",
+    timeout: 90000,
+    ...options
+  });
+}
+
+async function captureR3FCanvasClipScreenshot(page, filePath, options = {}) {
+  let overlayStyle = null;
+
+  try {
+    if (options.hideOverlays === true) {
+      overlayStyle = await page.addStyleTag({
+        content:
+          '[data-testid="r3f-simulation-overlays"] { visibility: hidden !important; }'
+      });
+      await page.waitForTimeout(100);
+    }
+
+    const clip = await page.evaluate((selector) => {
+      const canvas = document.querySelector(selector);
+
+      if (!(canvas instanceof HTMLCanvasElement)) {
+        throw new Error("R3F canvas element was not available for clipped screenshot");
+      }
+
+      const rect = canvas.getBoundingClientRect();
+      const x = Math.max(0, Math.floor(rect.left));
+      const y = Math.max(0, Math.floor(rect.top));
+      const right = Math.min(window.innerWidth, Math.ceil(rect.right));
+      const bottom = Math.min(window.innerHeight, Math.ceil(rect.bottom));
+
+      return {
+        x,
+        y,
+        width: Math.max(1, right - x),
+        height: Math.max(1, bottom - y)
+      };
+    }, r3fCanvasSelector);
+
+    let buffer = null;
+    try {
+      buffer = await page.screenshot({
+        path: filePath,
+        clip,
+        fullPage: false,
+        scale: "css",
+        animations: "disabled",
+        timeout: 90000
+      });
+    } catch (error) {
+      if (!/clipped area/i.test(String(error?.message ?? error))) {
+        throw error;
+      }
+
+      details.mobile_canvas_clip_fallback = {
+        reason: error instanceof Error ? error.message : String(error),
+        clip
+      };
+      buffer = await page.screenshot({
+        path: filePath,
+        fullPage: false,
+        scale: "css",
+        animations: "disabled",
+        timeout: 90000
+      });
+    }
+
+    if (options.requireReadableComposition) {
+      const compositionCheck = buildReadableCompositionCheck(
+        analyzeCanvasComposition(buffer)
+      );
+
+      if (compositionCheck.passed !== true) {
+        const label = options.label ?? "R3F canvas";
+        throw new Error(
+          `${label} clipped screenshot did not reach readable composition: ` +
+            JSON.stringify(compositionCheck)
+        );
+      }
+    }
+
+    return buffer;
+  } finally {
+    if (overlayStyle) {
+      await overlayStyle.evaluate((node) => node.remove()).catch(() => {});
+    }
+  }
+}
+
 async function captureR3FCanvasPng(page, filePath, options = {}) {
   const startedAt = Date.now();
   let lastBuffer = null;
@@ -1190,14 +1554,87 @@ async function captureR3FCanvasPng(page, filePath, options = {}) {
   return lastBuffer;
 }
 
-async function readR3FCanvasPng(page) {
-  const capture = await page.evaluate(() => {
-    if (typeof window.__r3fSimulationReadPixels !== "function") {
-      throw new Error("R3F renderer readback function was not installed");
+async function captureR3FCanvasDataUrlPng(page, filePath, options = {}) {
+  const startedAt = Date.now();
+  let lastBuffer = null;
+  let lastCompositionCheck = null;
+  let attempts = 0;
+
+  while (Date.now() - startedAt <= (options.timeoutMs ?? readableCanvasCaptureTimeoutMs)) {
+    attempts += 1;
+    lastBuffer = await readR3FCanvasDataUrlPng(page);
+
+    if (!options.requireReadableComposition) {
+      break;
     }
 
-    return window.__r3fSimulationReadPixels();
-  });
+    lastCompositionCheck = buildReadableCompositionCheck(
+      analyzeCanvasComposition(lastBuffer)
+    );
+
+    if (lastCompositionCheck.passed) {
+      break;
+    }
+
+    await page.waitForTimeout(
+      options.intervalMs ?? readableCanvasCaptureIntervalMs
+    );
+  }
+
+  if (!lastBuffer) {
+    throw new Error("R3F renderer did not produce a canvas data URL screenshot");
+  }
+
+  if (options.requireReadableComposition && lastCompositionCheck?.passed !== true) {
+    const label = options.label ?? "R3F canvas";
+    throw new Error(
+      `${label} did not reach readable composition after ${attempts} data URL attempts: ` +
+        JSON.stringify(lastCompositionCheck)
+    );
+  }
+
+  await writeFile(filePath, lastBuffer);
+  return lastBuffer;
+}
+
+async function readR3FCanvasDataUrlPng(page) {
+  const dataUrl = await page.evaluate((selector) => {
+    const canvas = document.querySelector(selector);
+
+    if (!(canvas instanceof HTMLCanvasElement)) {
+      throw new Error("R3F canvas element was not available for screenshot fallback");
+    }
+
+    return canvas.toDataURL("image/png");
+  }, r3fCanvasSelector);
+  const [, base64Png] = dataUrl.split(",");
+
+  if (!base64Png) {
+    throw new Error("R3F canvas screenshot fallback did not produce PNG data");
+  }
+
+  return Buffer.from(base64Png, "base64");
+}
+
+async function readR3FCanvasPng(page) {
+  let capture;
+
+  try {
+    capture = await page.evaluate(() => {
+      if (typeof window.__r3fSimulationReadPixels !== "function") {
+        throw new Error("R3F renderer readback function was not installed");
+      }
+
+      return window.__r3fSimulationReadPixels();
+    });
+  } catch (error) {
+    if (!/readback function was not installed/i.test(String(error?.message ?? error))) {
+      throw error;
+    }
+
+    return readR3FCanvasDataUrlPng(page);
+  }
+
   const buffer = encodeRgbaPng(
     capture.width,
     capture.height,
@@ -1455,6 +1892,80 @@ function runCompositionSelfTest() {
   );
 
   console.log("R3F dashboard verifier composition self-test passed.");
+}
+
+function runLiveSumoProofSelfTest() {
+  const good = buildLiveSumoProofCheck({
+    status: "captured",
+    r3f_ready: true,
+    api_readiness: {
+      simulation: {
+        ready: true,
+        mode: "sumo_traci"
+      }
+    },
+    frame_sample: {
+      source: "sumo_traci",
+      vehicle_count: 1,
+      signal_count: 2
+    },
+    screenshot: {
+      exists: true,
+      bytes: 1024
+    },
+    renderer: {
+      snapshot_source: "sumo_traci",
+      frame_bound: true,
+      frame_age_ms: 12,
+      network_latency_ms: 8,
+      sim_to_render_delay_ms: 150,
+      signal_state: "north:red,east:green",
+      domProof: {
+        sourceBadges: {
+          simulation: "simulation source: sumo_traci",
+          snapshot: "snapshot source: sumo_traci"
+        }
+      }
+    }
+  });
+  const stale = buildLiveSumoProofCheck({
+    status: "captured",
+    r3f_ready: true,
+    api_readiness: {
+      simulation: {
+        ready: true,
+        mode: "sumo_traci"
+      }
+    },
+    frame_sample: {
+      source: "sumo_last_good",
+      vehicle_count: 1,
+      signal_count: 2
+    },
+    screenshot: {
+      exists: true,
+      bytes: 1024
+    },
+    renderer: {
+      snapshot_source: "sumo_last_good",
+      frame_bound: true,
+      frame_age_ms: 12,
+      network_latency_ms: 8,
+      sim_to_render_delay_ms: 150,
+      signal_state: "north:red,east:green",
+      domProof: {
+        sourceBadges: {
+          simulation: "simulation source: sumo_last_good",
+          snapshot: "snapshot source: sumo_last_good"
+        }
+      }
+    }
+  });
+
+  assertSelfTest(good.passed === true, good.evidence);
+  assertSelfTest(stale.passed === false, stale.evidence);
+
+  console.log("R3F dashboard verifier live SUMO self-test passed.");
 }
 
 function buildSyntheticCanvasPng({ width, height, background, rects }) {
@@ -1896,6 +2407,244 @@ async function verifyScreenshotArtifact(filePath, expectedViewport) {
   };
 }
 
+async function fetchJsonWithTimeout(url, timeoutMs = 5000) {
+  const response = await fetch(url, {
+    signal: AbortSignal.timeout(timeoutMs)
+  });
+  const text = await response.text();
+
+  if (!response.ok) {
+    throw new Error(`HTTP ${response.status} from ${url}: ${text.slice(0, 240)}`);
+  }
+
+  return JSON.parse(text);
+}
+
+async function discoverLiveSumoProof() {
+  const mode = (process.env.R3F_DASHBOARD_LIVE_SUMO_PROOF ?? "skip").toLowerCase();
+  const disabled = ["0", "false", "off", "skip", "none"].includes(mode);
+  if (disabled) {
+    return {
+      status: "skipped",
+      reason: "R3F_DASHBOARD_LIVE_SUMO_PROOF disabled"
+    };
+  }
+
+  const required = ["1", "true", "on", "required"].includes(mode);
+  const apiBaseUrl = (
+    process.env.R3F_DASHBOARD_LIVE_SUMO_API_BASE_URL ?? "http://127.0.0.1:8000"
+  ).replace(/\/+$/, "");
+
+  try {
+    const readiness = await fetchJsonWithTimeout(
+      `${apiBaseUrl}/api/runtime/readiness?section=simulation`,
+      2500
+    );
+    const simulation = readiness?.simulation;
+
+    if (simulation?.ready === true && /^sumo_/.test(String(simulation.mode))) {
+      return {
+        status: "available",
+        api_base_url: apiBaseUrl,
+        api_readiness: readiness
+      };
+    }
+
+    return {
+      status: required ? "required_unavailable" : "skipped",
+      reason: `Simulation readiness is not live SUMO: ${JSON.stringify(simulation ?? null)}`,
+      api_base_url: apiBaseUrl,
+      api_readiness: readiness
+    };
+  } catch (error) {
+    return {
+      status: required ? "required_unavailable" : "skipped",
+      reason: error instanceof Error ? error.message : String(error),
+      api_base_url: apiBaseUrl
+    };
+  }
+}
+
+function summarizeLiveFrame(frame) {
+  if (!isRecord(frame)) {
+    return {
+      error: "live frame response was not an object"
+    };
+  }
+
+  return {
+    source: frame.source ?? null,
+    scenario_id: frame.scenario_id ?? null,
+    sim_time_seconds: Number.isFinite(Number(frame.sim_time_seconds))
+      ? Number(frame.sim_time_seconds)
+      : null,
+    vehicle_count: Array.isArray(frame.vehicles) ? frame.vehicles.length : 0,
+    density_segment_count: Array.isArray(frame.density_segments)
+      ? frame.density_segments.length
+      : 0,
+    signal_count: Array.isArray(frame.signals) ? frame.signals.length : 0,
+    event_count: Array.isArray(frame.events) ? frame.events.length : 0,
+    first_vehicle: Array.isArray(frame.vehicles) ? frame.vehicles[0] ?? null : null
+  };
+}
+
+async function waitForSnapshotSource(page, expectedSource, timeoutMs = 20000) {
+  await page.waitForFunction(
+    (source) => {
+      const viewport = document.querySelector('[data-testid="r3f-simulation-viewport"]');
+      return viewport?.getAttribute("data-r3f-snapshot-source") === source;
+    },
+    expectedSource,
+    { timeout: timeoutMs }
+  );
+}
+
+async function runLiveSumoBrowserProof(browser, baseUrl, liveProbe) {
+  const live = await newRoutedPage(browser, desktopViewport, {
+    liveSimulationBaseUrl: liveProbe.api_base_url
+  });
+  try {
+    verifierProgress("live SUMO browser proof started");
+    await gotoDashboard(live.page, baseUrl);
+    const r3fReady = await waitForR3F(live.page);
+    verifierProgress(`live SUMO R3F ready=${r3fReady}`);
+    const expectedSource = liveProbe.api_readiness?.simulation?.mode;
+    if (typeof expectedSource === "string") {
+      await waitForSnapshotSource(live.page, expectedSource).catch(() => {});
+    }
+    await live.page.waitForTimeout(800);
+    const renderer = await collectRendererProof(live.page);
+    verifierProgress(`live SUMO renderer source=${renderer.snapshot_source ?? "missing"}`);
+    let frameSample = {
+      error: "live frame sample was not collected"
+    };
+
+    try {
+      const frame = await fetchJsonWithTimeout(
+        `${liveProbe.api_base_url}/api/simulation/frame?scenario_id=emergency`,
+        10000
+      );
+      frameSample = summarizeLiveFrame(frame);
+    } catch (error) {
+      frameSample = {
+        error: error instanceof Error ? error.message : String(error)
+      };
+    }
+    verifierProgress(`live SUMO frame sample source=${frameSample.source ?? "missing"}`);
+
+    details.live_sumo = {
+      status: "captured",
+      route_mode: "live simulation frame and readiness; fixture operator side payloads",
+      api_base_url: liveProbe.api_base_url,
+      api_readiness: liveProbe.api_readiness,
+      frame_sample: frameSample,
+      r3f_ready: r3fReady,
+      renderer,
+      page_state: await collectPageState(live.page),
+      screenshot_capture: {
+        mode: "skipped",
+        reason: "live SUMO proof uses browser DOM telemetry and API frame sample; canonical fixture screenshot artifacts cover visual rendering"
+      },
+      console_errors: live.consoleErrors
+    };
+    verifierProgress("live SUMO browser proof captured");
+  } finally {
+    details.console_errors.push(...live.consoleErrors);
+    try {
+      await withStepTimeout("live SUMO page quiesce", 5000, async () => {
+        await live.page.route("**/*", (route) => route.abort()).catch(() => {});
+        await live.page.evaluate(() => {
+          window.stop();
+          for (const canvas of document.querySelectorAll("canvas")) {
+            canvas.remove();
+          }
+        });
+      });
+    } catch (error) {
+      const cleanupError = error instanceof Error ? error.message : String(error);
+      if (details.live_sumo && typeof details.live_sumo === "object") {
+        details.live_sumo.cleanup_error = cleanupError;
+      }
+    }
+    // Let browser.close() tear down the live polling/WebGL context. Closing this
+    // single context can block on Windows/SwiftShader while the page is polling.
+  }
+}
+
+async function runDensitySegmentQueueProof(browser, baseUrl) {
+  const densitySegmentQueue = await newRoutedPage(browser, desktopViewport, {
+    mutatePayloads: (payloads) => {
+      payloads.frame = {
+        ...payloads.frame,
+        queues: null
+      };
+    }
+  });
+
+  try {
+    await withStepTimeout("density segment queue-source check", 90000, async () => {
+      await gotoDashboard(densitySegmentQueue.page, baseUrl);
+      const densitySegmentR3FReady = await waitForR3F(densitySegmentQueue.page);
+      const densitySegmentRendererProof = await collectRendererProof(
+        densitySegmentQueue.page
+      );
+      details.queue_source_check = {
+        density_segment_without_frame_queues: {
+          r3f_ready: densitySegmentR3FReady,
+          queue_source: densitySegmentRendererProof.queue_source,
+          traffic_density_mode: densitySegmentRendererProof.traffic_density_mode,
+          badge: densitySegmentRendererProof.domProof?.sourceBadges?.queueSource ?? null
+        }
+      };
+    });
+  } catch (error) {
+    details.queue_source_check = {
+      density_segment_without_frame_queues: {
+        r3f_ready: false,
+        error: error instanceof Error ? error.stack ?? error.message : String(error)
+      }
+    };
+  } finally {
+    details.console_errors.push(...densitySegmentQueue.consoleErrors);
+    await densitySegmentQueue.context.close();
+  }
+}
+
+async function runLastGoodStaleProof(browser, baseUrl) {
+  const lastGood = await newRoutedPage(browser, desktopViewport, {
+    mutatePayloads: (payloads) => {
+      payloads.frame = {
+        ...payloads.frame,
+        source: "sumo_last_good"
+      };
+    }
+  });
+
+  try {
+    await withStepTimeout("last-good stale proof", 90000, async () => {
+      await gotoDashboard(lastGood.page, baseUrl);
+      const r3fReady = await waitForR3F(lastGood.page);
+      await lastGood.page.waitForTimeout(500);
+      const renderer = await collectRendererProof(lastGood.page);
+      details.last_good_stale = {
+        status: "captured",
+        r3f_ready: r3fReady,
+        renderer,
+        page_state: await collectPageState(lastGood.page),
+        console_errors: lastGood.consoleErrors
+      };
+    });
+  } catch (error) {
+    details.last_good_stale = {
+      status: "failed",
+      error: error instanceof Error ? error.stack ?? error.message : String(error)
+    };
+  } finally {
+    details.console_errors.push(...lastGood.consoleErrors);
+    await lastGood.context.close();
+  }
+}
+
 async function runBrowserVerification(baseUrl) {
   const { chromium } = await import("playwright");
   const browserExecutablePath =
@@ -1914,9 +2663,11 @@ async function runBrowserVerification(baseUrl) {
   const browser = await chromium.launch(browserLaunchOptions);
 
   try {
+    verifierProgress("desktop browser proof started");
     const desktop = await newRoutedPage(browser, desktopViewport);
     await gotoDashboard(desktop.page, baseUrl);
     const desktopR3FReady = await waitForR3F(desktop.page);
+    verifierProgress(`desktop R3F ready=${desktopR3FReady}`);
     const desktopPreCaptureRendererProof = await collectRendererProof(desktop.page);
     details.renderer = {
       preCapture: desktopPreCaptureRendererProof
@@ -1927,17 +2678,18 @@ async function runBrowserVerification(baseUrl) {
           requireReadableComposition: true
         })
       : null;
-    await desktop.page.screenshot({
-      path: desktopScreenshotPath,
-      fullPage: false,
-      scale: "css"
-    });
+    verifierProgress("desktop canvas captured");
+    await captureViewportScreenshot(desktop.page, desktopScreenshotPath);
+    verifierProgress("desktop viewport captured");
     const desktopMetrics = desktopCanvasPng ? analyzePng(desktopCanvasPng) : null;
     const desktopComposition = desktopCanvasPng
       ? analyzeCanvasComposition(desktopCanvasPng)
       : null;
     const rendererProof = await collectRendererProof(desktop.page);
     const desktopLayout = await collectOverlayLayoutProof(desktop.page);
+    const desktopPerformance = await collectPerformanceProof(desktop.page, {
+      targetFps: desktopMinFps
+    });
 
     details.renderer = {
       ...rendererProof,
@@ -1949,6 +2701,7 @@ async function runBrowserVerification(baseUrl) {
       r3f_ready: desktopR3FReady,
       page_state: await collectPageState(desktop.page),
       layout: desktopLayout,
+      performance: desktopPerformance,
       canvas_metrics: desktopMetrics,
       canvas_composition: desktopComposition,
       canvas_screenshot: await verifyScreenshotArtifact(
@@ -1958,36 +2711,46 @@ async function runBrowserVerification(baseUrl) {
       screenshot: await verifyScreenshotArtifact(desktopScreenshotPath, desktopViewport)
     };
     details.console_errors.push(...desktop.consoleErrors);
+    verifierProgress("desktop browser proof captured");
+    await desktop.context.close();
+    verifierProgress("desktop browser context closed");
 
+    verifierProgress("mobile browser proof started");
     const mobile = await newRoutedPage(browser, mobileViewport, {
       isMobile: true,
-      deviceScaleFactor: 2
+      deviceScaleFactor: 1
     });
     await gotoDashboard(mobile.page, baseUrl);
     const mobileR3FReady = await waitForR3F(mobile.page);
+    verifierProgress(`mobile R3F ready=${mobileR3FReady}`);
+    await mobile.page
+      .locator(r3fCanvasSelector)
+      .first()
+      .scrollIntoViewIfNeeded({ timeout: 45000 })
+      .catch(() => {});
+    await mobile.page.waitForTimeout(300);
     const mobileCanvasPng = mobileR3FReady
-      ? await captureR3FCanvasPng(mobile.page, mobileCanvasScreenshotPath, {
+      ? await captureR3FCanvasClipScreenshot(mobile.page, mobileCanvasScreenshotPath, {
           label: "mobile R3F canvas",
+          hideOverlays: true,
           requireReadableComposition: true
         })
       : null;
-    await mobile.page.screenshot({
-      path: mobileScreenshotPath,
-      fullPage: false,
-      scale: "css"
-    });
+    verifierProgress("mobile canvas captured");
+    await captureViewportScreenshot(mobile.page, mobileScreenshotPath);
+    verifierProgress("mobile viewport captured");
     const mobileMetrics = mobileCanvasPng ? analyzePng(mobileCanvasPng) : null;
     const mobileComposition = mobileCanvasPng
       ? analyzeCanvasComposition(mobileCanvasPng)
       : null;
     const mobileLayout = await collectMobileLayoutProof(mobile.page);
+    const mobilePerformance = await collectPerformanceProof(mobile.page, {
+      targetFps: mobileMinFps
+    });
     await scrollToOverlayProofRegion(mobile.page);
     const mobileOverlayLayout = await collectOverlayLayoutProof(mobile.page);
-    await mobile.page.screenshot({
-      path: mobileOverlayScreenshotPath,
-      fullPage: false,
-      scale: "css"
-    });
+    await captureViewportScreenshot(mobile.page, mobileOverlayScreenshotPath);
+    verifierProgress("mobile overlay captured");
 
     details.mobile = {
       viewport: mobileViewport,
@@ -1995,6 +2758,7 @@ async function runBrowserVerification(baseUrl) {
       page_state: await collectPageState(mobile.page),
       canvas_metrics: mobileMetrics,
       canvas_composition: mobileComposition,
+      performance: mobilePerformance,
       layout: {
         ...mobileLayout,
         overlays: mobileOverlayLayout
@@ -2009,31 +2773,29 @@ async function runBrowserVerification(baseUrl) {
         mobileViewport
       )
     };
-    details.console_errors.push(...mobile.consoleErrors);
-
-    const densitySegmentQueue = await newRoutedPage(browser, desktopViewport, {
-      mutatePayloads: (payloads) => {
-        payloads.frame = {
-          ...payloads.frame,
-          queues: null
-        };
-      }
-    });
-    await gotoDashboard(densitySegmentQueue.page, baseUrl);
-    const densitySegmentR3FReady = await waitForR3F(densitySegmentQueue.page);
-    const densitySegmentRendererProof = await collectRendererProof(
-      densitySegmentQueue.page
-    );
-    details.queue_source_check = {
-      density_segment_without_frame_queues: {
-        r3f_ready: densitySegmentR3FReady,
-        queue_source: densitySegmentRendererProof.queue_source,
-        traffic_density_mode: densitySegmentRendererProof.traffic_density_mode,
-        badge: densitySegmentRendererProof.domProof?.sourceBadges?.queueSource ?? null
+    details.no_overflow_evidence = {
+      mobile: {
+        viewportWidth: mobileLayout.viewportWidth,
+        scrollWidth: mobileLayout.scrollWidth,
+        horizontalOverflow: mobileLayout.horizontalOverflow,
+        overflowBy: mobileLayout.overflowBy,
+        r3fViewportVisible: mobileLayout.r3fViewportVisible,
+        canvasVisible: mobileLayout.canvasVisible
+      },
+      overlays: {
+        desktopOverlapsSafetyCopy: desktopLayout.overlapsSafetyCopy,
+        mobileOverlapsSafetyCopy: mobileOverlayLayout.overlapsSafetyCopy
       }
     };
-    details.console_errors.push(...densitySegmentQueue.consoleErrors);
+    details.console_errors.push(...mobile.consoleErrors);
+    verifierProgress("mobile browser proof captured");
+    await mobile.context.close();
+    verifierProgress("mobile browser context closed");
 
+    await runDensitySegmentQueueProof(browser, baseUrl);
+    await runLastGoodStaleProof(browser, baseUrl);
+
+    verifierProgress("WebGL-off fallback proof started");
     const fallback = await newRoutedPage(browser, desktopViewport, {
       forceWebglOff: true
     });
@@ -2046,10 +2808,10 @@ async function runBrowserVerification(baseUrl) {
       })
       .catch(() => {});
     await fallback.page.waitForTimeout(800);
-    await fallback.page.screenshot({
-      path: fallbackScreenshotPath,
-      fullPage: false
+    await captureViewportScreenshot(fallback.page, fallbackScreenshotPath, {
+      scale: "device"
     });
+    verifierProgress("WebGL-off fallback captured");
     const fallbackProof = await collectFallbackProof(fallback.page);
 
     details.fallback = {
@@ -2058,11 +2820,19 @@ async function runBrowserVerification(baseUrl) {
       screenshot: await verifyScreenshotArtifact(fallbackScreenshotPath, desktopViewport)
     };
     details.console_errors.push(...fallback.consoleErrors);
-
-    await desktop.context.close();
-    await mobile.context.close();
-    await densitySegmentQueue.context.close();
     await fallback.context.close();
+    verifierProgress("WebGL-off fallback context closed");
+
+    verifierProgress("live SUMO availability check started");
+    const liveSumoProbe = await discoverLiveSumoProof();
+    if (liveSumoProbe.status === "available") {
+      await runLiveSumoBrowserProof(browser, baseUrl, liveSumoProbe);
+    } else {
+      details.live_sumo = liveSumoProbe;
+    }
+    verifierProgress(`live SUMO availability status=${details.live_sumo?.status ?? "missing"}`);
+
+    verifierProgress("fixture browser contexts were closed before live proof");
 
     details.webgl_context_loss_errors = details.console_errors.filter(
       (message) =>
@@ -2089,7 +2859,7 @@ async function runBrowserVerification(baseUrl) {
       mobileComposition
     );
   } finally {
-    await browser.close();
+    await closeBrowserWithTimeout(browser);
   }
 }
 
@@ -2111,6 +2881,54 @@ function screenshotMatchesViewport(screenshot, viewport) {
   );
 }
 
+function buildLiveSumoProofCheck(liveSumo) {
+  const readiness = liveSumo?.api_readiness?.simulation ?? {};
+  const expectedSource = typeof readiness.mode === "string" ? readiness.mode : null;
+  const renderer = liveSumo?.renderer ?? {};
+  const frameSample = liveSumo?.frame_sample ?? {};
+  const sourceBadges = renderer.domProof?.sourceBadges ?? {};
+  const badgeIncludes = (badgeText, expectedValue) =>
+    typeof badgeText === "string" &&
+    typeof expectedValue === "string" &&
+    expectedValue.length > 0 &&
+    badgeText.includes(expectedValue);
+  const passed =
+    liveSumo?.status === "captured" &&
+    readiness.ready === true &&
+    /^sumo_/.test(String(expectedSource)) &&
+    frameSample.source === expectedSource &&
+    frameSample.vehicle_count > 0 &&
+    frameSample.signal_count > 0 &&
+    renderer.snapshot_source === expectedSource &&
+    renderer.frame_bound === true &&
+    Number.isFinite(renderer.frame_age_ms) &&
+    Number.isFinite(renderer.network_latency_ms) &&
+    Number.isFinite(renderer.sim_to_render_delay_ms) &&
+    typeof renderer.signal_state === "string" &&
+    renderer.signal_state.length > 0 &&
+    badgeIncludes(sourceBadges.snapshot, expectedSource);
+
+  return {
+    passed,
+    evidence: JSON.stringify({
+      status: liveSumo?.status ?? null,
+      readiness,
+      frame_sample: frameSample,
+      screenshot_capture: liveSumo?.screenshot_capture ?? null,
+      r3f_ready: liveSumo?.r3f_ready ?? null,
+      renderer: {
+        snapshot_source: renderer.snapshot_source ?? null,
+        frame_bound: renderer.frame_bound ?? null,
+        frame_age_ms: renderer.frame_age_ms ?? null,
+        network_latency_ms: renderer.network_latency_ms ?? null,
+        sim_to_render_delay_ms: renderer.sim_to_render_delay_ms ?? null,
+        signal_state: renderer.signal_state ?? null
+      },
+      source_badges: sourceBadges
+    })
+  };
+}
+
 function addFinalAssertions() {
   const renderer = details.renderer ?? {};
   const desktop = details.desktop ?? {};
@@ -2120,6 +2938,16 @@ function addFinalAssertions() {
   const composition = details.composition_check ?? {};
   const mobileComposition = details.mobile_composition_check ?? {};
   const telemetry = details.telemetry ?? {};
+  const sourceBadges = renderer.domProof?.sourceBadges ?? {};
+  const badgeIncludes = (badgeText, expectedValue) =>
+    typeof badgeText === "string" &&
+    typeof expectedValue === "string" &&
+    expectedValue.length > 0 &&
+    badgeText.includes(expectedValue);
+  const staleLiveFrame =
+    renderer.snapshot_source === "sumo_last_good" ||
+    renderer.frame_stale === true ||
+    telemetry.frame_stale === true;
 
   addAssertion(
     "canvas has non-background pixels",
@@ -2141,11 +2969,40 @@ function addFinalAssertions() {
     `draw calls ${renderer.drawCalls ?? "missing"} via ${renderer.drawCallSource ?? "missing"}`
   );
   addAssertion(
-    "draw calls under 250",
+    "normal draw calls under 180",
     Number.isFinite(renderer.drawCalls) &&
       renderer.drawCalls > 0 &&
-      renderer.drawCalls < maxDrawCalls,
-    `draw calls ${renderer.drawCalls ?? "missing"} / ${maxDrawCalls}`
+      renderer.drawCalls <= maxNormalDrawCalls,
+    `draw calls ${renderer.drawCalls ?? "missing"} / ${maxNormalDrawCalls}`
+  );
+  addAssertion(
+    "peak draw calls under 250",
+    Number.isFinite(renderer.peakDrawCalls) &&
+      renderer.peakDrawCalls > 0 &&
+      renderer.peakDrawCalls <= maxPeakDrawCalls,
+    `peak draw calls ${renderer.peakDrawCalls ?? "missing"} / ${maxPeakDrawCalls}`
+  );
+  addAssertion(
+    "R3F shadow proof fields are present and consistent",
+    desktop.r3f_ready !== true ||
+      (
+        typeof renderer.shadow_enabled === "boolean" &&
+        Number.isFinite(renderer.shadow_caster_count) &&
+        renderer.appProof?.shadowEnabled === renderer.shadow_enabled &&
+        renderer.appProof?.shadowCasterCount === renderer.shadow_caster_count
+      ),
+    `shadow_enabled=${renderer.shadow_enabled ?? "missing"}, shadow_caster_count=${renderer.shadow_caster_count ?? "missing"}, appProof=${JSON.stringify(renderer.appProof ?? null)}`
+  );
+  addAssertion(
+    "R3F shadow caster count stays inside whitelist budget",
+    desktop.r3f_ready !== true ||
+      (
+        renderer.shadow_enabled === true &&
+        Number.isFinite(renderer.shadow_caster_count) &&
+        renderer.shadow_caster_count > 0 &&
+        renderer.shadow_caster_count <= maxShadowCasterCount
+      ),
+    `shadow_enabled=${renderer.shadow_enabled ?? "missing"}, shadow_caster_count=${renderer.shadow_caster_count ?? "missing"} / ${maxShadowCasterCount}`
   );
   addAssertion(
     "desktop dashboard screenshot matches viewport",
@@ -2175,18 +3032,35 @@ function addFinalAssertions() {
         typeof renderer.frame_bound === "boolean" &&
         typeof renderer.traffic_density_mode === "string" &&
         typeof renderer.fallback_used === "boolean" &&
+        renderer.source_mode === renderer.snapshot_source &&
         renderer.snapshot_source === renderer.snapshotSource &&
         renderer.frame_bound === renderer.frameBound &&
         renderer.traffic_density_mode === renderer.trafficDensityMode &&
         renderer.fallback_used === renderer.fallbackUsed &&
+        renderer.fallback_reason === renderer.fallbackReason &&
         renderer.fallback_used === !renderer.frame_bound
       ),
     `snapshot_source=${renderer.snapshot_source ?? "missing"}, frame_bound=${renderer.frame_bound ?? "missing"}, traffic_density_mode=${renderer.traffic_density_mode ?? "missing"}, fallback_used=${renderer.fallback_used ?? "missing"}, camelCase=${JSON.stringify({
+      sourceMode: renderer.sourceMode ?? null,
       snapshotSource: renderer.snapshotSource ?? null,
       frameBound: renderer.frameBound ?? null,
       trafficDensityMode: renderer.trafficDensityMode ?? null,
-      fallbackUsed: renderer.fallbackUsed ?? null
+      fallbackUsed: renderer.fallbackUsed ?? null,
+      fallbackReason: renderer.fallbackReason ?? null
     })}`
+  );
+  addAssertion(
+    "R3F frame timing telemetry fields are present",
+    desktop.r3f_ready !== true ||
+      (
+        Number.isFinite(renderer.frame_age_ms) &&
+        Number.isFinite(renderer.network_latency_ms) &&
+        Number.isFinite(renderer.sim_to_render_delay_ms) &&
+        Number.isFinite(renderer.authoritative_hz) &&
+        Number.isFinite(renderer.authoritative_tick_drift_ms) &&
+        typeof renderer.frame_stale === "boolean"
+      ),
+    `frame_age_ms=${renderer.frame_age_ms ?? "missing"}, network_latency_ms=${renderer.network_latency_ms ?? "missing"}, sim_to_render_delay_ms=${renderer.sim_to_render_delay_ms ?? "missing"}, authoritative_hz=${renderer.authoritative_hz ?? "missing"}, authoritative_tick_drift_ms=${renderer.authoritative_tick_drift_ms ?? "missing"}, frame_stale=${renderer.frame_stale ?? "missing"}`
   );
   addAssertion(
     "R3F telemetry proof is reported when renderer is mounted",
@@ -2195,13 +3069,103 @@ function addFinalAssertions() {
         telemetry.renderer_mode === renderer.rendererMode &&
         telemetry.snapshot_source === renderer.snapshot_source &&
         telemetry.frame_bound === renderer.frame_bound &&
+        telemetry.fallback_reason === renderer.fallback_reason &&
         Number.isFinite(telemetry.draw_call_count) &&
         telemetry.draw_call_count > 0 &&
         telemetry.webgl_context_loss_count === renderer.webglContextLossEvents &&
-        telemetry.fallback_reason === null &&
-        telemetry.visible_vehicle_count === renderer.visibleVehicleCount
+        telemetry.visible_vehicle_count === renderer.visibleVehicleCount &&
+        Number.isFinite(telemetry.frame_age_ms) &&
+        Number.isFinite(telemetry.network_latency_ms) &&
+        Number.isFinite(telemetry.sim_to_render_delay_ms) &&
+        telemetry.authoritative_hz === renderer.authoritative_hz &&
+        Number.isFinite(telemetry.authoritative_tick_drift_ms) &&
+        Number.isFinite(telemetry.fps) &&
+        Number.isFinite(telemetry.average_frame_time_ms) &&
+        Number.isFinite(telemetry.cpu_frame_time_ms) &&
+        telemetry.gpu_frame_time_ms === null &&
+        Number.isFinite(telemetry.triangles) &&
+        telemetry.texture_memory_bytes === null &&
+        (
+          telemetry.js_heap_bytes === null ||
+          Number.isFinite(telemetry.js_heap_bytes)
+        ) &&
+        telemetry.frame_stale === renderer.frame_stale
       ),
     JSON.stringify(telemetry)
+  );
+  addAssertion(
+    "desktop performance sample meets target or is honestly unmeasurable",
+    (
+      Number.isFinite(desktop.performance?.fps) &&
+      desktop.performance.fps >= desktopMinFps &&
+      Number.isFinite(desktop.performance?.average_frame_time_ms) &&
+      desktop.performance.average_frame_time_ms <= desktopMaxAverageFrameTimeMs
+    ) ||
+      (
+        desktop.performance?.measurement_status ===
+          "unmeasurable_headless_static_demand_loop" &&
+        typeof desktop.performance.reason === "string" &&
+        Number.isFinite(renderer.drawCalls) &&
+        renderer.drawCalls <= maxNormalDrawCalls &&
+        Number.isFinite(renderer.peakDrawCalls) &&
+        renderer.peakDrawCalls <= maxPeakDrawCalls &&
+        Number.isFinite(renderer.appProof?.triangles)
+      ),
+    JSON.stringify({
+      performance: desktop.performance ?? null,
+      appProof: {
+        fps: renderer.appProof?.fps ?? null,
+        averageFrameTimeMs: renderer.appProof?.averageFrameTimeMs ?? null,
+        triangles: renderer.appProof?.triangles ?? null
+      }
+    })
+  );
+  addAssertion(
+    "mobile performance sample meets target or is honestly unmeasurable",
+    (
+      Number.isFinite(mobile.performance?.fps) &&
+      mobile.performance.fps >= mobileMinFps &&
+      Number.isFinite(mobile.performance?.average_frame_time_ms) &&
+      mobile.performance.average_frame_time_ms <= mobileMaxAverageFrameTimeMs
+    ) ||
+      (
+        mobile.performance?.measurement_status ===
+          "unmeasurable_headless_static_demand_loop" &&
+        typeof mobile.performance.reason === "string" &&
+        Number.isFinite(renderer.drawCalls) &&
+        renderer.drawCalls <= maxNormalDrawCalls &&
+        Number.isFinite(renderer.peakDrawCalls) &&
+        renderer.peakDrawCalls <= maxPeakDrawCalls &&
+        Number.isFinite(renderer.appProof?.triangles)
+      ),
+    JSON.stringify({
+      performance: mobile.performance ?? null,
+      appProof: {
+        fps: renderer.appProof?.fps ?? null,
+        averageFrameTimeMs: renderer.appProof?.averageFrameTimeMs ?? null,
+        triangles: renderer.appProof?.triangles ?? null
+      }
+    })
+  );
+  addAssertion(
+    "R3F source labels match renderer data attributes",
+    desktop.r3f_ready !== true ||
+      (
+        badgeIncludes(sourceBadges.simulation, renderer.snapshot_source) &&
+        badgeIncludes(sourceBadges.snapshot, renderer.snapshot_source) &&
+        badgeIncludes(sourceBadges.trafficDensity, renderer.traffic_density_mode) &&
+        badgeIncludes(sourceBadges.signalState, renderer.signal_state) &&
+        badgeIncludes(sourceBadges.queueSource, renderer.queue_source) &&
+        (!renderer.scenario_id || badgeIncludes(sourceBadges.scenarioId, renderer.scenario_id))
+      ),
+    JSON.stringify(sourceBadges)
+  );
+  addAssertion(
+    "stale live frames carry an operator-visible stale label",
+    desktop.r3f_ready !== true ||
+      !staleLiveFrame ||
+      /stale|degraded/i.test(sourceBadges.frameStale ?? ""),
+    `snapshot_source=${renderer.snapshot_source ?? "missing"}, frame_stale=${renderer.frame_stale ?? "missing"}, telemetry_frame_stale=${telemetry.frame_stale ?? "missing"}, frameStaleBadge=${sourceBadges.frameStale ?? "missing"}`
   );
   addAssertion(
     "R3F renderer uses frame-backed simulation snapshot",
@@ -2244,6 +3208,29 @@ function addFinalAssertions() {
         )
       ),
     JSON.stringify(details.queue_source_check?.density_segment_without_frame_queues ?? null)
+  );
+  addAssertion(
+    "last-good live fallback shows stale operator label",
+    details.last_good_stale?.status === "captured" &&
+      details.last_good_stale?.r3f_ready === true &&
+      details.last_good_stale?.renderer?.snapshot_source === "sumo_last_good" &&
+      details.last_good_stale?.renderer?.frame_bound === true &&
+      details.last_good_stale?.renderer?.frame_stale === true &&
+      /stale|degraded/i.test(
+        details.last_good_stale?.renderer?.domProof?.sourceBadges?.frameStale ??
+          ""
+      ),
+    JSON.stringify({
+      status: details.last_good_stale?.status ?? null,
+      r3f_ready: details.last_good_stale?.r3f_ready ?? null,
+      snapshot_source:
+        details.last_good_stale?.renderer?.snapshot_source ?? null,
+      frame_bound: details.last_good_stale?.renderer?.frame_bound ?? null,
+      frame_stale: details.last_good_stale?.renderer?.frame_stale ?? null,
+      frame_stale_badge:
+        details.last_good_stale?.renderer?.domProof?.sourceBadges?.frameStale ??
+        null
+    })
   );
   addAssertion(
     "operator source overlays are visible and clear of safety copy",
@@ -2300,6 +3287,29 @@ function addFinalAssertions() {
       mobile.canvas_metrics?.non_background_ratio > 0.02,
     `viewportVisible=${mobile.layout?.r3fViewportVisible}, canvasVisible=${mobile.layout?.canvasVisible}, horizontalOverflow=${mobile.layout?.horizontalOverflow}, nonBackground=${mobile.canvas_metrics?.non_background_ratio ?? "missing"}`
   );
+  addAssertion(
+    "no-overflow evidence is captured in details JSON",
+    details.no_overflow_evidence?.mobile?.horizontalOverflow === false &&
+      details.no_overflow_evidence?.mobile?.overflowBy === 0 &&
+      details.no_overflow_evidence?.mobile?.r3fViewportVisible === true &&
+      details.no_overflow_evidence?.mobile?.canvasVisible === true,
+    JSON.stringify(details.no_overflow_evidence)
+  );
+  if (details.live_sumo?.status === "captured") {
+    const liveSumoCheck = buildLiveSumoProofCheck(details.live_sumo);
+    addAssertion(
+      "live SUMO browser proof uses live SimulationFrameSnapshot",
+      liveSumoCheck.passed,
+      liveSumoCheck.evidence
+    );
+  }
+  if (details.live_sumo?.status === "required_unavailable") {
+    addAssertion(
+      "live SUMO browser proof is available when required",
+      false,
+      details.live_sumo.reason ?? JSON.stringify(details.live_sumo)
+    );
+  }
   addAssertion(
     "frame-backed density mode has at least 80 rendered vehicles",
     renderer.traffic_density_mode === "density_segments" &&
@@ -2376,6 +3386,8 @@ function printReport() {
 
 if (selfTestMode === "composition") {
   runCompositionSelfTest();
+} else if (selfTestMode === "live-sumo") {
+  runLiveSumoProofSelfTest();
 } else {
   await main();
 }

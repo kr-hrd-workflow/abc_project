@@ -46,19 +46,25 @@ const STAGE5_TEXTURE_ENTRIES = Object.entries(STAGE5_TEXTURE_PATHS) as Array<
   [Stage5TextureKey, string]
 >;
 
+export const STAGE5_WET_ROAD_MATERIAL_CONTROLS = {
+  wetness: 0.72,
+  asphaltBumpScale: 0.064,
+  markingWearOpacity: 0.96
+} as const;
+
 export const ROAD_MATERIALS = {
   asphalt: {
-    color: "#334145",
-    roughness: 0.21,
+    color: "#303d41",
+    roughness: 0.18,
     metalness: 0.055,
-    envMapIntensity: 1.32,
+    envMapIntensity: 1.44,
     dithering: true
   },
   intersectionAsphalt: {
-    color: "#2d3a3e",
-    roughness: 0.2,
+    color: "#2a373b",
+    roughness: 0.17,
     metalness: 0.07,
-    envMapIntensity: 1.4,
+    envMapIntensity: 1.52,
     dithering: true
   },
   asphaltPatch: {
@@ -76,11 +82,11 @@ export const ROAD_MATERIALS = {
   wornMarking: {
     color: "#fffdf0",
     emissive: "#d4c6a3",
-    emissiveIntensity: 0.58,
-    roughness: 0.82,
+    emissiveIntensity: 0.5,
+    roughness: 0.78,
     metalness: 0.02,
     transparent: true,
-    opacity: 0.99,
+    opacity: STAGE5_WET_ROAD_MATERIAL_CONTROLS.markingWearOpacity,
     depthWrite: false,
     polygonOffset: true,
     polygonOffsetFactor: -2,
@@ -90,8 +96,8 @@ export const ROAD_MATERIALS = {
   crosswalkMarking: {
     color: "#fff7df",
     emissive: "#c8b895",
-    emissiveIntensity: 0.48,
-    roughness: 0.86,
+    emissiveIntensity: 0.42,
+    roughness: 0.8,
     metalness: 0.02,
     transparent: true,
     opacity: 0.96,
@@ -231,7 +237,7 @@ export function useStage5RoadMaterials(): Stage5RoadMaterialSet {
             [18, 44],
             NoColorSpace
           ),
-          bumpScale: 0.058
+          bumpScale: STAGE5_WET_ROAD_MATERIAL_CONTROLS.asphaltBumpScale
         },
         intersectionAsphalt: {
           ...ROAD_MATERIALS.intersectionAsphalt,
@@ -246,7 +252,7 @@ export function useStage5RoadMaterials(): Stage5RoadMaterialSet {
             [12, 12],
             NoColorSpace
           ),
-          bumpScale: 0.05
+          bumpScale: STAGE5_WET_ROAD_MATERIAL_CONTROLS.asphaltBumpScale * 0.86
         },
         asphaltPatch: {
           ...ROAD_MATERIALS.asphaltPatch,

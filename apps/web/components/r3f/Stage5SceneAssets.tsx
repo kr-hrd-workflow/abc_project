@@ -27,6 +27,7 @@ import {
   type R3FAssetId
 } from "./assetManifest";
 import { useStage5RoadMaterials } from "./roadMaterials";
+import { STAGE5_SHADOWS_ENABLED } from "./shadowPolicy";
 
 export const STAGE6E_FIRST_PASS_PAYLOAD_LIMIT_BYTES = 25 * 1024 * 1024;
 
@@ -540,11 +541,15 @@ function Stage6EFirstPassInstancedSilhouette({
       ref={meshRef}
       name={`stage6e-first-pass-${silhouette.assetId}-instanced-silhouette`}
       args={[silhouette.geometry, silhouette.material, placements.length]}
-      castShadow={false}
+      castShadow={
+        STAGE5_SHADOWS_ENABLED && silhouette.assetId === "props/streetlight"
+      }
       receiveShadow={false}
       userData={{
         stage6eAssetId: silhouette.assetId,
         firstPassInstancedSilhouette: true,
+        realShadowWhitelist:
+          STAGE5_SHADOWS_ENABLED && silhouette.assetId === "props/streetlight",
         placementCount: placements.length
       }}
     />
@@ -687,9 +692,9 @@ function normalizeStage6EFirstPassGeometryForMerge(
 function createStage6EFirstPassMaterial(assetId: Stage6EFirstPassAssetId) {
   return new MeshStandardMaterial({
     color: STAGE6E_FIRST_PASS_MATERIAL_COLORS[assetId],
-    roughness: 0.58,
-    metalness: 0.16,
-    envMapIntensity: 0.75
+    roughness: assetId.startsWith("vehicles/") ? 0.5 : 0.64,
+    metalness: assetId === "props/streetlight" ? 0.36 : 0.16,
+    envMapIntensity: assetId.startsWith("vehicles/") ? 0.92 : 0.76
   });
 }
 

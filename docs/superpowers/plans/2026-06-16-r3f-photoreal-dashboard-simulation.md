@@ -4,6 +4,8 @@
 
 **Goal:** Replace the failed Unreal/Pixel Streaming renderer path with a photorealistic React Three Fiber simulation renderer embedded inside the existing `/dashboard` digital-twin viewport.
 
+**Successor plan:** Post-Stage-6 live SUMO completion, verifier hardening, and release-gate work continues in `docs/superpowers/plans/2026-06-18-sumo-live-r3f-photoreal-completion.md`. Preserve this plan's completed Stage 6 evidence as history.
+
 **Architecture:** Keep FastAPI/SUMO/TraCI/Tarcl as simulation truth and orchestration. Keep React DOM as the dashboard and HUD shell. Add an R3F renderer island under the existing `SimulationViewport` seam, backed first by a typed fixture snapshot contract, then by live SUMO/Tarcl snapshots or traces. Use a hybrid of procedural roadway geometry, Image Gen reference/texture sources, optimized GLB assets, and browser performance gates.
 
 **Tech Stack:** Next.js 16 preview, React 19, TypeScript, React Three Fiber, Three.js, Drei, React Postprocessing, glTF/GLB 2.0, glTF Transform, FastAPI, Pydantic, SUMO/TraCI/Tarcl, Vitest, Testing Library, Playwright.

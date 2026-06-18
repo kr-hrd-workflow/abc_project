@@ -56,3 +56,27 @@ export type SimulationFrameSnapshot = {
   queues: QueueMetrics;
   events: TrafficEvent[];
 };
+
+export type SimulationFrameBufferEntry = {
+  frame: SimulationFrameSnapshot;
+  receivedAtMs: number;
+  networkLatencyMs: number;
+  capturedAtMs: number;
+};
+
+export type SimulationFrameTelemetry = {
+  frameAgeMs: number | null;
+  networkLatencyMs: number | null;
+  simToRenderDelayMs: number | null;
+  authoritativeHz: number;
+  authoritativeTickDriftMs: number | null;
+  stale: boolean;
+  staleReason: string | null;
+};
+
+export const SIMULATION_FRAME_AUTHORITATIVE_HZ = 10;
+export const SIMULATION_FRAME_POLL_INTERVAL_MS =
+  1000 / SIMULATION_FRAME_AUTHORITATIVE_HZ;
+export const SIMULATION_FRAME_INTERPOLATION_DELAY_MS = 150;
+export const SIMULATION_FRAME_MAX_EXTRAPOLATION_MS = 300;
+export const SIMULATION_FRAME_STALE_AFTER_MS = 1000;

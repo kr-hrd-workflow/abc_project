@@ -25,14 +25,24 @@ const requiredFields = [
   "authorship",
   "units",
   "pbr",
+  "pbrChannels",
   "lod",
   "maxTextureSize",
   "maxTriangles",
-  "maxFileSizeBytes"
+  "maxFileSizeBytes",
+  "compression",
+  "provenanceEvidencePath"
 ];
 const allowedKinds = new Set(["vehicle", "prop", "texture", "decal"]);
 const allowedLods = new Set(["hero", "near", "medium", "far", "material", "decal"]);
 const allowedAuthorship = new Set(["project-authored", "generated", "third-party"]);
+const allowedCompressionStatuses = new Set([
+  "meshopt-or-draco-compressed",
+  "ktx2-compressed",
+  "webp-runtime",
+  "png-alpha-runtime",
+  "uncompressed-under-budget"
+]);
 const imageExtensions = new Set([".png", ".jpg", ".jpeg", ".webp"]);
 const bannedNameTerms = [
   "toy",
@@ -118,6 +128,16 @@ function hasNonEmptyArray(value) {
   return Array.isArray(value) && value.length > 0;
 }
 
+function isRepoRelativePath(value) {
+  if (!hasText(value)) {
+    return false;
+  }
+
+  const normalizedPath = value.replace(/\\/g, "/");
+
+  return !path.isAbsolute(normalizedPath) && !normalizedPath.startsWith("../");
+}
+
 function getProvenanceNote(entry) {
   if (!isRecord(entry?.details)) {
     return "";
@@ -191,6 +211,46 @@ function validateProvenanceFields(assetId, entry) {
 
   if (/undocumented|unknown|tbd|or-documented/.test(combinedText)) {
     addFailure(`${assetId}: third-party asset source/license/provenance is undocumented`);
+  }
+}
+
+function validatePbrChannels(assetId, entry) {
+  if (!hasNonEmptyArray(entry.pbrChannels)) {
+    addFailure(`${assetId}: pbrChannels must be a non-empty array`);
+    return;
+  }
+
+  for (const channel of entry.pbrChannels) {
+    if (!hasText(channel)) {
+      addFailure(`${assetId}: pbrChannels entries must be non-empty strings`);
+    }
+  }
+}
+
+function validateCompressionFields(assetId, entry) {
+  if (!isRecord(entry.compression)) {
+    addFailure(`${assetId}: compression must declare status, geometry, texture, and evidence`);
+    return;
+  }
+
+  const { status, geometry, texture, evidence } = entry.compression;
+
+  if (!allowedCompressionStatuses.has(status)) {
+    addFailure(
+      `${assetId}: compression.status must be one of ${Array.from(allowedCompressionStatuses).join(", ")}`
+    );
+  }
+
+  if (!hasText(geometry)) {
+    addFailure(`${assetId}: compression.geometry is required`);
+  }
+
+  if (!hasText(texture)) {
+    addFailure(`${assetId}: compression.texture is required`);
+  }
+
+  if (!hasText(evidence)) {
+    addFailure(`${assetId}: compression.evidence is required`);
   }
 }
 
@@ -698,6 +758,13 @@ function validateEntryShape(assetId, entry) {
     addFailure(`${assetId}: near/hero assets must declare pbr=true`);
   }
 
+  validatePbrChannels(assetId, entry);
+  validateCompressionFields(assetId, entry);
+
+  if (!isRepoRelativePath(entry.provenanceEvidencePath)) {
+    addFailure(`${assetId}: provenanceEvidencePath must be a repo-relative evidence path`);
+  }
+
   if (!isPositiveInteger(entry.maxTextureSize)) {
     addFailure(`${assetId}: maxTextureSize must be a positive integer`);
   }
@@ -1061,6 +1128,32 @@ async function verifyConcreteAsset(assetId, entry) {
   addFailure(`${assetId}: unsupported asset file extension ${extension}`);
 }
 
+async function verifyProvenanceEvidencePath(assetId, entry) {
+  if (!hasText(entry.provenanceEvidencePath)) {
+    return;
+  }
+
+  const evidencePath = path.resolve(repoRoot, entry.provenanceEvidencePath);
+
+  if (!isInsideDirectory(evidencePath, repoRoot)) {
+    addFailure(`${assetId}: provenanceEvidencePath escapes the repository`);
+    return;
+  }
+
+  let evidenceStat;
+
+  try {
+    evidenceStat = await stat(evidencePath);
+  } catch {
+    addFailure(`${assetId}: provenance evidence path is missing (${entry.provenanceEvidencePath})`);
+    return;
+  }
+
+  if (!evidenceStat.isFile()) {
+    addFailure(`${assetId}: provenance evidence path is not a file`);
+  }
+}
+
 async function readManifest() {
   let rawManifest;
 
@@ -1122,6 +1215,9 @@ function parseComplianceDocRows(complianceDocText) {
       license,
       provenance,
       status,
+      pbrChannels = "",
+      compression = "",
+      provenanceEvidencePath = "",
       sourceUrl = "",
       licenseDocumentation = ""
     ] = cells;
@@ -1138,6 +1234,9 @@ function parseComplianceDocRows(complianceDocText) {
       license,
       provenance,
       status,
+      pbrChannels,
+      compression,
+      provenanceEvidencePath,
       sourceUrl,
       licenseDocumentation
     });
@@ -1172,7 +1271,14 @@ function validateComplianceDocCoverage(entriesById, complianceDocText) {
       source: entry.source,
       license: entry.license,
       provenance: getProvenanceNote(entry),
-      status: entry.authorship
+      status: entry.authorship,
+      pbrChannels: Array.isArray(entry.pbrChannels)
+        ? entry.pbrChannels.join(", ")
+        : "",
+      compression: isRecord(entry.compression)
+        ? `${entry.compression.status}; geometry=${entry.compression.geometry}; texture=${entry.compression.texture}`
+        : "",
+      provenanceEvidencePath: entry.provenanceEvidencePath
     };
 
     if (entry.authorship === "third-party") {
@@ -1238,6 +1344,7 @@ async function main() {
 
   for (const [assetId, entry] of entriesById) {
     if (isRecord(entry)) {
+      await verifyProvenanceEvidencePath(assetId, entry);
       await verifyConcreteAsset(assetId, entry);
     }
   }

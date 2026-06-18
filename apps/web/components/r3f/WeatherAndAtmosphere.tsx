@@ -49,10 +49,10 @@ export type DistantCityBackdropSpec = {
 };
 
 export const STAGE5_ATMOSPHERE = {
-  background: "#182429",
-  fog: "#303d42",
+  background: "#19262b",
+  fog: "#334247",
   fogNear: 42,
-  fogFar: 230,
+  fogFar: 245,
   haze: "#c2cbc7"
 } as const;
 
@@ -71,7 +71,7 @@ const DISTANT_CITY_BACKDROP: DistantCityBackdropSpec = {
   position: [0, 42, -210],
   size: [360, 120],
   color: "#2d3a40",
-  opacity: 0.5
+  opacity: 0.46
 };
 
 export const WET_ROAD_REFLECTION_HIGHLIGHTS: WetRoadHighlightSpec[] = [
@@ -126,28 +126,28 @@ export const HAZE_PLANES: HazePlaneSpec[] = [
     position: [0, HAZE_HEIGHT, -118],
     rotation: [0, 0, 0],
     size: [82, 42],
-    opacity: 0.2
+    opacity: 0.18
   },
   {
     id: "south-corridor-depth-haze",
     position: [0, HAZE_HEIGHT, 105],
     rotation: [0, Math.PI, 0],
     size: [78, 40],
-    opacity: 0.16
+    opacity: 0.145
   },
   {
     id: "east-corridor-depth-haze",
     position: [118, HAZE_HEIGHT, 0],
     rotation: [0, Math.PI / 2, 0],
     size: [76, 38],
-    opacity: 0.15
+    opacity: 0.14
   },
   {
     id: "west-corridor-depth-haze",
     position: [-112, HAZE_HEIGHT, 0],
     rotation: [0, -Math.PI / 2, 0],
     size: [76, 38],
-    opacity: 0.155
+    opacity: 0.14
   }
 ];
 

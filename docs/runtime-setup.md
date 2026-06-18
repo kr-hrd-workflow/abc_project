@@ -9,16 +9,26 @@ or chat output. Keep `.env` local.
 
 ## Current Gate Status
 
-Current as of 2026-06-10 15:10 KST:
+Current on this Codex/WSL host as of 2026-06-18:
+
+- [x] The deterministic fixture simulation frame provider is ready and remains
+  the verified fallback/regression path.
+- [x] Live SUMO/TraCI frame proof is captured on this host. A direct WSL
+  readiness check with `SUMO_SIMULATION_MODE=sumo_traci` reports
+  `simulation ready=True mode=sumo_traci`, and the dashboard verifier captured
+  `live_sumo.status = "captured"` with both the API frame sample and R3F
+  renderer reporting `source = "sumo_traci"`.
+
+Historical local gate evidence from 2026-06-10 15:10 KST:
 
 - [x] Real YOLO/OpenCV inference is verified locally with OpenCV
   4.13.0.92, Ultralytics 8.4.62, local ignored
   `apps/api/models/yolov8n.pt`, strict vision readiness, and
   `/api/uploads/analyze` returning `observation.source = "opencv_yolo"`.
-- [x] Real SUMO/TraCI execution is verified locally with packaged SUMO 1.27.0,
-  TraCI/sumolib 1.27.0, `apps/api/networks/intersection.sumocfg`, strict
-  simulation readiness, and `/api/simulate-signal` returning
-  `source = "sumo_traci"`.
+- [x] Real SUMO/TraCI execution was verified in that historical local run with
+  packaged SUMO 1.27.0, TraCI/sumolib 1.27.0,
+  `apps/api/networks/intersection.sumocfg`, strict simulation readiness, and
+  `/api/simulate-signal` returning `source = "sumo_traci"`.
 - [x] OpenAI client boundary is mocked and tested without secrets or live calls.
 - [x] Live OpenAI client calls are intentionally deferred until the user buys
   API credits and sets `OPENAI_API_KEY` plus `OPENAI_MONTHLY_BUDGET_USD`.
@@ -128,6 +138,13 @@ apps/api/.venv/bin/python -m pytest apps/api/tests/test_adapters.py -v
 
 Approval required before installing binaries or adding network files.
 
+The checked items below include historical local evidence plus the current
+2026-06-18 Codex/WSL host proof. Current readiness was rerun with
+`SUMO_SIMULATION_MODE=sumo_traci` and passed with no missing simulation gates.
+The `/dashboard` verifier was also rerun with
+`R3F_DASHBOARD_LIVE_SUMO_PROOF=required`, capturing live `sumo_traci` API and
+renderer evidence in `artifacts/r3f-dashboard-details.json`.
+
 - [x] Approve local SUMO/TraCI runtime setup.
 - [x] Install the simulation extra:
 
@@ -172,6 +189,64 @@ apps/api/.venv/bin/python -m pytest apps/api/tests/test_adapters.py -v
 - [x] Confirm the response keeps the same `SimulationComparison` shape and
   returns `source = "sumo_traci"`.
 - [x] Update the docs checkboxes after a live SUMO run is proven.
+
+### SUMO frame provider modes
+
+`/api/simulation/frame` defaults to deterministic fixture snapshots:
+
+```dotenv
+SUMO_SIMULATION_MODE=fixture
+```
+
+Live frame modes are opt-in:
+
+```dotenv
+SUMO_SIMULATION_MODE=sumo_traci
+SUMO_SIMULATION_MODE=sumo_libsumo
+```
+
+Use `sumo_traci` for development and debug flows where TraCI tooling or GUI
+inspection is useful. Use `sumo_libsumo` for server operation when GUI
+inspection is not needed. TraCI runs scenario-keyed warm sessions through
+labeled connections. `libsumo` is process-global, so the runtime keeps only one
+active libsumo scenario and closes/replaces it when the scenario changes.
+
+Optional runtime settings:
+
+```dotenv
+SUMO_BINARY_PATH=/absolute/path/to/sumo
+SUMO_CONFIG_DIR=/absolute/path/to/scenario-sumocfgs
+SUMO_RUNTIME_TTL_SECONDS=300
+SUMO_AUTHORITATIVE_HZ=10
+SUMO_FRAME_CACHE_TTL_MS=1000
+SUMO_INTERPOLATION_DELAY_MS=150
+```
+
+When `SUMO_CONFIG_DIR` is set, the runtime expects scenario-keyed files named
+`<scenario_id>.sumocfg` inside that directory. Otherwise it uses
+`SUMO_CONFIG_PATH`.
+
+The frame provider keeps warm TraCI sessions keyed by scenario and evicts idle
+sessions after `SUMO_RUNTIME_TTL_SECONDS`. It does not start a new SUMO process
+for every frame request. In `sumo_libsumo` mode, libsumo's process-global
+runtime is serialized as a single active scenario. If live SUMO frame reads
+fail, the provider returns a stale `source = "sumo_last_good"` frame only while
+it is within `SUMO_FRAME_CACHE_TTL_MS`; otherwise it falls back to the fixture
+frame with `source = "simulation_snapshot_fixture"`.
+
+Do not treat fixture mode or last-good mode as live traffic truth. They are
+supported fallback and regression paths.
+
+The dashboard must keep source, stale, and fallback state visible. It is a
+simulation visualization, not live CCTV, and this project does not perform real
+traffic signal control.
+
+External tooling gates remain approval-based. Do not install or download SUMO,
+TraCI/libsumo, Blender, glTF Transform, meshopt/gltfpack, KTX2 encoders, or new
+runtime assets unless the user approves that tool/source. New R3F assets must
+record source/license/authorship, units, PBR channel coverage, budgets,
+compression status, and provenance evidence in the manifest before
+`npm run verify:r3f-assets` can pass.
 
 ## Gate 3: OpenAI Client Calls
 

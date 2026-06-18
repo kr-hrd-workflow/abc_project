@@ -1,4 +1,5 @@
 from collections.abc import Generator
+import threading
 
 import pytest
 from fastapi.testclient import TestClient
@@ -6,9 +7,19 @@ from sqlalchemy import create_engine
 from sqlalchemy.orm import Session, sessionmaker
 from sqlalchemy.pool import StaticPool
 
+import app.services.simulation_frame_provider as frame_provider_module
 from app.db.models import Base
 from app.db.session import get_session
 from app.main import app
+from app.core.config import Settings
+from app.scenarios.data import EMERGENCY_SCENARIO
+from app.services.simulation_frame_provider import (
+    FixtureSimulationFrameProvider,
+    SumoSimulationFrameProvider,
+    get_simulation_frame_provider,
+)
+from app.services.simulation_snapshot import build_fixture_simulation_frame
+from app.services.sumo_runtime import SumoRuntimeError, SumoRuntimeService
 
 engine = create_engine(
     "sqlite+pysqlite:///:memory:",
@@ -165,3 +176,324 @@ def test_simulate_signal_remains_aggregate_comparison_without_vehicle_trajectori
     assert "vehicles" not in payload
     assert "density_segments" not in payload
     assert "signals" not in payload
+
+
+def test_provider_factory_selects_fixture_and_sumo_modes() -> None:
+    assert isinstance(
+        get_simulation_frame_provider(Settings(sumo_simulation_mode="fixture")),
+        FixtureSimulationFrameProvider,
+    )
+    assert isinstance(
+        get_simulation_frame_provider(Settings(sumo_simulation_mode="sumo_traci")),
+        SumoSimulationFrameProvider,
+    )
+    assert isinstance(
+        get_simulation_frame_provider(Settings(sumo_simulation_mode="sumo_libsumo")),
+        SumoSimulationFrameProvider,
+    )
+
+
+def test_provider_factory_serializes_cold_live_provider_creation(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    frame_provider_module._PROVIDER_CACHE.clear()
+    entered_runtime_init = threading.Event()
+    release_runtime_init = threading.Event()
+    created_runtimes: list[object] = []
+    providers: list[object] = []
+    errors: list[BaseException] = []
+
+    class BlockingRuntime:
+        def __init__(self, _settings: Settings) -> None:
+            created_runtimes.append(self)
+            entered_runtime_init.set()
+            release_runtime_init.wait(timeout=2)
+
+        def read_frame(self, _scenario_id: str):
+            raise AssertionError("provider factory test should not read frames")
+
+    monkeypatch.setattr(frame_provider_module, "SumoRuntimeService", BlockingRuntime)
+
+    def build_provider() -> None:
+        try:
+            providers.append(
+                get_simulation_frame_provider(Settings(sumo_simulation_mode="sumo_traci"))
+            )
+        except BaseException as exc:
+            errors.append(exc)
+
+    first = threading.Thread(target=build_provider)
+    second = threading.Thread(target=build_provider)
+    first.start()
+    assert entered_runtime_init.wait(timeout=1)
+    second.start()
+    release_runtime_init.set()
+    first.join(timeout=2)
+    second.join(timeout=2)
+
+    assert errors == []
+    assert len(created_runtimes) == 1
+    assert len(providers) == 2
+    assert providers[0] is providers[1]
+
+
+def test_simulation_frame_route_uses_configured_provider(
+    client: TestClient,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    calls: list[str] = []
+
+    class FakeProvider:
+        def build_frame(self, scenario_id, observation, event_reads):
+            calls.append(scenario_id)
+            return build_fixture_simulation_frame(
+                scenario_id,
+                observation,
+                event_reads,
+            ).model_copy(update={"source": "sumo_traci"})
+
+    monkeypatch.setattr(
+        "app.api.routes.get_simulation_frame_provider",
+        lambda _settings: FakeProvider(),
+    )
+
+    response = client.get("/api/simulation/frame?scenario_id=normal")
+
+    assert response.status_code == 200
+    assert calls == ["normal"]
+    assert response.json()["source"] == "sumo_traci"
+
+
+def test_sumo_provider_first_failure_downgrades_to_fixture_source() -> None:
+    class FailingRuntime:
+        def read_frame(self, _scenario_id: str):
+            raise SumoRuntimeError("sumo unavailable")
+
+    provider = SumoSimulationFrameProvider(
+        runtime=FailingRuntime(),
+        fallback_provider=FixtureSimulationFrameProvider(),
+    )
+
+    frame = provider.build_frame("emergency", EMERGENCY_SCENARIO, [])
+
+    assert frame.source == "simulation_snapshot_fixture"
+    assert frame.scenario_id == "emergency"
+
+
+def test_sumo_provider_failure_after_valid_frame_returns_labeled_last_good() -> None:
+    live_frame = build_fixture_simulation_frame("emergency", EMERGENCY_SCENARIO, [])
+    live_frame = live_frame.model_copy(update={"source": "sumo_traci"})
+
+    class FlakyRuntime:
+        calls = 0
+
+        def read_frame(self, _scenario_id: str):
+            self.calls += 1
+            if self.calls == 1:
+                return live_frame
+            raise SumoRuntimeError("sumo disconnected")
+
+    provider = SumoSimulationFrameProvider(
+        runtime=FlakyRuntime(),
+        fallback_provider=FixtureSimulationFrameProvider(),
+    )
+
+    assert provider.build_frame("emergency", EMERGENCY_SCENARIO, []).source == "sumo_traci"
+
+    stale_frame = provider.build_frame("emergency", EMERGENCY_SCENARIO, [])
+
+    assert stale_frame.source == "sumo_last_good"
+    assert stale_frame.vehicles == live_frame.vehicles
+
+
+def test_sumo_provider_last_good_cache_expires_to_fixture_source() -> None:
+    class FakeClock:
+        now = 100.0
+
+        def __call__(self) -> float:
+            return self.now
+
+        def advance(self, seconds: float) -> None:
+            self.now += seconds
+
+    live_frame = build_fixture_simulation_frame("emergency", EMERGENCY_SCENARIO, [])
+    live_frame = live_frame.model_copy(update={"source": "sumo_traci"})
+    clock = FakeClock()
+
+    class FlakyRuntime:
+        calls = 0
+
+        def read_frame(self, _scenario_id: str):
+            self.calls += 1
+            if self.calls == 1:
+                return live_frame
+            raise SumoRuntimeError("sumo disconnected")
+
+    provider = SumoSimulationFrameProvider(
+        runtime=FlakyRuntime(),
+        fallback_provider=FixtureSimulationFrameProvider(),
+        frame_cache_ttl_ms=1000,
+        clock=clock,
+    )
+
+    assert provider.build_frame("emergency", EMERGENCY_SCENARIO, []).source == "sumo_traci"
+    clock.advance(0.5)
+
+    stale_frame = provider.build_frame("emergency", EMERGENCY_SCENARIO, [])
+
+    assert stale_frame.source == "sumo_last_good"
+    assert any(
+        "stale sumo frame" in event.ai_summary.lower()
+        for event in stale_frame.events
+    )
+
+    clock.advance(0.6)
+    expired_frame = provider.build_frame("emergency", EMERGENCY_SCENARIO, [])
+
+    assert expired_frame.source == "simulation_snapshot_fixture"
+
+
+class RuntimeMappingFailureClock:
+    def __init__(self) -> None:
+        self.now = 100.0
+
+    def __call__(self) -> float:
+        return self.now
+
+    def advance(self, seconds: float) -> None:
+        self.now += seconds
+
+
+class RuntimeMappingFailureSimulation:
+    def __init__(self) -> None:
+        self.time = 0.0
+
+    def getTime(self) -> float:
+        return self.time
+
+
+class EmptyTrafficLightApi:
+    def getIDList(self) -> list[str]:
+        return []
+
+
+class EmptyLaneApi:
+    def getIDList(self) -> list[str]:
+        return []
+
+
+class FailingVehicleApi:
+    def getIDList(self) -> list[str]:
+        raise RuntimeError("TraCI vehicle API unavailable")
+
+
+class StepThenMappingFailureClient:
+    def __init__(self) -> None:
+        self.step_count = 0
+        self.simulation = RuntimeMappingFailureSimulation()
+        self.vehicle = FailingVehicleApi()
+        self.trafficlight = EmptyTrafficLightApi()
+        self.lane = EmptyLaneApi()
+
+    def simulationStep(self) -> None:
+        self.step_count += 1
+        self.simulation.time = self.step_count / 10.0
+
+
+def test_sumo_provider_first_mapping_failure_after_step_falls_back_to_fixture() -> None:
+    runtime = SumoRuntimeService(
+        Settings(sumo_simulation_mode="sumo_traci"),
+        client_factory=lambda _mode, _scenario_id: StepThenMappingFailureClient(),
+    )
+    provider = SumoSimulationFrameProvider(
+        runtime=runtime,
+        fallback_provider=FixtureSimulationFrameProvider(),
+    )
+
+    frame = provider.build_frame("emergency", EMERGENCY_SCENARIO, [])
+
+    assert frame.source == "simulation_snapshot_fixture"
+    assert frame.scenario_id == "emergency"
+
+
+class FailsOnSecondVehicleListApi:
+    def __init__(self) -> None:
+        self.calls = 0
+
+    def getIDList(self) -> list[str]:
+        self.calls += 1
+        if self.calls == 1:
+            return []
+        raise RuntimeError("TraCI vehicle API unavailable")
+
+
+class SecondReadMappingFailureClient:
+    def __init__(self) -> None:
+        self.step_count = 0
+        self.simulation = RuntimeMappingFailureSimulation()
+        self.vehicle = FailsOnSecondVehicleListApi()
+        self.trafficlight = EmptyTrafficLightApi()
+        self.lane = EmptyLaneApi()
+
+    def simulationStep(self) -> None:
+        self.step_count += 1
+        self.simulation.time = self.step_count / 10.0
+
+
+def test_sumo_provider_mapping_failure_after_live_frame_returns_last_good() -> None:
+    clock = RuntimeMappingFailureClock()
+    runtime = SumoRuntimeService(
+        Settings(
+            sumo_simulation_mode="sumo_traci",
+            sumo_authoritative_hz=10,
+        ),
+        clock=clock,
+        client_factory=lambda _mode, _scenario_id: SecondReadMappingFailureClient(),
+    )
+    provider = SumoSimulationFrameProvider(
+        runtime=runtime,
+        fallback_provider=FixtureSimulationFrameProvider(),
+        frame_cache_ttl_ms=1000,
+        clock=clock,
+    )
+
+    live_frame = provider.build_frame("emergency", EMERGENCY_SCENARIO, [])
+    clock.advance(0.101)
+    stale_frame = provider.build_frame("emergency", EMERGENCY_SCENARIO, [])
+
+    assert live_frame.source == "sumo_traci"
+    assert stale_frame.source == "sumo_last_good"
+    assert stale_frame.sim_time_seconds == live_frame.sim_time_seconds
+    assert any(
+        "stale sumo frame" in event.ai_summary.lower()
+        for event in stale_frame.events
+    )
+
+
+def test_sumo_provider_immediate_read_after_mapping_failure_stays_last_good() -> None:
+    clock = RuntimeMappingFailureClock()
+    client = SecondReadMappingFailureClient()
+    runtime = SumoRuntimeService(
+        Settings(
+            sumo_simulation_mode="sumo_traci",
+            sumo_authoritative_hz=10,
+        ),
+        clock=clock,
+        client_factory=lambda _mode, _scenario_id: client,
+    )
+    provider = SumoSimulationFrameProvider(
+        runtime=runtime,
+        fallback_provider=FixtureSimulationFrameProvider(),
+        frame_cache_ttl_ms=1000,
+        clock=clock,
+    )
+
+    live_frame = provider.build_frame("emergency", EMERGENCY_SCENARIO, [])
+    clock.advance(0.101)
+    stale_frame = provider.build_frame("emergency", EMERGENCY_SCENARIO, [])
+    immediate_frame = provider.build_frame("emergency", EMERGENCY_SCENARIO, [])
+
+    assert live_frame.source == "sumo_traci"
+    assert stale_frame.source == "sumo_last_good"
+    assert immediate_frame.source == "sumo_last_good"
+    assert immediate_frame.sim_time_seconds == live_frame.sim_time_seconds

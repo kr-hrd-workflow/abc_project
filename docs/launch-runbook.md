@@ -49,6 +49,21 @@ Status vocabulary:
 | gated | Included in `npm run verify` and the checked-in R3F dashboard workflow. |
 | not live truth | Fixture, aggregate, or received simulation state is being rendered; the browser is not a SUMO/Tarcl authority. |
 
+Backend frame source modes:
+
+| Source | Meaning |
+|---|---|
+| `simulation_snapshot_fixture` | Deterministic local fixture fallback and regression baseline. |
+| `sumo_traci` | Opt-in live SUMO frame source through warm scenario-labeled TraCI sessions. |
+| `sumo_libsumo` | Opt-in live SUMO frame source through one serialized process-global libsumo session. |
+| `sumo_last_good` | Stale last-good SUMO frame after a live runtime error, bounded by `SUMO_FRAME_CACHE_TTL_MS`. |
+| fixture fallback after live failure | Supported fallback when no fresh last-good SUMO frame is within the cache TTL. Must remain labeled as fixture/fallback. |
+
+`GET /api/simulation/frame` is read-only. This slice does not expose public
+step, reset, or signal-phase override endpoints. Future controls must be
+permission-gated, rate-limited, and documented as simulation-only controls, not
+real-world signal control.
+
 Current R3F dashboard status:
 
 | Stage | Status | Evidence and boundary |
@@ -89,7 +104,47 @@ apps/web/public/unity/TemplateData/...
 
 Keep the safety copy visible: this is a digital twin and operator decision-support surface. It does not control real traffic signals and it is not a live CCTV feed.
 
-## 4. Local quality gate
+## 4. Simulation frame operation
+
+Fixture mode requires no external simulator install and is the default safe
+browser-proof mode:
+
+```env
+SUMO_SIMULATION_MODE=fixture
+NEXT_PUBLIC_R3F_SIMULATION_ENABLED=true
+```
+
+Live SUMO modes are opt-in and require approved local SUMO/Python setup first:
+
+```env
+SUMO_SIMULATION_MODE=sumo_traci
+# or
+SUMO_SIMULATION_MODE=sumo_libsumo
+SUMO_CONFIG_PATH=networks/intersection.sumocfg
+SUMO_RUNTIME_TTL_SECONDS=300
+SUMO_FRAME_CACHE_TTL_MS=1000
+SUMO_AUTHORITATIVE_HZ=10
+```
+
+Use `sumo_traci` for development/debug inspection and `sumo_libsumo` only when
+the local libsumo package is installed and GUI inspection is not needed. TraCI
+uses labeled connections for concurrent warm scenario sessions; libsumo is
+process-global, so changing scenarios closes/replaces the active libsumo
+session. If the live runtime fails, the API may serve `sumo_last_good` while it
+is fresh enough, then fall back to `simulation_snapshot_fixture`. The UI must
+show stale or fallback labels; do not describe either path as live CCTV,
+production monitoring, or real signal control.
+
+External install/download gates:
+
+- SUMO binary and Python TraCI/libsumo packages require approval.
+- Blender, glTF Transform, meshopt/gltfpack, KTX2 encoders, and asset downloads
+  require approval before installation or use.
+- New third-party runtime assets must be recorded in
+  `apps/web/public/simulation/r3f/assets/manifest.json` and pass
+  `npm run verify:r3f-assets` before verifier merge.
+
+## 5. Local quality gate
 
 Run the normal local quality gate before release or handoff:
 
@@ -97,11 +152,11 @@ Run the normal local quality gate before release or handoff:
 npm run verify
 ```
 
-`npm run verify` runs API tests, web tests, the web build, R3F asset proof, R3F dashboard browser proof, and `git diff --check`.
+`npm run verify` runs API tests, web tests, the web build, R3F asset proof, R3F dashboard browser proof, security gates, and `git diff --check`.
 
 The checked-in R3F dashboard workflow runs the same test/build/proof commands for `push` and `pull_request`. Branch protection, required-check settings, and CodeQL configuration are external GitHub settings and are not changed by this workflow.
 
-## 5. Production deployment checklist
+## 6. Production deployment checklist
 
 1. Set environment variables in the hosting platform:
    - `DATABASE_URL`
@@ -122,8 +177,10 @@ The checked-in R3F dashboard workflow runs the same test/build/proof commands fo
    - `npm run build:web`
    - `npm run verify`
 
-## 6. Safety boundaries
+## 7. Safety boundaries
 
 - The UI may recommend an operator action, but it never directly changes a real signal controller.
 - The dashboard renderer is presentation/digital-twin visualization unless an approved external simulator stream is configured.
+- The R3F viewport is a simulation visualization, not live CCTV.
+- Source, stale, and fallback badges must remain visible in browser proof.
 - All OpenAI usage must keep keys in ignored env files or hosting secrets, not committed files.

@@ -38,7 +38,19 @@
       "fileSizeBytes": 1147480,
       "provenance": "Project-authored local GLB generated for the R3F dashboard asset pipeline; no external downloads, stock models, paid asset stores, or archived Unreal assets were used."
     },
-    "authorship": "project-authored"
+    "authorship": "project-authored",
+    "pbrChannels": [
+      "baseColorFactor",
+      "metallicFactor",
+      "roughnessFactor"
+    ],
+    "compression": {
+      "status": "uncompressed-under-budget",
+      "geometry": "raw-glb-2.0-embedded-buffer",
+      "texture": "none-embedded-or-external",
+      "evidence": "scripts/verify-r3f-assets.mjs"
+    },
+    "provenanceEvidencePath": "docs/compliance/r3f-asset-licenses.md"
   },
   "vehicles/passenger_car_medium": {
     "id": "vehicles/passenger_car_medium",
@@ -79,7 +91,19 @@
       "fileSizeBytes": 900772,
       "provenance": "Project-authored local GLB generated for the R3F dashboard asset pipeline; no external downloads, stock models, paid asset stores, or archived Unreal assets were used."
     },
-    "authorship": "project-authored"
+    "authorship": "project-authored",
+    "pbrChannels": [
+      "baseColorFactor",
+      "metallicFactor",
+      "roughnessFactor"
+    ],
+    "compression": {
+      "status": "uncompressed-under-budget",
+      "geometry": "raw-glb-2.0-embedded-buffer",
+      "texture": "none-embedded-or-external",
+      "evidence": "scripts/verify-r3f-assets.mjs"
+    },
+    "provenanceEvidencePath": "docs/compliance/r3f-asset-licenses.md"
   },
   "vehicles/passenger_car_far": {
     "id": "vehicles/passenger_car_far",
@@ -125,7 +149,19 @@
       ],
       "provenance": "Project-authored local GLB generated for the R3F dashboard asset pipeline; no external downloads, stock models, paid asset stores, or archived Unreal assets were used."
     },
-    "authorship": "project-authored"
+    "authorship": "project-authored",
+    "pbrChannels": [
+      "baseColorFactor",
+      "metallicFactor",
+      "roughnessFactor"
+    ],
+    "compression": {
+      "status": "uncompressed-under-budget",
+      "geometry": "raw-glb-2.0-embedded-buffer",
+      "texture": "none-embedded-or-external",
+      "evidence": "scripts/verify-r3f-assets.mjs"
+    },
+    "provenanceEvidencePath": "docs/compliance/r3f-asset-licenses.md"
   },
   "vehicles/taxi_near": {
     "id": "vehicles/taxi_near",
@@ -166,7 +202,19 @@
       "fileSizeBytes": 1221976,
       "provenance": "Project-authored local GLB generated for the R3F dashboard asset pipeline; no external downloads, stock models, paid asset stores, or archived Unreal assets were used."
     },
-    "authorship": "project-authored"
+    "authorship": "project-authored",
+    "pbrChannels": [
+      "baseColorFactor",
+      "metallicFactor",
+      "roughnessFactor"
+    ],
+    "compression": {
+      "status": "uncompressed-under-budget",
+      "geometry": "raw-glb-2.0-embedded-buffer",
+      "texture": "none-embedded-or-external",
+      "evidence": "scripts/verify-r3f-assets.mjs"
+    },
+    "provenanceEvidencePath": "docs/compliance/r3f-asset-licenses.md"
   },
   "vehicles/taxi_far": {
     "id": "vehicles/taxi_far",
@@ -213,7 +261,19 @@
       ],
       "provenance": "Project-authored local GLB generated for the R3F dashboard asset pipeline; no external downloads, stock models, paid asset stores, or archived Unreal assets were used."
     },
-    "authorship": "project-authored"
+    "authorship": "project-authored",
+    "pbrChannels": [
+      "baseColorFactor",
+      "metallicFactor",
+      "roughnessFactor"
+    ],
+    "compression": {
+      "status": "uncompressed-under-budget",
+      "geometry": "raw-glb-2.0-embedded-buffer",
+      "texture": "none-embedded-or-external",
+      "evidence": "scripts/verify-r3f-assets.mjs"
+    },
+    "provenanceEvidencePath": "docs/compliance/r3f-asset-licenses.md"
   },
   "vehicles/bus_near": {
     "id": "vehicles/bus_near",
@@ -256,7 +316,19 @@
       "fileSizeBytes": 700664,
       "provenance": "Project-authored local GLB generated for the R3F dashboard asset pipeline; no external downloads, stock models, paid asset stores, or archived Unreal assets were used."
     },
-    "authorship": "project-authored"
+    "authorship": "project-authored",
+    "pbrChannels": [
+      "baseColorFactor",
+      "metallicFactor",
+      "roughnessFactor"
+    ],
+    "compression": {
+      "status": "uncompressed-under-budget",
+      "geometry": "raw-glb-2.0-embedded-buffer",
+      "texture": "none-embedded-or-external",
+      "evidence": "scripts/verify-r3f-assets.mjs"
+    },
+    "provenanceEvidencePath": "docs/compliance/r3f-asset-licenses.md"
   },
   "vehicles/bus_far": {
     "id": "vehicles/bus_far",
@@ -303,7 +375,19 @@
       ],
       "provenance": "Project-authored local GLB generated for the R3F dashboard asset pipeline; no external downloads, stock models, paid asset stores, or archived Unreal assets were used."
     },
-    "authorship": "project-authored"
+    "authorship": "project-authored",
+    "pbrChannels": [
+      "baseColorFactor",
+      "metallicFactor",
+      "roughnessFactor"
+    ],
+    "compression": {
+      "status": "uncompressed-under-budget",
+      "geometry": "raw-glb-2.0-embedded-buffer",
+      "texture": "none-embedded-or-external",
+      "evidence": "scripts/verify-r3f-assets.mjs"
+    },
+    "provenanceEvidencePath": "docs/compliance/r3f-asset-licenses.md"
   },
   "vehicles/truck_near": {
     "id": "vehicles/truck_near",
@@ -345,7 +429,19 @@
       "fileSizeBytes": 890804,
       "provenance": "Project-authored local GLB generated for the R3F dashboard asset pipeline; no external downloads, stock models, paid asset stores, or archived Unreal assets were used."
     },
-    "authorship": "project-authored"
+    "authorship": "project-authored",
+    "pbrChannels": [
+      "baseColorFactor",
+      "metallicFactor",
+      "roughnessFactor"
+    ],
+    "compression": {
+      "status": "uncompressed-under-budget",
+      "geometry": "raw-glb-2.0-embedded-buffer",
+      "texture": "none-embedded-or-external",
+      "evidence": "scripts/verify-r3f-assets.mjs"
+    },
+    "provenanceEvidencePath": "docs/compliance/r3f-asset-licenses.md"
   },
   "vehicles/truck_far": {
     "id": "vehicles/truck_far",
@@ -391,7 +487,19 @@
       ],
       "provenance": "Project-authored local GLB generated for the R3F dashboard asset pipeline; no external downloads, stock models, paid asset stores, or archived Unreal assets were used."
     },
-    "authorship": "project-authored"
+    "authorship": "project-authored",
+    "pbrChannels": [
+      "baseColorFactor",
+      "metallicFactor",
+      "roughnessFactor"
+    ],
+    "compression": {
+      "status": "uncompressed-under-budget",
+      "geometry": "raw-glb-2.0-embedded-buffer",
+      "texture": "none-embedded-or-external",
+      "evidence": "scripts/verify-r3f-assets.mjs"
+    },
+    "provenanceEvidencePath": "docs/compliance/r3f-asset-licenses.md"
   },
   "vehicles/emergency_ambulance_near": {
     "id": "vehicles/emergency_ambulance_near",
@@ -433,7 +541,19 @@
       "fileSizeBytes": 835976,
       "provenance": "Project-authored local GLB generated for the R3F dashboard asset pipeline; no external downloads, stock models, paid asset stores, or archived Unreal assets were used."
     },
-    "authorship": "project-authored"
+    "authorship": "project-authored",
+    "pbrChannels": [
+      "baseColorFactor",
+      "metallicFactor",
+      "roughnessFactor"
+    ],
+    "compression": {
+      "status": "uncompressed-under-budget",
+      "geometry": "raw-glb-2.0-embedded-buffer",
+      "texture": "none-embedded-or-external",
+      "evidence": "scripts/verify-r3f-assets.mjs"
+    },
+    "provenanceEvidencePath": "docs/compliance/r3f-asset-licenses.md"
   },
   "vehicles/emergency_ambulance_medium": {
     "id": "vehicles/emergency_ambulance_medium",
@@ -475,7 +595,19 @@
       "mirrorReason": "medium ambulance LOD intentionally omits mirrors while preserving emergency markings and lightbar",
       "provenance": "Project-authored local GLB generated for the R3F dashboard asset pipeline; no external downloads, stock models, paid asset stores, or archived Unreal assets were used."
     },
-    "authorship": "project-authored"
+    "authorship": "project-authored",
+    "pbrChannels": [
+      "baseColorFactor",
+      "metallicFactor",
+      "roughnessFactor"
+    ],
+    "compression": {
+      "status": "uncompressed-under-budget",
+      "geometry": "raw-glb-2.0-embedded-buffer",
+      "texture": "none-embedded-or-external",
+      "evidence": "scripts/verify-r3f-assets.mjs"
+    },
+    "provenanceEvidencePath": "docs/compliance/r3f-asset-licenses.md"
   },
   "props/traffic_signal_pole": {
     "id": "props/traffic_signal_pole",
@@ -527,7 +659,19 @@
       "fileSizeBytes": 51688,
       "provenance": "Project-authored local GLB generated for the R3F dashboard asset pipeline; no external downloads, stock models, paid asset stores, or archived Unreal assets were used."
     },
-    "authorship": "project-authored"
+    "authorship": "project-authored",
+    "pbrChannels": [
+      "baseColorFactor",
+      "metallicFactor",
+      "roughnessFactor"
+    ],
+    "compression": {
+      "status": "uncompressed-under-budget",
+      "geometry": "raw-glb-2.0-embedded-buffer",
+      "texture": "none-embedded-or-external",
+      "evidence": "scripts/verify-r3f-assets.mjs"
+    },
+    "provenanceEvidencePath": "docs/compliance/r3f-asset-licenses.md"
   },
   "props/traffic_signal_heads": {
     "id": "props/traffic_signal_heads",
@@ -591,7 +735,19 @@
       "fileSizeBytes": 54820,
       "provenance": "Project-authored local GLB generated for the R3F dashboard asset pipeline; no external downloads, stock models, paid asset stores, or archived Unreal assets were used."
     },
-    "authorship": "project-authored"
+    "authorship": "project-authored",
+    "pbrChannels": [
+      "baseColorFactor",
+      "metallicFactor",
+      "roughnessFactor"
+    ],
+    "compression": {
+      "status": "uncompressed-under-budget",
+      "geometry": "raw-glb-2.0-embedded-buffer",
+      "texture": "none-embedded-or-external",
+      "evidence": "scripts/verify-r3f-assets.mjs"
+    },
+    "provenanceEvidencePath": "docs/compliance/r3f-asset-licenses.md"
   },
   "props/streetlight": {
     "id": "props/streetlight",
@@ -640,7 +796,19 @@
       "fileSizeBytes": 38268,
       "provenance": "Project-authored local GLB generated for the R3F dashboard asset pipeline; no external downloads, stock models, paid asset stores, or archived Unreal assets were used."
     },
-    "authorship": "project-authored"
+    "authorship": "project-authored",
+    "pbrChannels": [
+      "baseColorFactor",
+      "metallicFactor",
+      "roughnessFactor"
+    ],
+    "compression": {
+      "status": "uncompressed-under-budget",
+      "geometry": "raw-glb-2.0-embedded-buffer",
+      "texture": "none-embedded-or-external",
+      "evidence": "scripts/verify-r3f-assets.mjs"
+    },
+    "provenanceEvidencePath": "docs/compliance/r3f-asset-licenses.md"
   },
   "props/tree_cluster": {
     "id": "props/tree_cluster",
@@ -688,7 +856,19 @@
       "fileSizeBytes": 77336,
       "provenance": "Project-authored local GLB generated for the R3F dashboard asset pipeline; no external downloads, stock models, paid asset stores, or archived Unreal assets were used."
     },
-    "authorship": "project-authored"
+    "authorship": "project-authored",
+    "pbrChannels": [
+      "baseColorFactor",
+      "metallicFactor",
+      "roughnessFactor"
+    ],
+    "compression": {
+      "status": "uncompressed-under-budget",
+      "geometry": "raw-glb-2.0-embedded-buffer",
+      "texture": "none-embedded-or-external",
+      "evidence": "scripts/verify-r3f-assets.mjs"
+    },
+    "provenanceEvidencePath": "docs/compliance/r3f-asset-licenses.md"
   },
   "props/curb_details": {
     "id": "props/curb_details",
@@ -741,7 +921,19 @@
       "fileSizeBytes": 68324,
       "provenance": "Project-authored local GLB generated for the R3F dashboard asset pipeline; no external downloads, stock models, paid asset stores, or archived Unreal assets were used."
     },
-    "authorship": "project-authored"
+    "authorship": "project-authored",
+    "pbrChannels": [
+      "baseColorFactor",
+      "metallicFactor",
+      "roughnessFactor"
+    ],
+    "compression": {
+      "status": "uncompressed-under-budget",
+      "geometry": "raw-glb-2.0-embedded-buffer",
+      "texture": "none-embedded-or-external",
+      "evidence": "scripts/verify-r3f-assets.mjs"
+    },
+    "provenanceEvidencePath": "docs/compliance/r3f-asset-licenses.md"
   },
   "textures/wet_asphalt_albedo": {
     "id": "textures/wet_asphalt_albedo",
@@ -769,7 +961,17 @@
       ],
       "provenance": "Project-authored deterministic Sharp texture regenerated for Stage 4.1; Image Gen used only as non-runtime material direction and runtime proof is deferred to later browser screenshots."
     },
-    "authorship": "generated"
+    "authorship": "generated",
+    "pbrChannels": [
+      "baseColor"
+    ],
+    "compression": {
+      "status": "webp-runtime",
+      "geometry": "not-applicable",
+      "texture": "webp",
+      "evidence": "scripts/verify-r3f-assets.mjs"
+    },
+    "provenanceEvidencePath": "apps/web/public/simulation/r3f/assets/textures/PROVENANCE.md"
   },
   "textures/wet_asphalt_roughness": {
     "id": "textures/wet_asphalt_roughness",
@@ -797,7 +999,17 @@
       ],
       "provenance": "Project-authored deterministic Sharp texture regenerated for Stage 4.1; Image Gen used only as non-runtime material direction and runtime proof is deferred to later browser screenshots."
     },
-    "authorship": "generated"
+    "authorship": "generated",
+    "pbrChannels": [
+      "roughness"
+    ],
+    "compression": {
+      "status": "webp-runtime",
+      "geometry": "not-applicable",
+      "texture": "webp",
+      "evidence": "scripts/verify-r3f-assets.mjs"
+    },
+    "provenanceEvidencePath": "apps/web/public/simulation/r3f/assets/textures/PROVENANCE.md"
   },
   "decals/worn_lane_markings": {
     "id": "decals/worn_lane_markings",
@@ -825,7 +1037,18 @@
       ],
       "provenance": "Project-authored deterministic Sharp decal regenerated for Stage 4.1; Image Gen used only as non-runtime material direction and runtime proof is deferred to later browser screenshots."
     },
-    "authorship": "generated"
+    "authorship": "generated",
+    "pbrChannels": [
+      "baseColor",
+      "alpha"
+    ],
+    "compression": {
+      "status": "png-alpha-runtime",
+      "geometry": "not-applicable",
+      "texture": "png-alpha",
+      "evidence": "scripts/verify-r3f-assets.mjs"
+    },
+    "provenanceEvidencePath": "apps/web/public/simulation/r3f/assets/textures/PROVENANCE.md"
   },
   "decals/crosswalk_wear": {
     "id": "decals/crosswalk_wear",
@@ -853,7 +1076,18 @@
       ],
       "provenance": "Project-authored deterministic Sharp decal regenerated for Stage 4.1; Image Gen used only as non-runtime material direction and runtime proof is deferred to later browser screenshots."
     },
-    "authorship": "generated"
+    "authorship": "generated",
+    "pbrChannels": [
+      "baseColor",
+      "alpha"
+    ],
+    "compression": {
+      "status": "png-alpha-runtime",
+      "geometry": "not-applicable",
+      "texture": "png-alpha",
+      "evidence": "scripts/verify-r3f-assets.mjs"
+    },
+    "provenanceEvidencePath": "apps/web/public/simulation/r3f/assets/textures/PROVENANCE.md"
   },
   "decals/curb_grime": {
     "id": "decals/curb_grime",
@@ -881,7 +1115,18 @@
       ],
       "provenance": "Project-authored deterministic Sharp decal regenerated for Stage 4.1; Image Gen used only as non-runtime material direction and runtime proof is deferred to later browser screenshots."
     },
-    "authorship": "generated"
+    "authorship": "generated",
+    "pbrChannels": [
+      "baseColor",
+      "alpha"
+    ],
+    "compression": {
+      "status": "png-alpha-runtime",
+      "geometry": "not-applicable",
+      "texture": "png-alpha",
+      "evidence": "scripts/verify-r3f-assets.mjs"
+    },
+    "provenanceEvidencePath": "apps/web/public/simulation/r3f/assets/textures/PROVENANCE.md"
   },
   "textures/sidewalk_paver_variation": {
     "id": "textures/sidewalk_paver_variation",
@@ -909,7 +1154,17 @@
       ],
       "provenance": "Project-authored deterministic Sharp texture regenerated for Stage 4.1; Image Gen used only as non-runtime material direction and runtime proof is deferred to later browser screenshots."
     },
-    "authorship": "generated"
+    "authorship": "generated",
+    "pbrChannels": [
+      "baseColor"
+    ],
+    "compression": {
+      "status": "webp-runtime",
+      "geometry": "not-applicable",
+      "texture": "webp",
+      "evidence": "scripts/verify-r3f-assets.mjs"
+    },
+    "provenanceEvidencePath": "apps/web/public/simulation/r3f/assets/textures/PROVENANCE.md"
   },
   "textures/facade_window_emissive": {
     "id": "textures/facade_window_emissive",
@@ -937,6 +1192,16 @@
       ],
       "provenance": "Project-authored deterministic Sharp texture regenerated for Stage 4.1; Image Gen used only as non-runtime material direction and runtime proof is deferred to later browser screenshots."
     },
-    "authorship": "generated"
+    "authorship": "generated",
+    "pbrChannels": [
+      "emissive"
+    ],
+    "compression": {
+      "status": "webp-runtime",
+      "geometry": "not-applicable",
+      "texture": "webp",
+      "evidence": "scripts/verify-r3f-assets.mjs"
+    },
+    "provenanceEvidencePath": "apps/web/public/simulation/r3f/assets/textures/PROVENANCE.md"
   }
 }

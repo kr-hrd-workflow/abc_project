@@ -20,10 +20,16 @@ class Settings(BaseSettings):
     vision_analysis_mode: Literal["fixture", "opencv_yolo"] = "fixture"
     yolo_model_path: str = "models/yolov8n.pt"
     yolo_confidence_threshold: float = Field(default=0.25, ge=0.0, le=1.0)
-    sumo_simulation_mode: Literal["fixture", "sumo_traci"] = "fixture"
+    sumo_simulation_mode: Literal["fixture", "sumo_traci", "sumo_libsumo"] = "fixture"
     sumo_binary: str = "sumo"
+    sumo_binary_path: str | None = None
     sumo_config_path: str = "networks/intersection.sumocfg"
+    sumo_config_dir: str | None = None
     sumo_step_count: int = Field(default=300, ge=1)
+    sumo_runtime_ttl_seconds: int = Field(default=300, ge=1)
+    sumo_authoritative_hz: int = Field(default=10, ge=5, le=10)
+    sumo_frame_cache_ttl_ms: int = Field(default=1000, ge=1)
+    sumo_interpolation_delay_ms: int = Field(default=150, ge=0)
     openai_model: str = "gpt-5.5"
     openai_api_key: str | None = Field(default=None, repr=False)
     openai_embedding_model: str = "text-embedding-3-small"

@@ -1,0 +1,262 @@
+from app.services.sumo_runtime import build_sumo_simulation_frame
+
+
+class FakeSimulation:
+    def getTime(self) -> float:
+        return 12.5
+
+
+class FakeVehicleApi:
+    def getIDList(self) -> list[str]:
+        return ["veh-1", "ambulance-east-9"]
+
+    def getPosition(self, vehicle_id: str) -> tuple[float, float]:
+        return {
+            "veh-1": (10.25, -3.5),
+            "ambulance-east-9": (42.0, 1.25),
+        }[vehicle_id]
+
+    def getAngle(self, vehicle_id: str) -> float:
+        return {"veh-1": 91.0, "ambulance-east-9": 270.0}[vehicle_id]
+
+    def getSpeed(self, vehicle_id: str) -> float:
+        return {"veh-1": 8.75, "ambulance-east-9": 14.2}[vehicle_id]
+
+    def getWaitingTime(self, vehicle_id: str) -> float:
+        return {"veh-1": 0.0, "ambulance-east-9": 3.0}[vehicle_id]
+
+    def getLaneID(self, vehicle_id: str) -> str:
+        return {"veh-1": "north-inbound-1", "ambulance-east-9": "east-inbound-1"}[
+            vehicle_id
+        ]
+
+    def getTypeID(self, vehicle_id: str) -> str:
+        return {"veh-1": "passenger", "ambulance-east-9": "ambulance"}[vehicle_id]
+
+
+class FakeTrafficLightApi:
+    def getIDList(self) -> list[str]:
+        return ["tls-main"]
+
+    def getRedYellowGreenState(self, _signal_id: str) -> str:
+        return "GrYr"
+
+
+class FakeLaneApi:
+    def getIDList(self) -> list[str]:
+        return ["north-inbound-1", "east-inbound-1"]
+
+    def getLastStepVehicleNumber(self, lane_id: str) -> int:
+        return {"north-inbound-1": 4, "east-inbound-1": 28}[lane_id]
+
+    def getLastStepMeanSpeed(self, lane_id: str) -> float:
+        return {"north-inbound-1": 7.5, "east-inbound-1": 0.4}[lane_id]
+
+    def getLastStepHaltingNumber(self, lane_id: str) -> int:
+        return {"north-inbound-1": 1, "east-inbound-1": 26}[lane_id]
+
+
+class FakeSumoClient:
+    simulation = FakeSimulation()
+    vehicle = FakeVehicleApi()
+    trafficlight = FakeTrafficLightApi()
+    lane = FakeLaneApi()
+
+
+def test_fake_sumo_client_maps_to_simulation_frame_snapshot_fields() -> None:
+    frame = build_sumo_simulation_frame(
+        scenario_id="emergency",
+        mode="sumo_traci",
+        client=FakeSumoClient(),
+        step_index=7,
+    )
+
+    assert frame.source == "sumo_traci"
+    assert frame.scenario_id == "emergency"
+    assert frame.sim_time_seconds == 12.5
+    assert frame.bounds_meters == {
+        "north": -160.0,
+        "south": 140.0,
+        "east": 160.0,
+        "west": -160.0,
+    }
+    assert frame.vehicles[0].model_dump() == {
+        "id": "veh-1",
+        "vehicle_type": "car",
+        "lane_id": "north-inbound-1",
+        "x_meters": 10.25,
+        "y_meters": -3.5,
+        "heading_degrees": 91.0,
+        "speed_mps": 8.75,
+        "waiting_seconds": 0.0,
+        "emergency": False,
+    }
+    assert frame.vehicles[1].vehicle_type == "emergency"
+    assert frame.vehicles[1].emergency is True
+    assert {
+        (signal.direction, signal.state)
+        for signal in frame.signals
+    } == {
+        ("north", "green"),
+        ("east", "red"),
+        ("south", "yellow"),
+        ("west", "red"),
+    }
+    assert {
+        (segment.segment_id, segment.source, segment.vehicle_count)
+        for segment in frame.density_segments
+    } == {
+        ("north-inbound-1-density", "aggregate_density_proxy", 4),
+        ("east-inbound-1-density", "aggregate_density_proxy", 28),
+    }
+    assert frame.queues.north == 1
+    assert frame.queues.east == 26
+    assert {(event.event_type, event.direction) for event in frame.events} == {
+        ("emergency_vehicle_approach", "east"),
+        ("queue_threshold_exceeded", "east"),
+    }
+    assert any("spillback" in event.ai_summary.lower() for event in frame.events)
+
+
+def test_sumo_mapping_keeps_density_aggregate_when_no_precise_vehicles_exist() -> None:
+    class NoVehicleApi(FakeVehicleApi):
+        def getIDList(self) -> list[str]:
+            return []
+
+    class AggregateOnlyClient(FakeSumoClient):
+        vehicle = NoVehicleApi()
+
+    frame = build_sumo_simulation_frame(
+        scenario_id="blocked",
+        mode="sumo_libsumo",
+        client=AggregateOnlyClient(),
+        step_index=1,
+    )
+
+    assert frame.vehicles == []
+    assert frame.density_segments
+    assert all(
+        segment.source == "aggregate_density_proxy"
+        for segment in frame.density_segments
+    )
+
+
+def test_queue_derivation_prefers_near_stopped_vehicles_at_stop_line() -> None:
+    class StopLineVehicleApi(FakeVehicleApi):
+        def getIDList(self) -> list[str]:
+            return ["near-stopped", "far-stopped", "near-moving"]
+
+        def getPosition(self, vehicle_id: str) -> tuple[float, float]:
+            return {
+                "near-stopped": (3.0, 0.0),
+                "far-stopped": (70.0, 0.0),
+                "near-moving": (4.0, 0.0),
+            }[vehicle_id]
+
+        def getAngle(self, _vehicle_id: str) -> float:
+            return 270.0
+
+        def getSpeed(self, vehicle_id: str) -> float:
+            return {
+                "near-stopped": 0.2,
+                "far-stopped": 0.1,
+                "near-moving": 3.0,
+            }[vehicle_id]
+
+        def getWaitingTime(self, _vehicle_id: str) -> float:
+            return 0.0
+
+        def getLaneID(self, _vehicle_id: str) -> str:
+            return "east-inbound-1"
+
+        def getTypeID(self, _vehicle_id: str) -> str:
+            return "passenger"
+
+        def getLanePosition(self, vehicle_id: str) -> float:
+            return {
+                "near-stopped": 96.0,
+                "far-stopped": 40.0,
+                "near-moving": 97.0,
+            }[vehicle_id]
+
+    class StopLineLaneApi(FakeLaneApi):
+        def getIDList(self) -> list[str]:
+            return ["east-inbound-1"]
+
+        def getLength(self, _lane_id: str) -> float:
+            return 100.0
+
+        def getLastStepHaltingNumber(self, _lane_id: str) -> int:
+            raise AssertionError("precise stop-line vehicle data should be used")
+
+    class StopLineClient(FakeSumoClient):
+        vehicle = StopLineVehicleApi()
+        lane = StopLineLaneApi()
+
+    frame = build_sumo_simulation_frame(
+        scenario_id="normal",
+        mode="sumo_traci",
+        client=StopLineClient(),
+        step_index=3,
+    )
+
+    assert frame.queues.east == 1
+    assert frame.queues.north == 0
+
+
+def test_events_cover_blocked_lane_and_high_wait_derivations() -> None:
+    class HighWaitVehicleApi(FakeVehicleApi):
+        def getIDList(self) -> list[str]:
+            return ["high-wait-west"]
+
+        def getPosition(self, _vehicle_id: str) -> tuple[float, float]:
+            return (-4.0, 0.0)
+
+        def getAngle(self, _vehicle_id: str) -> float:
+            return 90.0
+
+        def getSpeed(self, _vehicle_id: str) -> float:
+            return 0.1
+
+        def getWaitingTime(self, _vehicle_id: str) -> float:
+            return 75.0
+
+        def getLaneID(self, _vehicle_id: str) -> str:
+            return "west-inbound-1"
+
+        def getTypeID(self, _vehicle_id: str) -> str:
+            return "passenger"
+
+    class BlockedLaneApi(FakeLaneApi):
+        def getIDList(self) -> list[str]:
+            return ["west-inbound-1"]
+
+        def getLastStepVehicleNumber(self, _lane_id: str) -> int:
+            return 6
+
+        def getLastStepMeanSpeed(self, _lane_id: str) -> float:
+            return 0.1
+
+        def getLastStepHaltingNumber(self, _lane_id: str) -> int:
+            return 6
+
+    class IncidentClient(FakeSumoClient):
+        vehicle = HighWaitVehicleApi()
+        lane = BlockedLaneApi()
+
+    frame = build_sumo_simulation_frame(
+        scenario_id="blocked",
+        mode="sumo_libsumo",
+        client=IncidentClient(),
+        step_index=4,
+    )
+
+    assert {
+        (event.event_type, event.direction)
+        for event in frame.events
+    } == {
+        ("intersection_blocked", "west"),
+        ("queue_threshold_exceeded", "west"),
+    }
+    assert any("blocked lane" in event.ai_summary.lower() for event in frame.events)
+    assert any("high wait" in event.ai_summary.lower() for event in frame.events)

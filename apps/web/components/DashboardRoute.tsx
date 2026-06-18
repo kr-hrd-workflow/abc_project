@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 
 import { DashboardShell } from "./DashboardShell";
 import {
@@ -14,10 +14,21 @@ import {
   getRuntimeReadiness,
   getSimulationFrame,
   ingestFixture,
+  isSimulationFrameRouteMissingError,
   recommendSignal,
   simulateSignal
 } from "../lib/api";
-import type { SimulationFrameSnapshot } from "../lib/simulationSnapshot";
+import {
+  SIMULATION_FRAME_POLL_INTERVAL_MS,
+  type SimulationFrameBufferEntry,
+  type SimulationFrameSnapshot
+} from "../lib/simulationSnapshot";
+import {
+  createSimulationFrameRingBuffer,
+  normalizeSimulationFrameMessage,
+  type SimulationFrameWorkerInboundMessage,
+  type SimulationFrameWorkerOutboundMessage
+} from "../workers/simulationFrameWorker";
 import type {
   AnalysisFixture,
   AnalysisJob,
@@ -52,6 +63,12 @@ type DashboardData = {
   latestAnalysisJob: AnalysisJob | null;
 };
 
+type SimulationFrameLoadResult = {
+  frame: SimulationFrameSnapshot | null;
+  routeAvailable: boolean;
+  networkLatencyMs: number | null;
+};
+
 export function DashboardRoute() {
   const [data, setData] = useState<DashboardData | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -59,10 +76,160 @@ export function DashboardRoute() {
     useState<ScenarioId>(DEFAULT_SCENARIO_ID);
   const [selectedCityId, setSelectedCityId] = useState<CityId>(DEFAULT_CITY_ID);
   const [scenarioLoading, setScenarioLoading] = useState(false);
+  const [simulationFrameEntries, setSimulationFrameEntries] = useState<
+    SimulationFrameBufferEntry[]
+  >([]);
+  const [simulationFrameRouteAvailable, setSimulationFrameRouteAvailable] =
+    useState(true);
+  const simulationFrameWorkerRef = useRef<Worker | null>(null);
+  const fallbackFrameBufferRef = useRef(createSimulationFrameRingBuffer(2));
+  const selectedScenarioIdRef = useRef<ScenarioId>(selectedScenarioId);
+  const dashboardLoaded = data !== null;
+
+  const handleBufferedFrames = useCallback(
+    (frames: SimulationFrameBufferEntry[]) => {
+      const currentScenarioId = selectedScenarioIdRef.current;
+      const scopedFrames = frames.filter(
+        (entry) => entry.frame.scenario_id === currentScenarioId
+      );
+      if (frames.length > 0 && scopedFrames.length === 0) return;
+
+      setSimulationFrameEntries(scopedFrames);
+      const latestFrame = scopedFrames[scopedFrames.length - 1]?.frame;
+
+      if (latestFrame) {
+        setData((current) =>
+          current ? { ...current, simulationFrame: latestFrame } : current
+        );
+      }
+    },
+    []
+  );
+
+  const ensureSimulationFrameWorker = useCallback(() => {
+    if (typeof Worker === "undefined") return null;
+    if (simulationFrameWorkerRef.current) return simulationFrameWorkerRef.current;
+
+    try {
+      const worker = new Worker(
+        new URL("../workers/simulationFrameWorker.ts", import.meta.url),
+        { type: "module" }
+      );
+
+      worker.onmessage = (
+        event: MessageEvent<SimulationFrameWorkerOutboundMessage>
+      ) => {
+        if (event.data.type === "simulation-frame-buffer") {
+          handleBufferedFrames(event.data.frames);
+        }
+      };
+      worker.onerror = () => {
+        worker.terminate();
+        simulationFrameWorkerRef.current = null;
+      };
+      simulationFrameWorkerRef.current = worker;
+
+      return worker;
+    } catch {
+      return null;
+    }
+  }, [handleBufferedFrames]);
+
+  const resetSimulationFrameBuffer = useCallback(() => {
+    fallbackFrameBufferRef.current.reset();
+    setSimulationFrameEntries([]);
+    simulationFrameWorkerRef.current?.postMessage({ type: "reset" });
+  }, []);
+
+  const publishSimulationFrame = useCallback(
+    (
+      frame: SimulationFrameSnapshot,
+      networkLatencyMs: number | null,
+      expectedScenarioId: ScenarioId
+    ) => {
+      if (frame.scenario_id !== expectedScenarioId) return;
+
+      const message: SimulationFrameWorkerInboundMessage = {
+        type: "simulation-frame",
+        frame,
+        receivedAtMs: readNowMs(),
+        networkLatencyMs: networkLatencyMs ?? 0
+      };
+      const worker = ensureSimulationFrameWorker();
+
+      if (worker) {
+        worker.postMessage(message);
+        return;
+      }
+
+      const entry = normalizeSimulationFrameMessage(message);
+      if (!entry) return;
+
+      fallbackFrameBufferRef.current.push(entry);
+      handleBufferedFrames(fallbackFrameBufferRef.current.latestTwo());
+    },
+    [ensureSimulationFrameWorker, handleBufferedFrames]
+  );
 
   useEffect(() => {
     void loadDashboard(DEFAULT_SCENARIO_ID);
   }, []);
+
+  useEffect(() => {
+    return () => {
+      simulationFrameWorkerRef.current?.terminate();
+      simulationFrameWorkerRef.current = null;
+    };
+  }, []);
+
+  useEffect(() => {
+    selectedScenarioIdRef.current = selectedScenarioId;
+  }, [selectedScenarioId]);
+
+  useEffect(() => {
+    if (
+      !dashboardLoaded ||
+      !simulationFrameRouteAvailable ||
+      !shouldPollSimulationFrames(selectedScenarioId)
+    ) {
+      return;
+    }
+
+    let cancelled = false;
+    let timer: ReturnType<typeof setTimeout> | null = null;
+
+    const poll = async () => {
+      const result = await loadSimulationFrame(selectedScenarioId);
+      if (cancelled) return;
+
+      if (!result.routeAvailable) {
+        setSimulationFrameRouteAvailable(false);
+        return;
+      }
+
+      if (result.frame) {
+        publishSimulationFrame(
+          result.frame,
+          result.networkLatencyMs,
+          selectedScenarioId
+        );
+      }
+
+      timer = setTimeout(poll, SIMULATION_FRAME_POLL_INTERVAL_MS);
+    };
+
+    timer = setTimeout(poll, SIMULATION_FRAME_POLL_INTERVAL_MS);
+
+    return () => {
+      cancelled = true;
+      if (timer) clearTimeout(timer);
+    };
+  }, [
+    dashboardLoaded,
+    publishSimulationFrame,
+    selectedScenarioId,
+    simulationFrameRouteAvailable
+  ]);
 
   async function loadDashboard(scenarioId: ScenarioId) {
     try {
@@ -74,7 +241,7 @@ export function DashboardRoute() {
         report,
         fixtures,
         runtimeReadiness,
-        simulationFrame
+        simulationFrameResult
       ] =
         await Promise.all([
           getIntersectionStatus(scenarioId),
@@ -87,12 +254,30 @@ export function DashboardRoute() {
           loadSimulationFrame(scenarioId)
         ]);
 
+      if (scenarioId !== selectedScenarioIdRef.current) return;
+      setSimulationFrameRouteAvailable(simulationFrameResult.routeAvailable);
+
+      const scopedSimulationFrame =
+        simulationFrameResult.frame?.scenario_id === scenarioId
+          ? simulationFrameResult.frame
+          : null;
+
+      if (scopedSimulationFrame) {
+        publishSimulationFrame(
+          scopedSimulationFrame,
+          simulationFrameResult.networkLatencyMs,
+          scenarioId
+        );
+      } else {
+        resetSimulationFrameBuffer();
+      }
+
       setData({
         status,
         events,
         recommendation,
         simulation,
-        simulationFrame,
+        simulationFrame: scopedSimulationFrame,
         report,
         chat: null,
         fixtures,
@@ -153,6 +338,9 @@ export function DashboardRoute() {
   async function handleScenarioChange(scenarioId: ScenarioId) {
     if (scenarioId === selectedScenarioId) return;
 
+    resetSimulationFrameBuffer();
+    setSimulationFrameRouteAvailable(true);
+    selectedScenarioIdRef.current = scenarioId;
     setSelectedScenarioId(scenarioId);
     setScenarioLoading(true);
     try {
@@ -198,6 +386,7 @@ export function DashboardRoute() {
       recommendation={data.recommendation}
       simulation={data.simulation}
       simulationFrame={data.simulationFrame}
+      simulationFrameEntries={simulationFrameEntries}
       report={data.report}
       chat={data.chat}
       fixtures={data.fixtures}
@@ -235,18 +424,37 @@ function formatDashboardError(error: string) {
 
 async function loadSimulationFrame(
   scenarioId: ScenarioId
-): Promise<SimulationFrameSnapshot | null> {
+): Promise<SimulationFrameLoadResult> {
+  const startedAtMs = readNowMs();
+
   try {
-    return await getSimulationFrame(scenarioId);
+    const frame = await getSimulationFrame(scenarioId);
+
+    return {
+      frame,
+      routeAvailable: true,
+      networkLatencyMs: readNowMs() - startedAtMs
+    };
   } catch (error) {
-    if (isSimulationFrameRouteMissingError(error)) return null;
+    if (isSimulationFrameRouteMissingError(error)) {
+      return {
+        frame: null,
+        routeAvailable: false,
+        networkLatencyMs: null
+      };
+    }
     throw error;
   }
 }
 
-function isSimulationFrameRouteMissingError(error: unknown) {
-  return (
-    error instanceof Error &&
-    error.message.includes("API request failed: 404 /api/simulation/frame")
-  );
+function shouldPollSimulationFrames(scenarioId: ScenarioId) {
+  return SCENARIO_OPTIONS.some((option) => option.id === scenarioId);
+}
+
+function readNowMs() {
+  if (typeof performance !== "undefined" && typeof performance.now === "function") {
+    return performance.now();
+  }
+
+  return Date.now();
 }

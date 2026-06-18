@@ -19,6 +19,20 @@ The R3F dashboard proof artifacts are evidence, not source inputs. Keep generate
 
 A stage proof bundle must identify the stage, verifier command, generated timestamp, and known boundary. For the R3F dashboard, screenshots prove browser-rendered runtime behavior only. They do not prove live SUMO/Tarcl binding or real signal control.
 
+For post-Stage-6 R3F proof, the details JSON must include source mode,
+frame-bound state, fallback/stale reason, signal state, no-overflow evidence,
+draw calls, visible vehicle count, frame age, network latency,
+sim-to-render delay, authoritative Hz, authoritative tick drift, frame
+staleness, shadow enabled state, shadow caster count, FPS/frame-time samples,
+and normal/peak draw-call evidence. The details JSON is accepted only when
+produced by the same successful `npm run verify:r3f-dashboard` run as the
+canonical screenshots.
+
 ## Cleanup Rule
 
 Do not delete, move, or rewrite tracked proof artifacts without explicit approval. If a verifier generates new local artifacts during investigation, leave them ignored unless the primary agent accepts them as the current stage evidence.
+
+If a verifier fails after overwriting canonical artifacts, mark those artifacts
+as failed evidence and regenerate them with a passing verifier run before
+staging. Do not promote partial details JSON, timeout screenshots, or
+screenshots whose source labels do not match the details JSON.

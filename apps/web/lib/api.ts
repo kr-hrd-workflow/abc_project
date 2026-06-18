@@ -124,6 +124,10 @@ export async function getSimulationFrame(
   );
 }
 
+export function isSimulationFrameRouteMissingError(error: unknown): boolean {
+  return isMissingRouteError(error, "/api/simulation/frame");
+}
+
 export async function askQuestion(
   question: string,
   scenarioId?: ScenarioId
@@ -222,8 +226,11 @@ export async function getAnalysisJob(jobId: string): Promise<AnalysisJob> {
   );
 }
 
-function isMissingRouteError(error: unknown): boolean {
-  return error instanceof Error && error.message.includes("API request failed: 404");
+function isMissingRouteError(error: unknown, path?: string): boolean {
+  if (!(error instanceof Error)) return false;
+  if (!error.message.includes("API request failed: 404")) return false;
+
+  return path ? error.message.includes(path) : true;
 }
 
 function fallbackRecommendation(): Recommendation {

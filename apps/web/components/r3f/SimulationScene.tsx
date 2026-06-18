@@ -1,17 +1,14 @@
 "use client";
 
-import { Suspense, useEffect } from "react";
+import { useEffect } from "react";
 import { useThree, type RootState } from "@react-three/fiber";
 
 import type { SceneSnapshot } from "./buildSceneSnapshot";
-import { ApproachCorridors } from "./ApproachCorridors";
-import { LightingRig } from "./LightingRig";
-import { ProceduralIntersection } from "./ProceduralIntersection";
-import { SignalHardware } from "./SignalHardware";
-import { Stage5SceneAssets } from "./Stage5SceneAssets";
+import { DynamicVehicleLayer } from "./DynamicVehicleLayer";
+import { EnvironmentLayer } from "./EnvironmentLayer";
 import { getStage5CameraForAspect } from "./roadGeometry";
-import { TrafficDensityLayer } from "./TrafficDensityLayer";
-import { WeatherAndAtmosphere } from "./WeatherAndAtmosphere";
+import { SignalLayer } from "./SignalLayer";
+import { StaticRoadLayer } from "./StaticRoadLayer";
 
 export function SimulationScene({
   sceneSnapshot
@@ -21,15 +18,10 @@ export function SimulationScene({
   return (
     <group name={`smart-intersection-stage5-${sceneSnapshot.trafficDensityMode}`}>
       <Stage3CameraRig />
-      <WeatherAndAtmosphere />
-      <LightingRig />
-      <ApproachCorridors />
-      <ProceduralIntersection />
-      <Suspense fallback={null}>
-        <Stage5SceneAssets />
-      </Suspense>
-      <SignalHardware signals={sceneSnapshot.signals} />
-      <TrafficDensityLayer sceneSnapshot={sceneSnapshot} />
+      <EnvironmentLayer />
+      <StaticRoadLayer />
+      <DynamicVehicleLayer sceneSnapshot={sceneSnapshot} />
+      <SignalLayer signals={sceneSnapshot.signals} />
     </group>
   );
 }

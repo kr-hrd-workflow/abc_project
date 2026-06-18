@@ -61,7 +61,7 @@ runCommandCheck("cyclonedx_sbom_generation", process.execPath, [
 runCommandCheck("r3f_manifest_license_provenance", process.execPath, [
   "scripts/verify-r3f-assets.mjs"
 ]);
-runTrackedSecretScan();
+runWorkspaceSecretScan();
 
 const report = {
   generated_at: new Date().toISOString(),
@@ -170,36 +170,47 @@ function runPythonDependencyAudit() {
   }
 }
 
-function runTrackedSecretScan() {
-  const trackedFiles = spawnSync("git", [
-    "ls-files",
+function runWorkspaceSecretScan() {
+  const scanRoots = [
     "apps",
     "docs",
     "scripts",
     ".github",
+    "artifacts",
     "package.json",
     "package-lock.json"
-  ], {
-    cwd: repoRoot,
-    encoding: "utf8",
-    maxBuffer: 10 * 1024 * 1024
-  });
+  ];
+  const trackedFiles = gitFileList(["ls-files", ...scanRoots]);
+  const untrackedFiles = gitFileList([
+    "ls-files",
+    "--others",
+    "--exclude-standard",
+    ...scanRoots
+  ]);
 
-  if (trackedFiles.status !== 0) {
-    failures.push(`tracked_secret_scan: git ls-files exited ${trackedFiles.status}`);
+  if (trackedFiles.status !== 0 || untrackedFiles.status !== 0) {
+    const failedCommand =
+      trackedFiles.status !== 0 ? "git ls-files" : "git ls-files --others";
+    const failedResult =
+      trackedFiles.status !== 0 ? trackedFiles : untrackedFiles;
+    failures.push(`workspace_secret_scan: ${failedCommand} exited ${failedResult.status}`);
     results.push({
-      name: "tracked_secret_scan",
+      name: "workspace_secret_scan",
       status: "failed",
-      stderr_tail: tail(trackedFiles.stderr)
+      stderr_tail: tail(failedResult.stderr)
     });
     return;
   }
 
-  const findings = [];
-  const files = trackedFiles.stdout
-    .split(/\r?\n/)
+  const tracked = splitGitFiles(trackedFiles.stdout);
+  const untracked = splitGitFiles(untrackedFiles.stdout);
+  const files = [...new Set([...tracked, ...untracked])]
     .filter(Boolean)
     .filter(isScannableTextPath);
+  const scannableUntracked = untracked
+    .filter(Boolean)
+    .filter(isScannableTextPath);
+  const findings = [];
 
   for (const file of files) {
     const absolutePath = path.join(repoRoot, file);
@@ -224,15 +235,29 @@ function runTrackedSecretScan() {
   }
 
   results.push({
-    name: "tracked_secret_scan",
+    name: "workspace_secret_scan",
     status: findings.length === 0 ? "passed" : "failed",
     scanned_files: files.length,
+    scanned_untracked_files: scannableUntracked.length,
+    tracked_files: tracked.filter(isScannableTextPath).length,
     findings
   });
 
   if (findings.length > 0) {
-    failures.push(`tracked_secret_scan: ${findings.length} possible secret(s) found`);
+    failures.push(`workspace_secret_scan: ${findings.length} possible secret(s) found`);
   }
+}
+
+function gitFileList(args) {
+  return spawnSync("git", args, {
+    cwd: repoRoot,
+    encoding: "utf8",
+    maxBuffer: 10 * 1024 * 1024
+  });
+}
+
+function splitGitFiles(stdout) {
+  return String(stdout ?? "").split(/\r?\n/).filter(Boolean);
 }
 
 function isScannableTextPath(file) {

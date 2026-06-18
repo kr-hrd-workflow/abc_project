@@ -1,6 +1,6 @@
 ﻿// @vitest-environment jsdom
 
-import { cleanup, render, screen } from "@testing-library/react";
+import { cleanup, render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import type { ReactNode } from "react";
 import { useState } from "react";
@@ -26,6 +26,9 @@ const dashboardRouteApiMock = vi.hoisted(() => ({
   getRuntimeReadiness: vi.fn(),
   getSimulationFrame: vi.fn(),
   ingestFixture: vi.fn(),
+  isSimulationFrameRouteMissingError: (error: unknown) =>
+    error instanceof Error &&
+    error.message.includes("API request failed: 404 /api/simulation/frame"),
   recommendSignal: vi.fn(),
   simulateSignal: vi.fn()
 }));
@@ -118,7 +121,10 @@ import type {
 } from "../lib/types";
 import { SCENARIO_OPTIONS } from "../lib/types";
 import { CITY_PROFILES } from "../lib/cities";
-import type { SimulationFrameSnapshot } from "../lib/simulationSnapshot";
+import type {
+  SimulationFrameBufferEntry,
+  SimulationFrameSnapshot
+} from "../lib/simulationSnapshot";
 
 const status: IntersectionStatus = {
   intersection_id: "INT-0001",
@@ -357,6 +363,7 @@ const runtimeReadiness: RuntimeReadiness = {
 };
 
 afterEach(() => {
+  vi.useRealTimers();
   cleanup();
   vi.clearAllMocks();
   vi.restoreAllMocks();
@@ -401,6 +408,10 @@ function renderDashboard(overrides = {}) {
   );
 }
 
+function sleep(ms: number) {
+  return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
 function mockWebGLSupport(supported: boolean) {
   vi.spyOn(HTMLCanvasElement.prototype, "getContext").mockImplementation(
     ((contextId: string) => {
@@ -428,6 +439,51 @@ function mockDashboardRouteApi() {
   dashboardRouteApiMock.getSimulationFrame.mockResolvedValue(frameSnapshot);
 }
 
+function installWorkerMock() {
+  const workers: Array<{
+    messages: unknown[];
+    onmessage: ((event: MessageEvent) => void) | null;
+    onerror: ((event: Event) => void) | null;
+    postMessage: ReturnType<typeof vi.fn>;
+    terminate: ReturnType<typeof vi.fn>;
+    emit: (message: unknown) => void;
+  }> = [];
+
+  class MockWorker {
+    messages: unknown[] = [];
+    onmessage: ((event: MessageEvent) => void) | null = null;
+    onerror: ((event: Event) => void) | null = null;
+    postMessage = vi.fn((message: unknown) => {
+      this.messages.push(message);
+    });
+    terminate = vi.fn();
+
+    constructor() {
+      workers.push(this);
+    }
+
+    emit(message: unknown) {
+      this.onmessage?.({ data: message } as MessageEvent);
+    }
+  }
+
+  vi.stubGlobal("Worker", MockWorker as unknown as typeof Worker);
+
+  return workers;
+}
+
+function frameEntry(
+  frame: SimulationFrameSnapshot,
+  receivedAtMs = 1000
+): SimulationFrameBufferEntry {
+  return {
+    frame,
+    receivedAtMs,
+    networkLatencyMs: 10,
+    capturedAtMs: Date.parse(frame.captured_at)
+  };
+}
+
 describe("DashboardShell", () => {
   test("loads the dashboard with explicit fixture fallback when the frame route is missing", async () => {
     vi.stubEnv("NEXT_PUBLIC_R3F_SIMULATION_ENABLED", "true");
@@ -446,6 +502,99 @@ describe("DashboardShell", () => {
     expect(viewport.getAttribute("data-r3f-snapshot-source")).toBe("simulation_snapshot_fixture");
     expect(viewport.getAttribute("data-r3f-frame-bound")).toBeNull();
     expect(viewport.getAttribute("data-r3f-traffic-density-mode")).toBe("fixture_queues");
+  });
+
+  test("polls live frames at the authoritative dashboard rate and stops on unmount", async () => {
+    vi.stubEnv("NEXT_PUBLIC_R3F_SIMULATION_ENABLED", "true");
+    mockWebGLSupport(true);
+    mockDashboardRouteApi();
+    dashboardRouteApiMock.getSimulationFrame
+      .mockResolvedValueOnce(frameSnapshot)
+      .mockResolvedValueOnce({
+        ...frameSnapshot,
+        sim_time_seconds: frameSnapshot.sim_time_seconds + 0.1,
+        captured_at: "2026-06-16T00:00:00.100Z"
+      });
+
+    const { unmount } = render(<DashboardRoute />);
+
+    await screen.findByTestId("r3f-simulation-viewport");
+    expect(dashboardRouteApiMock.getSimulationFrame).toHaveBeenCalledTimes(1);
+
+    await waitFor(() => {
+      expect(dashboardRouteApiMock.getSimulationFrame).toHaveBeenCalledTimes(2);
+    });
+
+    expect(dashboardRouteApiMock.getSimulationFrame.mock.calls[1][0]).toBe("emergency");
+
+    unmount();
+    await sleep(250);
+
+    expect(dashboardRouteApiMock.getSimulationFrame).toHaveBeenCalledTimes(2);
+  });
+
+  test("does not keep polling when the simulation frame route is missing", async () => {
+    vi.stubEnv("NEXT_PUBLIC_R3F_SIMULATION_ENABLED", "true");
+    mockWebGLSupport(true);
+    mockDashboardRouteApi();
+    dashboardRouteApiMock.getSimulationFrame.mockRejectedValue(
+      new Error("API request failed: 404 /api/simulation/frame?scenario_id=emergency")
+    );
+
+    render(<DashboardRoute />);
+
+    await screen.findByTestId("r3f-simulation-viewport");
+    expect(dashboardRouteApiMock.getSimulationFrame).toHaveBeenCalledTimes(1);
+
+    await sleep(250);
+
+    expect(dashboardRouteApiMock.getSimulationFrame).toHaveBeenCalledTimes(1);
+    expect(screen.queryByText("Dashboard API unavailable")).toBeNull();
+  });
+
+  test("ignores late worker-buffered frames from the previous scenario after a scenario switch", async () => {
+    vi.stubEnv("NEXT_PUBLIC_R3F_SIMULATION_ENABLED", "true");
+    mockWebGLSupport(true);
+    const workers = installWorkerMock();
+    const pedestrianFrame: SimulationFrameSnapshot = {
+      ...frameSnapshot,
+      scenario_id: "pedestrian",
+      sim_time_seconds: 84,
+      captured_at: "2026-06-16T00:00:01.000Z",
+      vehicles: [
+        {
+          ...frameSnapshot.vehicles[0],
+          id: "pedestrian-live-1",
+          x_meters: -12
+        }
+      ]
+    };
+
+    mockDashboardRouteApi();
+    dashboardRouteApiMock.getSimulationFrame.mockImplementation(
+      async (scenarioId: ScenarioId) =>
+        scenarioId === "pedestrian" ? pedestrianFrame : frameSnapshot
+    );
+
+    render(<DashboardRoute />);
+
+    const viewport = await screen.findByTestId("r3f-simulation-viewport");
+    expect(viewport.getAttribute("data-r3f-scenario-id")).toBe("emergency");
+
+    await userEvent.click(screen.getByRole("button", { name: /보행자/ }));
+
+    await waitFor(() => {
+      expect(viewport.getAttribute("data-r3f-scenario-id")).toBe("pedestrian");
+    });
+
+    workers[0]?.emit({
+      type: "simulation-frame-buffer",
+      frames: [frameEntry(frameSnapshot, 2000)]
+    });
+    await sleep(50);
+
+    expect(viewport.getAttribute("data-r3f-scenario-id")).toBe("pedestrian");
+    expect(viewport.getAttribute("data-r3f-frame-bound")).toBe("true");
   });
 
   test("surfaces non-route simulation frame load errors", async () => {
@@ -1425,6 +1574,43 @@ describe("DashboardShell", () => {
     expect(viewport.getAttribute("data-r3f-glb-vehicle-count")).toBe("5");
     expect(viewport.getAttribute("data-r3f-street-shadow-count")).toBe("6");
     expect(viewport.getAttribute("data-r3f-vehicle-silhouette-part-count")).toBe("14");
+  });
+
+  test("exposes stale live-frame telemetry without hiding safety overlays", async () => {
+    vi.stubEnv("NEXT_PUBLIC_R3F_SIMULATION_ENABLED", "true");
+    mockWebGLSupport(true);
+    vi.spyOn(performance, "now").mockReturnValue(2500);
+
+    renderDashboard({
+      simulationFrame: {
+        ...frameSnapshot,
+        source: "sumo_last_good"
+      },
+      simulationFrameEntries: [
+        {
+          frame: {
+            ...frameSnapshot,
+            source: "sumo_last_good"
+          },
+          receivedAtMs: 1000,
+          networkLatencyMs: 22,
+          capturedAtMs: Date.parse(frameSnapshot.captured_at)
+        }
+      ]
+    });
+
+    const viewport = await screen.findByTestId("r3f-simulation-viewport");
+
+    await waitFor(() => {
+      expect(viewport.getAttribute("data-r3f-frame-age-ms")).toBe("1500");
+    });
+    expect(viewport.getAttribute("data-r3f-network-latency-ms")).toBe("22");
+    expect(viewport.getAttribute("data-r3f-authoritative-hz")).toBe("10");
+    expect(viewport.getAttribute("data-r3f-frame-stale")).toBe("true");
+    expect(screen.getByTestId("r3f-frame-stale-badge").textContent).toContain(
+      "degraded"
+    );
+    expect(screen.getByText("Simulation only / No real signal control")).toBeTruthy();
   });
 
   test("uses explicit fixture queue fallback when the simulation frame is absent", async () => {

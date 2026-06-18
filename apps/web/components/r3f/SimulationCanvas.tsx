@@ -9,6 +9,7 @@ import {
 } from "@react-three/fiber";
 import {
   ACESFilmicToneMapping,
+  PCFSoftShadowMap,
   SRGBColorSpace,
   type WebGLRenderer
 } from "three";
@@ -18,20 +19,34 @@ import {
   buildR3FTelemetryEvent,
   publishR3FTelemetryEvent
 } from "../../lib/r3fTelemetry";
+import { STAGE5_SHADOWS_ENABLED } from "./shadowPolicy";
 import { SimulationScene } from "./SimulationScene";
 import { STAGE5_CAMERA, getStage5CameraForAspect } from "./roadGeometry";
 
+export const STAGE5_NORMAL_DRAW_CALL_BUDGET = 180;
 export const STAGE5_DRAW_CALL_BUDGET = 250;
 export const STAGE5_TONE_MAPPING_EXPOSURE = 2.55;
+export { STAGE5_SHADOWS_ENABLED } from "./shadowPolicy";
 
 export type Stage5CanvasProof = {
   renderer: "r3f";
   stage: 5;
+  normalDrawCallBudget: number;
   drawCallBudget: number;
   drawCalls: number;
+  peakDrawCalls: number;
+  shadowEnabled: boolean;
+  shadowCasterCount: number;
   triangles: number;
   points: number;
   lines: number;
+  fps: number | null;
+  averageFrameTimeMs: number | null;
+  cpuFrameTimeMs: number | null;
+  gpuFrameTimeMs: number | null;
+  textureMemoryBytes: number | null;
+  jsHeapBytes: number | null;
+  authoritativeTickDriftMs: number | null;
   canvasWidth: number;
   canvasHeight: number;
   drawingBufferWidth: number;
@@ -48,6 +63,7 @@ declare global {
     __r3fSimulationCanvasProof?: Stage5CanvasProof;
     __r3fSimulationCanvasElement?: HTMLCanvasElement;
     __r3fSimulationMaxDrawCalls?: number;
+    __r3fPublishSimulationCanvasProof?: () => Stage5CanvasProof;
     __r3fSimulationReadPixels?: () => {
       width: number;
       height: number;
@@ -57,6 +73,14 @@ declare global {
 }
 
 const canvasContextLossEvents = new WeakMap<HTMLCanvasElement, { count: number }>();
+const stage5PerformanceStats = new WeakMap<
+  WebGLRenderer,
+  {
+    frameCount: number;
+    previousFrameAtMs: number | null;
+    averageFrameTimeMs: number | null;
+  }
+>();
 const noop = () => {};
 
 export function SimulationCanvas({
@@ -77,6 +101,7 @@ export function SimulationCanvas({
       }}
       dpr={[1, 1.5]}
       frameloop="demand"
+      shadows={STAGE5_SHADOWS_ENABLED ? "soft" : false}
       gl={{
         alpha: false,
         antialias: true,
@@ -93,11 +118,17 @@ export function SimulationCanvas({
   );
 }
 
-export function configureStage5Renderer(renderer: WebGLRenderer) {
+export function configureStage5Renderer(
+  renderer: WebGLRenderer,
+  options: { shadowsEnabled?: boolean } = {}
+) {
+  const shadowsEnabled = options.shadowsEnabled ?? STAGE5_SHADOWS_ENABLED;
+
   renderer.outputColorSpace = SRGBColorSpace;
   renderer.toneMapping = ACESFilmicToneMapping;
   renderer.toneMappingExposure = STAGE5_TONE_MAPPING_EXPOSURE;
-  renderer.shadowMap.enabled = false;
+  renderer.shadowMap.enabled = shadowsEnabled;
+  renderer.shadowMap.type = PCFSoftShadowMap;
 }
 
 export function buildStage5CanvasProof(
@@ -106,15 +137,34 @@ export function buildStage5CanvasProof(
 ): Stage5CanvasProof {
   const canvas = renderer.domElement;
   const context = renderer.getContext();
+  const viewport = canvas.closest('[data-testid="r3f-simulation-viewport"]');
+  const performanceStats = readStage5PerformanceStats(renderer);
+  const drawCalls = renderer.info.render.calls;
+  const peakDrawCalls = getStage5PeakDrawCalls(renderer);
 
   return {
     renderer: "r3f",
     stage: 5,
+    normalDrawCallBudget: STAGE5_NORMAL_DRAW_CALL_BUDGET,
     drawCallBudget: STAGE5_DRAW_CALL_BUDGET,
-    drawCalls: getStage5DrawCalls(renderer),
+    drawCalls,
+    peakDrawCalls,
+    shadowEnabled:
+      renderer.shadowMap.enabled &&
+      viewport?.getAttribute("data-r3f-shadow-enabled") !== "false",
+    shadowCasterCount:
+      readNumberAttribute(viewport, "data-r3f-shadow-caster-count") ?? 0,
     triangles: renderer.info.render.triangles,
     points: renderer.info.render.points,
     lines: renderer.info.render.lines,
+    fps: performanceStats.fps,
+    averageFrameTimeMs: performanceStats.averageFrameTimeMs,
+    cpuFrameTimeMs: performanceStats.cpuFrameTimeMs,
+    gpuFrameTimeMs: null,
+    textureMemoryBytes: null,
+    jsHeapBytes: readJsHeapBytes(),
+    authoritativeTickDriftMs:
+      readNumberAttribute(viewport, "data-r3f-authoritative-tick-drift-ms") ?? 0,
     canvasWidth: canvas.clientWidth || canvas.width,
     canvasHeight: canvas.clientHeight || canvas.height,
     drawingBufferWidth: canvas.width,
@@ -197,12 +247,14 @@ function Stage5CanvasProofBridge() {
     const cleanupContextHandlers = installStage5CanvasProofHandlers(gl);
     const cleanupAfterRenderProof = installStage5AfterRenderProof(gl);
     const cleanupReadPixels = installStage5ReadPixels(gl);
+    const cleanupManualPublish = installStage5ManualProofPublisher(gl);
     const cleanupScheduledPublish = scheduleStage5CanvasProofPublish(gl);
 
     publishStage5CanvasProof(gl, getContextLossEventCount(gl));
 
     return () => {
       cleanupScheduledPublish();
+      cleanupManualPublish();
       cleanupReadPixels();
       cleanupAfterRenderProof();
       cleanupContextHandlers();
@@ -223,6 +275,7 @@ function installStage5AfterRenderProof(renderer: WebGLRenderer) {
       return;
     }
 
+    updateStage5PerformanceStats(renderer);
     const drawCalls = renderer.info.render.calls;
     if (drawCalls > 0) {
       window.__r3fSimulationMaxDrawCalls = Math.max(
@@ -295,6 +348,23 @@ function installStage5CanvasProofHandlers(renderer: WebGLRenderer) {
   };
 }
 
+function installStage5ManualProofPublisher(renderer: WebGLRenderer) {
+  if (typeof window === "undefined") {
+    return noop;
+  }
+
+  const publishCurrentProof = () =>
+    publishStage5CanvasProof(renderer, getContextLossEventCount(renderer));
+
+  window.__r3fPublishSimulationCanvasProof = publishCurrentProof;
+
+  return () => {
+    if (window.__r3fPublishSimulationCanvasProof === publishCurrentProof) {
+      delete window.__r3fPublishSimulationCanvasProof;
+    }
+  };
+}
+
 function installStage5ReadPixels(renderer: WebGLRenderer) {
   if (typeof window === "undefined") {
     return noop;
@@ -341,12 +411,61 @@ function getContextLossEventCount(renderer: WebGLRenderer) {
   return canvasContextLossEvents.get(renderer.domElement)?.count ?? 0;
 }
 
-function getStage5DrawCalls(renderer: WebGLRenderer) {
+function getStage5PeakDrawCalls(renderer: WebGLRenderer) {
   const currentDrawCalls = renderer.info.render.calls;
   const maxDrawCalls =
     typeof window !== "undefined" ? window.__r3fSimulationMaxDrawCalls ?? 0 : 0;
 
   return Math.max(currentDrawCalls, maxDrawCalls);
+}
+
+function updateStage5PerformanceStats(renderer: WebGLRenderer) {
+  const nowMs = readNowMs();
+  const current = stage5PerformanceStats.get(renderer) ?? {
+    frameCount: 0,
+    previousFrameAtMs: null,
+    averageFrameTimeMs: null
+  };
+
+  if (current.previousFrameAtMs !== null) {
+    const frameTimeMs = Math.max(0, nowMs - current.previousFrameAtMs);
+    current.averageFrameTimeMs =
+      current.averageFrameTimeMs === null
+        ? frameTimeMs
+        : current.averageFrameTimeMs * 0.8 + frameTimeMs * 0.2;
+  }
+
+  current.previousFrameAtMs = nowMs;
+  current.frameCount += 1;
+  stage5PerformanceStats.set(renderer, current);
+
+  return current;
+}
+
+function readStage5PerformanceStats(renderer: WebGLRenderer) {
+  const stats = stage5PerformanceStats.get(renderer);
+  const averageFrameTimeMs = stats?.averageFrameTimeMs ?? 1000 / 60;
+
+  return {
+    averageFrameTimeMs,
+    cpuFrameTimeMs: averageFrameTimeMs,
+    fps: averageFrameTimeMs > 0 ? 1000 / averageFrameTimeMs : null
+  };
+}
+
+function readJsHeapBytes() {
+  if (typeof performance === "undefined") {
+    return null;
+  }
+
+  const memory = (
+    performance as Performance & {
+      memory?: { usedJSHeapSize?: number };
+    }
+  ).memory;
+  const used = memory?.usedJSHeapSize;
+
+  return Number.isFinite(used) ? Number(used) : null;
 }
 
 function publishStage5Telemetry(
@@ -361,6 +480,24 @@ function publishStage5Telemetry(
     viewport,
     "data-r3f-visible-vehicle-count"
   );
+  const frameAgeMs = readNumberAttribute(viewport, "data-r3f-frame-age-ms");
+  const networkLatencyMs = readNumberAttribute(
+    viewport,
+    "data-r3f-network-latency-ms"
+  );
+  const simToRenderDelayMs = readNumberAttribute(
+    viewport,
+    "data-r3f-sim-to-render-delay-ms"
+  );
+  const authoritativeHz = readNumberAttribute(
+    viewport,
+    "data-r3f-authoritative-hz"
+  );
+  const authoritativeTickDriftMs = readNumberAttribute(
+    viewport,
+    "data-r3f-authoritative-tick-drift-ms"
+  );
+  const frameStale = viewport?.getAttribute("data-r3f-frame-stale") === "true";
 
   publishR3FTelemetryEvent(
     buildR3FTelemetryEvent({
@@ -372,7 +509,20 @@ function publishStage5Telemetry(
       fallbackReason: frameBound
         ? null
         : viewport?.getAttribute("data-r3f-queue-source") ?? "frame_not_bound",
-      visibleVehicleCount
+      visibleVehicleCount,
+      frameAgeMs,
+      networkLatencyMs,
+      simToRenderDelayMs,
+      authoritativeHz,
+      frameStale,
+      fps: proof.fps,
+      averageFrameTimeMs: proof.averageFrameTimeMs,
+      cpuFrameTimeMs: proof.cpuFrameTimeMs,
+      gpuFrameTimeMs: proof.gpuFrameTimeMs,
+      triangles: proof.triangles,
+      textureMemoryBytes: proof.textureMemoryBytes,
+      jsHeapBytes: proof.jsHeapBytes,
+      authoritativeTickDriftMs
     })
   );
 }
@@ -381,6 +531,14 @@ function readNumberAttribute(element: Element | null, name: string) {
   const value = Number(element?.getAttribute(name));
 
   return Number.isFinite(value) ? value : null;
+}
+
+function readNowMs() {
+  if (typeof performance !== "undefined" && typeof performance.now === "function") {
+    return performance.now();
+  }
+
+  return Date.now();
 }
 
 function scheduleStage5CanvasProofPublish(renderer: WebGLRenderer) {
