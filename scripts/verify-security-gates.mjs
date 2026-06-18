@@ -11,13 +11,7 @@ const apiDir = path.join(repoRoot, "apps", "api");
 const securityReportPath = path.join(repoRoot, "artifacts", "r3f-security-gates.json");
 const pipAuditRequirementsFile = ".pip-audit-requirements.txt";
 const pipAuditRequirementsPath = path.join(apiDir, pipAuditRequirementsFile);
-const npmCliPath = path.join(
-  path.dirname(process.execPath),
-  "node_modules",
-  "npm",
-  "bin",
-  "npm-cli.js"
-);
+const npmExecPath = process.env.npm_execpath;
 
 const results = [];
 const failures = [];
@@ -37,21 +31,18 @@ const secretPatterns = [
   }
 ];
 
-runCommandCheck("root_npm_audit_moderate", process.execPath, [
-  npmCliPath,
+runNpmCheck("root_npm_audit_moderate", [
   "audit",
   "--audit-level=moderate"
 ]);
-runCommandCheck("web_workspace_npm_audit_moderate", process.execPath, [
-  npmCliPath,
+runNpmCheck("web_workspace_npm_audit_moderate", [
   "--workspace",
   "apps/web",
   "audit",
   "--audit-level=moderate"
 ]);
 runPythonDependencyAudit();
-runCommandCheck("cyclonedx_sbom_generation", process.execPath, [
-  npmCliPath,
+runNpmCheck("cyclonedx_sbom_generation", [
   "sbom",
   "--sbom-format",
   "cyclonedx",
@@ -79,11 +70,12 @@ if (failures.length > 0) {
   process.exitCode = 1;
 }
 
-function runCommandCheck(name, command, args) {
+function runCommandCheck(name, command, args, options = {}) {
   const result = spawnSync(command, args, {
     cwd: repoRoot,
     encoding: "utf8",
-    maxBuffer: 10 * 1024 * 1024
+    maxBuffer: 10 * 1024 * 1024,
+    ...options
   });
   const passed = result.status === 0;
 
@@ -100,6 +92,17 @@ function runCommandCheck(name, command, args) {
   if (!passed) {
     failures.push(`${name}: ${[command, ...args].join(" ")} exited ${result.status}`);
   }
+}
+
+function runNpmCheck(name, args) {
+  if (npmExecPath) {
+    runCommandCheck(name, process.execPath, [npmExecPath, ...args]);
+    return;
+  }
+
+  runCommandCheck(name, process.platform === "win32" ? "npm.cmd" : "npm", args, {
+    shell: process.platform === "win32"
+  });
 }
 
 function runPythonDependencyAudit() {
