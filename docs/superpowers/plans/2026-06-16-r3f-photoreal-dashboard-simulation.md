@@ -1518,7 +1518,7 @@ Expected: optimization check, asset verifier, dashboard browser proof, web build
 - Create: `.github/pull_request_template.md`
 - Modify: `.gitignore`
 
-- [ ] **Step 1: Add client telemetry bridge**
+- [x] **Step 1: Add client telemetry bridge**
 
 Create `apps/web/lib/r3fTelemetry.ts` with a narrow browser helper that can emit:
 
@@ -1534,7 +1534,7 @@ visible vehicle count
 
 In `SimulationCanvas.tsx`, call the helper from existing proof/context-loss paths. In development and tests, expose the event on `window` for the verifier. Do not add a production monitoring vendor without explicit user approval.
 
-- [ ] **Step 2: Verify telemetry in browser proof**
+- [x] **Step 2: Verify telemetry in browser proof**
 
 Update `verify-r3f-dashboard.mjs` so `artifacts/r3f-dashboard-details.json` contains:
 
@@ -1552,7 +1552,7 @@ Update `verify-r3f-dashboard.mjs` so `artifacts/r3f-dashboard-details.json` cont
 
 The verifier must fail if telemetry is absent while the R3F renderer is mounted.
 
-- [ ] **Step 3: Add security and audit gate**
+- [x] **Step 3: Add security and audit gate**
 
 Create `scripts/verify-security-gates.mjs` and root script:
 
@@ -1573,7 +1573,7 @@ tracked-file scan for obvious private keys or API tokens in source/docs/scripts
 
 For Python audit, SBOM generation, or dedicated secret-scanning tools, the script must report `blocked_requires_tooling` with the exact missing command. Do not install `pip-audit`, SBOM generators, or secret scanners without explicit user approval.
 
-- [ ] **Step 4: Define artifact retention and generated-output hygiene**
+- [x] **Step 4: Define artifact retention and generated-output hygiene**
 
 Create `docs/ops/r3f-artifact-retention.md` that classifies:
 
@@ -1586,7 +1586,7 @@ test-results: generated output, not source of truth
 
 Update `.gitignore` to prevent new accidental generated-output churn while preserving already tracked canonical proof artifacts. Do not delete or move existing tracked artifacts without explicit user approval.
 
-- [ ] **Step 5: Add release and PR discipline**
+- [x] **Step 5: Add release and PR discipline**
 
 Create `docs/release/r3f-stage-checklist.md` with:
 
@@ -1613,7 +1613,7 @@ generated-output hygiene check
 
 Creating Git tags, GitHub releases, changing branch protection, or opening PRs are external side effects and require explicit user approval at execution time.
 
-- [ ] **Step 6: Verification**
+- [x] **Step 6: Verification**
 
 Run:
 
@@ -1633,6 +1633,16 @@ default verify passes
 diff check passes
 artifact policy and release checklist exist
 ```
+
+Stage 6F proof, final primary-run browser artifact generated at `2026-06-18T01:48:44.873Z`:
+
+- `npm --workspace apps/web run test -- lib/r3fTelemetry.test.ts`: 1 test passed after the initial RED missing-module failure.
+- `npm --workspace apps/web run test -- components/r3f/SimulationCanvas.test.tsx`: 6 tests passed after the initial RED missing-telemetry failure.
+- `npm run verify:security`: passed available no-install checks; reported `blocked_requires_tooling` for `python -m pip_audit`, `npx @cyclonedx/cyclonedx-npm --output-file artifacts/sbom.json`, and `gitleaks detect --source . --no-git`.
+- `node scripts/verify-r3f-dashboard.mjs`: passed and wrote telemetry into `artifacts/r3f-dashboard-details.json`.
+- `npm run verify`: passed API tests, web tests, web build, asset verifier, dashboard verifier, and `git diff --check` with line-ending warnings only.
+- Telemetry evidence: `renderer_mode=r3f_photoreal_stage5`, `snapshot_source=simulation_snapshot_fixture`, `frame_bound=true`, `draw_call_count=94`, `webgl_context_loss_count=0`, `fallback_reason=null`, `visible_vehicle_count=160`.
+- Added artifact retention docs, release checklist, PR template, standalone security gate, and generated-output ignore rules. This is operational proof only; it does not create releases, tags, branch protection, production monitoring vendors, live SUMO/Tarcl binding, or real signal control.
 
 ## Final Stage 6 Readiness Gate
 

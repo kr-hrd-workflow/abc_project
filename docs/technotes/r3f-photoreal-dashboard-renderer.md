@@ -48,6 +48,7 @@ Photorealistic rendering remains required. Runtime evidence must come from actua
 | Stage 6C default gates | implemented, verified, gated | Root `npm run verify` and `.github/workflows/r3f-dashboard-verify.yml` include R3F asset and dashboard proof. |
 | Stage 6D docs reconciliation | implemented, verified | README, runbook, technote, and plan now use implemented/verified/gated wording without production-ready claims. |
 | Stage 6E runtime assets, compression checks, and licensing | implemented, verified, gated, not live truth | Manifest-backed assets are used by explicit ID in the runtime scene; optimizer, asset verifier, web build, and browser proof passed locally. |
+| Stage 6F operations, telemetry, security, and artifact hygiene | implemented, verified | Dashboard telemetry is captured in browser proof, no-install security checks run, blocked external tooling is reported explicitly, and artifact/release hygiene docs exist. |
 
 ## Stage 4 And 4.1 Asset Pipeline Evidence
 
@@ -122,6 +123,30 @@ Fresh browser proof artifacts:
 - `artifacts/r3f-dashboard-details.json`
 
 Human-view inspection compared the fresh desktop/mobile canvas crops with the committed Stage 5 baseline. The Stage 6E crops retain the wet road and facade lighting while adding visibly broader vehicle families, denser manifest-backed traffic silhouettes with per-instance color variation, street furniture, trees, curb details, and segmented city-edge massing. This is runtime browser evidence, not Image Gen or asset-only proof.
+
+## Stage 6F Operations Evidence
+
+Stage 6F adds operational proof surfaces without adding a production monitoring vendor, release automation, real SUMO/Tarcl binding, or real signal control.
+
+Runtime telemetry is published from the existing R3F canvas proof path and captured in `artifacts/r3f-dashboard-details.json`. Fresh primary-run proof generated at `2026-06-18T01:48:44.873Z` recorded:
+
+- `renderer_mode=r3f_photoreal_stage5`
+- `snapshot_source=simulation_snapshot_fixture`
+- `frame_bound=true`
+- `draw_call_count=94`
+- `webgl_context_loss_count=0`
+- `fallback_reason=null`
+- `visible_vehicle_count=160`
+
+Validation:
+
+- `npm --workspace apps/web run test -- lib/r3fTelemetry.test.ts`: 1 test passed after the RED missing-module failure.
+- `npm --workspace apps/web run test -- components/r3f/SimulationCanvas.test.tsx`: 6 tests passed after the RED missing-telemetry failure.
+- `npm run verify:security`: passed available no-install checks and reported blocked tooling commands for Python audit, SBOM generation, and a dedicated secret scanner.
+- `node scripts/verify-r3f-dashboard.mjs`: passed with telemetry evidence in the details JSON.
+- `npm run verify`: passed API tests, web tests, web build, R3F asset verification, dashboard browser proof, and `git diff --check` with line-ending warnings only.
+
+Operational docs now classify proof artifacts, details JSON, Playwright/test output, and generated scratch files. Release checklist and PR template require verification commands, browser artifacts, truth-source labels, no real signal control claim, asset license/provenance evidence, and generated-output hygiene.
 
 ## Stage 4.1 Texture And Decal Provenance
 

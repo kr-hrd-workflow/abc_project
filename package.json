@@ -12,6 +12,7 @@
     "codex:agent": "bash scripts/codex-agent.sh",
     "verify:r3f-assets": "node scripts/verify-r3f-assets.mjs",
     "verify:r3f-dashboard": "node scripts/verify-r3f-dashboard.mjs",
+    "verify:security": "node scripts/verify-security-gates.mjs",
     "verify": "npm run test:api && npm run test:web && npm run build:web && npm run verify:r3f-assets && npm run verify:r3f-dashboard && git diff --check"
   },
   "workspaces": [

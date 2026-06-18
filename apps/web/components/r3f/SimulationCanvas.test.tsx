@@ -111,6 +111,14 @@ describe("SimulationCanvas Stage 5 telemetry", () => {
 
   test("configures restrained renderer settings and publishes draw-call proof without React state", () => {
     const renderer = createRenderer();
+    const viewport = document.createElement("div");
+    viewport.dataset.testid = "r3f-simulation-viewport";
+    viewport.setAttribute("data-r3f-renderer-mode", "r3f_photoreal_stage5");
+    viewport.setAttribute("data-r3f-snapshot-source", "simulation_snapshot_fixture");
+    viewport.setAttribute("data-r3f-frame-bound", "true");
+    viewport.setAttribute("data-r3f-visible-vehicle-count", "160");
+    viewport.append(renderer.domElement);
+    document.body.append(viewport);
 
     configureStage5Renderer(renderer);
     const proof = publishStage5CanvasProof(renderer);
@@ -137,6 +145,17 @@ describe("SimulationCanvas Stage 5 telemetry", () => {
       })
     );
     expect(window.__r3fSimulationCanvasProof).toBe(proof);
+    expect(window.__r3fTelemetryEvent).toEqual(
+      expect.objectContaining({
+        renderer_mode: "r3f_photoreal_stage5",
+        snapshot_source: "simulation_snapshot_fixture",
+        frame_bound: true,
+        draw_call_count: 128,
+        webgl_context_loss_count: 0,
+        fallback_reason: null,
+        visible_vehicle_count: 160
+      })
+    );
   });
 
   test("marks context loss in the browser-readable proof object", () => {

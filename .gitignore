@@ -15,6 +15,9 @@ out/
 dist/
 build/
 coverage/
+.nyc_output/
+playwright-report/
+test-results/
 .turbo/
 .vercel/
 *.tsbuildinfo
@@ -42,6 +45,13 @@ media/
 /artifacts/*
 !/artifacts/r3f-stage4.1-asset-realism-contact-sheet.png
 !/artifacts/r3f-stage4.1-glb-turntable-contact-sheet.png
+!/artifacts/r3f-dashboard-desktop.png
+!/artifacts/r3f-dashboard-mobile.png
+!/artifacts/r3f-dashboard-desktop-canvas.png
+!/artifacts/r3f-dashboard-mobile-canvas.png
+!/artifacts/r3f-dashboard-mobile-overlays.png
+!/artifacts/r3f-dashboard-webgl-off.png
+!/artifacts/r3f-dashboard-details.json
 reports/generated/
 models/
 *.pt

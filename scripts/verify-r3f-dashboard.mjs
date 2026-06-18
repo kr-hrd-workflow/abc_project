@@ -72,6 +72,7 @@ const details = {
   desktop: null,
   mobile: null,
   fallback: null,
+  telemetry: null,
   console_errors: [],
   console_failures: [],
   webgl_context_loss_errors: [],
@@ -884,6 +885,11 @@ async function collectRendererProof(page) {
       window.__r3fDashboardProof ??
       window.__R3F_RENDERER_INFO__ ??
       null;
+    const telemetry =
+      typeof window.__r3fTelemetryEvent === "object" &&
+      window.__r3fTelemetryEvent !== null
+        ? window.__r3fTelemetryEvent
+        : null;
     const rendererInfo =
       appProof?.rendererInfo ??
       appProof?.renderer?.info ??
@@ -990,6 +996,18 @@ async function collectRendererProof(page) {
           : "webgl_draw_call_instrumentation",
       rendererInfoReported: Boolean(rendererInfo) || appProof?.renderer === "r3f",
       webglContextLossEvents: contextLossEvents,
+      telemetry: telemetry
+        ? {
+            renderer_mode: telemetry.renderer_mode ?? null,
+            snapshot_source: telemetry.snapshot_source ?? null,
+            frame_bound: telemetry.frame_bound ?? null,
+            draw_call_count: telemetry.draw_call_count ?? null,
+            webgl_context_loss_count: telemetry.webgl_context_loss_count ?? null,
+            fallback_reason: telemetry.fallback_reason ?? null,
+            visible_vehicle_count: telemetry.visible_vehicle_count ?? null,
+            emitted_at: telemetry.emitted_at ?? null
+          }
+        : null,
       appProof: appProof
         ? {
             renderer: appProof.renderer ?? null,
@@ -1925,6 +1943,7 @@ async function runBrowserVerification(baseUrl) {
       ...rendererProof,
       preCapture: desktopPreCaptureRendererProof
     };
+    details.telemetry = rendererProof.telemetry;
     details.desktop = {
       viewport: desktopViewport,
       r3f_ready: desktopR3FReady,
@@ -2100,6 +2119,7 @@ function addFinalAssertions() {
   const photorealism = details.photorealism_check ?? {};
   const composition = details.composition_check ?? {};
   const mobileComposition = details.mobile_composition_check ?? {};
+  const telemetry = details.telemetry ?? {};
 
   addAssertion(
     "canvas has non-background pixels",
@@ -2167,6 +2187,21 @@ function addFinalAssertions() {
       trafficDensityMode: renderer.trafficDensityMode ?? null,
       fallbackUsed: renderer.fallbackUsed ?? null
     })}`
+  );
+  addAssertion(
+    "R3F telemetry proof is reported when renderer is mounted",
+    desktop.r3f_ready !== true ||
+      (
+        telemetry.renderer_mode === renderer.rendererMode &&
+        telemetry.snapshot_source === renderer.snapshot_source &&
+        telemetry.frame_bound === renderer.frame_bound &&
+        Number.isFinite(telemetry.draw_call_count) &&
+        telemetry.draw_call_count > 0 &&
+        telemetry.webgl_context_loss_count === renderer.webglContextLossEvents &&
+        telemetry.fallback_reason === null &&
+        telemetry.visible_vehicle_count === renderer.visibleVehicleCount
+      ),
+    JSON.stringify(telemetry)
   );
   addAssertion(
     "R3F renderer uses frame-backed simulation snapshot",

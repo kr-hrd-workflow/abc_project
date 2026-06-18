@@ -14,6 +14,10 @@ import {
 } from "three";
 
 import type { SceneSnapshot } from "./buildSceneSnapshot";
+import {
+  buildR3FTelemetryEvent,
+  publishR3FTelemetryEvent
+} from "../../lib/r3fTelemetry";
 import { SimulationScene } from "./SimulationScene";
 import { STAGE5_CAMERA, getStage5CameraForAspect } from "./roadGeometry";
 
@@ -144,6 +148,7 @@ export function publishStage5CanvasProof(
     }
 
     window.__r3fSimulationCanvasProof = proof;
+    publishStage5Telemetry(renderer, proof);
   }
 
   return proof;
@@ -256,6 +261,7 @@ function clearStage5CanvasCurrent(renderer: WebGLRenderer) {
     delete window.__r3fSimulationCanvasElement;
     delete window.__r3fSimulationCanvasProof;
     delete window.__r3fSimulationMaxDrawCalls;
+    delete window.__r3fTelemetryEvent;
   }
 }
 
@@ -341,6 +347,40 @@ function getStage5DrawCalls(renderer: WebGLRenderer) {
     typeof window !== "undefined" ? window.__r3fSimulationMaxDrawCalls ?? 0 : 0;
 
   return Math.max(currentDrawCalls, maxDrawCalls);
+}
+
+function publishStage5Telemetry(
+  renderer: WebGLRenderer,
+  proof: Stage5CanvasProof
+) {
+  const viewport = renderer.domElement.closest(
+    '[data-testid="r3f-simulation-viewport"]'
+  );
+  const frameBound = viewport?.getAttribute("data-r3f-frame-bound") === "true";
+  const visibleVehicleCount = readNumberAttribute(
+    viewport,
+    "data-r3f-visible-vehicle-count"
+  );
+
+  publishR3FTelemetryEvent(
+    buildR3FTelemetryEvent({
+      rendererMode: viewport?.getAttribute("data-r3f-renderer-mode") ?? null,
+      snapshotSource: viewport?.getAttribute("data-r3f-snapshot-source") ?? null,
+      frameBound,
+      drawCallCount: Number.isFinite(proof.drawCalls) ? proof.drawCalls : null,
+      webglContextLossCount: proof.contextLossEvents,
+      fallbackReason: frameBound
+        ? null
+        : viewport?.getAttribute("data-r3f-queue-source") ?? "frame_not_bound",
+      visibleVehicleCount
+    })
+  );
+}
+
+function readNumberAttribute(element: Element | null, name: string) {
+  const value = Number(element?.getAttribute(name));
+
+  return Number.isFinite(value) ? value : null;
 }
 
 function scheduleStage5CanvasProofPublish(renderer: WebGLRenderer) {
