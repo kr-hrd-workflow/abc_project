@@ -3,7 +3,6 @@
 import { Suspense, useEffect, useMemo, useRef } from "react";
 import { useGLTF } from "@react-three/drei";
 import {
-  AdditiveBlending,
   BufferGeometry,
   Color,
   DoubleSide,
@@ -114,8 +113,8 @@ export const STAGE5_TRAFFIC_VEHICLE_SILHOUETTE_PARTS = [
   { name: "wheel", geometry: "cylinderGeometry", visible: true },
   { name: "headlight", geometry: "sphereGeometry", visible: true },
   { name: "taillight", geometry: "sphereGeometry", visible: true },
-  { name: "headlightGlow", geometry: "planeGeometry", visible: true },
-  { name: "taillightGlow", geometry: "planeGeometry", visible: true }
+  { name: "headlightGlow", geometry: "planeGeometry", visible: false },
+  { name: "taillightGlow", geometry: "planeGeometry", visible: false }
 ] as const;
 
 type Stage5TrafficVehiclePartName =
@@ -695,8 +694,6 @@ function Stage5TrafficVehicleInstances({
   const contactShadowRef = useRef<InstancedMesh>(null);
   const headlightRef = useRef<InstancedMesh>(null);
   const taillightRef = useRef<InstancedMesh>(null);
-  const headlightGlowRef = useRef<InstancedMesh>(null);
-  const taillightGlowRef = useRef<InstancedMesh>(null);
   const tempObjectRef = useRef(new Object3D());
 
   useEffect(() => {
@@ -868,27 +865,6 @@ function Stage5TrafficVehicleInstances({
       });
     });
 
-    vehicles.forEach((vehicle, index) => {
-      setVehiclePartMatrix({
-        mesh: headlightGlowRef.current,
-        tempObject,
-        vehicle,
-        index,
-        localOffset: [0, -vehicle.size[1] * 0.46, -vehicle.size[2] * 0.72],
-        localRotation: [-Math.PI / 2, 0, 0],
-        scale: [vehicle.size[0] * 0.92, vehicle.size[2] * 0.62, 1]
-      });
-      setVehiclePartMatrix({
-        mesh: taillightGlowRef.current,
-        tempObject,
-        vehicle,
-        index,
-        localOffset: [0, -vehicle.size[1] * 0.46, vehicle.size[2] * 0.62],
-        localRotation: [-Math.PI / 2, 0, 0],
-        scale: [vehicle.size[0] * 0.84, vehicle.size[2] * 0.42, 1]
-      });
-    });
-
     for (const mesh of [
       bodyRef.current,
       cabinRef.current,
@@ -902,9 +878,7 @@ function Stage5TrafficVehicleInstances({
       wheelRef.current,
       contactShadowRef.current,
       headlightRef.current,
-      taillightRef.current,
-      headlightGlowRef.current,
-      taillightGlowRef.current
+      taillightRef.current
     ]) {
       if (isThreeInstancedMesh(mesh)) {
         mesh.instanceMatrix.needsUpdate = true;
@@ -1114,34 +1088,6 @@ function Stage5TrafficVehicleInstances({
           emissive="#ff2f2f"
           emissiveIntensity={1.8}
           roughness={0.28}
-          toneMapped={false}
-        />
-      </instancedMesh>
-      <instancedMesh
-        ref={headlightGlowRef}
-        args={[undefined, undefined, vehicles.length]}
-      >
-        <Stage5VehiclePartGeometry partName="headlightGlow" />
-        <meshBasicMaterial
-          color="#d5f2ff"
-          transparent
-          opacity={0.62}
-          depthWrite={false}
-          blending={AdditiveBlending}
-          toneMapped={false}
-        />
-      </instancedMesh>
-      <instancedMesh
-        ref={taillightGlowRef}
-        args={[undefined, undefined, vehicles.length]}
-      >
-        <Stage5VehiclePartGeometry partName="taillightGlow" />
-        <meshBasicMaterial
-          color="#ff8a72"
-          transparent
-          opacity={0.58}
-          depthWrite={false}
-          blending={AdditiveBlending}
           toneMapped={false}
         />
       </instancedMesh>

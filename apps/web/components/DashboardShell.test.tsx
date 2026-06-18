@@ -1145,9 +1145,7 @@ describe("DashboardShell", () => {
       "wheelArch",
       "wheel",
       "headlight",
-      "taillight",
-      "headlightGlow",
-      "taillightGlow"
+      "taillight"
     ]);
     expect(visibleGeometryTypes).not.toContain("boxGeometry");
     expect(visibleGeometryTypes).toContain("extrudeGeometry");
@@ -1573,7 +1571,7 @@ describe("DashboardShell", () => {
     ).toBeGreaterThan(0);
     expect(viewport.getAttribute("data-r3f-glb-vehicle-count")).toBe("5");
     expect(viewport.getAttribute("data-r3f-street-shadow-count")).toBe("6");
-    expect(viewport.getAttribute("data-r3f-vehicle-silhouette-part-count")).toBe("14");
+    expect(viewport.getAttribute("data-r3f-vehicle-silhouette-part-count")).toBe("12");
   });
 
   test("exposes stale live-frame telemetry without hiding safety overlays", async () => {

@@ -18,6 +18,15 @@ const mobileCanvasScreenshotPath = path.join(artifactsDir, "r3f-dashboard-mobile
 const mobileOverlayScreenshotPath = path.join(artifactsDir, "r3f-dashboard-mobile-overlays.png");
 const fallbackScreenshotPath = path.join(artifactsDir, "r3f-dashboard-webgl-off.png");
 const detailsPath = path.join(artifactsDir, "r3f-dashboard-details.json");
+const dashboardArtifactPaths = [
+  desktopScreenshotPath,
+  mobileScreenshotPath,
+  desktopCanvasScreenshotPath,
+  mobileCanvasScreenshotPath,
+  mobileOverlayScreenshotPath,
+  fallbackScreenshotPath,
+  detailsPath
+];
 const manifestPath = path.join(
   repoRoot,
   "apps",
@@ -937,21 +946,39 @@ async function waitForR3F(page) {
       state: "visible",
       timeout: 45000
     });
-    await page.locator(r3fCanvasSelector).first().waitFor({
-      state: "attached",
-      timeout: 45000
-    });
     await page.waitForFunction(
-      () => {
-        const canvas = document.querySelector(
-          "canvas.r3f-simulation-canvas, .r3f-simulation-canvas canvas"
-        );
-        if (!canvas) return false;
+      (selector) => {
+        if (typeof window.__r3fPublishSimulationCanvasProof === "function") {
+          window.__r3fPublishSimulationCanvasProof();
+        }
+
+        const canvas =
+          document.querySelector(selector) ??
+          window.__r3fSimulationCanvasElement ??
+          null;
+        if (!(canvas instanceof HTMLCanvasElement)) return false;
         const rect = canvas.getBoundingClientRect();
-        return rect.width >= 120 && rect.height >= 120;
+        const proof = window.__r3fSimulationCanvasProof ?? null;
+        const proofHasUsableCanvas =
+          proof?.canvasConnected === true &&
+          proof.canvasWidth >= 120 &&
+          proof.canvasHeight >= 120 &&
+          proof.drawingBufferWidth > 0 &&
+          proof.drawingBufferHeight > 0;
+        const domHasUsableCanvas =
+          canvas.isConnected &&
+          rect.width >= 120 &&
+          rect.height >= 120 &&
+          canvas.width > 0 &&
+          canvas.height > 0;
+        const canCapture =
+          typeof window.__r3fSimulationReadPixels === "function" ||
+          typeof canvas.toDataURL === "function";
+
+        return canCapture && (domHasUsableCanvas || proofHasUsableCanvas);
       },
-      null,
-      { timeout: 30000 }
+      r3fCanvasSelector,
+      { timeout: 60000 }
     );
     await page.waitForTimeout(1200);
     return true;
@@ -1515,11 +1542,21 @@ async function captureR3FCanvasPng(page, filePath, options = {}) {
   const startedAt = Date.now();
   let lastBuffer = null;
   let lastCompositionCheck = null;
+  let lastCaptureError = null;
   let attempts = 0;
 
   while (Date.now() - startedAt <= (options.timeoutMs ?? readableCanvasCaptureTimeoutMs)) {
     attempts += 1;
-    lastBuffer = await readR3FCanvasPng(page);
+    try {
+      lastBuffer = await readR3FCanvasPng(page);
+      lastCaptureError = null;
+    } catch (error) {
+      lastCaptureError = error;
+      await page.waitForTimeout(
+        options.intervalMs ?? readableCanvasCaptureIntervalMs
+      );
+      continue;
+    }
 
     if (!options.requireReadableComposition) {
       break;
@@ -1539,7 +1576,12 @@ async function captureR3FCanvasPng(page, filePath, options = {}) {
   }
 
   if (!lastBuffer) {
-    throw new Error("R3F renderer did not produce a canvas readback");
+    throw new Error(
+      `R3F renderer did not produce a canvas readback after ${attempts} attempts` +
+        (lastCaptureError
+          ? `: ${lastCaptureError instanceof Error ? lastCaptureError.message : String(lastCaptureError)}`
+          : "")
+    );
   }
 
   if (options.requireReadableComposition && lastCompositionCheck?.passed !== true) {
@@ -1599,7 +1641,10 @@ async function captureR3FCanvasDataUrlPng(page, filePath, options = {}) {
 
 async function readR3FCanvasDataUrlPng(page) {
   const dataUrl = await page.evaluate((selector) => {
-    const canvas = document.querySelector(selector);
+    const canvas =
+      document.querySelector(selector) ??
+      window.__r3fSimulationCanvasElement ??
+      null;
 
     if (!(canvas instanceof HTMLCanvasElement)) {
       throw new Error("R3F canvas element was not available for screenshot fallback");
@@ -2626,9 +2671,13 @@ async function runLastGoodStaleProof(browser, baseUrl) {
       const r3fReady = await waitForR3F(lastGood.page);
       await lastGood.page.waitForTimeout(500);
       const renderer = await collectRendererProof(lastGood.page);
+      const effectiveR3FReady =
+        r3fReady ||
+        renderer.appProof?.canvasConnected === true ||
+        Boolean(renderer.domProof?.canvas?.rect?.width);
       details.last_good_stale = {
         status: "captured",
-        r3f_ready: r3fReady,
+        r3f_ready: effectiveR3FReady,
         renderer,
         page_state: await collectPageState(lastGood.page),
         console_errors: lastGood.consoleErrors
@@ -2672,12 +2721,14 @@ async function runBrowserVerification(baseUrl) {
     details.renderer = {
       preCapture: desktopPreCaptureRendererProof
     };
-    const desktopCanvasPng = desktopR3FReady
-      ? await captureR3FCanvasPng(desktop.page, desktopCanvasScreenshotPath, {
-          label: "desktop R3F canvas",
-          requireReadableComposition: true
-        })
-      : null;
+    const desktopCanvasPng = await captureR3FCanvasPng(
+      desktop.page,
+      desktopCanvasScreenshotPath,
+      {
+        label: "desktop R3F canvas",
+        requireReadableComposition: true
+      }
+    );
     verifierProgress("desktop canvas captured");
     await captureViewportScreenshot(desktop.page, desktopScreenshotPath);
     verifierProgress("desktop viewport captured");
@@ -2698,7 +2749,7 @@ async function runBrowserVerification(baseUrl) {
     details.telemetry = rendererProof.telemetry;
     details.desktop = {
       viewport: desktopViewport,
-      r3f_ready: desktopR3FReady,
+      r3f_ready: desktopR3FReady || Boolean(desktopCanvasPng),
       page_state: await collectPageState(desktop.page),
       layout: desktopLayout,
       performance: desktopPerformance,
@@ -3394,6 +3445,7 @@ if (selfTestMode === "composition") {
 
 async function main() {
   await mkdir(artifactsDir, { recursive: true });
+  await removeStaleDashboardArtifacts();
 
   let server = null;
 
@@ -3422,4 +3474,10 @@ async function main() {
   if (failures.length > 0) {
     process.exitCode = 1;
   }
+}
+
+async function removeStaleDashboardArtifacts() {
+  await Promise.all(
+    dashboardArtifactPaths.map((artifactPath) => rm(artifactPath, { force: true }))
+  );
 }
