@@ -117,6 +117,29 @@ export const STAGE5_TRAFFIC_VEHICLE_SILHOUETTE_PARTS = [
   { name: "taillightGlow", geometry: "planeGeometry", visible: false }
 ] as const;
 
+export const STAGE5_TRAFFIC_VEHICLE_LIGHT_GLOW = {
+  headlight: {
+    material: {
+      color: "#fff7d6",
+      emissive: "#fff2b8",
+      emissiveIntensity: 3.35,
+      roughness: 0.14,
+      toneMapped: false
+    },
+    scale: [0.3, 0.17, 0.095]
+  },
+  taillight: {
+    material: {
+      color: "#ff766b",
+      emissive: "#ff3535",
+      emissiveIntensity: 2.85,
+      roughness: 0.2,
+      toneMapped: false
+    },
+    scale: [0.28, 0.16, 0.09]
+  }
+} as const;
+
 type Stage5TrafficVehiclePartName =
   (typeof STAGE5_TRAFFIC_VEHICLE_SILHOUETTE_PARTS)[number]["name"];
 type Stage5TrafficVehicleGeometry =
@@ -851,7 +874,11 @@ function Stage5TrafficVehicleInstances({
         vehicle,
         index,
         localOffset,
-        scale: [vehicle.size[0] * 0.24, vehicle.size[1] * 0.13, vehicle.size[2] * 0.08]
+        scale: [
+          vehicle.size[0] * STAGE5_TRAFFIC_VEHICLE_LIGHT_GLOW.headlight.scale[0],
+          vehicle.size[1] * STAGE5_TRAFFIC_VEHICLE_LIGHT_GLOW.headlight.scale[1],
+          vehicle.size[2] * STAGE5_TRAFFIC_VEHICLE_LIGHT_GLOW.headlight.scale[2]
+        ]
       });
     });
     tailOffsets.forEach(({ vehicle, localOffset }, index) => {
@@ -861,7 +888,11 @@ function Stage5TrafficVehicleInstances({
         vehicle,
         index,
         localOffset,
-        scale: [vehicle.size[0] * 0.22, vehicle.size[1] * 0.12, vehicle.size[2] * 0.075]
+        scale: [
+          vehicle.size[0] * STAGE5_TRAFFIC_VEHICLE_LIGHT_GLOW.taillight.scale[0],
+          vehicle.size[1] * STAGE5_TRAFFIC_VEHICLE_LIGHT_GLOW.taillight.scale[1],
+          vehicle.size[2] * STAGE5_TRAFFIC_VEHICLE_LIGHT_GLOW.taillight.scale[2]
+        ]
       });
     });
 
@@ -1071,11 +1102,7 @@ function Stage5TrafficVehicleInstances({
       >
         <Stage5VehiclePartGeometry partName="headlight" />
         <meshStandardMaterial
-          color="#fff3c4"
-          emissive="#fff0b0"
-          emissiveIntensity={2.15}
-          roughness={0.2}
-          toneMapped={false}
+          {...STAGE5_TRAFFIC_VEHICLE_LIGHT_GLOW.headlight.material}
         />
       </instancedMesh>
       <instancedMesh
@@ -1084,11 +1111,7 @@ function Stage5TrafficVehicleInstances({
       >
         <Stage5VehiclePartGeometry partName="taillight" />
         <meshStandardMaterial
-          color="#ff5c55"
-          emissive="#ff2f2f"
-          emissiveIntensity={1.8}
-          roughness={0.28}
-          toneMapped={false}
+          {...STAGE5_TRAFFIC_VEHICLE_LIGHT_GLOW.taillight.material}
         />
       </instancedMesh>
     </group>

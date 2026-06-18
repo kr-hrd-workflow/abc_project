@@ -1002,7 +1002,7 @@ async function collectPageState(page) {
 }
 
 async function collectRendererProof(page) {
-  return page.evaluate(() => {
+  return page.evaluate(({ normalDrawCallBudget, peakDrawCallBudget }) => {
     if (typeof window.__r3fPublishSimulationCanvasProof === "function") {
       window.__r3fPublishSimulationCanvasProof();
     }
@@ -1183,8 +1183,10 @@ async function collectRendererProof(page) {
         : null,
       drawCalls,
       peakDrawCalls,
-      normalDrawCallBudget: Number(appProof?.normalDrawCallBudget ?? maxNormalDrawCalls),
-      peakDrawCallBudget: Number(appProof?.drawCallBudget ?? maxPeakDrawCalls),
+      normalDrawCallBudget: Number(
+        appProof?.normalDrawCallBudget ?? normalDrawCallBudget
+      ),
+      peakDrawCallBudget: Number(appProof?.drawCallBudget ?? peakDrawCallBudget),
       drawCallSource:
         Number.isFinite(Number(rendererInfoCalls)) && rendererInfoCalls !== null
           ? "renderer.info"
@@ -1265,6 +1267,9 @@ async function collectRendererProof(page) {
         )
       }
     };
+  }, {
+    normalDrawCallBudget: maxNormalDrawCalls,
+    peakDrawCallBudget: maxPeakDrawCalls
   });
 }
 
@@ -2011,6 +2016,60 @@ function runLiveSumoProofSelfTest() {
   assertSelfTest(stale.passed === false, stale.evidence);
 
   console.log("R3F dashboard verifier live SUMO self-test passed.");
+}
+
+async function runRendererProofFallbackSelfTest() {
+  const previousWindow = globalThis.window;
+  const previousDocument = globalThis.document;
+
+  try {
+    globalThis.window = {
+      __r3fDashboardVerifier: {},
+      getComputedStyle: () => ({
+        display: "block",
+        opacity: "1",
+        position: "static",
+        zIndex: "auto",
+        backgroundImage: "none",
+        backgroundColor: "rgba(0, 0, 0, 0)"
+      })
+    };
+    globalThis.document = {
+      querySelector: () => null,
+      querySelectorAll: () => []
+    };
+
+    const rendererProof = await collectRendererProof({
+      evaluate: async (callback, payload) => {
+        const browserContextCallback = (0, eval)(`(${callback.toString()})`);
+
+        return browserContextCallback(payload);
+      }
+    });
+
+    assertSelfTest(
+      rendererProof.normalDrawCallBudget === maxNormalDrawCalls,
+      `expected fallback normal draw-call budget ${maxNormalDrawCalls}, got ${rendererProof.normalDrawCallBudget}`
+    );
+    assertSelfTest(
+      rendererProof.peakDrawCallBudget === maxPeakDrawCalls,
+      `expected fallback peak draw-call budget ${maxPeakDrawCalls}, got ${rendererProof.peakDrawCallBudget}`
+    );
+
+    console.log("R3F dashboard verifier renderer-proof fallback self-test passed.");
+  } finally {
+    if (previousWindow === undefined) {
+      delete globalThis.window;
+    } else {
+      globalThis.window = previousWindow;
+    }
+
+    if (previousDocument === undefined) {
+      delete globalThis.document;
+    } else {
+      globalThis.document = previousDocument;
+    }
+  }
 }
 
 function buildSyntheticCanvasPng({ width, height, background, rects }) {
@@ -3439,6 +3498,8 @@ if (selfTestMode === "composition") {
   runCompositionSelfTest();
 } else if (selfTestMode === "live-sumo") {
   runLiveSumoProofSelfTest();
+} else if (selfTestMode === "renderer-proof-fallback") {
+  await runRendererProofFallbackSelfTest();
 } else {
   await main();
 }

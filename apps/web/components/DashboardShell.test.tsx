@@ -1155,6 +1155,45 @@ describe("DashboardShell", () => {
     expect(visibleGeometryTypes).toContain("torusGeometry");
   });
 
+  test("restores vehicle light glow through existing visible light meshes only", async () => {
+    const trafficDensity = await import("./r3f/TrafficDensityLayer");
+    const lightGlow = (
+      trafficDensity as typeof trafficDensity & {
+        STAGE5_TRAFFIC_VEHICLE_LIGHT_GLOW?: {
+          headlight: {
+            material: { emissiveIntensity: number; toneMapped: boolean };
+            scale: readonly [number, number, number];
+          };
+          taillight: {
+            material: { emissiveIntensity: number; toneMapped: boolean };
+            scale: readonly [number, number, number];
+          };
+        };
+      }
+    ).STAGE5_TRAFFIC_VEHICLE_LIGHT_GLOW;
+    const visiblePartNames = STAGE5_TRAFFIC_VEHICLE_SILHOUETTE_PARTS.filter(
+      (part) => part.visible
+    ).map((part) => part.name);
+    const hiddenGlowPartNames = STAGE5_TRAFFIC_VEHICLE_SILHOUETTE_PARTS.filter(
+      (part) => part.name.endsWith("Glow") && !part.visible
+    ).map((part) => part.name);
+
+    expect(visiblePartNames).toHaveLength(12);
+    expect(visiblePartNames).toEqual(
+      expect.arrayContaining(["headlight", "taillight"])
+    );
+    expect(hiddenGlowPartNames).toEqual(["headlightGlow", "taillightGlow"]);
+    expect(lightGlow).toBeDefined();
+    expect(lightGlow!.headlight.material.toneMapped).toBe(false);
+    expect(lightGlow!.taillight.material.toneMapped).toBe(false);
+    expect(lightGlow!.headlight.material.emissiveIntensity).toBeGreaterThanOrEqual(3);
+    expect(lightGlow!.taillight.material.emissiveIntensity).toBeGreaterThanOrEqual(2.6);
+    expect(lightGlow!.headlight.scale[0]).toBeGreaterThan(0.24);
+    expect(lightGlow!.headlight.scale[1]).toBeGreaterThan(0.13);
+    expect(lightGlow!.taillight.scale[0]).toBeGreaterThan(0.22);
+    expect(lightGlow!.taillight.scale[1]).toBeGreaterThan(0.12);
+  });
+
   test("uses Stage 4.1 GLB assets and facade panels for Stage 5 foreground realism", () => {
     expect(STAGE5_HERO_GLB_ASSET_IDS).toEqual([
       "vehicles/bus_near",
