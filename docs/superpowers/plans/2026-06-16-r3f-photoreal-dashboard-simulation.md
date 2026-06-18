@@ -1571,7 +1571,7 @@ manifest license/provenance coverage through verify-r3f-assets.mjs
 tracked-file scan for obvious private keys or API tokens in source/docs/scripts
 ```
 
-For Python audit, SBOM generation, or dedicated secret-scanning tools, the script must report `blocked_requires_tooling` with the exact missing command. Do not install `pip-audit`, SBOM generators, or secret scanners without explicit user approval.
+For Python audit, SBOM generation, or dedicated secret-scanning tools, the script must either run the repo-declared check or report `blocked_requires_tooling` with the exact missing command. Do not add or install extra security tooling without explicit user approval.
 
 - [x] **Step 4: Define artifact retention and generated-output hygiene**
 
@@ -1638,9 +1638,10 @@ Stage 6F proof, final primary-run browser artifact generated at `2026-06-18T01:4
 
 - `npm --workspace apps/web run test -- lib/r3fTelemetry.test.ts`: 1 test passed after the initial RED missing-module failure.
 - `npm --workspace apps/web run test -- components/r3f/SimulationCanvas.test.tsx`: 6 tests passed after the initial RED missing-telemetry failure.
-- `npm run verify:security`: passed available no-install checks; reported `blocked_requires_tooling` for `python -m pip_audit`, `npx @cyclonedx/cyclonedx-npm --output-file artifacts/sbom.json`, and `gitleaks detect --source . --no-git`.
+- Initial `npm run verify:security`: passed available no-install checks and reported exact blocked tooling for Python audit, SBOM generation, and external secret scanning.
+- Final-gate concern closure: `npm run verify:security` now runs Python dependency audit, CycloneDX SBOM generation, R3F asset provenance verification, and tracked-file secret scanning, writes `artifacts/r3f-security-gates.json`, and reports `blocked_requires_tooling=[]` when the gate passes.
 - `node scripts/verify-r3f-dashboard.mjs`: passed and wrote telemetry into `artifacts/r3f-dashboard-details.json`.
-- `npm run verify`: passed API tests, web tests, web build, asset verifier, dashboard verifier, and `git diff --check` with line-ending warnings only.
+- `npm run verify`: passed API tests, web tests, web build, asset verifier, dashboard verifier, security verifier, and `git diff --check` with no line-ending warnings after the final-gate concern closure.
 - Telemetry evidence: `renderer_mode=r3f_photoreal_stage5`, `snapshot_source=simulation_snapshot_fixture`, `frame_bound=true`, `draw_call_count=94`, `webgl_context_loss_count=0`, `fallback_reason=null`, `visible_vehicle_count=160`.
 - Added artifact retention docs, release checklist, PR template, standalone security gate, and generated-output ignore rules. This is operational proof only; it does not create releases, tags, branch protection, production monitoring vendors, live SUMO/Tarcl binding, or real signal control.
 

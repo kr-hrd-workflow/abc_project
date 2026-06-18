@@ -1,0 +1,16 @@
+# Keep regenerated proof JSON stable across Windows/WSL git clients.
+.gitattributes text eol=lf
+.gitignore text eol=lf
+package.json text eol=lf
+package-lock.json text eol=lf
+apps/api/pyproject.toml text eol=lf
+apps/web/package.json text eol=lf
+scripts/verify-security-gates.mjs text eol=lf
+docs/ops/r3f-artifact-retention.md text eol=lf
+docs/superpowers/plans/2026-06-16-r3f-photoreal-dashboard-simulation.md text eol=lf
+docs/technotes/r3f-photoreal-dashboard-renderer.md text eol=lf
+artifacts/r3f-dashboard-details.json text eol=lf
+artifacts/r3f-security-gates.json text eol=lf
+
+# Canonical proof images are binary artifacts.
+*.png binary

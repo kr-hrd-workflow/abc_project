@@ -1,12 +1,13 @@
 #!/usr/bin/env node
 
 import { spawnSync } from "node:child_process";
-import { readFileSync } from "node:fs";
+import { mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 
 const scriptDir = path.dirname(fileURLToPath(import.meta.url));
 const repoRoot = path.resolve(scriptDir, "..");
+const securityReportPath = path.join(repoRoot, "artifacts", "r3f-security-gates.json");
 const npmCliPath = path.join(
   path.dirname(process.execPath),
   "node_modules",
@@ -17,21 +18,6 @@ const npmCliPath = path.join(
 
 const results = [];
 const failures = [];
-const blockedRequiresTooling = [
-  {
-    check: "python_dependency_audit",
-    missing_command: "python -m pip_audit"
-  },
-  {
-    check: "sbom_generation",
-    missing_command: "npx @cyclonedx/cyclonedx-npm --output-file artifacts/sbom.json"
-  },
-  {
-    check: "dedicated_secret_scanner",
-    missing_command: "gitleaks detect --source . --no-git"
-  }
-];
-
 const secretPatterns = [
   {
     name: "private_key_block",
@@ -60,6 +46,19 @@ runCommandCheck("web_workspace_npm_audit_high", process.execPath, [
   "audit",
   "--audit-level=high"
 ]);
+runCommandCheck("python_dependency_audit", process.execPath, [
+  "scripts/run-api-python.mjs",
+  "-m",
+  "pip_audit"
+]);
+runCommandCheck("cyclonedx_sbom_generation", process.execPath, [
+  npmCliPath,
+  "sbom",
+  "--sbom-format",
+  "cyclonedx",
+  "--package-lock-only",
+  "--json"
+]);
 runCommandCheck("r3f_manifest_license_provenance", process.execPath, [
   "scripts/verify-r3f-assets.mjs"
 ]);
@@ -67,12 +66,14 @@ runTrackedSecretScan();
 
 const report = {
   generated_at: new Date().toISOString(),
-  status: failures.length === 0 ? "passed_with_blocked_tooling_notes" : "failed",
+  status: failures.length === 0 ? "passed" : "failed",
   results,
-  blocked_requires_tooling: blockedRequiresTooling,
+  blocked_requires_tooling: [],
   failures
 };
 
+mkdirSync(path.dirname(securityReportPath), { recursive: true });
+writeFileSync(securityReportPath, `${JSON.stringify(report, null, 2)}\n`, "utf8");
 console.log(JSON.stringify(report, null, 2));
 
 if (failures.length > 0) {

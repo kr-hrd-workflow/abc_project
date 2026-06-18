@@ -52,6 +52,7 @@ media/
 !/artifacts/r3f-dashboard-mobile-overlays.png
 !/artifacts/r3f-dashboard-webgl-off.png
 !/artifacts/r3f-dashboard-details.json
+!/artifacts/r3f-security-gates.json
 reports/generated/
 models/
 *.pt
@@ -74,6 +75,8 @@ archive/unreal/original/renderer/unreal/**/Saved/
 archive/unreal/original/renderer/unreal/**/Binaries/
 archive/unreal/original/renderer/unreal/**/.vs/
 archive/unreal/original/package.json
+archive/unreal/original/artifacts/imagegen/stage7/
+archive/unreal/original/artifacts/unreal-operator-map-stage7-*.png
 
 # Local asset pipeline virtualenv
 tools/asset-pipeline/.venv/

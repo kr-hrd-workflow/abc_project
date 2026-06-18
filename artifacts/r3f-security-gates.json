@@ -1,0 +1,130 @@
+{
+  "generated_at": "2026-06-18T02:49:49.171Z",
+  "status": "passed",
+  "results": [
+    {
+      "name": "root_npm_audit_high",
+      "command": "C:\\Program Files\\nodejs\\node.exe C:\\Program Files\\nodejs\\node_modules\\npm\\bin\\npm-cli.js audit --audit-level=high",
+      "status": "passed",
+      "exit_code": 0,
+      "error": null,
+      "stdout_tail": [
+        "# npm audit report",
+        "",
+        "postcss  <8.5.10",
+        "Severity: moderate",
+        "PostCSS has XSS via Unescaped </style> in its CSS Stringify Output - https://github.com/advisories/GHSA-qx2v-qp2m-jg93",
+        "fix available via `npm audit fix --force`",
+        "Will install next@9.3.3, which is a breaking change",
+        "node_modules/postcss",
+        "  next  9.3.4-canary.0 - 16.3.0-canary.5",
+        "  Depends on vulnerable versions of postcss",
+        "  node_modules/next",
+        "",
+        "2 moderate severity vulnerabilities",
+        "",
+        "To address all issues (including breaking changes), run:",
+        "  npm audit fix --force"
+      ],
+      "stderr_tail": [
+        ""
+      ]
+    },
+    {
+      "name": "web_workspace_npm_audit_high",
+      "command": "C:\\Program Files\\nodejs\\node.exe C:\\Program Files\\nodejs\\node_modules\\npm\\bin\\npm-cli.js --workspace apps/web audit --audit-level=high",
+      "status": "passed",
+      "exit_code": 0,
+      "error": null,
+      "stdout_tail": [
+        "# npm audit report",
+        "",
+        "postcss  <8.5.10",
+        "Severity: moderate",
+        "PostCSS has XSS via Unescaped </style> in its CSS Stringify Output - https://github.com/advisories/GHSA-qx2v-qp2m-jg93",
+        "fix available via `npm audit fix --force`",
+        "Will install next@9.3.3, which is a breaking change",
+        "node_modules/postcss",
+        "  next  9.3.4-canary.0 - 16.3.0-canary.5",
+        "  Depends on vulnerable versions of postcss",
+        "  node_modules/next",
+        "",
+        "2 moderate severity vulnerabilities",
+        "",
+        "To address all issues (including breaking changes), run:",
+        "  npm audit fix --force"
+      ],
+      "stderr_tail": [
+        ""
+      ]
+    },
+    {
+      "name": "python_dependency_audit",
+      "command": "C:\\Program Files\\nodejs\\node.exe scripts/run-api-python.mjs -m pip_audit",
+      "status": "passed",
+      "exit_code": 0,
+      "error": null,
+      "stdout_tail": [
+        "Name                   Skip Reason",
+        "---------------------- -------------------------------------------------------------------------------------",
+        "smart-intersection-api Dependency not found on PyPI and could not be audited: smart-intersection-api (0.1.0)"
+      ],
+      "stderr_tail": [
+        "No known vulnerabilities found"
+      ]
+    },
+    {
+      "name": "cyclonedx_sbom_generation",
+      "command": "C:\\Program Files\\nodejs\\node.exe C:\\Program Files\\nodejs\\node_modules\\npm\\bin\\npm-cli.js sbom --sbom-format cyclonedx --package-lock-only --json",
+      "status": "passed",
+      "exit_code": 0,
+      "error": null,
+      "stdout_tail": [
+        "      ]",
+        "    },",
+        "    {",
+        "      \"ref\": \"xml-name-validator@5.0.0\",",
+        "      \"dependsOn\": []",
+        "    },",
+        "    {",
+        "      \"ref\": \"xmlchars@2.2.0\",",
+        "      \"dependsOn\": []",
+        "    },",
+        "    {",
+        "      \"ref\": \"zustand@5.0.14\",",
+        "      \"dependsOn\": [",
+        "        \"@types/react@19.2.17\",",
+        "        \"react@19.2.7\",",
+        "        \"use-sync-external-store@1.6.0\"",
+        "      ]",
+        "    }",
+        "  ]",
+        "}"
+      ],
+      "stderr_tail": [
+        ""
+      ]
+    },
+    {
+      "name": "r3f_manifest_license_provenance",
+      "command": "C:\\Program Files\\nodejs\\node.exe scripts/verify-r3f-assets.mjs",
+      "status": "passed",
+      "exit_code": 0,
+      "error": null,
+      "stdout_tail": [
+        "R3F asset verification passed. First-pass GLB + texture payload: 9.62 MB / 25.00 MB."
+      ],
+      "stderr_tail": [
+        ""
+      ]
+    },
+    {
+      "name": "tracked_secret_scan",
+      "status": "passed",
+      "scanned_files": 165,
+      "findings": []
+    }
+  ],
+  "blocked_requires_tooling": [],
+  "failures": []
+}
