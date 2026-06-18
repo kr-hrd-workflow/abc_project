@@ -142,7 +142,7 @@ Validation:
 
 - `npm --workspace apps/web run test -- lib/r3fTelemetry.test.ts`: 1 test passed after the RED missing-module failure.
 - `npm --workspace apps/web run test -- components/r3f/SimulationCanvas.test.tsx`: 6 tests passed after the RED missing-telemetry failure.
-- `npm run verify:security`: runs high-severity npm audit gates, Python dependency audit, CycloneDX SBOM generation, R3F asset provenance verification, and a tracked-file secret scan; the final readiness report is written to `artifacts/r3f-security-gates.json` with `blocked_requires_tooling=[]` when the gate passes.
+- `npm run verify:security`: runs moderate-or-higher npm audit gates, Python third-party dependency audit with skipped dependencies rejected, CycloneDX SBOM generation, R3F asset provenance verification, and a tracked-file secret scan; the final readiness report is written to `artifacts/r3f-security-gates.json` with `blocked_requires_tooling=[]` when the gate passes.
 - `node scripts/verify-r3f-dashboard.mjs`: passed with telemetry evidence in the details JSON.
 - `npm run verify`: passed API tests, web tests, web build, R3F asset verification, dashboard browser proof, security verification, and `git diff --check` with no line-ending warnings after the final-gate concern closure.
 

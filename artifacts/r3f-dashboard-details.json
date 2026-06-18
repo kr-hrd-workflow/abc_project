@@ -1,10 +1,10 @@
 {
-  "generated_at": "2026-06-18T02:45:48.543Z",
+  "generated_at": "2026-06-18T03:04:52.097Z",
   "route": "/dashboard",
   "server": {
     "mode": "started-production",
-    "base_url": "http://127.0.0.1:55576",
-    "port": 55576,
+    "base_url": "http://127.0.0.1:61742",
+    "port": 61742,
     "env": {
       "FORCE_COLOR": "0",
       "NEXT_PUBLIC_API_BASE_URL": "http://127.0.0.1:8000",
@@ -48,7 +48,7 @@
       "cssWidth": 915,
       "cssHeight": 680,
       "backingWidth": 914,
-      "backingHeight": 680
+      "backingHeight": 679
     },
     "drawCalls": 94,
     "drawCallSource": "renderer.info",
@@ -62,7 +62,7 @@
       "webgl_context_loss_count": 0,
       "fallback_reason": null,
       "visible_vehicle_count": 160,
-      "emitted_at": "2026-06-18T02:46:27.325Z"
+      "emitted_at": "2026-06-18T03:05:15.406Z"
     },
     "appProof": {
       "renderer": "r3f",
@@ -74,7 +74,7 @@
       "canvasHeight": 680,
       "canvasConnected": true,
       "drawingBufferWidth": 914,
-      "drawingBufferHeight": 680
+      "drawingBufferHeight": 679
     },
     "domProof": {
       "viewport": {
@@ -82,7 +82,7 @@
         "className": "simulation-viewport",
         "rect": {
           "x": 506,
-          "y": 472,
+          "y": 471,
           "width": 915,
           "height": 680
         },
@@ -98,9 +98,9 @@
         "className": "simulation-source-overlays",
         "rect": {
           "x": 987,
-          "y": 486,
+          "y": 485,
           "width": 420,
-          "height": 96
+          "height": 130
         },
         "display": "flex",
         "opacity": "1",
@@ -122,7 +122,7 @@
         "className": "r3f-simulation-canvas",
         "rect": {
           "x": 506,
-          "y": 472,
+          "y": 471,
           "width": 915,
           "height": 680
         },
@@ -138,7 +138,7 @@
         "className": null,
         "rect": {
           "x": 506,
-          "y": 472,
+          "y": 471,
           "width": 915,
           "height": 680
         },
@@ -155,7 +155,7 @@
           "className": null,
           "rect": {
             "x": 506,
-            "y": 472,
+            "y": 471,
             "width": 915,
             "height": 680
           },
@@ -194,7 +194,7 @@
         "cssWidth": 915,
         "cssHeight": 680,
         "backingWidth": 914,
-        "backingHeight": 680
+        "backingHeight": 679
       },
       "drawCalls": 94,
       "drawCallSource": "renderer.info",
@@ -208,7 +208,7 @@
         "webgl_context_loss_count": 0,
         "fallback_reason": null,
         "visible_vehicle_count": 160,
-        "emitted_at": "2026-06-18T02:46:25.873Z"
+        "emitted_at": "2026-06-18T03:05:15.406Z"
       },
       "appProof": {
         "renderer": "r3f",
@@ -220,7 +220,7 @@
         "canvasHeight": 680,
         "canvasConnected": true,
         "drawingBufferWidth": 914,
-        "drawingBufferHeight": 680
+        "drawingBufferHeight": 679
       },
       "domProof": {
         "viewport": {
@@ -228,7 +228,7 @@
           "className": "simulation-viewport",
           "rect": {
             "x": 506,
-            "y": 472,
+            "y": 471,
             "width": 915,
             "height": 680
           },
@@ -244,9 +244,9 @@
           "className": "simulation-source-overlays",
           "rect": {
             "x": 987,
-            "y": 486,
+            "y": 485,
             "width": 420,
-            "height": 96
+            "height": 130
           },
           "display": "flex",
           "opacity": "1",
@@ -268,7 +268,7 @@
           "className": "r3f-simulation-canvas",
           "rect": {
             "x": 506,
-            "y": 472,
+            "y": 471,
             "width": 915,
             "height": 680
           },
@@ -284,7 +284,7 @@
           "className": null,
           "rect": {
             "x": 506,
-            "y": 472,
+            "y": 471,
             "width": 915,
             "height": 680
           },
@@ -301,7 +301,7 @@
             "className": null,
             "rect": {
               "x": 506,
-              "y": 472,
+              "y": 471,
               "width": 915,
               "height": 680
             },
@@ -330,7 +330,7 @@
     },
     "r3f_ready": true,
     "page_state": {
-      "url": "http://127.0.0.1:55576/dashboard",
+      "url": "http://127.0.0.1:61742/dashboard",
       "title": "Smart Intersection Ops",
       "bodyTextExcerpt": "스마트 교차로 운영 시스템 Smart Intersection Ops 선택된 교차로 강남대로 / 테헤란로 INT-SEO-0001 · 서울 강남 · Asia/Seoul 보행·버스 수요가 높은 도심 간선 교차로 INC-2025-0516-0007 Active Live 09:00:00 분석 완료 Analysis Complete Fresh 12s 데이터 최신 알림 리포트 시나리오 한국어 EN 서울 보행·버스 수요가 높은 도심 간선 교차로 뉴욕 보행 밀도가 높은 격자형 도심 교차로 파리 버스·택시 우선 검토가 필요한 대로형 교차로 런던 보행 중심 상업지와 버스 회랑이 만나는 교차로 운영 모드 AI가 시뮬레이션 권고를 자동으로 준비합니다. AI 권고 자동 준비 AI Automatic 관리자 직접 검토 Admin Manual 자동 준비 중 신뢰도 92% 다음 권고 emergency_priority Simulation only / No real signal control 권고와 시뮬레이션만 제공합니다. 실제 교통 신호 제어는 수행하지 않습니다. 운영자 A Operator A Live evidence rail Incident Brief Spine 이벤트, 증거, 현장 흐름 전체",
       "hasNextErrorOverlay": false,
@@ -351,94 +351,94 @@
       "safetyCopyVisible": true,
       "overlayRect": {
         "x": 987,
-        "y": 486,
+        "y": 485,
         "width": 420,
-        "height": 96,
-        "top": 486,
+        "height": 130,
+        "top": 485,
         "right": 1407,
-        "bottom": 582,
+        "bottom": 615,
         "left": 987
       },
       "safetyRect": {
         "x": 1165,
-        "y": 195,
+        "y": 194,
         "width": 246,
         "height": 104,
-        "top": 195,
+        "top": 194,
         "right": 1411,
-        "bottom": 299,
+        "bottom": 298,
         "left": 1165
       },
       "overlayViewportIntersection": {
         "x": 987,
-        "y": 486,
+        "y": 485,
         "width": 420,
-        "height": 96,
-        "top": 486,
+        "height": 130,
+        "top": 485,
         "right": 1407,
-        "bottom": 582,
+        "bottom": 615,
         "left": 987
       },
       "safetyViewportIntersection": {
         "x": 1165,
-        "y": 195,
+        "y": 194,
         "width": 246,
         "height": 104,
-        "top": 195,
+        "top": 194,
         "right": 1411,
-        "bottom": 299,
+        "bottom": 298,
         "left": 1165
       },
       "overlapsSafetyCopy": false
     },
     "canvas_metrics": {
       "width": 914,
-      "height": 680,
-      "sampled_pixels": 621520,
-      "non_background_ratio": 0.4716388853134251,
-      "bright_ratio": 0.007344896383060883,
-      "dark_ratio": 0.6864123439310078,
-      "warm_light_ratio": 0.00008849272750675763,
-      "cool_light_ratio": 0.002929913759814648,
-      "marking_ratio": 0.024702342643840906,
-      "saturated_ratio": 0.7156760844381517,
+      "height": 679,
+      "sampled_pixels": 620606,
+      "non_background_ratio": 0.4455773872634167,
+      "bright_ratio": 0.007355713608956407,
+      "dark_ratio": 0.7122860558873102,
+      "warm_light_ratio": 0.00008862305552959527,
+      "cool_light_ratio": 0.0029342288021707813,
+      "marking_ratio": 0.02473872311901593,
+      "saturated_ratio": 0.7097675497819873,
       "color_bucket_count": 328,
-      "luminance_stddev": 28.917488104768587
+      "luminance_stddev": 28.79884003843793
     },
     "canvas_composition": {
       "width": 914,
-      "height": 680,
-      "scene_coverage_ratio": 0.9432890333376239,
-      "empty_near_black_ratio": 0.05279315227184966,
-      "top_band_scene_ratio": 0.8600849530184065,
-      "bottom_band_scene_ratio": 0.9997667009911185,
-      "left_band_scene_ratio": 0.7413773706203793,
-      "right_band_scene_ratio": 0.9941903684550744,
-      "center_band_scene_ratio": 0.991622533257676,
+      "height": 679,
+      "scene_coverage_ratio": 0.9431475042136235,
+      "empty_near_black_ratio": 0.052704936787591486,
+      "top_band_scene_ratio": 0.8595137726863175,
+      "bottom_band_scene_ratio": 0.9994732150093201,
+      "left_band_scene_ratio": 0.7417046926933694,
+      "right_band_scene_ratio": 0.9940361553027238,
+      "center_band_scene_ratio": 0.9915594855305466,
       "occupied_grid_cell_count": 25,
       "grid_cell_count": 25,
       "scene_bbox_width_ratio": 1,
       "scene_bbox_height_ratio": 1,
       "grid_cell_scene_ratios": [
         [
-          0.304,
-          0.997,
+          0.302,
+          0.996,
           1,
           1,
           1
         ],
         [
-          0.404,
-          0.972,
+          0.41,
+          0.973,
           0.987,
           0.953,
           0.972
         ],
         [
+          0.998,
           0.999,
-          1,
           0.999,
-          1,
+          0.999,
           1
         ],
         [
@@ -446,11 +446,11 @@
           0.999,
           1,
           0.999,
-          0.999
+          0.998
         ],
         [
           1,
-          0.999,
+          0.997,
           1,
           1,
           1
@@ -459,9 +459,9 @@
     },
     "canvas_screenshot": {
       "exists": true,
-      "bytes": 451950,
+      "bytes": 465106,
       "width": 914,
-      "height": 680,
+      "height": 679,
       "expected_viewport": {
         "width": 1440,
         "height": 1000
@@ -469,7 +469,7 @@
     },
     "screenshot": {
       "exists": true,
-      "bytes": 638118,
+      "bytes": 581068,
       "width": 1440,
       "height": 1000,
       "expected_viewport": {
@@ -485,7 +485,7 @@
     },
     "r3f_ready": true,
     "page_state": {
-      "url": "http://127.0.0.1:55576/dashboard",
+      "url": "http://127.0.0.1:61742/dashboard",
       "title": "Smart Intersection Ops",
       "bodyTextExcerpt": "스마트 교차로 운영 시스템 Smart Intersection Ops 선택된 교차로 강남대로 / 테헤란로 INT-SEO-0001 · 서울 강남 · Asia/Seoul 보행·버스 수요가 높은 도심 간선 교차로 INC-2025-0516-0007 Active Live 09:00:00 분석 완료 Analysis Complete Fresh 12s 데이터 최신 알림 리포트 시나리오 한국어 EN 서울 보행·버스 수요가 높은 도심 간선 교차로 뉴욕 보행 밀도가 높은 격자형 도심 교차로 파리 버스·택시 우선 검토가 필요한 대로형 교차로 런던 보행 중심 상업지와 버스 회랑이 만나는 교차로 운영 모드 AI가 시뮬레이션 권고를 자동으로 준비합니다. AI 권고 자동 준비 AI Automatic 관리자 직접 검토 Admin Manual 자동 준비 중 신뢰도 92% 다음 권고 emergency_priority Simulation only / No real signal control 운영자 A Operator A Live evidence rail Incident Brief Spine 이벤트, 증거, 현장 흐름 전체 최근 이벤트 표시 1/1 09:00:00 긴급 CRITICAL 긴급차량 접",
       "hasNextErrorOverlay": false,
@@ -579,40 +579,40 @@
         "safetyCopyVisible": true,
         "overlayRect": {
           "x": 21,
-          "y": 698,
+          "y": 666,
           "width": 348,
-          "height": 122,
-          "top": 698,
+          "height": 154,
+          "top": 666,
           "right": 369,
           "bottom": 820,
           "left": 21
         },
         "safetyRect": {
           "x": 21,
-          "y": 54,
+          "y": 30,
           "width": 348,
-          "height": 42,
-          "top": 54,
+          "height": 66,
+          "top": 30,
           "right": 369,
           "bottom": 96,
           "left": 21
         },
         "overlayViewportIntersection": {
           "x": 21,
-          "y": 698,
+          "y": 666,
           "width": 348,
-          "height": 122,
-          "top": 698,
+          "height": 154,
+          "top": 666,
           "right": 369,
           "bottom": 820,
           "left": 21
         },
         "safetyViewportIntersection": {
           "x": 21,
-          "y": 54,
+          "y": 30,
           "width": 348,
-          "height": 42,
-          "top": 54,
+          "height": 66,
+          "top": 30,
           "right": 369,
           "bottom": 96,
           "left": 21
@@ -632,7 +632,7 @@
     },
     "screenshot": {
       "exists": true,
-      "bytes": 93287,
+      "bytes": 87823,
       "width": 390,
       "height": 844,
       "expected_viewport": {
@@ -642,7 +642,7 @@
     },
     "overlay_screenshot": {
       "exists": true,
-      "bytes": 191613,
+      "bytes": 180236,
       "width": 390,
       "height": 844,
       "expected_viewport": {
@@ -656,7 +656,7 @@
     "fallbackCanvasVisible": true,
     "safetyTextVisible": true,
     "page_state": {
-      "url": "http://127.0.0.1:55576/dashboard",
+      "url": "http://127.0.0.1:61742/dashboard",
       "title": "Smart Intersection Ops",
       "bodyTextExcerpt": "스마트 교차로 운영 시스템 Smart Intersection Ops 선택된 교차로 강남대로 / 테헤란로 INT-SEO-0001 · 서울 강남 · Asia/Seoul 보행·버스 수요가 높은 도심 간선 교차로 INC-2025-0516-0007 Active Live 09:00:00 분석 완료 Analysis Complete Fresh 12s 데이터 최신 알림 리포트 시나리오 한국어 EN 서울 보행·버스 수요가 높은 도심 간선 교차로 뉴욕 보행 밀도가 높은 격자형 도심 교차로 파리 버스·택시 우선 검토가 필요한 대로형 교차로 런던 보행 중심 상업지와 버스 회랑이 만나는 교차로 운영 모드 AI가 시뮬레이션 권고를 자동으로 준비합니다. AI 권고 자동 준비 AI Automatic 관리자 직접 검토 Admin Manual 자동 준비 중 신뢰도 92% 다음 권고 emergency_priority Simulation only / No real signal control 권고와 시뮬레이션만 제공합니다. 실제 교통 신호 제어는 수행하지 않습니다. 운영자 A Operator A Live evidence rail Incident Brief Spine 이벤트, 증거, 현장 흐름 전체",
       "hasNextErrorOverlay": false,
@@ -666,7 +666,7 @@
     },
     "screenshot": {
       "exists": true,
-      "bytes": 865136,
+      "bytes": 846348,
       "width": 1440,
       "height": 1000,
       "expected_viewport": {
@@ -683,15 +683,15 @@
     "webgl_context_loss_count": 0,
     "fallback_reason": null,
     "visible_vehicle_count": 160,
-    "emitted_at": "2026-06-18T02:46:27.325Z"
+    "emitted_at": "2026-06-18T03:05:15.406Z"
   },
   "console_errors": [
     "[warning] WebGL: CONTEXT_LOST_WEBGL: loseContext: context lost",
     "[warning] THREE.Clock: This module has been deprecated. Please use THREE.Timer instead.",
-    "[warning] [.WebGL-0x43ac0292f800]GL Driver Message (OpenGL, Performance, GL_CLOSE_PATH_NV, High): GPU stall due to ReadPixels",
-    "[warning] [.WebGL-0x43ac0292f800]GL Driver Message (OpenGL, Performance, GL_CLOSE_PATH_NV, High): GPU stall due to ReadPixels",
-    "[warning] [.WebGL-0x43ac0292f800]GL Driver Message (OpenGL, Performance, GL_CLOSE_PATH_NV, High): GPU stall due to ReadPixels",
-    "[warning] [.WebGL-0x43ac0292f800]GL Driver Message (OpenGL, Performance, GL_CLOSE_PATH_NV, High): GPU stall due to ReadPixels (this message will no longer repeat)",
+    "[warning] [.WebGL-0x714403df3600]GL Driver Message (OpenGL, Performance, GL_CLOSE_PATH_NV, High): GPU stall due to ReadPixels",
+    "[warning] [.WebGL-0x714403df3600]GL Driver Message (OpenGL, Performance, GL_CLOSE_PATH_NV, High): GPU stall due to ReadPixels",
+    "[warning] [.WebGL-0x714403df3600]GL Driver Message (OpenGL, Performance, GL_CLOSE_PATH_NV, High): GPU stall due to ReadPixels",
+    "[warning] [.WebGL-0x714403df3600]GL Driver Message (OpenGL, Performance, GL_CLOSE_PATH_NV, High): GPU stall due to ReadPixels (this message will no longer repeat)",
     "[warning] THREE.Clock: This module has been deprecated. Please use THREE.Timer instead.",
     "[warning] THREE.Clock: This module has been deprecated. Please use THREE.Timer instead."
   ],
@@ -726,38 +726,38 @@
     },
     "metrics": {
       "width": 914,
-      "height": 680,
-      "scene_coverage_ratio": 0.9432890333376239,
-      "empty_near_black_ratio": 0.05279315227184966,
-      "top_band_scene_ratio": 0.8600849530184065,
-      "bottom_band_scene_ratio": 0.9997667009911185,
-      "left_band_scene_ratio": 0.7413773706203793,
-      "right_band_scene_ratio": 0.9941903684550744,
-      "center_band_scene_ratio": 0.991622533257676,
+      "height": 679,
+      "scene_coverage_ratio": 0.9431475042136235,
+      "empty_near_black_ratio": 0.052704936787591486,
+      "top_band_scene_ratio": 0.8595137726863175,
+      "bottom_band_scene_ratio": 0.9994732150093201,
+      "left_band_scene_ratio": 0.7417046926933694,
+      "right_band_scene_ratio": 0.9940361553027238,
+      "center_band_scene_ratio": 0.9915594855305466,
       "occupied_grid_cell_count": 25,
       "grid_cell_count": 25,
       "scene_bbox_width_ratio": 1,
       "scene_bbox_height_ratio": 1,
       "grid_cell_scene_ratios": [
         [
-          0.304,
-          0.997,
+          0.302,
+          0.996,
           1,
           1,
           1
         ],
         [
-          0.404,
-          0.972,
+          0.41,
+          0.973,
           0.987,
           0.953,
           0.972
         ],
         [
+          0.998,
           0.999,
-          1,
           0.999,
-          1,
+          0.999,
           1
         ],
         [
@@ -765,11 +765,11 @@
           0.999,
           1,
           0.999,
-          0.999
+          0.998
         ],
         [
           1,
-          0.999,
+          0.997,
           1,
           1,
           1
@@ -859,11 +859,11 @@
   "assertions": {
     "canvas has non-background pixels": {
       "passed": true,
-      "evidence": "desktop canvas non-background ratio 0.4716388853134251"
+      "evidence": "desktop canvas non-background ratio 0.4455773872634167"
     },
     "dashboard mounts Stage 5 R3F renderer": {
       "passed": true,
-      "evidence": "rendererMode=r3f_photoreal_stage5, photorealStage=5, appProof={\"renderer\":\"r3f\",\"stage\":5,\"contextLost\":false,\"contextLossEvents\":0,\"drawCalls\":94,\"canvasWidth\":915,\"canvasHeight\":680,\"canvasConnected\":true,\"drawingBufferWidth\":914,\"drawingBufferHeight\":680}"
+      "evidence": "rendererMode=r3f_photoreal_stage5, photorealStage=5, appProof={\"renderer\":\"r3f\",\"stage\":5,\"contextLost\":false,\"contextLossEvents\":0,\"drawCalls\":94,\"canvasWidth\":915,\"canvasHeight\":680,\"canvasConnected\":true,\"drawingBufferWidth\":914,\"drawingBufferHeight\":679}"
     },
     "renderer.info draw call budget is reported": {
       "passed": true,
@@ -875,11 +875,11 @@
     },
     "desktop dashboard screenshot matches viewport": {
       "passed": true,
-      "evidence": "1440x1000, expected 1440x1000, 638118 bytes at artifacts/r3f-dashboard-desktop.png"
+      "evidence": "1440x1000, expected 1440x1000, 581068 bytes at artifacts/r3f-dashboard-desktop.png"
     },
     "mobile dashboard screenshot matches viewport": {
       "passed": true,
-      "evidence": "390x844, expected 390x844, 93287 bytes at artifacts/r3f-dashboard-mobile.png"
+      "evidence": "390x844, expected 390x844, 87823 bytes at artifacts/r3f-dashboard-mobile.png"
     },
     "no page or console errors": {
       "passed": true,
@@ -895,7 +895,7 @@
     },
     "R3F telemetry proof is reported when renderer is mounted": {
       "passed": true,
-      "evidence": "{\"renderer_mode\":\"r3f_photoreal_stage5\",\"snapshot_source\":\"simulation_snapshot_fixture\",\"frame_bound\":true,\"draw_call_count\":94,\"webgl_context_loss_count\":0,\"fallback_reason\":null,\"visible_vehicle_count\":160,\"emitted_at\":\"2026-06-18T02:46:27.325Z\"}"
+      "evidence": "{\"renderer_mode\":\"r3f_photoreal_stage5\",\"snapshot_source\":\"simulation_snapshot_fixture\",\"frame_bound\":true,\"draw_call_count\":94,\"webgl_context_loss_count\":0,\"fallback_reason\":null,\"visible_vehicle_count\":160,\"emitted_at\":\"2026-06-18T03:05:15.406Z\"}"
     },
     "R3F renderer uses frame-backed simulation snapshot": {
       "passed": true,
@@ -911,7 +911,7 @@
     },
     "operator source overlays are visible and clear of safety copy": {
       "passed": true,
-      "evidence": "desktop={\"viewportRect\":{\"top\":0,\"right\":1440,\"bottom\":1000,\"left\":0,\"width\":1440,\"height\":1000},\"overlayVisible\":true,\"safetyCopyVisible\":true,\"overlayRect\":{\"x\":987,\"y\":486,\"width\":420,\"height\":96,\"top\":486,\"right\":1407,\"bottom\":582,\"left\":987},\"safetyRect\":{\"x\":1165,\"y\":195,\"width\":246,\"height\":104,\"top\":195,\"right\":1411,\"bottom\":299,\"left\":1165},\"overlayViewportIntersection\":{\"x\":987,\"y\":486,\"width\":420,\"height\":96,\"top\":486,\"right\":1407,\"bottom\":582,\"left\":987},\"safetyViewportIntersection\":{\"x\":1165,\"y\":195,\"width\":246,\"height\":104,\"top\":195,\"right\":1411,\"bottom\":299,\"left\":1165},\"overlapsSafetyCopy\":false}, mobile={\"viewportRect\":{\"top\":0,\"right\":390,\"bottom\":844,\"left\":0,\"width\":390,\"height\":844},\"overlayVisible\":true,\"safetyCopyVisible\":true,\"overlayRect\":{\"x\":21,\"y\":698,\"width\":348,\"height\":122,\"top\":698,\"right\":369,\"bottom\":820,\"left\":21},\"safetyRect\":{\"x\":21,\"y\":54,\"width\":348,\"height\":42,\"top\":54,\"right\":369,\"bottom\":96,\"left\":21},\"overlayViewportIntersection\":{\"x\":21,\"y\":698,\"width\":348,\"height\":122,\"top\":698,\"right\":369,\"bottom\":820,\"left\":21},\"safetyViewportIntersection\":{\"x\":21,\"y\":54,\"width\":348,\"height\":42,\"top\":54,\"right\":369,\"bottom\":96,\"left\":21},\"overlapsSafetyCopy\":false}"
+      "evidence": "desktop={\"viewportRect\":{\"top\":0,\"right\":1440,\"bottom\":1000,\"left\":0,\"width\":1440,\"height\":1000},\"overlayVisible\":true,\"safetyCopyVisible\":true,\"overlayRect\":{\"x\":987,\"y\":485,\"width\":420,\"height\":130,\"top\":485,\"right\":1407,\"bottom\":615,\"left\":987},\"safetyRect\":{\"x\":1165,\"y\":194,\"width\":246,\"height\":104,\"top\":194,\"right\":1411,\"bottom\":298,\"left\":1165},\"overlayViewportIntersection\":{\"x\":987,\"y\":485,\"width\":420,\"height\":130,\"top\":485,\"right\":1407,\"bottom\":615,\"left\":987},\"safetyViewportIntersection\":{\"x\":1165,\"y\":194,\"width\":246,\"height\":104,\"top\":194,\"right\":1411,\"bottom\":298,\"left\":1165},\"overlapsSafetyCopy\":false}, mobile={\"viewportRect\":{\"top\":0,\"right\":390,\"bottom\":844,\"left\":0,\"width\":390,\"height\":844},\"overlayVisible\":true,\"safetyCopyVisible\":true,\"overlayRect\":{\"x\":21,\"y\":666,\"width\":348,\"height\":154,\"top\":666,\"right\":369,\"bottom\":820,\"left\":21},\"safetyRect\":{\"x\":21,\"y\":30,\"width\":348,\"height\":66,\"top\":30,\"right\":369,\"bottom\":96,\"left\":21},\"overlayViewportIntersection\":{\"x\":21,\"y\":666,\"width\":348,\"height\":154,\"top\":666,\"right\":369,\"bottom\":820,\"left\":21},\"safetyViewportIntersection\":{\"x\":21,\"y\":30,\"width\":348,\"height\":66,\"top\":30,\"right\":369,\"bottom\":96,\"left\":21},\"overlapsSafetyCopy\":false}"
     },
     "forced-WebGL-off fallback renders": {
       "passed": true,
@@ -923,7 +923,7 @@
     },
     "desktop canvas composition is readable and not miniature": {
       "passed": true,
-      "evidence": "{\"usable_scene_coverage\":true,\"empty_void_not_dominant\":true,\"north_approach_uses_frame\":true,\"south_approach_uses_frame\":true,\"east_west_approaches_readable\":true,\"distributed_scene_detail\":true,\"not_miniature_strip\":true,\"thresholds\":{\"min_scene_coverage_ratio\":0.5,\"max_empty_near_black_ratio\":0.5,\"min_top_band_scene_ratio\":0.04,\"min_side_band_scene_ratio\":0.08,\"min_bottom_band_scene_ratio\":0.16,\"min_occupied_grid_cell_count\":17},\"metrics\":{\"width\":914,\"height\":680,\"scene_coverage_ratio\":0.9432890333376239,\"empty_near_black_ratio\":0.05279315227184966,\"top_band_scene_ratio\":0.8600849530184065,\"bottom_band_scene_ratio\":0.9997667009911185,\"left_band_scene_ratio\":0.7413773706203793,\"right_band_scene_ratio\":0.9941903684550744,\"center_band_scene_ratio\":0.991622533257676,\"occupied_grid_cell_count\":25,\"grid_cell_count\":25,\"scene_bbox_width_ratio\":1,\"scene_bbox_height_ratio\":1,\"grid_cell_scene_ratios\":[[0.304,0.997,1,1,1],[0.404,0.972,0.987,0.953,0.972],[0.999,1,0.999,1,1],[1,0.999,1,0.999,0.999],[1,0.999,1,1,1]]},\"passed\":true}"
+      "evidence": "{\"usable_scene_coverage\":true,\"empty_void_not_dominant\":true,\"north_approach_uses_frame\":true,\"south_approach_uses_frame\":true,\"east_west_approaches_readable\":true,\"distributed_scene_detail\":true,\"not_miniature_strip\":true,\"thresholds\":{\"min_scene_coverage_ratio\":0.5,\"max_empty_near_black_ratio\":0.5,\"min_top_band_scene_ratio\":0.04,\"min_side_band_scene_ratio\":0.08,\"min_bottom_band_scene_ratio\":0.16,\"min_occupied_grid_cell_count\":17},\"metrics\":{\"width\":914,\"height\":679,\"scene_coverage_ratio\":0.9431475042136235,\"empty_near_black_ratio\":0.052704936787591486,\"top_band_scene_ratio\":0.8595137726863175,\"bottom_band_scene_ratio\":0.9994732150093201,\"left_band_scene_ratio\":0.7417046926933694,\"right_band_scene_ratio\":0.9940361553027238,\"center_band_scene_ratio\":0.9915594855305466,\"occupied_grid_cell_count\":25,\"grid_cell_count\":25,\"scene_bbox_width_ratio\":1,\"scene_bbox_height_ratio\":1,\"grid_cell_scene_ratios\":[[0.302,0.996,1,1,1],[0.41,0.973,0.987,0.953,0.972],[0.998,0.999,0.999,0.999,1],[1,0.999,1,0.999,0.998],[1,0.997,1,1,1]]},\"passed\":true}"
     },
     "mobile canvas composition is readable and not mostly void": {
       "passed": true,

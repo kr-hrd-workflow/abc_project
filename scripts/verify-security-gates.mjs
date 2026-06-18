@@ -1,13 +1,16 @@
 #!/usr/bin/env node
 
 import { spawnSync } from "node:child_process";
-import { mkdirSync, readFileSync, writeFileSync } from "node:fs";
+import { mkdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 
 const scriptDir = path.dirname(fileURLToPath(import.meta.url));
 const repoRoot = path.resolve(scriptDir, "..");
+const apiDir = path.join(repoRoot, "apps", "api");
 const securityReportPath = path.join(repoRoot, "artifacts", "r3f-security-gates.json");
+const pipAuditRequirementsFile = ".pip-audit-requirements.txt";
+const pipAuditRequirementsPath = path.join(apiDir, pipAuditRequirementsFile);
 const npmCliPath = path.join(
   path.dirname(process.execPath),
   "node_modules",
@@ -34,23 +37,19 @@ const secretPatterns = [
   }
 ];
 
-runCommandCheck("root_npm_audit_high", process.execPath, [
+runCommandCheck("root_npm_audit_moderate", process.execPath, [
   npmCliPath,
   "audit",
-  "--audit-level=high"
+  "--audit-level=moderate"
 ]);
-runCommandCheck("web_workspace_npm_audit_high", process.execPath, [
+runCommandCheck("web_workspace_npm_audit_moderate", process.execPath, [
   npmCliPath,
   "--workspace",
   "apps/web",
   "audit",
-  "--audit-level=high"
+  "--audit-level=moderate"
 ]);
-runCommandCheck("python_dependency_audit", process.execPath, [
-  "scripts/run-api-python.mjs",
-  "-m",
-  "pip_audit"
-]);
+runPythonDependencyAudit();
 runCommandCheck("cyclonedx_sbom_generation", process.execPath, [
   npmCliPath,
   "sbom",
@@ -100,6 +99,74 @@ function runCommandCheck(name, command, args) {
 
   if (!passed) {
     failures.push(`${name}: ${[command, ...args].join(" ")} exited ${result.status}`);
+  }
+}
+
+function runPythonDependencyAudit() {
+  const freeze = spawnSync(process.execPath, [
+    "scripts/run-api-python.mjs",
+    "-m",
+    "pip",
+    "freeze",
+    "--exclude-editable"
+  ], {
+    cwd: repoRoot,
+    encoding: "utf8",
+    maxBuffer: 10 * 1024 * 1024
+  });
+
+  if (freeze.status !== 0) {
+    results.push({
+      name: "python_dependency_audit",
+      command: `${process.execPath} scripts/run-api-python.mjs -m pip freeze --exclude-editable`,
+      status: "failed",
+      exit_code: freeze.status,
+      error: freeze.error?.message ?? null,
+      stdout_tail: tail(freeze.stdout),
+      stderr_tail: tail(freeze.stderr)
+    });
+    failures.push(`python_dependency_audit: pip freeze exited ${freeze.status}`);
+    return;
+  }
+
+  writeFileSync(pipAuditRequirementsPath, freeze.stdout, "utf8");
+  const audit = spawnSync(process.execPath, [
+    "scripts/run-api-python.mjs",
+    "-m",
+    "pip_audit",
+    "-r",
+    pipAuditRequirementsFile,
+    "--format",
+    "json"
+  ], {
+    cwd: repoRoot,
+    encoding: "utf8",
+    maxBuffer: 10 * 1024 * 1024
+  });
+  rmSync(pipAuditRequirementsPath, { force: true });
+
+  const output = `${audit.stdout ?? ""}\n${audit.stderr ?? ""}`;
+  const hasSkippedDependency = /\bskip_reason\b|Skip Reason/.test(output);
+  const passed = audit.status === 0 && !hasSkippedDependency;
+
+  results.push({
+    name: "python_dependency_audit",
+    command: [
+      `${process.execPath} scripts/run-api-python.mjs -m pip freeze --exclude-editable`,
+      `${process.execPath} scripts/run-api-python.mjs -m pip_audit -r ${pipAuditRequirementsFile} --format json`
+    ].join(" && "),
+    status: passed ? "passed" : "failed",
+    exit_code: audit.status,
+    error: audit.error?.message ?? null,
+    dependency_source: "pip freeze --exclude-editable",
+    skipped_dependencies: hasSkippedDependency ? "present" : "none",
+    stdout_tail: tail(audit.stdout),
+    stderr_tail: tail(audit.stderr)
+  });
+
+  if (!passed) {
+    const reason = hasSkippedDependency ? "reported skipped dependencies" : `exited ${audit.status}`;
+    failures.push(`python_dependency_audit: ${reason}`);
   }
 }
 

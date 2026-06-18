@@ -6,7 +6,7 @@
 
 **Architecture:** Keep FastAPI/SUMO/TraCI/Tarcl as simulation truth and orchestration. Keep React DOM as the dashboard and HUD shell. Add an R3F renderer island under the existing `SimulationViewport` seam, backed first by a typed fixture snapshot contract, then by live SUMO/Tarcl snapshots or traces. Use a hybrid of procedural roadway geometry, Image Gen reference/texture sources, optimized GLB assets, and browser performance gates.
 
-**Tech Stack:** Next.js 15, React 19, TypeScript, React Three Fiber, Three.js, Drei, React Postprocessing, glTF/GLB 2.0, glTF Transform, FastAPI, Pydantic, SUMO/TraCI/Tarcl, Vitest, Testing Library, Playwright.
+**Tech Stack:** Next.js 16 preview, React 19, TypeScript, React Three Fiber, Three.js, Drei, React Postprocessing, glTF/GLB 2.0, glTF Transform, FastAPI, Pydantic, SUMO/TraCI/Tarcl, Vitest, Testing Library, Playwright.
 
 ---
 
@@ -1565,8 +1565,8 @@ Create `scripts/verify-security-gates.mjs` and root script:
 The script must run checks that are available without new external tools:
 
 ```text
-npm audit --audit-level=high
-npm --workspace apps/web audit --audit-level=high
+npm audit --audit-level=moderate
+npm --workspace apps/web audit --audit-level=moderate
 manifest license/provenance coverage through verify-r3f-assets.mjs
 tracked-file scan for obvious private keys or API tokens in source/docs/scripts
 ```
@@ -1639,7 +1639,7 @@ Stage 6F proof, final primary-run browser artifact generated at `2026-06-18T01:4
 - `npm --workspace apps/web run test -- lib/r3fTelemetry.test.ts`: 1 test passed after the initial RED missing-module failure.
 - `npm --workspace apps/web run test -- components/r3f/SimulationCanvas.test.tsx`: 6 tests passed after the initial RED missing-telemetry failure.
 - Initial `npm run verify:security`: passed available no-install checks and reported exact blocked tooling for Python audit, SBOM generation, and external secret scanning.
-- Final-gate concern closure: `npm run verify:security` now runs Python dependency audit, CycloneDX SBOM generation, R3F asset provenance verification, and tracked-file secret scanning, writes `artifacts/r3f-security-gates.json`, and reports `blocked_requires_tooling=[]` when the gate passes.
+- Final-gate concern closure: `npm run verify:security` now runs moderate-or-higher npm audit gates, Python third-party dependency audit with skipped dependencies rejected, CycloneDX SBOM generation, R3F asset provenance verification, and tracked-file secret scanning, writes `artifacts/r3f-security-gates.json`, and reports `blocked_requires_tooling=[]` when the gate passes.
 - `node scripts/verify-r3f-dashboard.mjs`: passed and wrote telemetry into `artifacts/r3f-dashboard-details.json`.
 - `npm run verify`: passed API tests, web tests, web build, asset verifier, dashboard verifier, security verifier, and `git diff --check` with no line-ending warnings after the final-gate concern closure.
 - Telemetry evidence: `renderer_mode=r3f_photoreal_stage5`, `snapshot_source=simulation_snapshot_fixture`, `frame_bound=true`, `draw_call_count=94`, `webgl_context_loss_count=0`, `fallback_reason=null`, `visible_vehicle_count=160`.

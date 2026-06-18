@@ -3,8 +3,12 @@
 .gitignore text eol=lf
 package.json text eol=lf
 package-lock.json text eol=lf
+README.md text eol=lf
 apps/api/pyproject.toml text eol=lf
 apps/web/package.json text eol=lf
+apps/web/app/globals.css text eol=lf
+apps/web/next-env.d.ts text eol=lf
+apps/web/tsconfig.json text eol=lf
 scripts/verify-security-gates.mjs text eol=lf
 docs/ops/r3f-artifact-retention.md text eol=lf
 docs/superpowers/plans/2026-06-16-r3f-photoreal-dashboard-simulation.md text eol=lf

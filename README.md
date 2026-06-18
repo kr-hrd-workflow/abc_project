@@ -6,7 +6,7 @@
 
 최신 `main` 기준으로 아래 범위가 구현되어 있습니다.
 
-- `Next.js 15 + React 19 + TypeScript` 기반 웹 랜딩 페이지와 운영자 대시보드
+- `Next.js 16 preview + React 19 + TypeScript` 기반 웹 랜딩 페이지와 운영자 대시보드
 - `FastAPI + SQLAlchemy + Alembic` 기반 API
 - Docker Compose 기반 PostgreSQL/pgvector 개발 환경
 - 긴급차량, 보행자 대기, 일반 흐름, 교차로 막힘 시나리오
