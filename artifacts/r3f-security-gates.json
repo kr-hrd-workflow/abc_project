@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-06-18T13:22:59.528Z",
+  "generated_at": "2026-06-19T09:19:13.444Z",
   "status": "passed",
   "results": [
     {
@@ -82,7 +82,7 @@
       "exit_code": 0,
       "error": null,
       "stdout_tail": [
-        "R3F asset verification passed. First-pass GLB + texture payload: 9.62 MB / 25.00 MB."
+        "R3F asset verification passed. First-pass GLB + texture payload: 11.95 MB / 25.00 MB."
       ],
       "stderr_tail": [
         ""
@@ -91,9 +91,9 @@
     {
       "name": "workspace_secret_scan",
       "status": "passed",
-      "scanned_files": 182,
-      "scanned_untracked_files": 0,
-      "tracked_files": 182,
+      "scanned_files": 202,
+      "scanned_untracked_files": 19,
+      "tracked_files": 183,
       "findings": []
     }
   ],

@@ -26,7 +26,11 @@ import {
   type R3FAssetEntry,
   type R3FAssetId
 } from "./assetManifest";
-import { useStage5RoadMaterials } from "./roadMaterials";
+import {
+  STAGE6_BUILDING_FACADE_MATERIAL_CONTROLS,
+  STAGE5_TEXTURE_ASSET_IDS,
+  useStage5RoadMaterials
+} from "./roadMaterials";
 import { STAGE5_SHADOWS_ENABLED } from "./shadowPolicy";
 
 export const STAGE6E_FIRST_PASS_PAYLOAD_LIMIT_BYTES = 25 * 1024 * 1024;
@@ -319,6 +323,16 @@ export const STAGE5_STREET_FURNITURE_CONTACT_SHADOW_PLACEMENTS: Stage5StreetFurn
 
 export const STAGE5_FACADE_PANELS: Stage5FacadePanelSpec[] =
   buildStage5FacadePanels();
+
+export function getStage6FacadePanelMaterialContract() {
+  return {
+    sourceAsset: STAGE5_TEXTURE_ASSET_IDS.facadeWindowEmissive,
+    textureRole: "facadeWindowEmissive",
+    baseColorMap: "none",
+    emissiveOnly: true,
+    minOpacity: STAGE6_BUILDING_FACADE_MATERIAL_CONTROLS.facadePanelOpacity
+  };
+}
 
 export function buildStage6EAssetRuntimePlan(): Stage6EAssetRuntimePlan {
   const manifestEntries = listR3FAssetEntries();
@@ -619,7 +633,7 @@ function Stage5StreetFurnitureContactShadows() {
       <meshBasicMaterial
         color="#02040a"
         transparent
-        opacity={0.3}
+        opacity={0.48}
         depthWrite={false}
         toneMapped={false}
       />
@@ -733,6 +747,7 @@ function Stage5FacadePanels() {
       ref={facadeRef}
       name="stage5-lit-facade-window-panels"
       args={[undefined, undefined, STAGE5_FACADE_PANELS.length]}
+      renderOrder={2}
       receiveShadow
     >
       <planeGeometry args={[1, 1]} />
@@ -740,7 +755,8 @@ function Stage5FacadePanels() {
           {...roadMaterials.buildingEdge}
           side={DoubleSide}
           transparent
-          opacity={0.68}
+          opacity={STAGE6_BUILDING_FACADE_MATERIAL_CONTROLS.facadePanelOpacity}
+          depthWrite={false}
         />
     </instancedMesh>
   );

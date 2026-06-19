@@ -10,8 +10,18 @@ import {
   STAGE5_SHADOWS_ENABLED,
   getStage5ShadowCasterCount
 } from "./shadowPolicy";
+import { getWeatherAwareRainLayerConfig } from "./RainParticleLayer";
 import { SimulationCanvas } from "./SimulationCanvas";
 import { SimulationOverlays } from "./SimulationOverlays";
+import { buildStage6PostFXState } from "./stage6PostFXPresets";
+import {
+  STAGE6_TEXTURE_MEMORY_ESTIMATE_MB,
+  getStage6PresentationMode
+} from "./stage6Quality";
+import type {
+  Stage6QualityPreset,
+  Stage6WeatherPresetName
+} from "./stage6Quality";
 import { useInterpolatedSimulationFrame } from "./useInterpolatedSimulationFrame";
 import {
   STAGE5_TRAFFIC_VEHICLE_SILHOUETTE_PARTS,
@@ -54,11 +64,29 @@ export function R3FSimulationViewport({
   );
   const frameBound = frameSceneSnapshot.source !== null;
   const sceneSnapshot = frameBound ? frameSceneSnapshot : fallbackSceneSnapshot;
-  const visibleVehicleCount = useMemo(() => {
-    const renderPlan = buildTrafficDensityRenderPlan(sceneSnapshot);
-
-    return renderPlan.preciseVehicles.length + renderPlan.farVehicles.length;
-  }, [sceneSnapshot]);
+  const stage6Presentation = useMemo(() => getStage6PresentationMode(), []);
+  const stage6QualityPreset = stage6Presentation.qualityPreset;
+  const trafficRenderPlan = useMemo(
+    () => buildTrafficDensityRenderPlan(sceneSnapshot, stage6QualityPreset),
+    [sceneSnapshot, stage6QualityPreset]
+  );
+  const visibleVehicleCount =
+    trafficRenderPlan.preciseVehicles.length + trafficRenderPlan.farVehicles.length;
+  const highQualityVehicleCount = trafficRenderPlan.preciseVehicles.filter(
+    (vehicle) => vehicle.highQualityGlbEligible
+  ).length;
+  const postFxState = useMemo(
+    () => buildStage6PostFXState(stage6QualityPreset.name),
+    [stage6QualityPreset.name]
+  );
+  const weatherFeatureState = useMemo(
+    () =>
+      getStage6WeatherFeatureState(
+        stage6QualityPreset,
+        stage6Presentation.weather
+      ),
+    [stage6Presentation.weather, stage6QualityPreset]
+  );
   const corridorLengthMeters = getCorridorLengthDataAttribute();
   const visibleVehiclePartCount =
     STAGE5_TRAFFIC_VEHICLE_SILHOUETTE_PARTS.filter((part) => part.visible).length;
@@ -74,6 +102,20 @@ export function R3FSimulationViewport({
       data-r3f-frame-bound={frameBound ? "true" : undefined}
       data-r3f-renderer-mode={STAGE5_RENDERER_MODE}
       data-r3f-photoreal-stage="5"
+      data-r3f-finishing-stage="6"
+      data-r3f-quality-preset={stage6QualityPreset.name}
+      data-r3f-weather={stage6Presentation.weather}
+      data-r3f-time-of-day={stage6Presentation.timeOfDay}
+      data-r3f-postfx-enabled={postFxState.enabled ? "true" : "false"}
+      data-r3f-postfx-chain={postFxState.chainLabel}
+      data-r3f-planar-reflection-enabled={
+        stage6QualityPreset.reflections === "fake" ? "false" : "true"
+      }
+      data-r3f-weather-particles-enabled={
+        weatherFeatureState.weatherParticlesEnabled ? "true" : "false"
+      }
+      data-r3f-high-quality-vehicle-count={highQualityVehicleCount}
+      data-r3f-texture-memory-estimate-mb={STAGE6_TEXTURE_MEMORY_ESTIMATE_MB}
       data-r3f-corridor-length-meters={corridorLengthMeters}
       data-r3f-traffic-density-mode={sceneSnapshot.trafficDensityMode}
       data-r3f-signal-state={signalState}
@@ -100,7 +142,12 @@ export function R3FSimulationViewport({
       }
       data-r3f-vehicle-silhouette-part-count={visibleVehiclePartCount}
     >
-      <SimulationCanvas sceneSnapshot={sceneSnapshot} />
+      <SimulationCanvas
+        sceneSnapshot={sceneSnapshot}
+        qualityPreset={stage6QualityPreset}
+        weather={stage6Presentation.weather}
+        timeOfDay={stage6Presentation.timeOfDay}
+      />
       <SimulationOverlays
         simulationSource={simulation.source}
         sceneSnapshot={sceneSnapshot}
@@ -118,6 +165,22 @@ export function R3FSimulationViewport({
       </div>
     </div>
   );
+}
+
+export function getStage6WeatherFeatureState(
+  qualityPreset: Stage6QualityPreset,
+  weather: Stage6WeatherPresetName
+) {
+  const rainLayerConfig = getWeatherAwareRainLayerConfig(qualityPreset, weather);
+
+  return {
+    weather,
+    qualityPreset: qualityPreset.name,
+    streakCount: rainLayerConfig.streakCount,
+    splashCount: rainLayerConfig.splashCount,
+    weatherParticlesEnabled:
+      rainLayerConfig.streakCount + rainLayerConfig.splashCount > 0
+  };
 }
 
 function buildStaticFrameEntries(

@@ -11,6 +11,9 @@ import {
 } from "./roadGeometry";
 import type { Vector3Tuple } from "./roadGeometry";
 import { useStage5RoadMaterials } from "./roadMaterials";
+import type { Stage6QualityPreset } from "./stage6Quality";
+import { getStage6QualityPreset } from "./stage6Quality";
+import { WetRoadReflectors } from "./WetRoadReflectors";
 
 type RoadMaterialProps = ThreeElements["meshStandardMaterial"];
 type PlaneBatchSpec = {
@@ -111,7 +114,11 @@ const TURN_ARROW_PARTS: PlanePrimitiveSpec[] = TURN_ARROW_MARKINGS.flatMap(
   (arrow) => arrow.parts
 );
 
-export function ProceduralIntersection() {
+export function ProceduralIntersection({
+  qualityPreset = getStage6QualityPreset("low")
+}: {
+  qualityPreset?: Stage6QualityPreset;
+} = {}) {
   const roadMaterials = useStage5RoadMaterials();
 
   return (
@@ -159,6 +166,7 @@ export function ProceduralIntersection() {
         material={roadMaterials.markingScuff}
         renderOrder={4}
       />
+      <WetRoadReflectors qualityPreset={qualityPreset} />
     </group>
   );
 }

@@ -9,8 +9,26 @@ import {
 } from "three";
 
 import { getR3FAssetEntry, type R3FAssetId } from "./assetManifest";
+import { createStage6WeatherAtlasCellTexture } from "./stage6WeatherAtlas";
 
 type RoadMaterialProps = ThreeElements["meshStandardMaterial"];
+
+export type Stage6RoadMaterialMapCoverage = {
+  baseColor: "scalar" | "texture";
+  normal: "missing" | "texture";
+  roughness: "scalar" | "texture";
+  ao: "missing" | "texture";
+};
+
+export type Stage6RoadMaterialName =
+  | "asphalt"
+  | "wetAsphalt"
+  | "lanePaint"
+  | "crosswalkPaint"
+  | "curbConcrete"
+  | "sidewalkConcrete"
+  | "puddleMask"
+  | "roadEdgeGrime";
 
 export const STAGE5_TEXTURE_ASSET_IDS = {
   wetAsphaltAlbedo: "textures/wet_asphalt_albedo",
@@ -19,7 +37,8 @@ export const STAGE5_TEXTURE_ASSET_IDS = {
   crosswalkWear: "decals/crosswalk_wear",
   curbGrime: "decals/curb_grime",
   sidewalkPaverVariation: "textures/sidewalk_paver_variation",
-  facadeWindowEmissive: "textures/facade_window_emissive"
+  facadeWindowEmissive: "textures/facade_window_emissive",
+  stage6WeatherMaterialAtlas: "sprites/stage6_weather_material_source_atlas"
 } as const satisfies Record<string, R3FAssetId>;
 
 export const STAGE5_TEXTURE_PATHS = {
@@ -36,6 +55,9 @@ export const STAGE5_TEXTURE_PATHS = {
   ).path,
   facadeWindowEmissive: getR3FAssetEntry(
     STAGE5_TEXTURE_ASSET_IDS.facadeWindowEmissive
+  ).path,
+  stage6WeatherMaterialAtlas: getR3FAssetEntry(
+    STAGE5_TEXTURE_ASSET_IDS.stage6WeatherMaterialAtlas
   ).path
 } as const;
 
@@ -49,26 +71,33 @@ const STAGE5_TEXTURE_ENTRIES = Object.entries(STAGE5_TEXTURE_PATHS) as Array<
 export const STAGE5_WET_ROAD_MATERIAL_CONTROLS = {
   wetness: 0.72,
   asphaltBumpScale: 0.064,
-  markingWearOpacity: 0.96
+  markingWearOpacity: 0.58
+} as const;
+
+export const STAGE6_BUILDING_FACADE_MATERIAL_CONTROLS = {
+  baseColor: "#202a2f",
+  emissive: "#415e68",
+  emissiveIntensity: 0.24,
+  facadePanelOpacity: 0.42
 } as const;
 
 export const ROAD_MATERIALS = {
   asphalt: {
-    color: "#303d41",
-    roughness: 0.18,
-    metalness: 0.055,
-    envMapIntensity: 1.44,
+    color: "#1f2a2f",
+    roughness: 0.2,
+    metalness: 0.06,
+    envMapIntensity: 1.18,
     dithering: true
   },
   intersectionAsphalt: {
-    color: "#2a373b",
-    roughness: 0.17,
+    color: "#1c282d",
+    roughness: 0.18,
     metalness: 0.07,
-    envMapIntensity: 1.52,
+    envMapIntensity: 1.24,
     dithering: true
   },
   asphaltPatch: {
-    color: "#233036",
+    color: "#1b2529",
     roughness: 0.44,
     metalness: 0.035,
     envMapIntensity: 0.86,
@@ -80,9 +109,9 @@ export const ROAD_MATERIALS = {
     dithering: true
   },
   wornMarking: {
-    color: "#fffdf0",
-    emissive: "#d4c6a3",
-    emissiveIntensity: 0.5,
+    color: "#e0dac5",
+    emissive: "#716955",
+    emissiveIntensity: 0.18,
     roughness: 0.78,
     metalness: 0.02,
     transparent: true,
@@ -94,13 +123,13 @@ export const ROAD_MATERIALS = {
     dithering: true
   },
   crosswalkMarking: {
-    color: "#fff7df",
-    emissive: "#c8b895",
-    emissiveIntensity: 0.42,
+    color: "#d2c6aa",
+    emissive: "#514633",
+    emissiveIntensity: 0.08,
     roughness: 0.8,
     metalness: 0.02,
     transparent: true,
-    opacity: 0.96,
+    opacity: 0.54,
     depthWrite: false,
     polygonOffset: true,
     polygonOffsetFactor: -3,
@@ -108,7 +137,7 @@ export const ROAD_MATERIALS = {
     dithering: true
   },
   markingScuff: {
-    color: "#30393c",
+    color: "#202b2f",
     roughness: 0.74,
     metalness: 0.02,
     transparent: true,
@@ -119,7 +148,7 @@ export const ROAD_MATERIALS = {
     dithering: true
   },
   queueZone: {
-    color: "#33484f",
+    color: "#25363c",
     roughness: 0.58,
     metalness: 0.02,
     transparent: true,
@@ -130,7 +159,7 @@ export const ROAD_MATERIALS = {
     dithering: true
   },
   edgeGrime: {
-    color: "#283134",
+    color: "#222c30",
     roughness: 0.78,
     metalness: 0.01,
     transparent: true,
@@ -141,34 +170,121 @@ export const ROAD_MATERIALS = {
     dithering: true
   },
   curb: {
-    color: "#69675e",
+    color: "#424845",
     roughness: 0.9,
     metalness: 0.01,
     dithering: true
   },
   sidewalk: {
-    color: "#60685f",
+    color: "#3a4442",
     roughness: 0.91,
     metalness: 0.02,
     dithering: true
   },
   cityGround: {
-    color: "#2d393d",
-    roughness: 0.78,
+    color: "#20292d",
+    roughness: 0.82,
     metalness: 0.025,
     envMapIntensity: 0.62,
     dithering: true
   },
+  buildingBlock: {
+    color: "#1f2b31",
+    roughness: 0.72,
+    metalness: 0.04,
+    emissive: "#0c1215",
+    emissiveIntensity: 0.08,
+    envMapIntensity: 0.38,
+    dithering: true
+  },
   buildingEdge: {
-    color: "#324046",
+    color: STAGE6_BUILDING_FACADE_MATERIAL_CONTROLS.baseColor,
     roughness: 0.44,
     metalness: 0.14,
-    emissive: "#42382c",
-    emissiveIntensity: 0.44,
+    emissive: STAGE6_BUILDING_FACADE_MATERIAL_CONTROLS.emissive,
+    emissiveIntensity:
+      STAGE6_BUILDING_FACADE_MATERIAL_CONTROLS.emissiveIntensity,
     envMapIntensity: 0.86,
     dithering: true
   }
 } satisfies Record<string, RoadMaterialProps>;
+
+export const STAGE6_ROAD_MATERIALS = {
+  asphalt: ROAD_MATERIALS.asphalt,
+  wetAsphalt: ROAD_MATERIALS.intersectionAsphalt,
+  lanePaint: ROAD_MATERIALS.wornMarking,
+  crosswalkPaint: ROAD_MATERIALS.crosswalkMarking,
+  curbConcrete: ROAD_MATERIALS.curb,
+  sidewalkConcrete: ROAD_MATERIALS.sidewalk,
+  puddleMask: {
+    color: "#202b2f",
+    roughness: 0.08,
+    metalness: 0.08,
+    envMapIntensity: 1.8,
+    transparent: true,
+    opacity: 0.32,
+    depthWrite: false,
+    polygonOffset: true,
+    polygonOffsetFactor: -5,
+    dithering: true
+  },
+  roadEdgeGrime: ROAD_MATERIALS.edgeGrime
+} as const satisfies Record<Stage6RoadMaterialName, RoadMaterialProps>;
+
+export const STAGE6_ROAD_MATERIAL_COVERAGE = {
+  asphalt: {
+    baseColor: "texture",
+    normal: "missing",
+    roughness: "texture",
+    ao: "missing"
+  },
+  wetAsphalt: {
+    baseColor: "texture",
+    normal: "missing",
+    roughness: "texture",
+    ao: "missing"
+  },
+  lanePaint: {
+    baseColor: "texture",
+    normal: "missing",
+    roughness: "texture",
+    ao: "missing"
+  },
+  crosswalkPaint: {
+    baseColor: "texture",
+    normal: "missing",
+    roughness: "texture",
+    ao: "missing"
+  },
+  curbConcrete: {
+    baseColor: "texture",
+    normal: "missing",
+    roughness: "texture",
+    ao: "missing"
+  },
+  sidewalkConcrete: {
+    baseColor: "texture",
+    normal: "missing",
+    roughness: "texture",
+    ao: "missing"
+  },
+  puddleMask: {
+    baseColor: "scalar",
+    normal: "missing",
+    roughness: "scalar",
+    ao: "missing"
+  },
+  roadEdgeGrime: {
+    baseColor: "texture",
+    normal: "missing",
+    roughness: "texture",
+    ao: "missing"
+  }
+} as const satisfies Record<Stage6RoadMaterialName, Stage6RoadMaterialMapCoverage>;
+
+export function getStage6RoadMaterialCoverage(name: Stage6RoadMaterialName) {
+  return STAGE6_ROAD_MATERIAL_COVERAGE[name];
+}
 
 export type Stage5RoadMaterialSet = typeof ROAD_MATERIALS;
 
@@ -226,22 +342,30 @@ export function useStage5RoadMaterials(): Stage5RoadMaterialSet {
       return {
         asphalt: {
           ...ROAD_MATERIALS.asphalt,
-          map: repeatTexture(textures.wetAsphaltAlbedo, [10, 32], SRGBColorSpace),
+          map: createStage6WeatherAtlasCellTexture(
+            textures.stage6WeatherMaterialAtlas,
+            "wetAsphaltGloss",
+            SRGBColorSpace
+          ),
           roughnessMap: repeatTexture(
             textures.wetAsphaltRoughness,
             [10, 32],
             NoColorSpace
           ),
-          bumpMap: repeatTexture(
-            textures.wetAsphaltRoughness,
-            [18, 44],
+          bumpMap: createStage6WeatherAtlasCellTexture(
+            textures.stage6WeatherMaterialAtlas,
+            "asphaltAggregate",
             NoColorSpace
           ),
           bumpScale: STAGE5_WET_ROAD_MATERIAL_CONTROLS.asphaltBumpScale
         },
         intersectionAsphalt: {
           ...ROAD_MATERIALS.intersectionAsphalt,
-          map: repeatTexture(textures.wetAsphaltAlbedo, [7, 7], SRGBColorSpace),
+          map: createStage6WeatherAtlasCellTexture(
+            textures.stage6WeatherMaterialAtlas,
+            "rainReflectiveRoad",
+            SRGBColorSpace
+          ),
           roughnessMap: repeatTexture(
             textures.wetAsphaltRoughness,
             [7, 7],
@@ -256,7 +380,11 @@ export function useStage5RoadMaterials(): Stage5RoadMaterialSet {
         },
         asphaltPatch: {
           ...ROAD_MATERIALS.asphaltPatch,
-          map: repeatTexture(textures.wetAsphaltAlbedo, [4, 14], SRGBColorSpace),
+          map: createStage6WeatherAtlasCellTexture(
+            textures.stage6WeatherMaterialAtlas,
+            "potholePuddles",
+            SRGBColorSpace
+          ),
           roughnessMap: repeatTexture(
             textures.wetAsphaltRoughness,
             [6, 18],
@@ -271,7 +399,11 @@ export function useStage5RoadMaterials(): Stage5RoadMaterialSet {
         },
         wornMarking: {
           ...ROAD_MATERIALS.wornMarking,
-          map: repeatTexture(textures.wornLaneMarkings, [1, 18], SRGBColorSpace),
+          map: createStage6WeatherAtlasCellTexture(
+            textures.stage6WeatherMaterialAtlas,
+            "laneMarkings",
+            SRGBColorSpace
+          ),
           roughnessMap: repeatTexture(
             textures.wetAsphaltRoughness,
             [4, 28],
@@ -280,7 +412,11 @@ export function useStage5RoadMaterials(): Stage5RoadMaterialSet {
         },
         crosswalkMarking: {
           ...ROAD_MATERIALS.crosswalkMarking,
-          map: repeatTexture(textures.crosswalkWear, [2, 1], SRGBColorSpace),
+          map: createStage6WeatherAtlasCellTexture(
+            textures.stage6WeatherMaterialAtlas,
+            "crosswalkWear",
+            SRGBColorSpace
+          ),
           roughnessMap: repeatTexture(
             textures.wetAsphaltRoughness,
             [3, 3],
@@ -289,7 +425,11 @@ export function useStage5RoadMaterials(): Stage5RoadMaterialSet {
         },
         markingScuff: {
           ...ROAD_MATERIALS.markingScuff,
-          map: repeatTexture(textures.wornLaneMarkings, [2, 10], SRGBColorSpace),
+          map: createStage6WeatherAtlasCellTexture(
+            textures.stage6WeatherMaterialAtlas,
+            "wetConcrete",
+            SRGBColorSpace
+          ),
           roughnessMap: repeatTexture(
             textures.wetAsphaltRoughness,
             [4, 16],
@@ -299,7 +439,11 @@ export function useStage5RoadMaterials(): Stage5RoadMaterialSet {
         queueZone: ROAD_MATERIALS.queueZone,
         edgeGrime: {
           ...ROAD_MATERIALS.edgeGrime,
-          map: repeatTexture(textures.curbGrime, [1, 22], SRGBColorSpace),
+          map: createStage6WeatherAtlasCellTexture(
+            textures.stage6WeatherMaterialAtlas,
+            "puddleMask",
+            SRGBColorSpace
+          ),
           roughnessMap: repeatTexture(textures.curbGrime, [1, 22], NoColorSpace)
         },
         curb: {
@@ -351,9 +495,13 @@ export function useStage5RoadMaterials(): Stage5RoadMaterialSet {
           ),
           bumpScale: 0.014
         },
+        buildingBlock: ROAD_MATERIALS.buildingBlock,
         buildingEdge: {
           ...ROAD_MATERIALS.buildingEdge,
-          map: repeatTexture(textures.facadeWindowEmissive, [8, 6], SRGBColorSpace),
+          color: STAGE6_BUILDING_FACADE_MATERIAL_CONTROLS.baseColor,
+          emissive: STAGE6_BUILDING_FACADE_MATERIAL_CONTROLS.emissive,
+          emissiveIntensity:
+            STAGE6_BUILDING_FACADE_MATERIAL_CONTROLS.emissiveIntensity,
           emissiveMap: repeatTexture(
             textures.facadeWindowEmissive,
             [8, 6],

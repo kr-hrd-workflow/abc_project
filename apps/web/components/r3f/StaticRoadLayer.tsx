@@ -6,8 +6,15 @@ import type { Group, Object3D } from "three";
 import { ApproachCorridors } from "./ApproachCorridors";
 import { ProceduralIntersection } from "./ProceduralIntersection";
 import { Stage5SceneAssets } from "./Stage5SceneAssets";
+import { Stage6SurfaceDecals } from "./Stage6SurfaceDecals";
+import type { Stage6QualityPreset } from "./stage6Quality";
+import { getStage6QualityPreset } from "./stage6Quality";
 
-function StaticRoadLayerComponent() {
+function StaticRoadLayerComponent({
+  qualityPreset = getStage6QualityPreset("high")
+}: {
+  qualityPreset?: Stage6QualityPreset;
+}) {
   const groupRef = useRef<Group>(null);
 
   useEffect(() => {
@@ -17,7 +24,8 @@ function StaticRoadLayerComponent() {
   return (
     <group ref={groupRef} name="stage5-static-road-layer">
       <ApproachCorridors />
-      <ProceduralIntersection />
+      <ProceduralIntersection qualityPreset={qualityPreset} />
+      <Stage6SurfaceDecals qualityPreset={qualityPreset} />
       <Suspense fallback={null}>
         <Stage5SceneAssets />
       </Suspense>

@@ -26,12 +26,28 @@ describe("R3F telemetry", () => {
       simToRenderDelayMs: 150,
       authoritativeHz: 10,
       frameStale: false,
+      qualityPreset: "high",
+      postFx: {
+        enabled: true,
+        chain: ["SMAA", "SSAO", "Bloom", "ToneMapping", "Noise", "Vignette"],
+        source: "dom_attribute",
+        reason: null
+      },
+      heavyFeatures: {
+        planarReflection: true,
+        weatherParticles: true,
+        highQualityVehicles: 18,
+        shadowCasters: 14,
+        source: "browser_telemetry",
+        reason: null
+      },
       fps: 60,
       averageFrameTimeMs: 16.2,
       cpuFrameTimeMs: 16.2,
       gpuFrameTimeMs: null,
       triangles: 42000,
       textureMemoryBytes: null,
+      textureMemoryEstimateMb: 8.5,
       jsHeapBytes: 2048,
       authoritativeTickDriftMs: 5,
       emittedAt: "2026-06-18T00:00:00.000Z"
@@ -50,12 +66,40 @@ describe("R3F telemetry", () => {
       sim_to_render_delay_ms: 150,
       authoritative_hz: 10,
       frame_stale: false,
+      quality_preset: "high",
+      post_fx: {
+        enabled: true,
+        chain: ["SMAA", "SSAO", "Bloom", "ToneMapping", "Noise", "Vignette"],
+        source: "dom_attribute",
+        reason: null
+      },
+      heavy_features: {
+        planar_reflection: true,
+        weather_particles: true,
+        high_quality_vehicles: 18,
+        shadow_casters: 14,
+        source: "browser_telemetry",
+        reason: null
+      },
       fps: 60,
       average_frame_time_ms: 16.2,
       cpu_frame_time_ms: 16.2,
       gpu_frame_time_ms: null,
       triangles: 42000,
       texture_memory_bytes: null,
+      performance: {
+        draw_calls: 94,
+        frame_time_ms: 16.2,
+        visible_vehicles: 160,
+        texture_memory_estimate_mb: 8.5,
+        source: "browser_telemetry",
+        reason: null
+      },
+      source_labels: {
+        snapshot_source: "simulation_snapshot_fixture",
+        stale: false,
+        fallback_reason: null
+      },
       js_heap_bytes: 2048,
       authoritative_tick_drift_ms: 5,
       emitted_at: "2026-06-18T00:00:00.000Z"
@@ -63,5 +107,50 @@ describe("R3F telemetry", () => {
 
     expect(publishR3FTelemetryEvent(event)).toBe(event);
     expect(window.__r3fTelemetryEvent).toBe(event);
+  });
+
+  test("labels missing Stage 6 finishing telemetry instead of fabricating values", () => {
+    const event = buildR3FTelemetryEvent({
+      rendererMode: "r3f_photoreal_stage5",
+      snapshotSource: "simulation_snapshot_fixture",
+      frameBound: true,
+      drawCallCount: 94,
+      webglContextLossCount: 0,
+      fallbackReason: null,
+      visibleVehicleCount: 160,
+      averageFrameTimeMs: null,
+      textureMemoryBytes: null,
+      emittedAt: "2026-06-18T00:00:00.000Z"
+    });
+
+    expect(event.quality_preset).toBeNull();
+    expect(event.post_fx).toEqual({
+      enabled: null,
+      chain: null,
+      source: "not_reported",
+      reason: "postFX state was not reported by DOM attributes or browser telemetry"
+    });
+    expect(event.heavy_features).toEqual({
+      planar_reflection: null,
+      weather_particles: null,
+      high_quality_vehicles: null,
+      shadow_casters: null,
+      source: "not_reported",
+      reason: "heavy feature state was not reported by DOM attributes or browser telemetry"
+    });
+    expect(event.performance).toEqual({
+      draw_calls: 94,
+      frame_time_ms: null,
+      visible_vehicles: 160,
+      texture_memory_estimate_mb: null,
+      source: "browser_telemetry",
+      reason:
+        "frame time and texture memory estimate were not reported by browser telemetry"
+    });
+    expect(event.source_labels).toEqual({
+      snapshot_source: "simulation_snapshot_fixture",
+      stale: false,
+      fallback_reason: null
+    });
   });
 });

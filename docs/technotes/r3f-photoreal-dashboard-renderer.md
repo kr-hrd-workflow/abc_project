@@ -64,6 +64,23 @@ visible whenever the frame source is degraded or fixture-backed.
 | Stage 6E runtime assets, compression checks, and licensing | implemented, verified, gated, not live truth | Manifest-backed assets are used by explicit ID in the runtime scene; optimizer, asset verifier, web build, and browser proof passed locally. |
 | Stage 6F operations, telemetry, security, and artifact hygiene | implemented, verified | Dashboard telemetry is captured in browser proof, no-install security checks run, blocked external tooling is reported explicitly, and artifact/release hygiene docs exist. |
 
+## Stage 6 Finishing Wave Contracts
+
+Quality presets are Low, Medium, High, and Ultra. Low favors stable fallback visuals, High is the default review target, and Ultra is allowed only when visual proof and frame-time proof pass.
+
+Feature-heavy effects must expose their active state to browser-verifier telemetry. That includes postprocessing chain state, reflection state, weather particle state, high-quality vehicle usage, shadow caster count, draw calls, visible vehicles, and stale/fallback source labels.
+
+The browser details JSON now has a normalized finishing-wave evidence shape:
+
+- `qualityPreset`: preset value when exposed by renderer DOM attrs or telemetry; otherwise `null` plus `qualityPresetEvidence.reason`.
+- `postFx`: `enabled`, `chain`, `source`, and `reason`.
+- `heavyFeatures`: planar reflection, weather particles, high-quality vehicle count, shadow caster count, source, and reason.
+- `performance`: draw calls, frame time, visible vehicles, texture-memory estimate, source, and reason.
+- `sourceLabels`: snapshot, stale, fallback, signal, traffic-density, and queue labels visible to the operator.
+- `scenarios`: day/high, night/high, rain/high, rain/low fallback, mobile/rain/high, WebGL-off fallback, and canvas-only/nonblank proof status.
+
+Current Worker 6 verifier wiring can record missing renderer-owned attrs honestly, but full visual-scenario capture still requires renderer-owned deterministic time/weather/quality hooks. The integration attrs expected by the gates are `data-r3f-quality-preset`, `data-r3f-postfx-enabled`, `data-r3f-postfx-chain`, `data-r3f-planar-reflection-enabled`, `data-r3f-weather-particles-enabled`, `data-r3f-high-quality-vehicle-count`, and optionally `data-r3f-texture-memory-estimate-mb`, or equivalent fields on `window.__r3fTelemetryEvent`.
+
 ## Stage 4 And 4.1 Asset Pipeline Evidence
 
 Stage 4 adds the asset-kit pipeline only. Stage 4.1 upgrades that kit from verifier-valid primitives to realism-ready shipped assets. Neither stage changes the Stage 2/3 `SimulationFrameSnapshot` truth boundary or the procedural renderer handoff.

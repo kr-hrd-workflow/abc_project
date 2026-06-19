@@ -28,6 +28,10 @@ import {
   getStage5ShadowCasterCount
 } from "./shadowPolicy";
 import {
+  STAGE6_QUALITY_PRESETS,
+  getStage6QualityPreset
+} from "./stage6Quality";
+import {
   STAGE3_CAMERA,
   STAGE5_CAMERA,
   getStage5CameraForAspect
@@ -124,9 +128,23 @@ describe("SimulationCanvas Stage 5 telemetry", () => {
     expect(mobileCamera.target[2]).toBeGreaterThanOrEqual(-12);
   });
 
-  test("keeps Stage 5 exposure high enough for wet-road detail without washing out lights", () => {
-    expect(STAGE5_TONE_MAPPING_EXPOSURE).toBeGreaterThanOrEqual(2.4);
-    expect(STAGE5_TONE_MAPPING_EXPOSURE).toBeLessThanOrEqual(2.7);
+  test("keeps Stage 6 wet-road exposure dark enough for CCTV contrast", () => {
+    expect(STAGE5_TONE_MAPPING_EXPOSURE).toBeGreaterThanOrEqual(1);
+    expect(STAGE5_TONE_MAPPING_EXPOSURE).toBeLessThanOrEqual(1.35);
+  });
+
+  test("defines bounded Stage 6 quality presets", () => {
+    expect(Object.keys(STAGE6_QUALITY_PRESETS)).toEqual([
+      "low",
+      "medium",
+      "high",
+      "ultra"
+    ]);
+    expect(getStage6QualityPreset("ultra").maxDpr).toBeGreaterThan(
+      getStage6QualityPreset("low").maxDpr
+    );
+    expect(getStage6QualityPreset("unknown").name).toBe("high");
+    expect(getStage6QualityPreset("low").reflections).toBe("fake");
   });
 
   test("configures restrained renderer settings and publishes draw-call proof without React state", () => {
@@ -139,6 +157,16 @@ describe("SimulationCanvas Stage 5 telemetry", () => {
     viewport.setAttribute("data-r3f-visible-vehicle-count", "160");
     viewport.setAttribute("data-r3f-shadow-enabled", "true");
     viewport.setAttribute("data-r3f-shadow-caster-count", "18");
+    viewport.setAttribute("data-r3f-quality-preset", "high");
+    viewport.setAttribute("data-r3f-postfx-enabled", "true");
+    viewport.setAttribute(
+      "data-r3f-postfx-chain",
+      "SMAA,SSAO,Bloom,ToneMapping,Noise,Vignette"
+    );
+    viewport.setAttribute("data-r3f-planar-reflection-enabled", "true");
+    viewport.setAttribute("data-r3f-weather-particles-enabled", "true");
+    viewport.setAttribute("data-r3f-high-quality-vehicle-count", "14");
+    viewport.setAttribute("data-r3f-texture-memory-estimate-mb", "12");
     viewport.append(renderer.domElement);
     document.body.append(viewport);
 
@@ -165,7 +193,14 @@ describe("SimulationCanvas Stage 5 telemetry", () => {
         fps: expect.any(Number),
         cpuFrameTimeMs: expect.any(Number),
         gpuFrameTimeMs: null,
-        textureMemoryBytes: null,
+        textureMemoryBytes: 12 * 1024 * 1024,
+        textureMemoryEstimateMb: 12,
+        qualityPreset: "high",
+        postFxEnabled: true,
+        postFxChain: ["SMAA", "SSAO", "Bloom", "ToneMapping", "Noise", "Vignette"],
+        planarReflectionEnabled: true,
+        weatherParticlesEnabled: true,
+        highQualityVehicleCount: 14,
         jsHeapBytes: null,
         authoritativeTickDriftMs: 0,
         lines: 12,
@@ -187,9 +222,31 @@ describe("SimulationCanvas Stage 5 telemetry", () => {
         draw_call_count: 128,
         webgl_context_loss_count: 0,
         fallback_reason: null,
-        visible_vehicle_count: 160
+        visible_vehicle_count: 160,
+        quality_preset: "high",
+        post_fx: {
+          enabled: true,
+          chain: ["SMAA", "SSAO", "Bloom", "ToneMapping", "Noise", "Vignette"],
+          source: "dom_attribute",
+          reason: null
+        },
+        heavy_features: {
+          planar_reflection: true,
+          weather_particles: true,
+          high_quality_vehicles: 14,
+          shadow_casters: 18,
+          source: "dom_attribute",
+          reason: null
+        },
+        performance: expect.objectContaining({
+          draw_calls: 128,
+          visible_vehicles: 160,
+          texture_memory_estimate_mb: 12
+        })
       })
     );
+    expect(STAGE5_DRAW_CALL_BUDGET).toBe(900);
+    expect(proof.drawCallBudget).toBeGreaterThanOrEqual(proof.peakDrawCalls);
   });
 
   test("keeps renderer shadows behind the explicit whitelist gate", () => {

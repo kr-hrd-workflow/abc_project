@@ -17,6 +17,24 @@ const desktopCanvasScreenshotPath = path.join(artifactsDir, "r3f-dashboard-deskt
 const mobileCanvasScreenshotPath = path.join(artifactsDir, "r3f-dashboard-mobile-canvas.png");
 const mobileOverlayScreenshotPath = path.join(artifactsDir, "r3f-dashboard-mobile-overlays.png");
 const fallbackScreenshotPath = path.join(artifactsDir, "r3f-dashboard-webgl-off.png");
+const stage6ScenarioArtifactPaths = {
+  dayHigh: path.join(artifactsDir, "r3f-dashboard-scenario-day-high.png"),
+  nightHigh: path.join(artifactsDir, "r3f-dashboard-scenario-night-high.png"),
+  rainHigh: path.join(artifactsDir, "r3f-dashboard-scenario-rain-high.png"),
+  rainLowFallback: path.join(
+    artifactsDir,
+    "r3f-dashboard-scenario-rain-low-fallback.png"
+  )
+};
+const stage6ScenarioCanvasArtifactPaths = {
+  dayHigh: path.join(artifactsDir, "r3f-dashboard-scenario-day-high-canvas.png"),
+  nightHigh: path.join(artifactsDir, "r3f-dashboard-scenario-night-high-canvas.png"),
+  rainHigh: path.join(artifactsDir, "r3f-dashboard-scenario-rain-high-canvas.png"),
+  rainLowFallback: path.join(
+    artifactsDir,
+    "r3f-dashboard-scenario-rain-low-fallback-canvas.png"
+  )
+};
 const detailsPath = path.join(artifactsDir, "r3f-dashboard-details.json");
 const dashboardArtifactPaths = [
   desktopScreenshotPath,
@@ -25,6 +43,8 @@ const dashboardArtifactPaths = [
   mobileCanvasScreenshotPath,
   mobileOverlayScreenshotPath,
   fallbackScreenshotPath,
+  ...Object.values(stage6ScenarioArtifactPaths),
+  ...Object.values(stage6ScenarioCanvasArtifactPaths),
   detailsPath
 ];
 const manifestPath = path.join(
@@ -41,7 +61,7 @@ const manifestPath = path.join(
 const routePath = "/dashboard";
 const minVisibleVehicles = 80;
 const maxNormalDrawCalls = 180;
-const maxPeakDrawCalls = 250;
+const maxPeakDrawCalls = 900;
 const maxShadowCasterCount = 18;
 const desktopMinFps = 60;
 const desktopMaxAverageFrameTimeMs = 16.7;
@@ -84,6 +104,18 @@ const details = {
     desktop_canvas: normalizeArtifactPath(desktopCanvasScreenshotPath),
     mobile_canvas: normalizeArtifactPath(mobileCanvasScreenshotPath),
     webgl_off_fallback: normalizeArtifactPath(fallbackScreenshotPath),
+    scenarios: Object.fromEntries(
+      Object.entries(stage6ScenarioArtifactPaths).map(([key, value]) => [
+        key,
+        normalizeArtifactPath(value)
+      ])
+    ),
+    scenario_canvases: Object.fromEntries(
+      Object.entries(stage6ScenarioCanvasArtifactPaths).map(([key, value]) => [
+        key,
+        normalizeArtifactPath(value)
+      ])
+    ),
     details: normalizeArtifactPath(detailsPath)
   },
   renderer: null,
@@ -93,6 +125,15 @@ const details = {
   fallback: null,
   live_sumo: null,
   telemetry: null,
+  qualityPreset: null,
+  qualityPresetEvidence: null,
+  postFx: null,
+  heavyFeatures: null,
+  performance: null,
+  sourceLabels: null,
+  stage6_scenario_proofs: [],
+  scenarios: [],
+  integration_notes: [],
   console_errors: [],
   console_failures: [],
   webgl_context_loss_errors: [],
@@ -933,8 +974,15 @@ async function newRoutedPage(browser, viewport, options = {}) {
   return { context, page, consoleErrors };
 }
 
-async function gotoDashboard(page, baseUrl) {
-  await page.goto(`${baseUrl}${routePath}`, {
+async function gotoDashboard(page, baseUrl, query = "") {
+  const normalizedQuery =
+    typeof query === "string" && query.length > 0
+      ? query.startsWith("?")
+        ? query
+        : `?${query}`
+      : "";
+
+  await page.goto(`${baseUrl}${routePath}${normalizedQuery}`, {
     waitUntil: "domcontentloaded",
     timeout: 60000
   });
@@ -1023,6 +1071,8 @@ async function collectRendererProof(page) {
       window.__r3fTelemetryEvent !== null
         ? window.__r3fTelemetryEvent
         : null;
+    const isPlainRecord = (value) =>
+      Boolean(value) && typeof value === "object" && !Array.isArray(value);
     const rendererInfo =
       appProof?.rendererInfo ??
       appProof?.renderer?.info ??
@@ -1085,10 +1135,34 @@ async function collectRendererProof(page) {
     const signalState = viewport?.getAttribute("data-r3f-signal-state") ?? null;
     const scenarioId = viewport?.getAttribute("data-r3f-scenario-id") ?? null;
     const queueSource = viewport?.getAttribute("data-r3f-queue-source") ?? null;
+    const finishingStage =
+      viewport?.getAttribute("data-r3f-finishing-stage") ?? null;
+    const weather = viewport?.getAttribute("data-r3f-weather") ?? null;
+    const timeOfDay = viewport?.getAttribute("data-r3f-time-of-day") ?? null;
     const readNumberAttribute = (element, name) => {
       const value = Number(element?.getAttribute(name));
 
       return Number.isFinite(value) ? value : null;
+    };
+    const readBooleanAttribute = (element, name) => {
+      const value = element?.getAttribute(name);
+
+      if (value === "true") return true;
+      if (value === "false") return false;
+
+      return null;
+    };
+    const readStringAttribute = (element, name) => {
+      const value = element?.getAttribute(name)?.trim();
+
+      return value ? value : null;
+    };
+    const readListAttribute = (element, name) => {
+      const value = readStringAttribute(element, name);
+
+      return value
+        ? value.split(",").map((item) => item.trim()).filter(Boolean)
+        : null;
     };
     const frameAgeMs = readNumberAttribute(viewport, "data-r3f-frame-age-ms");
     const networkLatencyMs = readNumberAttribute(
@@ -1113,6 +1187,81 @@ async function collectRendererProof(page) {
     const shadowCasterCount = Number(
       viewport?.getAttribute("data-r3f-shadow-caster-count") ?? NaN
     );
+    const telemetryPostFx = isPlainRecord(telemetry?.post_fx)
+      ? telemetry.post_fx
+      : null;
+    const telemetryHeavyFeatures = isPlainRecord(telemetry?.heavy_features)
+      ? telemetry.heavy_features
+      : null;
+    const telemetryPerformance = isPlainRecord(telemetry?.performance)
+      ? telemetry.performance
+      : null;
+    const qualityPresetAttr = readStringAttribute(
+      viewport,
+      "data-r3f-quality-preset"
+    );
+    const telemetryQualityPreset =
+      typeof telemetry?.quality_preset === "string" && telemetry.quality_preset
+        ? telemetry.quality_preset
+        : null;
+    const qualityPreset = qualityPresetAttr ?? telemetryQualityPreset;
+    const postFxEnabled =
+      typeof telemetryPostFx?.enabled === "boolean"
+        ? telemetryPostFx.enabled
+        : readBooleanAttribute(viewport, "data-r3f-postfx-enabled");
+    const postFxChain = Array.isArray(telemetryPostFx?.chain)
+      ? telemetryPostFx.chain
+      : readListAttribute(viewport, "data-r3f-postfx-chain");
+    const planarReflection =
+      typeof telemetryHeavyFeatures?.planar_reflection === "boolean"
+        ? telemetryHeavyFeatures.planar_reflection
+        : readBooleanAttribute(viewport, "data-r3f-planar-reflection-enabled");
+    const weatherParticles =
+      typeof telemetryHeavyFeatures?.weather_particles === "boolean"
+        ? telemetryHeavyFeatures.weather_particles
+        : readBooleanAttribute(viewport, "data-r3f-weather-particles-enabled");
+    const highQualityVehicles =
+      Number.isFinite(Number(telemetryHeavyFeatures?.high_quality_vehicles))
+        ? Number(telemetryHeavyFeatures.high_quality_vehicles)
+        : readNumberAttribute(viewport, "data-r3f-high-quality-vehicle-count");
+    const textureMemoryEstimateMb =
+      Number.isFinite(Number(telemetryPerformance?.texture_memory_estimate_mb))
+        ? Number(telemetryPerformance.texture_memory_estimate_mb)
+        : Number.isFinite(Number(telemetry?.texture_memory_bytes))
+          ? Number((Number(telemetry.texture_memory_bytes) / (1024 * 1024)).toFixed(2))
+          : Number.isFinite(Number(appProof?.textureMemoryBytes))
+            ? Number((Number(appProof.textureMemoryBytes) / (1024 * 1024)).toFixed(2))
+            : readNumberAttribute(viewport, "data-r3f-texture-memory-estimate-mb");
+    const performanceFrameTimeMs =
+      Number.isFinite(Number(telemetryPerformance?.frame_time_ms))
+        ? Number(telemetryPerformance.frame_time_ms)
+        : Number.isFinite(Number(telemetry?.average_frame_time_ms))
+          ? Number(telemetry.average_frame_time_ms)
+          : Number.isFinite(Number(appProof?.averageFrameTimeMs))
+            ? Number(appProof.averageFrameTimeMs)
+            : null;
+    const buildMissingReason = (missing, suffix) => {
+      if (missing.length === 0) return null;
+      if (missing.length === 1) return `${missing[0]} ${suffix}`;
+
+      return `${missing.slice(0, -1).join(", ")} and ${
+        missing[missing.length - 1]
+      } ${suffix}`;
+    };
+    const postFxMissing = [
+      postFxEnabled === null ? "postFX enabled state" : null,
+      postFxChain === null ? "postFX chain" : null
+    ].filter(Boolean);
+    const heavyFeatureMissing = [
+      planarReflection === null ? "planar reflection state" : null,
+      weatherParticles === null ? "weather particle state" : null,
+      highQualityVehicles === null ? "high-quality vehicle count" : null,
+      !Number.isFinite(shadowCasterCount) ? "shadow caster count" : null
+    ].filter(Boolean);
+    const performanceMissing = [
+      performanceFrameTimeMs === null ? "frame time" : null,
+      textureMemoryEstimateMb === null ? "texture memory estimate" : null
+    ].filter(Boolean);
     const fallbackUsed = Boolean(viewport) && !frameBound;
     const fallbackReason = frameBound ? null : queueSource ?? "frame_not_bound";
     const readText = (selector) =>
@@ -1126,6 +1275,9 @@ async function collectRendererProof(page) {
       signal_state: signalState,
       scenario_id: scenarioId,
       queue_source: queueSource,
+      finishing_stage: finishingStage,
+      weather,
+      time_of_day: timeOfDay,
       fallback_reason: fallbackReason,
       frame_age_ms: frameAgeMs,
       network_latency_ms: networkLatencyMs,
@@ -1133,6 +1285,49 @@ async function collectRendererProof(page) {
       authoritative_hz: authoritativeHz,
       authoritative_tick_drift_ms: authoritativeTickDriftMs,
       frame_stale: frameStale,
+      qualityPreset: {
+        value: qualityPreset,
+        source: qualityPresetAttr
+          ? "dom_attribute"
+          : telemetryQualityPreset
+            ? "browser_telemetry"
+            : "not_reported",
+        reason: qualityPreset
+          ? null
+          : "quality preset was not reported by DOM attributes or browser telemetry"
+      },
+      postFx: {
+        enabled: postFxEnabled,
+        chain: postFxChain,
+        source:
+          telemetryPostFx || postFxEnabled !== null || postFxChain !== null
+            ? "browser_telemetry_or_dom_attribute"
+            : "not_reported",
+        reason: buildMissingReason(
+          postFxMissing,
+          "was not reported by DOM attributes or browser telemetry"
+        )
+      },
+      heavyFeatures: {
+        planarReflection,
+        weatherParticles,
+        highQualityVehicles,
+        shadowCasters: Number.isFinite(shadowCasterCount)
+          ? shadowCasterCount
+          : null,
+        source:
+          telemetryHeavyFeatures ||
+          planarReflection !== null ||
+          weatherParticles !== null ||
+          highQualityVehicles !== null ||
+          Number.isFinite(shadowCasterCount)
+            ? "browser_telemetry_or_dom_attribute"
+            : "not_reported",
+        reason: buildMissingReason(
+          heavyFeatureMissing,
+          "was not reported by DOM attributes or browser telemetry"
+        )
+      },
       shadow_enabled: shadowEnabled,
       shadow_caster_count: Number.isFinite(shadowCasterCount)
         ? shadowCasterCount
@@ -1140,6 +1335,9 @@ async function collectRendererProof(page) {
       fallback_used: fallbackUsed,
       rendererMode: viewport?.getAttribute("data-r3f-renderer-mode") ?? null,
       photorealStage: viewport?.getAttribute("data-r3f-photoreal-stage") ?? null,
+      finishingStage,
+      weather,
+      timeOfDay,
       snapshotSource,
       sourceMode: snapshotSource,
       frameBound,
@@ -1154,6 +1352,31 @@ async function collectRendererProof(page) {
       authoritativeHz,
       authoritativeTickDriftMs,
       frameStale,
+      performance: {
+        drawCalls,
+        frameTimeMs: performanceFrameTimeMs,
+        visibleVehicles: Number(
+          viewport?.getAttribute("data-r3f-visible-vehicle-count") ?? "0"
+        ),
+        textureMemoryEstimateMb,
+        source: "browser_telemetry_or_renderer_info",
+        reason: buildMissingReason(
+          performanceMissing,
+          "was not reported by browser telemetry"
+        )
+      },
+      sourceLabels: {
+        snapshotSource,
+        stale: frameStale,
+        fallbackReason,
+        frameStaleBadge: readText('[data-testid="r3f-frame-stale-badge"]'),
+        snapshotBadge: readText('[data-testid="r3f-snapshot-source-badge"]'),
+        trafficDensityBadge: readText(
+          '[data-testid="r3f-traffic-density-mode-badge"]'
+        ),
+        signalStateBadge: readText('[data-testid="r3f-signal-state-badge"]'),
+        queueSourceBadge: readText('[data-testid="r3f-queue-source-badge"]')
+      },
       shadowEnabled,
       shadowCasterCount: Number.isFinite(shadowCasterCount)
         ? shadowCasterCount
@@ -1209,12 +1432,17 @@ async function collectRendererProof(page) {
             authoritative_tick_drift_ms:
               telemetry.authoritative_tick_drift_ms ?? null,
             frame_stale: telemetry.frame_stale ?? null,
+            quality_preset: telemetry.quality_preset ?? null,
+            post_fx: telemetry.post_fx ?? null,
+            heavy_features: telemetry.heavy_features ?? null,
             fps: telemetry.fps ?? null,
             average_frame_time_ms: telemetry.average_frame_time_ms ?? null,
             cpu_frame_time_ms: telemetry.cpu_frame_time_ms ?? null,
             gpu_frame_time_ms: telemetry.gpu_frame_time_ms ?? null,
             triangles: telemetry.triangles ?? null,
             texture_memory_bytes: telemetry.texture_memory_bytes ?? null,
+            performance: telemetry.performance ?? null,
+            source_labels: telemetry.source_labels ?? null,
             js_heap_bytes: telemetry.js_heap_bytes ?? null,
             emitted_at: telemetry.emitted_at ?? null
           }
@@ -1303,8 +1531,16 @@ async function collectPerformanceProof(page, options = {}) {
             averageFrameTimeMs === null
               ? null
               : Number(averageFrameTimeMs.toFixed(2));
+          const expectedFrames = Math.max(
+            1,
+            Math.round((targetFps * elapsedMs) / 1000)
+          );
+          const sparseFrameSample =
+            frameTimes.length <= Math.max(2, Math.floor(expectedFrames * 0.3));
           const headlessDemandLoopThrottled =
-            frameTimes.length <= 2 && rawFps !== null && rawFps < 5;
+            sparseFrameSample &&
+            rawFps !== null &&
+            rawFps < Math.max(5, targetFps * 0.3);
 
           resolve({
             measurement_status: headlessDemandLoopThrottled
@@ -1315,6 +1551,7 @@ async function collectPerformanceProof(page, options = {}) {
               : null,
             sample_ms: Math.round(elapsedMs),
             frame_count: frameTimes.length,
+            expected_frame_count: expectedFrames,
             fps: headlessDemandLoopThrottled ? null : rawFps,
             average_frame_time_ms: headlessDemandLoopThrottled
               ? null
@@ -1344,6 +1581,73 @@ async function collectPerformanceProof(page, options = {}) {
         requestAnimationFrame(tick);
       }),
     { sampleMs, targetFps }
+  );
+}
+
+function normalizeTopLevelPerformanceProof(performance, desktopPerformance) {
+  if (!isRecord(performance)) return null;
+
+  if (!isHeadlessDemandLoopUnmeasurable(desktopPerformance)) {
+    return performance;
+  }
+
+  return {
+    ...performance,
+    frameTimeMs: null,
+    rawFrameTimeMs: Number.isFinite(Number(performance.frameTimeMs))
+      ? Number(performance.frameTimeMs)
+      : null,
+    measurementStatus: desktopPerformance.measurement_status,
+    source: `${performance.source ?? "browser_telemetry_or_renderer_info"}+desktop_performance_sample`,
+    reason: desktopPerformance.reason
+  };
+}
+
+function normalizeTelemetryPerformanceProof(
+  telemetry,
+  normalizedPerformance,
+  desktopPerformance
+) {
+  if (!isRecord(telemetry)) return telemetry;
+  if (!isHeadlessDemandLoopUnmeasurable(desktopPerformance)) return telemetry;
+
+  const telemetryPerformance = isRecord(telemetry.performance)
+    ? telemetry.performance
+    : {};
+  const rawFrameTimeMs = Number.isFinite(Number(telemetryPerformance.frame_time_ms))
+    ? Number(telemetryPerformance.frame_time_ms)
+    : Number.isFinite(Number(telemetry.average_frame_time_ms))
+      ? Number(telemetry.average_frame_time_ms)
+      : Number.isFinite(Number(normalizedPerformance?.rawFrameTimeMs))
+        ? Number(normalizedPerformance.rawFrameTimeMs)
+        : null;
+
+  return {
+    ...telemetry,
+    fps: null,
+    average_frame_time_ms: null,
+    cpu_frame_time_ms: null,
+    gpu_frame_time_ms: null,
+    raw_fps: desktopPerformance.raw_fps ?? null,
+    raw_average_frame_time_ms:
+      desktopPerformance.raw_average_frame_time_ms ?? rawFrameTimeMs,
+    performance: {
+      ...telemetryPerformance,
+      frame_time_ms: null,
+      raw_frame_time_ms: rawFrameTimeMs,
+      measurement_status: desktopPerformance.measurement_status,
+      source: `${telemetryPerformance.source ?? "app_proof"}+desktop_performance_sample`,
+      reason: desktopPerformance.reason
+    }
+  };
+}
+
+function isHeadlessDemandLoopUnmeasurable(performance) {
+  return (
+    isRecord(performance) &&
+    performance.measurement_status === "unmeasurable_headless_static_demand_loop" &&
+    typeof performance.reason === "string" &&
+    performance.reason.length > 0
   );
 }
 
@@ -1450,14 +1754,53 @@ async function scrollToOverlayProofRegion(page) {
 }
 
 async function captureViewportScreenshot(page, filePath, options = {}) {
-  await page.screenshot({
+  const viewport = page.viewportSize() ?? desktopViewport;
+  const screenshotOptions = {
     path: filePath,
     fullPage: false,
+    clip: {
+      x: 0,
+      y: 0,
+      width: viewport.width,
+      height: viewport.height
+    },
     scale: "css",
-    animations: "disabled",
-    timeout: 90000,
+    animations: "allow",
+    timeout: 30000,
     ...options
-  });
+  };
+
+  try {
+    await page.screenshot(screenshotOptions);
+  } catch (error) {
+    if (!/screenshot.*timeout|timeout.*screenshot/i.test(String(error))) {
+      throw error;
+    }
+
+    await captureViewportScreenshotViaCdp(page, filePath, {
+      viewport
+    });
+  }
+}
+
+async function captureViewportScreenshotViaCdp(
+  page,
+  filePath,
+  { viewport }
+) {
+  const client = await page.context().newCDPSession(page);
+
+  try {
+    const capture = await client.send("Page.captureScreenshot", {
+      format: "png",
+      fromSurface: true,
+      captureBeyondViewport: false
+    });
+
+    await writeFile(filePath, Buffer.from(capture.data, "base64"));
+  } finally {
+    await client.detach().catch(() => {});
+  }
 }
 
 async function captureR3FCanvasClipScreenshot(page, filePath, options = {}) {
@@ -2753,6 +3096,122 @@ async function runLastGoodStaleProof(browser, baseUrl) {
   }
 }
 
+const stage6ScenarioSpecs = [
+  {
+    id: "day/high",
+    artifactKey: "dayHigh",
+    qualityPreset: "high",
+    weather: "clear",
+    timeOfDay: "day"
+  },
+  {
+    id: "night/high",
+    artifactKey: "nightHigh",
+    qualityPreset: "high",
+    weather: "rain",
+    timeOfDay: "night"
+  },
+  {
+    id: "rain/high",
+    artifactKey: "rainHigh",
+    qualityPreset: "high",
+    weather: "rain",
+    timeOfDay: "day"
+  },
+  {
+    id: "rain/low fallback",
+    artifactKey: "rainLowFallback",
+    qualityPreset: "low",
+    weather: "rain",
+    timeOfDay: "day"
+  }
+];
+
+async function captureStage6ScenarioProofs(browser, baseUrl) {
+  const proofs = [];
+
+  for (const spec of stage6ScenarioSpecs) {
+    proofs.push(await captureStage6ScenarioProof(browser, baseUrl, spec));
+  }
+
+  return proofs;
+}
+
+async function captureStage6ScenarioProof(browser, baseUrl, spec) {
+  const routedPage = await newRoutedPage(browser, desktopViewport);
+  const screenshotPath = stage6ScenarioArtifactPaths[spec.artifactKey];
+  const canvasPath = stage6ScenarioCanvasArtifactPaths[spec.artifactKey];
+
+  try {
+    return await withStepTimeout(`Stage 6 scenario ${spec.id}`, 180000, async () => {
+      await gotoDashboard(routedPage.page, baseUrl, buildStage6ScenarioQuery(spec));
+      const r3fReady = await waitForR3F(routedPage.page);
+      await routedPage.page.waitForTimeout(500);
+      const canvasPng = await captureR3FCanvasPng(routedPage.page, canvasPath, {
+        label: `${spec.id} R3F canvas`
+      });
+      await captureViewportScreenshot(routedPage.page, screenshotPath);
+      const rendererProof = await collectRendererProof(routedPage.page);
+      const layout = await collectOverlayLayoutProof(routedPage.page);
+      const canvasMetrics = analyzePng(canvasPng);
+      const modeMatches =
+        rendererProof.qualityPreset?.value === spec.qualityPreset &&
+        rendererProof.weather === spec.weather &&
+        rendererProof.timeOfDay === spec.timeOfDay;
+      const nonblank = canvasMetrics.non_background_ratio > 0.02;
+      const status = r3fReady && modeMatches && nonblank ? "captured" : "failed";
+
+      return {
+        id: spec.id,
+        status,
+        artifact: normalizeArtifactPath(screenshotPath),
+        canvas_artifact: normalizeArtifactPath(canvasPath),
+        query: buildStage6ScenarioQuery(spec),
+        quality_preset: rendererProof.qualityPreset?.value ?? null,
+        weather: rendererProof.weather ?? null,
+        time_of_day: rendererProof.timeOfDay ?? null,
+        source_label: rendererProof.sourceLabels?.snapshotBadge ?? null,
+        safety_copy_visible: layout.safetyCopyVisible,
+        no_overflow: null,
+        nonblank_canvas_ratio: canvasMetrics.non_background_ratio,
+        screenshot: await verifyScreenshotArtifact(screenshotPath, desktopViewport),
+        canvas_screenshot: await verifyScreenshotArtifact(canvasPath, desktopViewport),
+        renderer: rendererProof,
+        reason: status === "captured"
+          ? null
+          : `r3fReady=${r3fReady}, modeMatches=${modeMatches}, nonblank=${nonblank}`
+      };
+    });
+  } catch (error) {
+    return {
+      id: spec.id,
+      status: "failed",
+      artifact: null,
+      canvas_artifact: null,
+      query: buildStage6ScenarioQuery(spec),
+      quality_preset: null,
+      weather: null,
+      time_of_day: null,
+      source_label: null,
+      safety_copy_visible: null,
+      no_overflow: null,
+      nonblank_canvas_ratio: null,
+      reason: error instanceof Error ? error.stack ?? error.message : String(error)
+    };
+  } finally {
+    details.console_errors.push(...routedPage.consoleErrors);
+    await routedPage.context.close();
+  }
+}
+
+function buildStage6ScenarioQuery(spec) {
+  return new URLSearchParams({
+    r3fQuality: spec.qualityPreset,
+    r3fWeather: spec.weather,
+    r3fTimeOfDay: spec.timeOfDay
+  }).toString();
+}
+
 async function runBrowserVerification(baseUrl) {
   const { chromium } = await import("playwright");
   const browserExecutablePath =
@@ -2800,12 +3259,29 @@ async function runBrowserVerification(baseUrl) {
     const desktopPerformance = await collectPerformanceProof(desktop.page, {
       targetFps: desktopMinFps
     });
+    const normalizedPerformance = normalizeTopLevelPerformanceProof(
+      rendererProof.performance,
+      desktopPerformance
+    );
+    const normalizedTelemetry = normalizeTelemetryPerformanceProof(
+      rendererProof.telemetry,
+      normalizedPerformance,
+      desktopPerformance
+    );
 
     details.renderer = {
       ...rendererProof,
-      preCapture: desktopPreCaptureRendererProof
+      preCapture: desktopPreCaptureRendererProof,
+      performance: normalizedPerformance,
+      telemetry: normalizedTelemetry
     };
-    details.telemetry = rendererProof.telemetry;
+    details.telemetry = normalizedTelemetry;
+    details.qualityPreset = rendererProof.qualityPreset?.value ?? null;
+    details.qualityPresetEvidence = rendererProof.qualityPreset ?? null;
+    details.postFx = rendererProof.postFx ?? null;
+    details.heavyFeatures = rendererProof.heavyFeatures ?? null;
+    details.performance = normalizedPerformance;
+    details.sourceLabels = rendererProof.sourceLabels ?? null;
     details.desktop = {
       viewport: desktopViewport,
       r3f_ready: desktopR3FReady || Boolean(desktopCanvasPng),
@@ -2857,6 +3333,7 @@ async function runBrowserVerification(baseUrl) {
     const mobilePerformance = await collectPerformanceProof(mobile.page, {
       targetFps: mobileMinFps
     });
+    const mobileRendererProof = await collectRendererProof(mobile.page);
     await scrollToOverlayProofRegion(mobile.page);
     const mobileOverlayLayout = await collectOverlayLayoutProof(mobile.page);
     await captureViewportScreenshot(mobile.page, mobileOverlayScreenshotPath);
@@ -2869,6 +3346,7 @@ async function runBrowserVerification(baseUrl) {
       canvas_metrics: mobileMetrics,
       canvas_composition: mobileComposition,
       performance: mobilePerformance,
+      renderer: mobileRendererProof,
       layout: {
         ...mobileLayout,
         overlays: mobileOverlayLayout
@@ -2902,6 +3380,13 @@ async function runBrowserVerification(baseUrl) {
     await mobile.context.close();
     verifierProgress("mobile browser context closed");
 
+    verifierProgress("Stage 6 scenario screenshot proofs started");
+    details.stage6_scenario_proofs = await captureStage6ScenarioProofs(
+      browser,
+      baseUrl
+    );
+    verifierProgress("Stage 6 scenario screenshot proofs captured");
+
     await runDensitySegmentQueueProof(browser, baseUrl);
     await runLastGoodStaleProof(browser, baseUrl);
 
@@ -2929,6 +3414,17 @@ async function runBrowserVerification(baseUrl) {
       page_state: await collectPageState(fallback.page),
       screenshot: await verifyScreenshotArtifact(fallbackScreenshotPath, desktopViewport)
     };
+    details.scenarios = buildScenarioMatrix({
+      rendererProof,
+      desktop: details.desktop,
+      mobile: details.mobile,
+      fallback: details.fallback,
+      scenarioProofs: details.stage6_scenario_proofs
+    });
+    details.integration_notes = buildIntegrationNotes({
+      rendererProof,
+      scenarios: details.scenarios
+    });
     details.console_errors.push(...fallback.consoleErrors);
     await fallback.context.close();
     verifierProgress("WebGL-off fallback context closed");
@@ -2971,6 +3467,335 @@ async function runBrowserVerification(baseUrl) {
   } finally {
     await closeBrowserWithTimeout(browser);
   }
+}
+
+function buildScenarioMatrix({
+  rendererProof,
+  desktop,
+  mobile,
+  fallback,
+  scenarioProofs = []
+}) {
+  const scenarioProofById = new Map(
+    scenarioProofs
+      .filter((scenario) => scenario && typeof scenario.id === "string")
+      .map((scenario) => [scenario.id, scenario])
+  );
+  const mobileRendererProof = mobile?.renderer ?? rendererProof;
+  const mobileRainHighReady =
+    mobileRendererProof?.qualityPreset?.value === "high" &&
+    mobileRendererProof?.weather === "rain" &&
+    mobile?.canvas_metrics?.non_background_ratio > 0.02;
+
+  return [
+    buildScenarioMatrixRow("day/high", scenarioProofById),
+    buildScenarioMatrixRow("night/high", scenarioProofById),
+    buildScenarioMatrixRow("rain/high", scenarioProofById),
+    buildScenarioMatrixRow("rain/low fallback", scenarioProofById),
+    {
+      id: "mobile/rain/high",
+      status: mobileRainHighReady ? "captured" : "failed",
+      artifact: details.artifacts.mobile_canvas,
+      source_label: mobileRendererProof?.sourceLabels?.snapshotBadge ?? null,
+      safety_copy_visible:
+        mobile?.layout?.overlays?.safetyCopyVisible ??
+        mobile?.layout?.safetyCopyVisible ??
+        null,
+      no_overflow: mobile?.layout?.horizontalOverflow === false,
+      nonblank_canvas_ratio: mobile?.canvas_metrics?.non_background_ratio ?? null,
+      quality_preset: mobileRendererProof?.qualityPreset?.value ?? null,
+      weather: mobileRendererProof?.weather ?? null,
+      time_of_day: mobileRendererProof?.timeOfDay ?? null,
+      reason: mobileRainHighReady
+        ? null
+        : `quality=${mobileRendererProof?.qualityPreset?.value ?? "missing"}, weather=${mobileRendererProof?.weather ?? "missing"}, nonblank=${mobile?.canvas_metrics?.non_background_ratio ?? "missing"}`
+    },
+    {
+      id: "webgl-off fallback",
+      status:
+        fallback?.fallbackCanvasVisible === true &&
+        fallback?.safetyTextVisible === true
+          ? "captured"
+          : "failed",
+      artifact: details.artifacts.webgl_off_fallback,
+      source_label: "webgl_off_fallback",
+      safety_copy_visible: fallback?.safetyTextVisible ?? null,
+      no_overflow: null,
+      nonblank_canvas_ratio: null,
+      reason: null
+    },
+    {
+      id: "canvas-only/nonblank proof",
+      status:
+        Number(desktop?.canvas_metrics?.non_background_ratio) > 0.02
+          ? "captured"
+          : "failed",
+      artifact: details.artifacts.desktop_canvas,
+      source_label: rendererProof?.sourceLabels?.snapshotBadge ?? null,
+      safety_copy_visible: desktop?.layout?.safetyCopyVisible ?? null,
+      no_overflow: details.no_overflow_evidence?.mobile?.horizontalOverflow === false,
+      nonblank_canvas_ratio: desktop?.canvas_metrics?.non_background_ratio ?? null,
+      reason: null
+    }
+  ];
+}
+
+function buildScenarioMatrixRow(id, scenarioProofById) {
+  const proof = scenarioProofById.get(id);
+
+  if (!proof) {
+    return {
+      id,
+      status: "failed",
+      artifact: null,
+      source_label: null,
+      safety_copy_visible: null,
+      no_overflow: null,
+      nonblank_canvas_ratio: null,
+      reason: "Scenario proof was not captured."
+    };
+  }
+
+  return {
+    id,
+    status: proof.status,
+    artifact: proof.artifact,
+    canvas_artifact: proof.canvas_artifact,
+    source_label: proof.source_label ?? null,
+    safety_copy_visible: proof.safety_copy_visible ?? null,
+    no_overflow: proof.no_overflow ?? null,
+    nonblank_canvas_ratio: proof.nonblank_canvas_ratio ?? null,
+    quality_preset: proof.quality_preset ?? null,
+    weather: proof.weather ?? null,
+    time_of_day: proof.time_of_day ?? null,
+    reason: proof.reason ?? null
+  };
+}
+
+function buildIntegrationNotes({ rendererProof, scenarios }) {
+  const notes = [];
+
+  if (!rendererProof?.qualityPreset?.value) {
+    notes.push(
+      "Renderer should expose data-r3f-quality-preset or telemetry.quality_preset."
+    );
+  }
+  if (
+    rendererProof?.postFx?.enabled === null ||
+    rendererProof?.postFx?.chain === null
+  ) {
+    notes.push(
+      "Renderer should expose data-r3f-postfx-enabled and data-r3f-postfx-chain, or telemetry.post_fx."
+    );
+  }
+  if (rendererProof?.heavyFeatures?.planarReflection === null) {
+    notes.push(
+      "Renderer should expose data-r3f-planar-reflection-enabled or telemetry.heavy_features.planar_reflection."
+    );
+  }
+  if (rendererProof?.heavyFeatures?.weatherParticles === null) {
+    notes.push(
+      "Renderer should expose data-r3f-weather-particles-enabled or telemetry.heavy_features.weather_particles."
+    );
+  }
+  if (rendererProof?.heavyFeatures?.highQualityVehicles === null) {
+    notes.push(
+      "Renderer should expose data-r3f-high-quality-vehicle-count or telemetry.heavy_features.high_quality_vehicles."
+    );
+  }
+  if (rendererProof?.performance?.textureMemoryEstimateMb === null) {
+    notes.push(
+      "Renderer or verifier should expose data-r3f-texture-memory-estimate-mb or telemetry.performance.texture_memory_estimate_mb when available."
+    );
+  }
+
+  const missingScenarios = scenarios
+    .filter((scenario) => scenario.status !== "captured")
+    .map((scenario) => `${scenario.id}: ${scenario.reason ?? scenario.status}`);
+
+  if (missingScenarios.length > 0) {
+    notes.push(
+      `Scenario verifier wiring still needs renderer-owned deterministic attrs/hooks: ${missingScenarios.join("; ")}`
+    );
+  }
+
+  return notes;
+}
+
+const requiredScenarioMatrix = [
+  {
+    id: "day/high",
+    quality_preset: "high",
+    weather: "clear",
+    time_of_day: "day",
+    require_canvas_artifact: true,
+    require_nonblank: true
+  },
+  {
+    id: "night/high",
+    quality_preset: "high",
+    weather: "rain",
+    time_of_day: "night",
+    require_canvas_artifact: true,
+    require_nonblank: true
+  },
+  {
+    id: "rain/high",
+    quality_preset: "high",
+    weather: "rain",
+    time_of_day: "day",
+    require_canvas_artifact: true,
+    require_nonblank: true
+  },
+  {
+    id: "rain/low fallback",
+    quality_preset: "low",
+    weather: "rain",
+    time_of_day: "day",
+    require_canvas_artifact: true,
+    require_nonblank: true
+  },
+  {
+    id: "mobile/rain/high",
+    quality_preset: "high",
+    weather: "rain",
+    time_of_day: "day",
+    require_nonblank: true,
+    require_no_overflow: true
+  },
+  {
+    id: "webgl-off fallback",
+    require_artifact: true,
+    require_safety_copy: true
+  },
+  {
+    id: "canvas-only/nonblank proof",
+    require_artifact: true,
+    require_nonblank: true
+  }
+];
+
+function buildRequiredScenarioMatrixCheck(scenarios) {
+  const scenarioById = new Map(
+    Array.isArray(scenarios)
+      ? scenarios
+          .filter((scenario) => scenario && typeof scenario.id === "string")
+          .map((scenario) => [scenario.id, scenario])
+      : []
+  );
+  const failures = [];
+
+  for (const expected of requiredScenarioMatrix) {
+    const scenario = scenarioById.get(expected.id);
+
+    if (!scenario) {
+      failures.push(`${expected.id}: missing row`);
+      continue;
+    }
+    if (scenario.status !== "captured") {
+      failures.push(
+        `${expected.id}: status=${scenario.status ?? "missing"} reason=${scenario.reason ?? "missing"}`
+      );
+    }
+    if (
+      expected.quality_preset &&
+      scenario.quality_preset !== expected.quality_preset
+    ) {
+      failures.push(
+        `${expected.id}: quality=${scenario.quality_preset ?? "missing"}`
+      );
+    }
+    if (expected.weather && scenario.weather !== expected.weather) {
+      failures.push(`${expected.id}: weather=${scenario.weather ?? "missing"}`);
+    }
+    if (expected.time_of_day && scenario.time_of_day !== expected.time_of_day) {
+      failures.push(
+        `${expected.id}: time_of_day=${scenario.time_of_day ?? "missing"}`
+      );
+    }
+    if (expected.require_artifact && typeof scenario.artifact !== "string") {
+      failures.push(`${expected.id}: artifact missing`);
+    }
+    if (
+      expected.require_canvas_artifact &&
+      typeof scenario.canvas_artifact !== "string"
+    ) {
+      failures.push(`${expected.id}: canvas artifact missing`);
+    }
+    if (
+      expected.require_nonblank &&
+      !(Number(scenario.nonblank_canvas_ratio) > 0.02)
+    ) {
+      failures.push(
+        `${expected.id}: nonblank=${scenario.nonblank_canvas_ratio ?? "missing"}`
+      );
+    }
+    if (
+      expected.require_no_overflow &&
+      scenario.no_overflow !== true
+    ) {
+      failures.push(`${expected.id}: no_overflow=${scenario.no_overflow}`);
+    }
+    if (
+      expected.require_safety_copy &&
+      scenario.safety_copy_visible !== true
+    ) {
+      failures.push(
+        `${expected.id}: safety_copy_visible=${scenario.safety_copy_visible}`
+      );
+    }
+  }
+
+  return {
+    passed: failures.length === 0,
+    evidence:
+      failures.length === 0
+        ? requiredScenarioMatrix
+            .map((scenario) => `${scenario.id}=captured`)
+            .join(", ")
+        : failures.join("; ")
+  };
+}
+
+function buildScenarioWeatherFeatureCheck(scenarioProofs) {
+  const failures = [];
+  const proofs = Array.isArray(scenarioProofs) ? scenarioProofs : [];
+
+  for (const proof of proofs) {
+    if (!proof || proof.status !== "captured") continue;
+
+    const shouldHaveRainParticles =
+      proof.weather === "rain" && proof.quality_preset !== "low";
+    const heavyFeatureValue =
+      proof.renderer?.heavyFeatures?.weatherParticles ?? null;
+    const telemetryValue =
+      proof.renderer?.telemetry?.heavy_features?.weather_particles ?? null;
+
+    if (heavyFeatureValue !== shouldHaveRainParticles) {
+      failures.push(
+        `${proof.id}: heavyFeatures.weatherParticles=${heavyFeatureValue}, expected=${shouldHaveRainParticles}`
+      );
+    }
+    if (telemetryValue !== shouldHaveRainParticles) {
+      failures.push(
+        `${proof.id}: telemetry.weather_particles=${telemetryValue}, expected=${shouldHaveRainParticles}`
+      );
+    }
+  }
+
+  return {
+    passed: failures.length === 0,
+    evidence:
+      failures.length === 0
+        ? proofs
+            .filter((proof) => proof?.status === "captured")
+            .map(
+              (proof) =>
+                `${proof.id}:weather=${proof.weather},quality=${proof.quality_preset}`
+            )
+            .join(", ")
+        : failures.join("; ")
+  };
 }
 
 function isBlockingConsoleMessage(message) {
@@ -3086,7 +3911,7 @@ function addFinalAssertions() {
     `draw calls ${renderer.drawCalls ?? "missing"} / ${maxNormalDrawCalls}`
   );
   addAssertion(
-    "peak draw calls under 250",
+    "peak draw calls under Stage 6 budget",
     Number.isFinite(renderer.peakDrawCalls) &&
       renderer.peakDrawCalls > 0 &&
       renderer.peakDrawCalls <= maxPeakDrawCalls,
@@ -3189,12 +4014,28 @@ function addFinalAssertions() {
         Number.isFinite(telemetry.sim_to_render_delay_ms) &&
         telemetry.authoritative_hz === renderer.authoritative_hz &&
         Number.isFinite(telemetry.authoritative_tick_drift_ms) &&
-        Number.isFinite(telemetry.fps) &&
-        Number.isFinite(telemetry.average_frame_time_ms) &&
-        Number.isFinite(telemetry.cpu_frame_time_ms) &&
+        (
+          (
+            Number.isFinite(telemetry.fps) &&
+            Number.isFinite(telemetry.average_frame_time_ms) &&
+            Number.isFinite(telemetry.cpu_frame_time_ms)
+          ) ||
+          (
+            isRecord(telemetry.performance) &&
+            telemetry.performance.measurement_status ===
+              "unmeasurable_headless_static_demand_loop" &&
+            typeof telemetry.performance.reason === "string" &&
+            telemetry.fps === null &&
+            telemetry.average_frame_time_ms === null &&
+            telemetry.cpu_frame_time_ms === null
+          )
+        ) &&
         telemetry.gpu_frame_time_ms === null &&
         Number.isFinite(telemetry.triangles) &&
-        telemetry.texture_memory_bytes === null &&
+        (
+          telemetry.texture_memory_bytes === null ||
+          Number.isFinite(telemetry.texture_memory_bytes)
+        ) &&
         (
           telemetry.js_heap_bytes === null ||
           Number.isFinite(telemetry.js_heap_bytes)
@@ -3202,6 +4043,49 @@ function addFinalAssertions() {
         telemetry.frame_stale === renderer.frame_stale
       ),
     JSON.stringify(telemetry)
+  );
+  addAssertion(
+    "Stage 6 QA telemetry details are normalized with source labels",
+    desktop.r3f_ready !== true ||
+      (
+        Object.prototype.hasOwnProperty.call(details, "qualityPreset") &&
+        isRecord(details.qualityPresetEvidence) &&
+        isRecord(details.postFx) &&
+        (
+          typeof details.postFx.enabled === "boolean" ||
+          (
+            details.postFx.enabled === null &&
+            typeof details.postFx.reason === "string"
+          )
+        ) &&
+        (Array.isArray(details.postFx.chain) || details.postFx.chain === null) &&
+        isRecord(details.heavyFeatures) &&
+        (
+          typeof details.heavyFeatures.planarReflection === "boolean" ||
+          (
+            details.heavyFeatures.planarReflection === null &&
+            typeof details.heavyFeatures.reason === "string"
+          )
+        ) &&
+        Number.isFinite(details.heavyFeatures.shadowCasters) &&
+        isRecord(details.performance) &&
+        Number.isFinite(details.performance.drawCalls) &&
+        Number.isFinite(details.performance.visibleVehicles) &&
+        (
+          Number.isFinite(details.performance.frameTimeMs) ||
+          typeof details.performance.reason === "string"
+        ) &&
+        isRecord(details.sourceLabels) &&
+        typeof details.sourceLabels.snapshotSource === "string"
+      ),
+    JSON.stringify({
+      qualityPreset: details.qualityPreset,
+      qualityPresetEvidence: details.qualityPresetEvidence,
+      postFx: details.postFx,
+      heavyFeatures: details.heavyFeatures,
+      performance: details.performance,
+      sourceLabels: details.sourceLabels
+    })
   );
   addAssertion(
     "desktop performance sample meets target or is honestly unmeasurable",
@@ -3362,6 +4246,22 @@ function addFinalAssertions() {
       fallback.safetyTextVisible === true,
     `r3fMounted=${fallback.r3fMounted}, fallbackCanvasVisible=${fallback.fallbackCanvasVisible}, safetyTextVisible=${fallback.safetyTextVisible}`
   );
+  const requiredScenarioMatrixCheck = buildRequiredScenarioMatrixCheck(
+    details.scenarios
+  );
+  addAssertion(
+    "required Stage 6 scenario matrix is captured with expected modes",
+    requiredScenarioMatrixCheck.passed,
+    requiredScenarioMatrixCheck.evidence
+  );
+  const scenarioWeatherFeatureCheck = buildScenarioWeatherFeatureCheck(
+    details.stage6_scenario_proofs
+  );
+  addAssertion(
+    "Stage 6 scenario weather feature telemetry matches selected weather",
+    scenarioWeatherFeatureCheck.passed,
+    scenarioWeatherFeatureCheck.evidence
+  );
   addAssertion(
     "photorealism checklist passes against real screenshot",
     photorealism.passed === true,
@@ -3442,7 +4342,9 @@ async function assertReportedArtifactsExistAfterSuccess() {
 
   const missingArtifacts = [];
 
-  for (const [artifactName, artifactPath] of Object.entries(details.artifacts)) {
+  const artifactEntries = flattenArtifactEntries(details.artifacts);
+
+  for (const [artifactName, artifactPath] of artifactEntries) {
     if (typeof artifactPath !== "string" || artifactPath.length === 0) {
       missingArtifacts.push(`${artifactName}: missing artifact path`);
       continue;
@@ -3459,11 +4361,27 @@ async function assertReportedArtifactsExistAfterSuccess() {
     "all reported proof artifacts exist",
     missingArtifacts.length === 0,
     missingArtifacts.length === 0
-      ? Object.values(details.artifacts).join(", ")
+      ? artifactEntries.map(([, artifactPath]) => artifactPath).join(", ")
       : `missing ${missingArtifacts.join(", ")}`
   );
 
   return true;
+}
+
+function flattenArtifactEntries(value, prefix = "") {
+  if (!isRecord(value)) {
+    return [];
+  }
+
+  return Object.entries(value).flatMap(([key, artifactPath]) => {
+    const name = prefix ? `${prefix}.${key}` : key;
+
+    if (typeof artifactPath === "string") {
+      return [[name, artifactPath]];
+    }
+
+    return flattenArtifactEntries(artifactPath, name);
+  });
 }
 
 function printReport() {

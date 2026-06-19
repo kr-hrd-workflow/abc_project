@@ -1,50 +1,86 @@
 "use client";
 
-import { useEffect } from "react";
-import { useThree, type RootState } from "@react-three/fiber";
-
 import type { SceneSnapshot } from "./buildSceneSnapshot";
+import { CameraRig } from "./CameraRig";
 import { DynamicVehicleLayer } from "./DynamicVehicleLayer";
 import { EnvironmentLayer } from "./EnvironmentLayer";
-import { getStage5CameraForAspect } from "./roadGeometry";
+import { RoadDetailProps } from "./RoadDetailProps";
+import { SceneClutterLayer } from "./SceneClutterLayer";
 import { SignalLayer } from "./SignalLayer";
 import { StaticRoadLayer } from "./StaticRoadLayer";
+import { WheelSprayLayer } from "./WheelSprayLayer";
+import type {
+  Stage6QualityPreset,
+  Stage6TimeOfDay,
+  Stage6WeatherPresetName
+} from "./stage6Quality";
+import { getStage6QualityPreset } from "./stage6Quality";
 
 export function SimulationScene({
-  sceneSnapshot
+  sceneSnapshot,
+  qualityPreset = getStage6QualityPreset("high"),
+  weather = "rain",
+  timeOfDay = "day"
 }: {
   sceneSnapshot: SceneSnapshot;
+  qualityPreset?: Stage6QualityPreset;
+  weather?: Stage6WeatherPresetName;
+  timeOfDay?: Stage6TimeOfDay;
 }) {
   return (
     <group name={`smart-intersection-stage5-${sceneSnapshot.trafficDensityMode}`}>
-      <Stage3CameraRig />
-      <EnvironmentLayer />
-      <StaticRoadLayer />
-      <DynamicVehicleLayer sceneSnapshot={sceneSnapshot} />
+      <CameraRig weather={weather} timeOfDay={timeOfDay} />
+      <EnvironmentLayer
+        signals={sceneSnapshot.signals}
+        qualityPreset={qualityPreset}
+        weather={weather}
+        timeOfDay={timeOfDay}
+      />
+      <StaticRoadLayerWithDetails qualityPreset={qualityPreset} />
+      <DynamicVehicleLayerWithWeather
+        sceneSnapshot={sceneSnapshot}
+        qualityPreset={qualityPreset}
+      />
       <SignalLayer signals={sceneSnapshot.signals} />
     </group>
   );
 }
 
-function Stage3CameraRig() {
-  const { camera, invalidate, size } = useThree();
-
-  useEffect(() => {
-    const cameraConfig = getStage5CameraForAspect(size.width / size.height);
-
-    camera.position.set(...cameraConfig.position);
-    camera.near = cameraConfig.near;
-    camera.far = cameraConfig.far;
-    const perspectiveCamera = camera as RootState["camera"] & { fov?: number };
-
-    if (typeof perspectiveCamera.fov === "number") {
-      perspectiveCamera.fov = cameraConfig.fov;
-    }
-
-    camera.lookAt(...cameraConfig.target);
-    camera.updateProjectionMatrix();
-    invalidate();
-  }, [camera, invalidate, size.height, size.width]);
-
-  return null;
+function StaticRoadLayerWithDetails({
+  qualityPreset
+}: {
+  qualityPreset: Stage6QualityPreset;
+}) {
+  return (
+    <>
+      <StaticRoadLayer qualityPreset={qualityPreset} />
+      <RoadDetailProps />
+      <SceneClutterLayer />
+    </>
+  );
 }
+
+StaticRoadLayerWithDetails.displayName = "StaticRoadLayer";
+
+function DynamicVehicleLayerWithWeather({
+  sceneSnapshot,
+  qualityPreset
+}: {
+  sceneSnapshot: SceneSnapshot;
+  qualityPreset: Stage6QualityPreset;
+}) {
+  return (
+    <>
+      <DynamicVehicleLayer
+        sceneSnapshot={sceneSnapshot}
+        qualityPreset={qualityPreset}
+      />
+      <WheelSprayLayer
+        sceneSnapshot={sceneSnapshot}
+        qualityPreset={qualityPreset}
+      />
+    </>
+  );
+}
+
+DynamicVehicleLayerWithWeather.displayName = "DynamicVehicleLayer";

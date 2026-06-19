@@ -32,10 +32,14 @@ const stage6EFirstPassRuntimeAssetIds = new Set([
   "textures/sidewalk_paver_variation",
   "textures/facade_window_emissive"
 ]);
+const stage6GeneratedAssetIds = new Set([
+  "sprites/stage6_weather_material_source_atlas"
+]);
 
 const failures = [];
 const reports = [];
 const seenStage6EFirstPassAssetIds = new Set();
+const seenStage6GeneratedAssetIds = new Set();
 let allManifestPayloadBytes = 0;
 let stage6EFirstPassPayloadBytes = 0;
 
@@ -45,6 +49,10 @@ function addFailure(message) {
 
 function isRecord(value) {
   return Boolean(value) && typeof value === "object" && !Array.isArray(value);
+}
+
+function hasText(value) {
+  return typeof value === "string" && value.trim().length > 0;
 }
 
 function formatBytes(bytes) {
@@ -122,6 +130,25 @@ async function checkOptimizedPath(assetId, entry) {
   return optimizedLocalPath;
 }
 
+function validateOptimizationMetadata(assetId, entry) {
+  if (!isRecord(entry.compression)) {
+    addFailure(`${assetId}: compression metadata is required for optimization audit`);
+  } else {
+    for (const field of ["status", "geometry", "texture", "evidence"]) {
+      if (!hasText(entry.compression[field])) {
+        addFailure(`${assetId}: compression.${field} is required for optimization audit`);
+      }
+    }
+  }
+
+  if (
+    (entry.authorship === "generated" || entry.kind === "sprite") &&
+    !hasText(entry.runtimeUsage)
+  ) {
+    addFailure(`${assetId}: generated and sprite assets must declare runtimeUsage`);
+  }
+}
+
 async function main() {
   const manifest = await readManifest();
   const entries = Object.entries(manifest);
@@ -131,6 +158,8 @@ async function main() {
       addFailure(`${assetId}: manifest entry path is required`);
       continue;
     }
+
+    validateOptimizationMetadata(assetId, entry);
 
     const localPath = toAssetLocalPath(entry.path);
 
@@ -160,6 +189,10 @@ async function main() {
       stage6EFirstPassPayloadBytes += fileStat.size;
     }
 
+    if (stage6GeneratedAssetIds.has(assetId)) {
+      seenStage6GeneratedAssetIds.add(assetId);
+    }
+
     if (path.extname(localPath).toLowerCase() !== ".glb") {
       continue;
     }
@@ -178,6 +211,12 @@ async function main() {
   for (const assetId of stage6EFirstPassRuntimeAssetIds) {
     if (!seenStage6EFirstPassAssetIds.has(assetId)) {
       addFailure(`Stage 6E first-pass asset ${assetId} is missing from manifest`);
+    }
+  }
+
+  for (const assetId of stage6GeneratedAssetIds) {
+    if (!seenStage6GeneratedAssetIds.has(assetId)) {
+      addFailure(`Stage 6 generated source asset ${assetId} is missing from manifest`);
     }
   }
 

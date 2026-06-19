@@ -5,8 +5,11 @@ import type { SceneSnapshot } from "./buildSceneSnapshot";
 import type { Vector3Tuple } from "./roadGeometry";
 import { STAGE5_SHADOWS_ENABLED } from "./shadowPolicy";
 
+export type SignalHardwareLightingPreset = "day" | "cloudy" | "rain" | "night";
+
 type SignalHardwareProps = {
   signals: SceneSnapshot["signals"];
+  lightingPreset?: SignalHardwareLightingPreset;
 };
 
 type SignalPlacement = {
@@ -27,16 +30,63 @@ const LENS_COLORS = {
   yellow: "#ffd34d",
   green: "#35f090"
 } as const;
+const SIGNAL_MATERIALS = {
+  pole: {
+    color: "#2c383d",
+    roughness: 0.64,
+    metalness: 0.34,
+    envMapIntensity: 0.72
+  },
+  housing: {
+    color: "#10171c",
+    roughness: 0.48,
+    metalness: 0.42,
+    envMapIntensity: 0.82
+  },
+  hood: {
+    color: "#0a1014",
+    roughness: 0.56,
+    metalness: 0.32,
+    envMapIntensity: 0.5
+  },
+  lensGlass: {
+    roughness: 0.16,
+    metalness: 0.01,
+    transparent: true,
+    opacity: 0.72,
+    envMapIntensity: 1.08
+  }
+} as const;
+const SIGNAL_LENS_EMISSIVE_SCALE_BY_PRESET = {
+  day: 0.78,
+  cloudy: 0.96,
+  rain: 1.18,
+  night: 1.45
+} as const satisfies Record<SignalHardwareLightingPreset, number>;
+const ACTIVE_SIGNAL_HARDWARE_LIGHTING_PRESET: SignalHardwareLightingPreset =
+  "rain";
 
-export function SignalHardware({ signals }: SignalHardwareProps) {
+export function SignalHardware({
+  signals,
+  lightingPreset = ACTIVE_SIGNAL_HARDWARE_LIGHTING_PRESET
+}: SignalHardwareProps) {
   const uniqueSignals = getSignalsByDirection(signals);
+  const lensEmissiveScale = SIGNAL_LENS_EMISSIVE_SCALE_BY_PRESET[lightingPreset];
 
   if (uniqueSignals.length === 0) {
     return null;
   }
 
   return (
-    <group name="stage6b-signal-hardware">
+    <group
+      name="stage6b-signal-hardware"
+      userData={{
+        signalStateSource: "SceneSnapshot.signals",
+        realSignalControlClaim: false,
+        lightingPreset,
+        lensEmissiveScale
+      }}
+    >
       {uniqueSignals.map((signal) => {
         const placement = SIGNAL_PLACEMENTS[signal.direction];
 
@@ -53,42 +103,66 @@ export function SignalHardware({ signals }: SignalHardwareProps) {
               receiveShadow
             >
               <cylinderGeometry args={[0.09, 0.13, 5.1, 10]} />
-              <meshStandardMaterial
-                color="#2c383d"
-                roughness={0.64}
-                metalness={0.34}
-                envMapIntensity={0.72}
-              />
+              <meshStandardMaterial {...SIGNAL_MATERIALS.pole} />
             </mesh>
             <mesh
+              name={`signal-housing-${signal.direction}`}
               position={[0, 0.28, 0]}
               castShadow={STAGE5_SHADOWS_ENABLED}
               receiveShadow
             >
               <boxGeometry args={[0.92, 1.72, 0.42]} />
-              <meshStandardMaterial
-                color="#10171c"
-                roughness={0.48}
-                metalness={0.42}
-                envMapIntensity={0.82}
-              />
+              <meshStandardMaterial {...SIGNAL_MATERIALS.housing} />
             </mesh>
             {(["red", "yellow", "green"] as const).map((state, index) => {
               const active = signal.state === state;
 
               return (
-                <mesh key={state} position={[0, 0.82 - index * 0.54, -0.24]}>
-                  <sphereGeometry args={[0.18, 18, 12]} />
-                  <meshStandardMaterial
-                    color={active ? LENS_COLORS[state] : LENS_OFF}
-                    emissive={active ? LENS_COLORS[state] : "#000000"}
-                    emissiveIntensity={active ? 2.1 : 0.02}
-                    roughness={active ? 0.18 : 0.46}
-                    metalness={0.02}
-                    envMapIntensity={active ? 1.15 : 0.28}
-                    toneMapped={!active}
-                  />
-                </mesh>
+                <group
+                  key={state}
+                  name={`signal-lens-assembly-${signal.direction}-${state}`}
+                  position={[0, 0.82 - index * 0.54, -0.24]}
+                >
+                  <mesh
+                    name={`signal-hood-${signal.direction}-${state}`}
+                    position={[0, 0.08, -0.08]}
+                    castShadow={STAGE5_SHADOWS_ENABLED}
+                  >
+                    <boxGeometry args={[0.52, 0.14, 0.34]} />
+                    <meshStandardMaterial {...SIGNAL_MATERIALS.hood} />
+                  </mesh>
+                  <mesh name={`signal-lens-glass-${signal.direction}-${state}`}>
+                    <sphereGeometry args={[0.19, 18, 12]} />
+                    <meshStandardMaterial
+                      {...SIGNAL_MATERIALS.lensGlass}
+                      color={active ? LENS_COLORS[state] : LENS_OFF}
+                    />
+                  </mesh>
+                  <mesh
+                    name={`signal-emissive-core-${signal.direction}-${state}`}
+                    position={[0, 0, -0.018]}
+                    userData={{
+                      signalStateSource: "SceneSnapshot.signals",
+                      signalState: signal.state,
+                      lensState: state,
+                      active,
+                      bloomEligible: active,
+                      amberBloomEligible: active && state === "yellow",
+                      realSignalControlClaim: false
+                    }}
+                  >
+                    <sphereGeometry args={[0.115, 16, 10]} />
+                    <meshStandardMaterial
+                      color={active ? LENS_COLORS[state] : "#10181b"}
+                      emissive={active ? LENS_COLORS[state] : "#000000"}
+                      emissiveIntensity={active ? 2.15 * lensEmissiveScale : 0}
+                      roughness={active ? 0.12 : 0.5}
+                      metalness={0}
+                      envMapIntensity={active ? 1.28 : 0.2}
+                      toneMapped={!active}
+                    />
+                  </mesh>
+                </group>
               );
             })}
           </group>

@@ -10,6 +10,9 @@
     "lod": "near",
     "lodGroup": "passenger_car",
     "lowerDetailId": "vehicles/passenger_car_medium",
+    "missingLodTierReasons": {
+      "hero": "No dedicated hero passenger car is shipped because the dashboard uses the near sedan as the highest-detail foreground traffic tier under the current first-pass payload budget."
+    },
     "maxTextureSize": 1024,
     "maxTriangles": 16000,
     "maxFileSizeBytes": 1200000,
@@ -174,6 +177,10 @@
     "lod": "near",
     "lodGroup": "taxi",
     "lowerDetailId": "vehicles/taxi_far",
+    "missingLodTierReasons": {
+      "hero": "No dedicated hero taxi is shipped because the near taxi is the highest-detail foreground taxi tier for the current dashboard camera.",
+      "medium": "The taxi group intentionally uses near and far tiers only: near handles visible foreground taxis and far handles density traffic until a measured mid-distance transition needs a separate asset."
+    },
     "maxTextureSize": 1024,
     "maxTriangles": 16000,
     "maxFileSizeBytes": 1350000,
@@ -286,6 +293,10 @@
     "lod": "near",
     "lodGroup": "bus",
     "lowerDetailId": "vehicles/bus_far",
+    "missingLodTierReasons": {
+      "hero": "No dedicated hero bus is shipped because the near bus is the highest-detail visible transit tier and no camera-locked hero bus placement exists.",
+      "medium": "The bus group intentionally uses near and far tiers only: near covers foreground transit and far covers corridor density until a measured LOD transition needs a separate medium bus."
+    },
     "maxTextureSize": 1024,
     "maxTriangles": 14000,
     "maxFileSizeBytes": 1500000,
@@ -400,6 +411,10 @@
     "lod": "near",
     "lodGroup": "truck",
     "lowerDetailId": "vehicles/truck_far",
+    "missingLodTierReasons": {
+      "hero": "No dedicated hero truck is shipped because the near truck is the highest-detail foreground freight tier for the current dashboard camera.",
+      "medium": "The truck group intentionally uses near and far tiers only: near covers foreground freight and far covers corridor density until a measured LOD transition needs a separate medium truck."
+    },
     "maxTextureSize": 1024,
     "maxTriangles": 13000,
     "maxFileSizeBytes": 1400000,
@@ -512,6 +527,10 @@
     "lod": "near",
     "lodGroup": "emergency_ambulance",
     "lowerDetailId": "vehicles/emergency_ambulance_medium",
+    "missingLodTierReasons": {
+      "hero": "No dedicated hero ambulance is shipped because the near ambulance is the highest-detail emergency tier and no camera-locked hero ambulance placement exists.",
+      "far": "The medium ambulance is reused for lower-detail and density emergency coverage to preserve lightbar and emergency markings; a dedicated far ambulance is deferred until measured payload or visual need."
+    },
     "maxTextureSize": 1024,
     "maxTriangles": 12000,
     "maxFileSizeBytes": 1300000,
@@ -971,7 +990,8 @@
       "texture": "webp",
       "evidence": "scripts/verify-r3f-assets.mjs"
     },
-    "provenanceEvidencePath": "apps/web/public/simulation/r3f/assets/textures/PROVENANCE.md"
+    "provenanceEvidencePath": "apps/web/public/simulation/r3f/assets/textures/PROVENANCE.md",
+    "runtimeUsage": "Runtime road albedo map for wet asphalt, intersection asphalt, asphalt patches, and subtle surface color variation in the R3F dashboard."
   },
   "textures/wet_asphalt_roughness": {
     "id": "textures/wet_asphalt_roughness",
@@ -1009,7 +1029,8 @@
       "texture": "webp",
       "evidence": "scripts/verify-r3f-assets.mjs"
     },
-    "provenanceEvidencePath": "apps/web/public/simulation/r3f/assets/textures/PROVENANCE.md"
+    "provenanceEvidencePath": "apps/web/public/simulation/r3f/assets/textures/PROVENANCE.md",
+    "runtimeUsage": "Runtime roughness and bump source for wet asphalt, curb, marking, sidewalk, and city-ground materials in the R3F dashboard."
   },
   "decals/worn_lane_markings": {
     "id": "decals/worn_lane_markings",
@@ -1048,7 +1069,8 @@
       "texture": "png-alpha",
       "evidence": "scripts/verify-r3f-assets.mjs"
     },
-    "provenanceEvidencePath": "apps/web/public/simulation/r3f/assets/textures/PROVENANCE.md"
+    "provenanceEvidencePath": "apps/web/public/simulation/r3f/assets/textures/PROVENANCE.md",
+    "runtimeUsage": "Runtime transparent decal map for worn lane markings, marking scuffs, stop-bar fragments, and arrow wear."
   },
   "decals/crosswalk_wear": {
     "id": "decals/crosswalk_wear",
@@ -1087,7 +1109,8 @@
       "texture": "png-alpha",
       "evidence": "scripts/verify-r3f-assets.mjs"
     },
-    "provenanceEvidencePath": "apps/web/public/simulation/r3f/assets/textures/PROVENANCE.md"
+    "provenanceEvidencePath": "apps/web/public/simulation/r3f/assets/textures/PROVENANCE.md",
+    "runtimeUsage": "Runtime transparent decal map for eroded crosswalk bars and crossing paint wear."
   },
   "decals/curb_grime": {
     "id": "decals/curb_grime",
@@ -1126,7 +1149,8 @@
       "texture": "png-alpha",
       "evidence": "scripts/verify-r3f-assets.mjs"
     },
-    "provenanceEvidencePath": "apps/web/public/simulation/r3f/assets/textures/PROVENANCE.md"
+    "provenanceEvidencePath": "apps/web/public/simulation/r3f/assets/textures/PROVENANCE.md",
+    "runtimeUsage": "Runtime transparent curb grime decal and curb bump source for road-edge dirt, runoff, seams, and chipped lower edges."
   },
   "textures/sidewalk_paver_variation": {
     "id": "textures/sidewalk_paver_variation",
@@ -1164,7 +1188,8 @@
       "texture": "webp",
       "evidence": "scripts/verify-r3f-assets.mjs"
     },
-    "provenanceEvidencePath": "apps/web/public/simulation/r3f/assets/textures/PROVENANCE.md"
+    "provenanceEvidencePath": "apps/web/public/simulation/r3f/assets/textures/PROVENANCE.md",
+    "runtimeUsage": "Runtime sidewalk and city-ground surface map for paver seams, concrete mottling, stains, and small crack variation."
   },
   "textures/facade_window_emissive": {
     "id": "textures/facade_window_emissive",
@@ -1202,6 +1227,54 @@
       "texture": "webp",
       "evidence": "scripts/verify-r3f-assets.mjs"
     },
-    "provenanceEvidencePath": "apps/web/public/simulation/r3f/assets/textures/PROVENANCE.md"
+    "provenanceEvidencePath": "apps/web/public/simulation/r3f/assets/textures/PROVENANCE.md",
+    "runtimeUsage": "Runtime facade emissive map for warm, cool, and unlit window panel variation on city-edge building planes."
+  },
+  "sprites/stage6_weather_material_source_atlas": {
+    "id": "sprites/stage6_weather_material_source_atlas",
+    "path": "/simulation/r3f/assets/sprites/stage6-weather-material-source-atlas.png",
+    "kind": "sprite",
+    "source": "built-in-imagegen-generated-source-atlas",
+    "license": "Project-authored generated source atlas via built-in ImageGen; no external third-party asset source, logos, text, watermarks, or downloads",
+    "units": "meters",
+    "pbr": false,
+    "lod": "atlas",
+    "maxTextureSize": 2048,
+    "maxTriangles": 0,
+    "maxFileSizeBytes": 3000000,
+    "allowNonPowerOfTwo": true,
+    "nonPowerOfTwoReason": "Built-in ImageGen produced a 1254x1254 source atlas. It is preserved as source/reference material and is not tiled or repeated as a runtime GPU material; derivative runtime sprites should be power-of-two when sliced.",
+    "realismStatus": "stage6_finishing_source_ready",
+    "visualRejectIfToyLike": true,
+    "details": {
+      "dimensions": "1254x1254",
+      "fileSizeBytes": 2446820,
+      "generationMode": "built-in-image_gen",
+      "generationDate": "2026-06-19",
+      "assetRole": "Stage 6 weather/material source atlas for wet-road, rain, spray, sign, guardrail, billboard, and pedestrian-silhouette derivative assets.",
+      "spriteFeatures": [
+        "wet asphalt material swatches",
+        "worn lane and crosswalk paint panels",
+        "puddle and rain streak masks",
+        "splash puff and wheel-spray source cells",
+        "brandless billboard panels",
+        "pedestrian silhouettes",
+        "road sign and guardrail decal source cells"
+      ],
+      "promptSummary": "4x4 atlas with wet asphalt, worn lane/crosswalk, puddle masks, rain streaks, splash puffs, wheel spray, billboard panels without brands, pedestrian silhouettes, road signs/guardrail decals; no logos/text/watermarks.",
+      "provenance": "Built-in ImageGen source atlas copied into the project from the primary agent's generated output; no external downloads, stock packs, third-party assets, logos, text, or watermarks were used. Runtime proof must come from browser-rendered R3F evidence, not this source atlas alone."
+    },
+    "authorship": "generated",
+    "pbrChannels": [
+      "sourceColor"
+    ],
+    "compression": {
+      "status": "png-source-atlas",
+      "geometry": "not-applicable",
+      "texture": "png-truecolor-source",
+      "evidence": "apps/web/public/simulation/r3f/assets/textures/PROVENANCE.md"
+    },
+    "provenanceEvidencePath": "apps/web/public/simulation/r3f/assets/textures/PROVENANCE.md",
+    "runtimeUsage": "Runtime source atlas sampled by Stage 6 road materials, billboard clutter, road detail props, rain particle sprites, and wheel-spray sprites through named UV cells for wet asphalt, lane/crosswalk wear, puddle masks, billboard panels, road signs, guardrails, rain streaks, splash puffs, and wheel spray."
   }
 }

@@ -33,15 +33,52 @@ const requiredFields = [
   "compression",
   "provenanceEvidencePath"
 ];
-const allowedKinds = new Set(["vehicle", "prop", "texture", "decal"]);
-const allowedLods = new Set(["hero", "near", "medium", "far", "material", "decal"]);
+const allowedKinds = new Set(["vehicle", "prop", "texture", "decal", "sprite"]);
+const allowedLods = new Set([
+  "hero",
+  "near",
+  "medium",
+  "far",
+  "material",
+  "decal",
+  "atlas"
+]);
 const allowedAuthorship = new Set(["project-authored", "generated", "third-party"]);
 const allowedCompressionStatuses = new Set([
   "meshopt-or-draco-compressed",
   "ktx2-compressed",
+  "png-source-atlas",
   "webp-runtime",
   "png-alpha-runtime",
   "uncompressed-under-budget"
+]);
+const allowedPbrChannels = new Set([
+  "alpha",
+  "ambientOcclusion",
+  "baseColor",
+  "baseColorFactor",
+  "emissive",
+  "metallic",
+  "metallicFactor",
+  "normal",
+  "roughness",
+  "roughnessFactor",
+  "sourceColor"
+]);
+const physicalPbrChannels = new Set([
+  "ambientOcclusion",
+  "baseColor",
+  "baseColorFactor",
+  "emissive",
+  "metallic",
+  "metallicFactor",
+  "normal",
+  "roughness",
+  "roughnessFactor"
+]);
+const allowedRealismStatuses = new Set([
+  "stage4_1_ready",
+  "stage6_finishing_source_ready"
 ]);
 const imageExtensions = new Set([".png", ".jpg", ".jpeg", ".webp"]);
 const bannedNameTerms = [
@@ -57,6 +94,9 @@ const proofArtifactPaths = [
   "artifacts/r3f-stage4.1-asset-realism-contact-sheet.png",
   "artifacts/r3f-stage4.1-glb-turntable-contact-sheet.png"
 ];
+const stage6GeneratedAssetIds = new Set([
+  "sprites/stage6_weather_material_source_atlas"
+]);
 const firstPassPayloadLimitBytes = 25 * 1024 * 1024;
 const nearVehicleTriangleFloor = 600;
 const lodRank = new Map([
@@ -65,6 +105,7 @@ const lodRank = new Map([
   ["medium", 2],
   ["far", 3]
 ]);
+const vehicleLodTiers = Array.from(lodRank.keys());
 
 const failures = [];
 const assetMetricsById = new Map();
@@ -220,9 +261,91 @@ function validatePbrChannels(assetId, entry) {
     return;
   }
 
+  const channels = [];
+
   for (const channel of entry.pbrChannels) {
     if (!hasText(channel)) {
       addFailure(`${assetId}: pbrChannels entries must be non-empty strings`);
+      continue;
+    }
+
+    channels.push(channel);
+
+    if (!allowedPbrChannels.has(channel)) {
+      addFailure(
+        `${assetId}: pbrChannels entry "${channel}" is not an allowed channel`
+      );
+    }
+  }
+
+  if (entry.pbr === false) {
+    const claimedPhysicalChannel = channels.find((channel) =>
+      physicalPbrChannels.has(channel)
+    );
+
+    if (claimedPhysicalChannel) {
+      addFailure(
+        `${assetId}: pbr=false assets must not claim physical PBR channel "${claimedPhysicalChannel}"`
+      );
+    }
+  } else if (entry.pbr === true && channels.every((channel) => channel === "sourceColor")) {
+    addFailure(`${assetId}: pbr=true assets must declare at least one physical PBR channel`);
+  }
+}
+
+function validateRuntimeUsage(assetId, entry) {
+  const runtimeUsage = entry.runtimeUsage;
+
+  if (runtimeUsage === undefined) {
+    if (entry.authorship === "generated" || entry.kind === "sprite") {
+      addFailure(`${assetId}: generated and sprite assets must declare runtimeUsage`);
+    }
+
+    return;
+  }
+
+  if (hasText(runtimeUsage)) {
+    return;
+  }
+
+  if (Array.isArray(runtimeUsage) && runtimeUsage.length > 0) {
+    for (const usage of runtimeUsage) {
+      if (!hasText(usage)) {
+        addFailure(`${assetId}: runtimeUsage entries must be non-empty strings`);
+      }
+    }
+
+    return;
+  }
+
+  addFailure(`${assetId}: runtimeUsage must be a non-empty string or string array`);
+}
+
+function validateMissingLodTierReasons(assetId, entry) {
+  const reasons = entry.missingLodTierReasons;
+
+  if (reasons === undefined) {
+    return;
+  }
+
+  if (entry.kind !== "vehicle") {
+    addFailure(`${assetId}: missingLodTierReasons is only valid for vehicle assets`);
+    return;
+  }
+
+  if (!isRecord(reasons)) {
+    addFailure(`${assetId}: missingLodTierReasons must be an object keyed by LOD tier`);
+    return;
+  }
+
+  for (const [tier, reason] of Object.entries(reasons)) {
+    if (!lodRank.has(tier)) {
+      addFailure(`${assetId}: missingLodTierReasons.${tier} is not a known vehicle LOD tier`);
+      continue;
+    }
+
+    if (!hasText(reason)) {
+      addFailure(`${assetId}: missingLodTierReasons.${tier} must be a non-empty reason`);
     }
   }
 }
@@ -760,6 +883,7 @@ function validateEntryShape(assetId, entry) {
 
   validatePbrChannels(assetId, entry);
   validateCompressionFields(assetId, entry);
+  validateRuntimeUsage(assetId, entry);
 
   if (!isRepoRelativePath(entry.provenanceEvidencePath)) {
     addFailure(`${assetId}: provenanceEvidencePath must be a repo-relative evidence path`);
@@ -781,7 +905,36 @@ function validateEntryShape(assetId, entry) {
     addFailure(`${assetId}: allowNonPowerOfTwo must be boolean when present`);
   }
 
+  validateMissingLodTierReasons(assetId, entry);
   validateStageRealismMetadata(assetId, entry);
+}
+
+function getMissingLodTierReason(groupEntries, tier) {
+  for (const [, entry] of groupEntries) {
+    const reasons = entry.missingLodTierReasons;
+
+    if (isRecord(reasons) && hasText(reasons[tier])) {
+      return reasons[tier];
+    }
+  }
+
+  return "";
+}
+
+function validateVehicleLodTierCoverage(groupId, groupEntries) {
+  const presentTiers = new Set(groupEntries.map(([, entry]) => entry.lod));
+
+  for (const tier of vehicleLodTiers) {
+    if (presentTiers.has(tier)) {
+      continue;
+    }
+
+    if (!hasText(getMissingLodTierReason(groupEntries, tier))) {
+      addFailure(
+        `${groupId}: vehicle lodGroup is missing ${tier} LOD and missingLodTierReasons.${tier}`
+      );
+    }
+  }
 }
 
 function validateVehicleLods(entriesById) {
@@ -845,6 +998,8 @@ function validateVehicleLods(entriesById) {
     if (lowerOptions.length === 0) {
       addFailure(`${groupId}: vehicle lodGroup is missing a lower-detail option`);
     }
+
+    validateVehicleLodTierCoverage(groupId, groupEntries);
   }
 }
 
@@ -863,8 +1018,10 @@ function validateStageRealismMetadata(assetId, entry) {
     return;
   }
 
-  if (entry.realismStatus !== "stage4_1_ready") {
-    addFailure(`${assetId}: realismStatus must be "stage4_1_ready"`);
+  if (!allowedRealismStatuses.has(entry.realismStatus)) {
+    addFailure(
+      `${assetId}: realismStatus must be one of ${Array.from(allowedRealismStatuses).join(", ")}`
+    );
   }
 
   if (entry.visualRejectIfToyLike !== true) {
@@ -926,18 +1083,32 @@ function validateStageRealismMetadata(assetId, entry) {
     }
   }
 
-  if (entry.kind === "texture" || entry.kind === "decal") {
+  if (entry.kind === "texture" || entry.kind === "decal" || entry.kind === "sprite") {
     if (!isRecord(details)) {
       addFailure(`${assetId}: ${entry.kind} assets must include details metadata`);
       return;
     }
 
-    if (!hasNonEmptyArray(details.materialFeatures) && !hasNonEmptyArray(details.decalFeatures)) {
-      addFailure(`${assetId}: ${entry.kind} details must include materialFeatures or decalFeatures`);
+    if (
+      !hasNonEmptyArray(details.materialFeatures) &&
+      !hasNonEmptyArray(details.decalFeatures) &&
+      !hasNonEmptyArray(details.spriteFeatures)
+    ) {
+      addFailure(
+        `${assetId}: ${entry.kind} details must include materialFeatures, decalFeatures, or spriteFeatures`
+      );
     }
 
     if (!hasText(details.provenance)) {
       addFailure(`${assetId}: ${entry.kind} details.provenance is required`);
+    }
+  }
+}
+
+function validateStage6GeneratedAssetCoverage(entriesById) {
+  for (const assetId of stage6GeneratedAssetIds) {
+    if (!entriesById.has(assetId)) {
+      addFailure(`${assetId}: missing required Stage 6 generated source asset`);
     }
   }
 }
@@ -1334,6 +1505,8 @@ async function main() {
 
   const entriesById = new Map(entries);
   const complianceDocText = await readComplianceDoc();
+
+  validateStage6GeneratedAssetCoverage(entriesById);
 
   for (const [assetId, entry] of entriesById) {
     validateEntryShape(assetId, entry);

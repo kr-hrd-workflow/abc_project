@@ -4,7 +4,10 @@ import type {
   SimulationFrameBufferEntry,
   SimulationFrameSnapshot
 } from "../../lib/simulationSnapshot";
-import { interpolateSimulationFrame } from "./useInterpolatedSimulationFrame";
+import {
+  interpolateHeadingDegrees,
+  interpolateSimulationFrame
+} from "./useInterpolatedSimulationFrame";
 
 const baseFrame: SimulationFrameSnapshot = {
   source: "sumo_traci",
@@ -52,6 +55,10 @@ function entry(
 }
 
 describe("interpolateSimulationFrame", () => {
+  test("interpolates headings across the zero-degree seam on the shortest path", () => {
+    expect(interpolateHeadingDegrees(350, 10, 0.5)).toBeCloseTo(0);
+  });
+
   test("interpolates vehicles by sim_time_seconds and keeps signal state until the next frame boundary", () => {
     const nextFrame: SimulationFrameSnapshot = {
       ...baseFrame,

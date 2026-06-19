@@ -24,6 +24,12 @@ import type {
   SimulationVehicleSnapshot
 } from "../../lib/simulationSnapshot";
 import type { SceneSnapshot, SceneTrafficDensityMode } from "./buildSceneSnapshot";
+import type {
+  Stage6VehicleLodTier,
+  Stage6VehicleMaterialCues
+} from "./stage6VehicleLod";
+import type { Stage6QualityPreset } from "./stage6Quality";
+import { getStage6QualityPreset } from "./stage6Quality";
 import {
   STAGE5_NEAR_VEHICLE_SHADOW_LIMIT,
   STAGE5_SHADOWS_ENABLED
@@ -36,6 +42,12 @@ import {
 } from "./roadGeometry";
 import type { Vector3Tuple } from "./roadGeometry";
 import { getR3FAssetEntry, type R3FAssetId } from "./assetManifest";
+import {
+  STAGE6_VEHICLE_LOD_POLICY,
+  STAGE6_VEHICLE_MATERIAL_RESPONSE_CUES,
+  decideStage6VehicleLod,
+  getStage6VehicleMaterialCues
+} from "./stage6VehicleLod";
 
 export type TrafficDensitySourceLabel =
   | "fixture"
@@ -52,6 +64,10 @@ export type TrafficDensityPreciseVehicle = {
   size: Vector3Tuple;
   color: string;
   emergency: boolean;
+  lodTier: Stage6VehicleLodTier;
+  highQualityGlbEligible: boolean;
+  operatorRelevant: boolean;
+  materialCues: Stage6VehicleMaterialCues;
 };
 
 export type TrafficDensityFarVehicle = {
@@ -120,9 +136,9 @@ export const STAGE5_TRAFFIC_VEHICLE_SILHOUETTE_PARTS = [
 export const STAGE5_TRAFFIC_VEHICLE_LIGHT_GLOW = {
   headlight: {
     material: {
-      color: "#fff7d6",
-      emissive: "#fff2b8",
-      emissiveIntensity: 3.35,
+      color: "#ffc65a",
+      emissive: "#ffb347",
+      emissiveIntensity: 4.1,
       roughness: 0.14,
       toneMapped: false
     },
@@ -165,6 +181,10 @@ type Stage5TrafficVehicleInstance = {
   color: string;
   emergency: boolean;
   profileName: TrafficVehicleProfileName;
+  lodTier: Stage6VehicleLodTier;
+  highQualityGlbEligible: boolean;
+  operatorRelevant: boolean;
+  materialCues: Stage6VehicleMaterialCues;
 };
 
 export const STAGE6E_REPEATED_DENSITY_GLB_ASSET_IDS = [
@@ -188,10 +208,10 @@ const STAGE6E_DENSITY_MATERIAL_COLORS: Record<
   Stage6ERepeatedDensityAssetId,
   string
 > = {
-  "vehicles/passenger_car_far": "#748995",
-  "vehicles/taxi_far": "#a78d3a",
-  "vehicles/bus_far": "#668897",
-  "vehicles/truck_far": "#859197"
+  "vehicles/passenger_car_far": "#4d5b62",
+  "vehicles/taxi_far": "#8f742c",
+  "vehicles/bus_far": "#536b73",
+  "vehicles/truck_far": "#59646a"
 };
 
 const STAGE6E_DENSITY_ASSET_BY_PROFILE: Record<
@@ -211,7 +231,7 @@ const TRAFFIC_VEHICLE_PROFILES: TrafficVehicleProfile[] = [
   {
     name: "sedan",
     size: [2.36, 1.14, 4.65],
-    colors: ["#e6ecef", "#b7c1c7", "#8fa4af", "#c9d2d5"]
+    colors: ["#c8cdd0", "#8f989d", "#747f86", "#6a7175"]
   },
   {
     name: "hatchback",
@@ -220,7 +240,7 @@ const TRAFFIC_VEHICLE_PROFILES: TrafficVehicleProfile[] = [
       MIN_TRAFFIC_VEHICLE_HEIGHT_METERS,
       4.32
     ],
-    colors: ["#f0f3f1", "#aeb9be", "#97a8b0"]
+    colors: ["#c6cccf", "#7f8b91", "#697276"]
   },
   {
     name: "taxi",
@@ -230,30 +250,34 @@ const TRAFFIC_VEHICLE_PROFILES: TrafficVehicleProfile[] = [
   {
     name: "suv",
     size: [2.52, 1.34, 4.9],
-    colors: ["#b8c3c8", "#7f96a4", "#a97870"]
+    colors: ["#9fa9ad", "#5e6f78", "#6d504c"]
   },
   {
     name: "van",
     size: [2.62, 1.62, 5.62],
-    colors: ["#d7dee1", "#9cafb8", "#c2b17a"]
+    colors: ["#b9c1c5", "#72858e", "#9c8d5b"]
   },
   {
     name: "boxTruck",
     size: [2.68, 2.02, 7.15],
-    colors: ["#cfd8dc", "#b2bec5"]
+    colors: ["#aeb8bd", "#6b777d"]
   },
   {
     name: "cityBus",
     size: [2.76, 2.18, 8.85],
-    colors: ["#88a9b6", "#b7c7cf"]
+    colors: ["#607c87", "#8c9ca3"]
   }
 ];
 
 export function buildTrafficDensityRenderPlan(
-  sceneSnapshot: SceneSnapshot
+  sceneSnapshot: SceneSnapshot,
+  qualityPreset: Stage6QualityPreset = getStage6QualityPreset("high")
 ): TrafficDensityRenderPlan {
   const mode = sceneSnapshot.trafficDensityMode;
-  const preciseVehicles = buildPreciseVehicles(sceneSnapshot.vehicles);
+  const preciseVehicles = buildPreciseVehicles(
+    sceneSnapshot.vehicles,
+    qualityPreset
+  );
   const farVehicles = buildFarVehicles(sceneSnapshot);
 
   return {
@@ -292,11 +316,13 @@ export function buildStage6EDensityRenderPlan(
 }
 
 export function TrafficDensityLayer({
-  sceneSnapshot
+  sceneSnapshot,
+  qualityPreset = getStage6QualityPreset("high")
 }: {
   sceneSnapshot: SceneSnapshot;
+  qualityPreset?: Stage6QualityPreset;
 }) {
-  const plan = buildTrafficDensityRenderPlan(sceneSnapshot);
+  const plan = buildTrafficDensityRenderPlan(sceneSnapshot, qualityPreset);
   const canUseDensityGlbs = canUseRuntimeDensityAssets();
   const densityRenderPlan = buildStage6EDensityRenderPlan(plan.farVehicles);
   const allProceduralFarVehicles =
@@ -311,7 +337,11 @@ export function TrafficDensityLayer({
       size: vehicle.size,
       color: vehicle.color,
       emergency: vehicle.emergency,
-      profileName: getPreciseVehicleProfileName(vehicle.vehicleType)
+      profileName: getPreciseVehicleProfileName(vehicle.vehicleType),
+      lodTier: vehicle.lodTier,
+      highQualityGlbEligible: vehicle.highQualityGlbEligible,
+      operatorRelevant: vehicle.operatorRelevant,
+      materialCues: vehicle.materialCues
     }));
   const preciseShadowVehicles =
     selectNearVehicleShadowCasters(preciseVehicles);
@@ -327,6 +357,15 @@ export function TrafficDensityLayer({
       name={`stage5-traffic-density-${plan.mode}`}
       userData={{
         visibleVehicleCount: plan.farVehicles.length + plan.preciseVehicles.length,
+        qualityPreset: qualityPreset.name,
+        stage6VehicleLodPolicy: STAGE6_VEHICLE_LOD_POLICY,
+        stage6PreciseVehicleLodTiers: countStage6VehicleLodTiers(
+          plan.preciseVehicles
+        ),
+        stage6HighQualityGlbEligibleVehicleCount:
+          plan.preciseVehicles.filter((vehicle) => vehicle.highQualityGlbEligible)
+            .length,
+        stage6MaterialResponseCues: STAGE6_VEHICLE_MATERIAL_RESPONSE_CUES,
         densityGlbAssetIds: plan.farVehicles.map((vehicle) => vehicle.assetId),
         densitySourceLabel: plan.sourceLabel,
         densityGlbInstancedFamilyCount:
@@ -394,15 +433,29 @@ function selectNearVehicleShadowCasters(
 function buildStage5TrafficVehicleInstances(
   vehicles: TrafficDensityFarVehicle[]
 ): Stage5TrafficVehicleInstance[] {
-  return vehicles.map((vehicle) => ({
-    id: vehicle.id,
-    position: vehicle.position,
-    rotationY: vehicle.rotationY,
-    size: vehicle.size,
-    color: vehicle.color,
-    emergency: false,
-    profileName: getProfileNameFromSize(vehicle.size)
-  }));
+  return vehicles.map((vehicle) => {
+    const profileName = getProfileNameFromSize(vehicle.size);
+
+    return {
+      id: vehicle.id,
+      position: vehicle.position,
+      rotationY: vehicle.rotationY,
+      size: vehicle.size,
+      color: vehicle.color,
+      emergency: false,
+      profileName,
+      lodTier: "far",
+      highQualityGlbEligible: false,
+      operatorRelevant: false,
+      materialCues: getStage6VehicleMaterialCues({
+        vehicleType: getVehicleTypeFromProfileName(profileName),
+        emergency: false,
+        speedMps: 0,
+        waitingSeconds: 0,
+        truthSource: "proxy"
+      })
+    };
+  });
 }
 
 function Stage6EDensityVehicleGlbs({
@@ -547,7 +600,7 @@ function Stage6EDensityContactShadows({
       <meshBasicMaterial
         color="#020617"
         transparent
-        opacity={0.34}
+        opacity={0.5}
         depthWrite={false}
       />
     </instancedMesh>
@@ -927,7 +980,15 @@ function Stage5TrafficVehicleInstances({
       name={name}
       userData={{
         vehicleCount: vehicles.length,
-        castsRealShadows: castRealShadows
+        castsRealShadows: castRealShadows,
+        stage6VehicleLodTiers: countStage6VehicleLodTiers(vehicles),
+        highQualityGlbEligibleVehicleCount: vehicles.filter(
+          (vehicle) => vehicle.highQualityGlbEligible
+        ).length,
+        materialResponseCues: STAGE6_VEHICLE_MATERIAL_RESPONSE_CUES,
+        emergencyLightVehicleCount: vehicles.filter(
+          (vehicle) => vehicle.materialCues.emergencyLight !== "none"
+        ).length
       }}
     >
       <instancedMesh
@@ -939,7 +1000,7 @@ function Stage5TrafficVehicleInstances({
         <meshBasicMaterial
           color="#020304"
           transparent
-          opacity={0.44}
+          opacity={0.58}
           depthWrite={false}
         />
       </instancedMesh>
@@ -952,13 +1013,13 @@ function Stage5TrafficVehicleInstances({
         <Stage5VehiclePartGeometry partName="body" />
         <meshPhysicalMaterial
           color="#ffffff"
-          roughness={0.28}
-          metalness={0.28}
-          clearcoat={0.48}
-          clearcoatRoughness={0.24}
-          envMapIntensity={0.98}
-          emissive="#1d2a30"
-          emissiveIntensity={0.12}
+          roughness={0.36}
+          metalness={0.18}
+          clearcoat={0.32}
+          clearcoatRoughness={0.34}
+          envMapIntensity={0.72}
+          emissive="#10171a"
+          emissiveIntensity={0.05}
           vertexColors
         />
       </instancedMesh>
@@ -970,16 +1031,16 @@ function Stage5TrafficVehicleInstances({
       >
         <Stage5VehiclePartGeometry partName="cabin" />
         <meshPhysicalMaterial
-          color="#7fb2c3"
-          roughness={0.16}
+          color="#253943"
+          roughness={0.2}
           metalness={0.04}
-          transmission={0.12}
+          transmission={0.08}
           thickness={0.08}
-          envMapIntensity={1.18}
-          emissive="#17313c"
-          emissiveIntensity={0.26}
+          envMapIntensity={0.76}
+          emissive="#0a1418"
+          emissiveIntensity={0.12}
           transparent
-          opacity={0.82}
+          opacity={0.7}
         />
       </instancedMesh>
       <instancedMesh
@@ -988,9 +1049,9 @@ function Stage5TrafficVehicleInstances({
       >
         <Stage5VehiclePartGeometry partName="roofHighlight" />
         <meshBasicMaterial
-          color="#f7fbff"
+          color="#d7dde0"
           transparent
-          opacity={0.16}
+          opacity={0.075}
           depthWrite={false}
           side={DoubleSide}
         />
@@ -1001,16 +1062,16 @@ function Stage5TrafficVehicleInstances({
       >
         <Stage5VehiclePartGeometry partName="windshield" />
         <meshPhysicalMaterial
-          color="#376175"
-          emissive="#183542"
-          emissiveIntensity={0.34}
+          color="#1b303a"
+          emissive="#081218"
+          emissiveIntensity={0.12}
           roughness={0.12}
           metalness={0.05}
-          transmission={0.16}
+          transmission={0.08}
           thickness={0.05}
-          envMapIntensity={1.24}
+          envMapIntensity={0.84}
           transparent
-          opacity={0.78}
+          opacity={0.68}
           side={DoubleSide}
         />
       </instancedMesh>
@@ -1020,16 +1081,16 @@ function Stage5TrafficVehicleInstances({
       >
         <Stage5VehiclePartGeometry partName="rearGlass" />
         <meshPhysicalMaterial
-          color="#2d5264"
-          emissive="#142c37"
-          emissiveIntensity={0.3}
+          color="#182b34"
+          emissive="#071016"
+          emissiveIntensity={0.1}
           roughness={0.14}
           metalness={0.04}
-          transmission={0.14}
+          transmission={0.08}
           thickness={0.05}
-          envMapIntensity={1.16}
+          envMapIntensity={0.78}
           transparent
-          opacity={0.74}
+          opacity={0.66}
           side={DoubleSide}
         />
       </instancedMesh>
@@ -1039,15 +1100,15 @@ function Stage5TrafficVehicleInstances({
       >
         <Stage5VehiclePartGeometry partName="sideGlass" />
         <meshPhysicalMaterial
-          color="#244a5b"
-          emissive="#102831"
-          emissiveIntensity={0.24}
+          color="#142832"
+          emissive="#060e13"
+          emissiveIntensity={0.08}
           roughness={0.16}
-          transmission={0.14}
+          transmission={0.08}
           thickness={0.04}
-          envMapIntensity={1.12}
+          envMapIntensity={0.74}
           transparent
-          opacity={0.68}
+          opacity={0.62}
           side={DoubleSide}
         />
       </instancedMesh>
@@ -1248,11 +1309,36 @@ function getIntersectionDistanceSquared(position: Vector3Tuple) {
   return position[0] * position[0] + position[2] * position[2];
 }
 
+function countStage6VehicleLodTiers(
+  vehicles: { lodTier: Stage6VehicleLodTier }[]
+): Record<Stage6VehicleLodTier, number> {
+  return vehicles.reduce<Record<Stage6VehicleLodTier, number>>(
+    (counts, vehicle) => {
+      counts[vehicle.lodTier] += 1;
+
+      return counts;
+    },
+    { hero: 0, near: 0, mid: 0, far: 0 }
+  );
+}
+
 function buildPreciseVehicles(
-  vehicles: SimulationVehicleSnapshot[]
+  vehicles: SimulationVehicleSnapshot[],
+  qualityPreset: Stage6QualityPreset
 ): TrafficDensityPreciseVehicle[] {
   return vehicles.map((vehicle) => {
     const size = getPreciseVehicleSize(vehicle);
+    const lodDecision = decideStage6VehicleLod({
+      distanceMeters: Math.sqrt(
+        vehicle.x_meters * vehicle.x_meters + vehicle.y_meters * vehicle.y_meters
+      ),
+      sourceLabel: "snapshot",
+      vehicleType: vehicle.vehicle_type,
+      emergency: vehicle.emergency,
+      speedMps: vehicle.speed_mps,
+      waitingSeconds: vehicle.waiting_seconds,
+      qualityPreset
+    });
 
     return {
       id: vehicle.id,
@@ -1266,7 +1352,11 @@ function buildPreciseVehicles(
       rotationY: degreesToRadians(vehicle.heading_degrees),
       size,
       color: getPreciseVehicleColor(vehicle),
-      emergency: vehicle.emergency
+      emergency: vehicle.emergency,
+      lodTier: lodDecision.tier,
+      highQualityGlbEligible: lodDecision.highQualityGlbEligible,
+      operatorRelevant: lodDecision.operatorRelevant,
+      materialCues: lodDecision.materialCues
     };
   });
 }
@@ -1414,7 +1504,7 @@ function buildDensitySegmentVehicles(
       color:
         segment.source === "aggregate_density_proxy"
           ? getTrafficVehicleColor({ profile, direction: segment.approach, index, laneIndex })
-          : "#94d4e7",
+          : "#71838c",
       opacity: segment.source === "aggregate_density_proxy" ? 0.68 : 0.72
     };
   });
@@ -1550,6 +1640,15 @@ function getProfileNameFromSize(size: Vector3Tuple): TrafficVehicleProfileName {
   return matchingProfile?.name ?? "sedan";
 }
 
+function getVehicleTypeFromProfileName(
+  profileName: TrafficVehicleProfileName
+): SimulationVehicleSnapshot["vehicle_type"] {
+  if (profileName === "cityBus") return "bus";
+  if (profileName === "boxTruck") return "truck";
+  if (profileName === "taxi") return "taxi";
+  return "car";
+}
+
 function getPreciseVehicleProfileName(
   vehicleType: SimulationVehicleSnapshot["vehicle_type"]
 ): TrafficVehicleProfileName {
@@ -1644,11 +1743,11 @@ function getPreciseVehicleSize(
 }
 
 function getPreciseVehicleColor(vehicle: SimulationVehicleSnapshot) {
-  if (vehicle.emergency || vehicle.vehicle_type === "emergency") return "#ef4444";
-  if (vehicle.vehicle_type === "bus") return "#38bdf8";
-  if (vehicle.vehicle_type === "truck") return "#94a3b8";
-  if (vehicle.vehicle_type === "taxi") return "#facc15";
-  return "#dbeafe";
+  if (vehicle.emergency || vehicle.vehicle_type === "emergency") return "#a73532";
+  if (vehicle.vehicle_type === "bus") return "#607c87";
+  if (vehicle.vehicle_type === "truck") return "#6b777d";
+  if (vehicle.vehicle_type === "taxi") return "#b99734";
+  return "#aeb8bd";
 }
 
 function degreesToRadians(degrees: number) {

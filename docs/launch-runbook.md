@@ -152,7 +152,23 @@ Run the normal local quality gate before release or handoff:
 npm run verify
 ```
 
-`npm run verify` runs API tests, web tests, the web build, R3F asset proof, R3F dashboard browser proof, security gates, and `git diff --check`.
+`npm run verify` runs API tests, web tests, the web build, R3F asset proof, R3F dashboard browser proof, R3F performance telemetry, R3F visual-scenario checks, security gates, and `git diff --check`.
+
+For focused R3F proof:
+
+```bash
+npm run verify:r3f-dashboard
+npm run verify:r3f-performance
+npm run verify:r3f-visual-diff
+```
+
+`verify:r3f-dashboard` writes the canonical screenshots and `artifacts/r3f-dashboard-details.json`. The performance and visual-diff gates consume that details JSON, so run the dashboard verifier first.
+
+Quality preset names are `low`, `medium`, `high`, and `ultra`. The current review target is `high`. Low favors stable fallback visuals, Medium enables lighter postprocessing and reflections, High enables the standard photoreal review chain, and Ultra is allowed only when the visual and frame-time gates pass. If the renderer has not yet exposed a preset selector, the details JSON must report `qualityPreset=null` with an integration note rather than inventing the value.
+
+Image Gen or other generated images may guide texture/decal direction only after the selected runtime asset is copied into the repo, documented in the R3F asset manifest/provenance, and verified by browser proof. A screenshot artifact proves the browser-rendered R3F simulation state only; it is not live CCTV proof, production monitoring, deployment evidence, or real signal-control evidence.
+
+Missing Blender, KTX2/BasisU, meshopt/gltfpack, SUMO, TraCI, libsumo, or third-party asset tooling is a setup blocker unless explicitly approved for installation. Do not silently install those tools during verifier runs.
 
 The checked-in R3F dashboard workflow runs the same test/build/proof commands for `push` and `pull_request`. Branch protection, required-check settings, and CodeQL configuration are external GitHub settings and are not changed by this workflow.
 

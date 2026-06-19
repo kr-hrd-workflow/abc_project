@@ -102,7 +102,7 @@ export const CORRIDOR_LENGTH_METERS: Record<Direction, number> = {
 const HALF_INTERSECTION = INTERSECTION_BOX_METERS / 2;
 const MARKING_HEIGHT = 0.018;
 const LANE_DIVIDER_MARKING_WIDTH = 0.58;
-const CROSSWALK_STRIPE_WIDTH = 1.12;
+const CROSSWALK_STRIPE_WIDTH = 0.86;
 const CURB_WIDTH = 0.45;
 const CURB_HEIGHT = 0.22;
 const SIDEWALK_WIDTH = 5.5;
@@ -336,25 +336,25 @@ function buildCrosswalkStripes(): PlanePrimitiveSpec[] {
       id: `north-crosswalk-${index}`,
       direction: "north",
       position: [offset, MARKING_HEIGHT + 0.008, -crosswalkOffset],
-      size: [CROSSWALK_STRIPE_WIDTH, ROAD_WIDTH_METERS + 2.5]
+      size: [CROSSWALK_STRIPE_WIDTH, ROAD_WIDTH_METERS + 0.8]
     });
     stripes.push({
       id: `south-crosswalk-${index}`,
       direction: "south",
       position: [offset, MARKING_HEIGHT + 0.008, crosswalkOffset],
-      size: [CROSSWALK_STRIPE_WIDTH, ROAD_WIDTH_METERS + 2.5]
+      size: [CROSSWALK_STRIPE_WIDTH, ROAD_WIDTH_METERS + 0.8]
     });
     stripes.push({
       id: `east-crosswalk-${index}`,
       direction: "east",
       position: [crosswalkOffset, MARKING_HEIGHT + 0.008, offset],
-      size: [ROAD_WIDTH_METERS + 2.5, CROSSWALK_STRIPE_WIDTH]
+      size: [ROAD_WIDTH_METERS + 0.8, CROSSWALK_STRIPE_WIDTH]
     });
     stripes.push({
       id: `west-crosswalk-${index}`,
       direction: "west",
       position: [-crosswalkOffset, MARKING_HEIGHT + 0.008, offset],
-      size: [ROAD_WIDTH_METERS + 2.5, CROSSWALK_STRIPE_WIDTH]
+      size: [ROAD_WIDTH_METERS + 0.8, CROSSWALK_STRIPE_WIDTH]
     });
   }
 

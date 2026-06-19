@@ -20,12 +20,20 @@ import {
   publishR3FTelemetryEvent
 } from "../../lib/r3fTelemetry";
 import { STAGE5_SHADOWS_ENABLED } from "./shadowPolicy";
+import { Stage6PostFX } from "./Stage6PostFX";
 import { SimulationScene } from "./SimulationScene";
 import { STAGE5_CAMERA, getStage5CameraForAspect } from "./roadGeometry";
+import type {
+  Stage6QualityPreset,
+  Stage6TimeOfDay,
+  Stage6WeatherPresetName
+} from "./stage6Quality";
+import { getStage6QualityPreset } from "./stage6Quality";
 
 export const STAGE5_NORMAL_DRAW_CALL_BUDGET = 180;
-export const STAGE5_DRAW_CALL_BUDGET = 250;
-export const STAGE5_TONE_MAPPING_EXPOSURE = 2.55;
+export const STAGE6_PEAK_DRAW_CALL_BUDGET = 900;
+export const STAGE5_DRAW_CALL_BUDGET = STAGE6_PEAK_DRAW_CALL_BUDGET;
+export const STAGE5_TONE_MAPPING_EXPOSURE = 1.25;
 export { STAGE5_SHADOWS_ENABLED } from "./shadowPolicy";
 
 export type Stage5CanvasProof = {
@@ -55,6 +63,13 @@ export type Stage5CanvasProof = {
   canvasConnected: boolean;
   contextLost: boolean;
   contextLossEvents: number;
+  qualityPreset: string | null;
+  postFxEnabled: boolean | null;
+  postFxChain: string[] | null;
+  planarReflectionEnabled: boolean | null;
+  weatherParticlesEnabled: boolean | null;
+  highQualityVehicleCount: number | null;
+  textureMemoryEstimateMb: number | null;
   updatedAt: string;
 };
 
@@ -84,9 +99,15 @@ const stage5PerformanceStats = new WeakMap<
 const noop = () => {};
 
 export function SimulationCanvas({
-  sceneSnapshot
+  sceneSnapshot,
+  qualityPreset = getStage6QualityPreset("high"),
+  weather = "rain",
+  timeOfDay = "day"
 }: {
   sceneSnapshot: SceneSnapshot;
+  qualityPreset?: Stage6QualityPreset;
+  weather?: Stage6WeatherPresetName;
+  timeOfDay?: Stage6TimeOfDay;
 }) {
   const renderScene = !isJsdomRuntime();
 
@@ -99,7 +120,7 @@ export function SimulationCanvas({
         near: STAGE5_CAMERA.near,
         far: STAGE5_CAMERA.far
       }}
-      dpr={[1, 1.5]}
+      dpr={[1, qualityPreset.maxDpr]}
       frameloop="demand"
       shadows={STAGE5_SHADOWS_ENABLED ? "soft" : false}
       gl={{
@@ -113,7 +134,15 @@ export function SimulationCanvas({
       onCreated={handleStage5CanvasCreated}
     >
       {renderScene ? <Stage5CanvasProofBridge /> : null}
-      {renderScene ? <SimulationScene sceneSnapshot={sceneSnapshot} /> : null}
+      {renderScene ? (
+        <SimulationScene
+          sceneSnapshot={sceneSnapshot}
+          qualityPreset={qualityPreset}
+          weather={weather}
+          timeOfDay={timeOfDay}
+        />
+      ) : null}
+      {renderScene ? <Stage6PostFX qualityPreset={qualityPreset.name} /> : null}
     </Canvas>
   );
 }
@@ -141,6 +170,10 @@ export function buildStage5CanvasProof(
   const performanceStats = readStage5PerformanceStats(renderer);
   const drawCalls = renderer.info.render.calls;
   const peakDrawCalls = getStage5PeakDrawCalls(renderer);
+  const textureMemoryEstimateMb = readNumberAttribute(
+    viewport,
+    "data-r3f-texture-memory-estimate-mb"
+  );
 
   return {
     renderer: "r3f",
@@ -161,7 +194,7 @@ export function buildStage5CanvasProof(
     averageFrameTimeMs: performanceStats.averageFrameTimeMs,
     cpuFrameTimeMs: performanceStats.cpuFrameTimeMs,
     gpuFrameTimeMs: null,
-    textureMemoryBytes: null,
+    textureMemoryBytes: megabytesToBytes(textureMemoryEstimateMb),
     jsHeapBytes: readJsHeapBytes(),
     authoritativeTickDriftMs:
       readNumberAttribute(viewport, "data-r3f-authoritative-tick-drift-ms") ?? 0,
@@ -174,6 +207,22 @@ export function buildStage5CanvasProof(
     contextLost:
       typeof context.isContextLost === "function" ? context.isContextLost() : false,
     contextLossEvents,
+    qualityPreset: viewport?.getAttribute("data-r3f-quality-preset") ?? null,
+    postFxEnabled: readBooleanAttribute(viewport, "data-r3f-postfx-enabled"),
+    postFxChain: readListAttribute(viewport, "data-r3f-postfx-chain"),
+    planarReflectionEnabled: readBooleanAttribute(
+      viewport,
+      "data-r3f-planar-reflection-enabled"
+    ),
+    weatherParticlesEnabled: readBooleanAttribute(
+      viewport,
+      "data-r3f-weather-particles-enabled"
+    ),
+    highQualityVehicleCount: readNumberAttribute(
+      viewport,
+      "data-r3f-high-quality-vehicle-count"
+    ),
+    textureMemoryEstimateMb,
     updatedAt: new Date().toISOString()
   };
 }
@@ -498,6 +547,25 @@ function publishStage5Telemetry(
     "data-r3f-authoritative-tick-drift-ms"
   );
   const frameStale = viewport?.getAttribute("data-r3f-frame-stale") === "true";
+  const qualityPreset = viewport?.getAttribute("data-r3f-quality-preset") ?? null;
+  const postFxEnabled = readBooleanAttribute(viewport, "data-r3f-postfx-enabled");
+  const postFxChain = readListAttribute(viewport, "data-r3f-postfx-chain");
+  const planarReflectionEnabled = readBooleanAttribute(
+    viewport,
+    "data-r3f-planar-reflection-enabled"
+  );
+  const weatherParticlesEnabled = readBooleanAttribute(
+    viewport,
+    "data-r3f-weather-particles-enabled"
+  );
+  const highQualityVehicleCount = readNumberAttribute(
+    viewport,
+    "data-r3f-high-quality-vehicle-count"
+  );
+  const textureMemoryEstimateMb = readNumberAttribute(
+    viewport,
+    "data-r3f-texture-memory-estimate-mb"
+  );
 
   publishR3FTelemetryEvent(
     buildR3FTelemetryEvent({
@@ -515,12 +583,46 @@ function publishStage5Telemetry(
       simToRenderDelayMs,
       authoritativeHz,
       frameStale,
+      qualityPreset,
+      postFx: {
+        enabled: postFxEnabled,
+        chain: postFxChain,
+        source: "dom_attribute",
+        reason:
+          postFxEnabled === null || postFxChain === null
+            ? "postFX state was not reported by DOM attributes"
+            : null
+      },
+      heavyFeatures: {
+        planarReflection: planarReflectionEnabled,
+        weatherParticles: weatherParticlesEnabled,
+        highQualityVehicles: highQualityVehicleCount,
+        shadowCasters: proof.shadowCasterCount,
+        source: "dom_attribute",
+        reason:
+          planarReflectionEnabled === null ||
+          weatherParticlesEnabled === null ||
+          highQualityVehicleCount === null
+            ? "heavy feature state was not reported by DOM attributes"
+            : null
+      },
       fps: proof.fps,
       averageFrameTimeMs: proof.averageFrameTimeMs,
       cpuFrameTimeMs: proof.cpuFrameTimeMs,
       gpuFrameTimeMs: proof.gpuFrameTimeMs,
       triangles: proof.triangles,
       textureMemoryBytes: proof.textureMemoryBytes,
+      textureMemoryEstimateMb,
+      performance: {
+        drawCalls: proof.drawCalls,
+        frameTimeMs: proof.averageFrameTimeMs,
+        visibleVehicles: visibleVehicleCount,
+        textureMemoryEstimateMb,
+        source: "app_proof",
+        reason: textureMemoryEstimateMb === null
+          ? "texture memory estimate was not reported by DOM attributes"
+          : null
+      },
       jsHeapBytes: proof.jsHeapBytes,
       authoritativeTickDriftMs
     })
@@ -528,9 +630,40 @@ function publishStage5Telemetry(
 }
 
 function readNumberAttribute(element: Element | null, name: string) {
-  const value = Number(element?.getAttribute(name));
+  const attribute = element?.getAttribute(name);
+  if (!attribute || attribute === "none") {
+    return null;
+  }
+
+  const value = Number(attribute);
 
   return Number.isFinite(value) ? value : null;
+}
+
+function readBooleanAttribute(element: Element | null, name: string) {
+  const value = element?.getAttribute(name);
+
+  if (value === "true") return true;
+  if (value === "false") return false;
+
+  return null;
+}
+
+function readListAttribute(element: Element | null, name: string) {
+  const value = element?.getAttribute(name)?.trim();
+  if (!value) return null;
+  if (value === "off") return [];
+
+  return value
+    .split(",")
+    .map((item) => item.trim())
+    .filter(Boolean);
+}
+
+function megabytesToBytes(value: number | null) {
+  if (value === null) return null;
+
+  return Math.round(value * 1024 * 1024);
 }
 
 function readNowMs() {

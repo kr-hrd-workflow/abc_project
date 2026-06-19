@@ -232,7 +232,7 @@ export function ApproachCorridors() {
       <InstancedBoxBatch
         name="stage5-city-edge-building-blocks"
         specs={CITY_EDGE_BLOCKS}
-        material={roadMaterials.buildingEdge}
+        material={roadMaterials.buildingBlock}
         castShadow
         receiveShadow
       />

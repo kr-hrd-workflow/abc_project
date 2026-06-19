@@ -22,6 +22,40 @@ export function SimulationOverlays({
       data-testid="r3f-simulation-overlays"
       aria-label="Simulation source overlays"
     >
+      <OverlayBadge
+        label="Camera"
+        value="SIM-CCTV-INT-0001"
+        testId="r3f-cctv-camera-id-badge"
+      />
+      <OverlayBadge
+        label="CCTV"
+        value={formatVirtualCctvSource(simulationSource, sceneSnapshot.source)}
+        testId="r3f-cctv-source-badge"
+      />
+      <OverlayBadge
+        label="Render delay"
+        value={formatRenderDelay(frameTelemetry.simToRenderDelayMs)}
+        testId="r3f-cctv-render-delay-badge"
+      />
+      <OverlayBadge
+        label="Feed"
+        value={
+          frameTelemetry.stale
+            ? formatFrameStaleValue(frameTelemetry.staleReason)
+            : "current simulation frame"
+        }
+        testId="r3f-cctv-stale-badge"
+      />
+      <OverlayBadge
+        label="Effect"
+        value="rain lens / light compression"
+        testId="r3f-cctv-effect-badge"
+      />
+      <OverlayBadge
+        label="Safety"
+        value="Virtual simulation CCTV, not a live feed"
+        testId="r3f-cctv-safety-badge"
+      />
       <OverlayBadge label="Simulation" value={simulationSource} testId="r3f-simulation-source-badge" />
       <OverlayBadge
         label="Snapshot"
@@ -66,6 +100,21 @@ function formatFrameStaleValue(reason: string | null) {
   if (reason === "missing_next_frame") return "stale missing-next";
   if (reason === "frame_age") return "stale age";
   return "stale";
+}
+
+function formatVirtualCctvSource(
+  simulationSource: string,
+  snapshotSource: string | null
+) {
+  return `virtual simulation CCTV / ${simulationSource} / ${snapshotSource ?? "none"}`;
+}
+
+function formatRenderDelay(simToRenderDelayMs: number | null) {
+  if (typeof simToRenderDelayMs !== "number" || !Number.isFinite(simToRenderDelayMs)) {
+    return "unavailable";
+  }
+
+  return `${Math.max(0, Math.round(simToRenderDelayMs))} ms`;
 }
 
 function OverlayBadge({

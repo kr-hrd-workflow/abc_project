@@ -53,5 +53,11 @@ jobs:
         timeout-minutes: 15
         run: npm run verify:r3f-dashboard
 
+      - name: Verify R3F performance telemetry
+        run: npm run verify:r3f-performance
+
+      - name: Verify R3F visual scenarios
+        run: npm run verify:r3f-visual-diff
+
       - name: Verify security gates
         run: npm run verify:security

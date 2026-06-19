@@ -11,10 +11,16 @@ import {
   SIGNAL_ACCENT_LIGHTS,
   STAGE5_LIGHT_COLORS,
   STREETLIGHT_POOLS,
-  VEHICLE_EMISSIVE_ACCENTS
+  VEHICLE_EMISSIVE_ACCENTS,
+  buildStage6SignalAccentLights,
+  type Stage6SignalAccentSignal
 } from "./LightingRig";
+import { RainParticleLayer } from "./RainParticleLayer";
 import { ROAD_WIDTH_METERS } from "./roadGeometry";
 import type { Vector3Tuple } from "./roadGeometry";
+import type { Stage6QualityPreset } from "./stage6Quality";
+import type { Stage6WeatherPresetName } from "./stage6Quality";
+import { getStage6QualityPreset } from "./stage6Quality";
 
 export type WetRoadHighlightSource =
   | "streetlight"
@@ -49,16 +55,16 @@ export type DistantCityBackdropSpec = {
 };
 
 export const STAGE5_ATMOSPHERE = {
-  background: "#19262b",
-  fog: "#334247",
-  fogNear: 42,
-  fogFar: 245,
-  haze: "#c2cbc7"
+  background: "#17242b",
+  fog: "#23343c",
+  fogNear: 28,
+  fogFar: 170,
+  haze: "#5d7378"
 } as const;
 
 const REFLECTION_TINTS = {
-  streetlight: "#ffd9a4",
-  headlight: "#fff7e8",
+  streetlight: "#ffb24a",
+  headlight: "#ffc65a",
   taillight: "#b14438"
 } as const;
 
@@ -70,8 +76,8 @@ const DISTANT_CITY_BACKDROP: DistantCityBackdropSpec = {
   id: "north-distant-city-depth-backdrop",
   position: [0, 42, -210],
   size: [360, 120],
-  color: "#2d3a40",
-  opacity: 0.46
+  color: "#151f24",
+  opacity: 0.28
 };
 
 export const WET_ROAD_REFLECTION_HIGHLIGHTS: WetRoadHighlightSpec[] = [
@@ -90,10 +96,10 @@ export const WET_ROAD_REFLECTION_HIGHLIGHTS: WetRoadHighlightSpec[] = [
       position: onNorthSouthCorridor
         ? [reflectionX, ROAD_SURFACE_OVERLAY_Y, light.position[2]]
         : [light.position[0], ROAD_SURFACE_OVERLAY_Y, reflectionZ],
-      size: onNorthSouthCorridor ? [5.6, 30] : [30, 5.6],
+      size: onNorthSouthCorridor ? [7.6, 38] : [38, 7.6],
       rotationY: 0,
       color: REFLECTION_TINTS.streetlight,
-      opacity: 0.42
+      opacity: 0.68
     };
   }),
   ...SIGNAL_ACCENT_LIGHTS.map((light): WetRoadHighlightSpec => ({
@@ -116,7 +122,7 @@ export const WET_ROAD_REFLECTION_HIGHLIGHTS: WetRoadHighlightSpec[] = [
     color: light.kind === "headlight"
       ? REFLECTION_TINTS.headlight
       : REFLECTION_TINTS.taillight,
-    opacity: light.kind === "headlight" ? 0.55 : 0.28
+    opacity: light.kind === "headlight" ? 0.72 : 0.34
   }))
 ];
 
@@ -126,35 +132,68 @@ export const HAZE_PLANES: HazePlaneSpec[] = [
     position: [0, HAZE_HEIGHT, -118],
     rotation: [0, 0, 0],
     size: [82, 42],
-    opacity: 0.18
+    opacity: 0.075
   },
   {
     id: "south-corridor-depth-haze",
     position: [0, HAZE_HEIGHT, 105],
     rotation: [0, Math.PI, 0],
     size: [78, 40],
-    opacity: 0.145
+    opacity: 0.06
   },
   {
     id: "east-corridor-depth-haze",
     position: [118, HAZE_HEIGHT, 0],
     rotation: [0, Math.PI / 2, 0],
     size: [76, 38],
-    opacity: 0.14
+    opacity: 0.055
   },
   {
     id: "west-corridor-depth-haze",
     position: [-112, HAZE_HEIGHT, 0],
     rotation: [0, -Math.PI / 2, 0],
     size: [76, 38],
-    opacity: 0.14
+    opacity: 0.055
   }
 ];
 
-export function WeatherAndAtmosphere() {
+function buildSignalWetRoadReflectionHighlights(
+  signals: readonly Stage6SignalAccentSignal[]
+): WetRoadHighlightSpec[] {
+  return buildStage6SignalAccentLights(signals).map(
+    (light): WetRoadHighlightSpec => ({
+      id: `${light.id}-wet-road-reflection`,
+      source: "signal",
+      position: [light.position[0], ROAD_SURFACE_OVERLAY_Y + 0.002, light.position[2]],
+      size: Math.abs(light.position[2]) > Math.abs(light.position[0])
+        ? [3.6, 10]
+        : [10, 3.6],
+      rotationY: 0,
+      color: light.color,
+      opacity: 0.25
+    })
+  );
+}
+
+export function WeatherAndAtmosphere({
+  qualityPreset = getStage6QualityPreset("high"),
+  weather = "rain",
+  signals = []
+}: {
+  qualityPreset?: Stage6QualityPreset;
+  weather?: Stage6WeatherPresetName;
+  signals?: readonly Stage6SignalAccentSignal[];
+}) {
   const reflectionFalloffTexture = useSoftReflectionTexture();
   const hazeFalloffTexture = useSoftHazeTexture();
   const distantCityTexture = useDistantCityTexture();
+  const wetRoadReflectionHighlights = useMemo(
+    () => [
+      ...WET_ROAD_REFLECTION_HIGHLIGHTS,
+      ...buildSignalWetRoadReflectionHighlights(signals)
+    ],
+    [signals]
+  );
 
   return (
     <group name="stage5-weather-and-atmosphere">
@@ -204,7 +243,9 @@ export function WeatherAndAtmosphere() {
         </mesh>
       ))}
 
-      {WET_ROAD_REFLECTION_HIGHLIGHTS.map((highlight) => (
+      <RainParticleLayer qualityPreset={qualityPreset} weather={weather} />
+
+      {wetRoadReflectionHighlights.map((highlight) => (
         <mesh
           key={highlight.id}
           name={highlight.id}

@@ -83,6 +83,7 @@ import {
 } from "./r3f/buildSceneSnapshot";
 import { STAGE5_RENDERER_MODE } from "./r3f/R3FSimulationViewport";
 import { SimulationScene } from "./r3f/SimulationScene";
+import { CAMERA_RIG_PRESETS } from "./r3f/CameraRig";
 import {
   STAGE5_MIN_VISIBLE_VEHICLES,
   STAGE5_TRAFFIC_VEHICLE_SILHOUETTE_PARTS,
@@ -343,7 +344,8 @@ const stage4RequiredAssetIds = [
   "decals/crosswalk_wear",
   "decals/curb_grime",
   "textures/sidewalk_paver_variation",
-  "textures/facade_window_emissive"
+  "textures/facade_window_emissive",
+  "sprites/stage6_weather_material_source_atlas"
 ];
 
 const runtimeReadiness: RuntimeReadiness = {
@@ -979,7 +981,7 @@ describe("DashboardShell", () => {
     });
   });
 
-  test("invalidates demand rendering after applying the Stage 5 long-corridor camera target", () => {
+  test("invalidates demand rendering after applying the Stage 6 rain camera target", () => {
     r3fCameraMock.position.set.mockClear();
     r3fCameraMock.lookAt.mockClear();
     r3fCameraMock.updateProjectionMatrix.mockClear();
@@ -994,13 +996,17 @@ describe("DashboardShell", () => {
       />
     );
 
+    const stage6RainCamera = CAMERA_RIG_PRESETS.nightRainClose;
+
     expect(r3fCameraMock.position.set).toHaveBeenCalledWith(
-      ...STAGE5_CAMERA.position
+      ...stage6RainCamera.position
     );
-    expect(r3fCameraMock.near).toBe(STAGE5_CAMERA.near);
-    expect(r3fCameraMock.far).toBe(STAGE5_CAMERA.far);
-    expect(r3fCameraMock.fov).toBe(STAGE5_CAMERA.fov);
-    expect(r3fCameraMock.lookAt).toHaveBeenCalledWith(...STAGE5_CAMERA.target);
+    expect(r3fCameraMock.near).toBe(stage6RainCamera.near);
+    expect(r3fCameraMock.far).toBe(stage6RainCamera.far);
+    expect(r3fCameraMock.fov).toBe(stage6RainCamera.fov);
+    expect(r3fCameraMock.lookAt).toHaveBeenCalledWith(
+      ...stage6RainCamera.target
+    );
     expect(r3fCameraMock.updateProjectionMatrix).toHaveBeenCalled();
     expect(r3fInvalidateMock).toHaveBeenCalledTimes(1);
   });
@@ -1026,7 +1032,7 @@ describe("DashboardShell", () => {
       const asset = getR3FAssetEntry(assetId);
 
       expect(asset.id).toBe(assetId);
-      expect(asset.path).toMatch(/^\/simulation\/r3f\/assets\/(glb|textures)\//);
+      expect(asset.path).toMatch(/^\/simulation\/r3f\/assets\/(glb|textures|sprites)\//);
       expect(asset.units).toBe("meters");
       expect(asset.source.length).toBeGreaterThan(0);
       expect(asset.license.length).toBeGreaterThan(0);

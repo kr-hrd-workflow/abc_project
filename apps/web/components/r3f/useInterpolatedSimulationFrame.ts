@@ -265,9 +265,10 @@ function interpolateVehicle(
     emergency: ratio >= 1 ? next.emergency : previous.emergency,
     x_meters: lerp(previous.x_meters, next.x_meters, ratio),
     y_meters: lerp(previous.y_meters, next.y_meters, ratio),
-    heading_degrees: normalizeDegrees(
-      previous.heading_degrees +
-        shortestAngleDelta(previous.heading_degrees, next.heading_degrees) * ratio
+    heading_degrees: interpolateHeadingDegrees(
+      previous.heading_degrees,
+      next.heading_degrees,
+      ratio
     ),
     speed_mps: lerp(previous.speed_mps, next.speed_mps, ratio),
     waiting_seconds: lerp(previous.waiting_seconds, next.waiting_seconds, ratio)
@@ -305,8 +306,28 @@ function lerp(start: number, end: number, ratio: number) {
   return start + (end - start) * ratio;
 }
 
+export function interpolateHeadingDegrees(
+  startDegrees: number,
+  endDegrees: number,
+  ratio: number,
+  options: { maxDeltaDegrees?: number } = {}
+) {
+  const maxDeltaDegrees = options.maxDeltaDegrees ?? 180;
+  const delta = clamp(
+    shortestAngleDelta(startDegrees, endDegrees),
+    -maxDeltaDegrees,
+    maxDeltaDegrees
+  );
+
+  return normalizeDegrees(startDegrees + delta * clamp01(ratio));
+}
+
 function clamp01(value: number) {
   return Math.min(1, Math.max(0, value));
+}
+
+function clamp(value: number, min: number, max: number) {
+  return Math.min(max, Math.max(min, value));
 }
 
 function shortestAngleDelta(start: number, end: number) {

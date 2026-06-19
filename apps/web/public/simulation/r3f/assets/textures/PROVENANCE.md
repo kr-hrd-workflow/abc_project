@@ -1,4 +1,27 @@
-# Stage 4.1 Texture Provenance
+# R3F Texture and Sprite Provenance
+
+## Stage 6 Weather/Material Source Atlas
+
+Generated with the built-in ImageGen tool on 2026-06-19 and copied into the
+project by the primary agent:
+
+- Runtime/source path: `apps/web/public/simulation/r3f/assets/sprites/stage6-weather-material-source-atlas.png`
+- Built-in ImageGen original: `C:\Users\100ri\.codex\generated_images\019edd58-c84a-7cb1-9a2f-f7a69157fd98\ig_0bba982a5dc6403f016a3493590b6c81918b343d03996e4806.png`
+- Generation mode: built-in `image_gen`
+- Asset role: Stage 6 runtime/source atlas for wet-road, weather, spray, pedestrian silhouette, billboard, sign, and guardrail sprite or mask cells.
+- Runtime usage: sampled directly by the Stage 6 renderer via named UV cells for wet asphalt, rain-reflective road, puddles, lane/crosswalk wear, billboard panels, road signs, guardrails, rain streaks, splash puffs, and wheel spray.
+- Dimensions: 1254x1254 PNG, intentionally non-power-of-two as copied from ImageGen output. The renderer clamps named atlas cells and disables mipmap generation to avoid NPOT repeat artifacts.
+- License/authorship: project-authored generated source atlas; no external downloads, stock packs, third-party assets, logos, text, or watermarks.
+
+Prompt summary: 4x4 atlas with wet asphalt, worn lane/crosswalk, puddle masks,
+rain streaks, splash puffs, wheel spray, billboard panels without brands,
+pedestrian silhouettes, road signs/guardrail decals; no logos/text/watermarks.
+
+This atlas is runtime source material, not standalone proof. Runtime proof comes
+from browser-rendered `/dashboard` R3F screenshots showing the sampled cells in
+the scene.
+
+## Stage 4.1 Texture Provenance
 
 Generated locally for the R3F dashboard asset pipeline on 2026-06-17 with the repo-installed `sharp` package and deterministic project-authored procedural routines.
 
@@ -9,9 +32,9 @@ Image Gen was used only for non-runtime material direction. Prompt summary: a se
 Runtime proof comes later from browser-rendered `/dashboard` R3F screenshots, not from Image Gen output or this provenance note.
 
 The asset manifest is the authoritative runtime record for each shipped texture
-or decal. Every entry must name its PBR channel coverage, texture budget,
-compression status, license/authorship, and this provenance evidence path before
-`npm run verify:r3f-assets` can pass.
+or decal/sprite. Every generated entry must name its PBR channel coverage,
+texture budget, compression status, license/authorship, runtime usage, and this
+provenance evidence path before `npm run verify:r3f-assets` can pass.
 
 Seed: `0x7419d2ab`
 
