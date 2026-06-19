@@ -15,17 +15,21 @@
 - 한국어/영어 전환 가능한 운영자 cockpit UI
 - landing hero의 CSS-only 3D/isometric roadway scene
 - Signal Assembly 섹션의 GSAP sticky scroll + depth ring scene
-- 실사형 WebGL 스타일 가상 CCTV fallback
+- `/dashboard` 기본 R3F digital twin renderer
+- Stage 6 R3F 실사형 마감: postFX, 젖은 PBR 도로, 반사/비/스프레이, 신호등/전조등, 차량 LOD, CCTV 스타일 카메라, 도로 소품, visual regression proof
+- Low/Medium/High/Ultra 품질 preset과 heavy feature gating
+- R3F telemetry: quality preset, postFX chain, reflection/weather state, draw calls, visible vehicles, source/stale/fallback labels
+- 실사형 WebGL 스타일 가상 CCTV fallback 및 WebGL-off fallback proof
 - `NEXT_PUBLIC_SIMULATION_STREAM_URL` 설정 시 hosted simulation iframe mount slot
 - `NEXT_PUBLIC_UNITY_WEBGL_URL` legacy Unity WebGL 호환 alias
-- Archived Unreal renderer scaffold and helper scripts: `archive/unreal/original/`
+- 보관된 Unreal renderer scaffold와 helper scripts: `archive/unreal/original/`
 - OpenAI live 답변 gateway와 `openai_auto` fallback 모드
 - OpenAI API 키/월 예산 guard 및 secret 미노출 readiness report
 - keyword 기반 로컬 정책 근거 검색과 `KNOWLEDGE_SEARCH_MODE=pgvector` 옵션
 - PostgreSQL `vector` extension, `knowledge_chunks.embedding` migration, pgvector 검색 경로
 - `/api/runtime/readiness`와 CLI readiness checks
 - Guarded OpenAI smoke CLI: `npm run openai:smoke`
-- 통합 검증 스크립트: `npm run verify`
+- 통합 검증 스크립트와 GitHub Actions workflow: `npm run verify`, `.github/workflows/r3f-dashboard-verify.yml`
 
 ## 안전 경계
 
@@ -33,7 +37,7 @@
 
 - 실제 신호 제어기와 직접 연결하지 않습니다.
 - 추천은 “운영자 참고용”이며 자동 제어 명령이 아닙니다.
-- WebGL/Unity viewport는 digital twin/시연 화면입니다. live CCTV라고 표현하면 안 됩니다.
+- R3F/WebGL/Unity/stream viewport는 digital twin/시연 화면입니다. live CCTV라고 표현하면 안 됩니다.
 - OpenAI API key, token, password, connection string은 git에 커밋하지 않습니다.
 
 ## 빠른 실행
@@ -66,11 +70,11 @@ npm run launch:local
 
 세부 런칭 체크리스트는 [`docs/launch-runbook.md`](docs/launch-runbook.md)를 참고하세요.
 
-## Unreal / Pixel Streaming archive
+## Unreal / Pixel Streaming 보관본
 
-The previous Unreal Engine renderer, Pixel Streaming helpers, UE plans, and proof artifacts are isolated under `archive/unreal/original/`.
+이전 Unreal Engine renderer, Pixel Streaming helper, UE 계획, proof artifact는 `archive/unreal/original/` 아래에 격리되어 있습니다.
 
-To resume that path later, restore the archived original paths first:
+나중에 이 경로를 재개하려면 먼저 아래 archived original path를 복원하세요.
 
 ```text
 archive/unreal/original/renderer/unreal/
@@ -79,41 +83,55 @@ archive/unreal/original/docs/
 archive/unreal/original/artifacts/
 ```
 
-UE technotes remain in `docs/technotes/` as reference material.
+UE technote는 참고 자료로 `docs/technotes/`에 남아 있습니다.
 
-## Dashboard renderer direction
+## 대시보드 렌더러 방향
 
-Renderer precedence for the `/dashboard` simulation viewport:
+`/dashboard` simulation viewport의 renderer 우선순위는 다음과 같습니다.
 
-- External renderer: `NEXT_PUBLIC_SIMULATION_STREAM_URL` iframe remains highest priority.
-- Legacy renderer: `NEXT_PUBLIC_UNITY_WEBGL_URL` is used only when the generic stream URL is absent.
-- Default renderer: internal R3F digital twin when enabled and WebGL is available.
-- Fallback renderer: existing CSS/canvas virtual CCTV when R3F is disabled, unavailable, or WebGL fails.
+- 외부 renderer: `NEXT_PUBLIC_SIMULATION_STREAM_URL` iframe이 가장 높은 우선순위입니다.
+- Legacy renderer: generic stream URL이 없을 때만 `NEXT_PUBLIC_UNITY_WEBGL_URL` alias를 사용합니다.
+- 기본 renderer: WebGL 사용 가능 시 내부 R3F digital twin을 사용합니다.
+- Fallback renderer: R3F가 비활성화되었거나 WebGL이 실패하면 CSS/canvas virtual CCTV fallback을 사용합니다.
 
-R3F runtime is implemented through Stage 5 browser visual proof. Current repo evidence also implements Stage 6A frame-backed renderer state, Stage 6B signal-state hardware and operator overlays, and Stage 6C default verification gates. SUMO/TraCI/Tarcl remains simulation truth. Browser rendering may interpolate received state, but it cannot invent traffic truth or perform real signal control. Image Gen references are visual targets only, not runtime evidence.
+R3F runtime은 Stage 6 finishing wave까지 구현되어 있습니다. 현재 `/dashboard` proof는 젖은 도시 교통 카메라 장면을 목표로 postFX, PBR 도로, wet reflection, rain/spray, signal/headlight lighting, vehicle LOD/material, CCTV camera framing, road props, generated atlas source asset, quality preset, telemetry, visual regression gate를 포함합니다.
 
-Status vocabulary:
+중요한 truth boundary:
 
-| Term | Meaning |
+- `SimulationFrameSnapshot.vehicles`만 precise vehicle truth입니다.
+- `density_segments` 또는 fixture fallback은 aggregate density 표현에만 사용하며 source/stale/fallback label을 표시합니다.
+- 브라우저 renderer는 수신된 simulation state를 보간할 수 있지만 차량 truth를 발명하거나 실제 신호 제어를 수행하지 않습니다.
+- Image Gen으로 만든 atlas는 repo-bound runtime source asset입니다. proof는 browser-rendered `/dashboard` screenshot과 telemetry에서 확인합니다.
+
+상태 용어:
+
+| 용어 | 의미 |
 |---|---|
-| implemented | Code or documentation exists and is wired locally. |
-| verified | Fresh local tests, build, browser proof, or docs checks passed. |
-| gated | Included in `npm run verify` and the checked-in R3F dashboard workflow. |
-| not live truth | Fixture, aggregate, or received simulation state is being rendered; the browser is not a SUMO/Tarcl authority. |
+| implemented | 코드 또는 문서가 존재하고 로컬에서 wiring되어 있습니다. |
+| verified | 최신 로컬 test, build, browser proof, docs check가 통과했습니다. |
+| gated | `npm run verify`와 checked-in R3F dashboard workflow에 포함되어 있습니다. |
+| not live truth | fixture, aggregate, 또는 수신된 simulation state를 렌더링합니다. 브라우저는 SUMO/TraCI authority가 아닙니다. |
 
-Current R3F dashboard status:
+현재 R3F dashboard 상태:
 
-| Stage | Status | Evidence and boundary |
+| Stage | Status | 증거와 경계 |
 |---|---|---|
-| Stage 1 R3F island | implemented, verified | Browser-only R3F island is the default internal renderer when enabled and WebGL is available. |
-| Stage 2 frame contract | implemented, verified, not live truth | `/api/simulation/frame` and `SimulationFrameSnapshot` exist; viewport binding is Stage 6A, not live SUMO/Tarcl authority. |
-| Stage 3 geometry and density | implemented, verified, not live truth | Procedural roads and density rendering exist; fixture or received density is labeled instead of invented vehicle truth. |
-| Stage 4/4.1 assets and materials | implemented, verified, gated | Asset manifest, GLBs, textures, proof images, and `verify:r3f-assets` enforce the asset bar. |
-| Stage 5 browser proof | implemented, verified, gated, not live truth | `/dashboard` R3F screenshots and verifier artifacts prove browser rendering, not live traffic control. |
-| Stage 6A frame wiring | implemented, verified, not live truth | R3F prefers `SimulationFrameSnapshot` and labels fixture fallback when frame data is absent. |
-| Stage 6B dynamic signals | implemented, verified, not live truth | Signal hardware and source badges render received signal state or explicit `unavailable`. |
-| Stage 6C default gates | implemented, verified, gated | Root `npm run verify` and `.github/workflows/r3f-dashboard-verify.yml` include R3F asset and dashboard proof. |
-| Stage 6D docs reconciliation | implemented, verified | README, launch runbook, R3F technote, and the live plan use implemented/verified/gated wording without production-ready claims. |
+| Stage 1-3 R3F island/frame/geometry | implemented, verified, not live truth | R3F island, `/api/simulation/frame`, `SimulationFrameSnapshot`, procedural road, density rendering이 있습니다. fixture/aggregate data는 label로 표시합니다. |
+| Stage 4/4.1 assets/materials | implemented, verified, gated | Asset manifest, GLB, texture, proof image, generated atlas가 있으며 `verify:r3f-assets`가 payload/provenance boundary를 강제합니다. |
+| Stage 5 browser proof | implemented, verified, gated, not live truth | `/dashboard` desktop/mobile/WebGL-off screenshot은 browser rendering proof이며 live traffic control proof가 아닙니다. |
+| Stage 6A-6C frame/signals/default gates | implemented, verified, gated, not live truth | Frame-backed renderer state, signal hardware, source badge, telemetry field, default R3F CI gate가 연결되어 있습니다. |
+| Stage 6D-6F docs/telemetry/security | implemented, verified, gated | Runbook, technote, asset license note, telemetry normalization, security verifier, artifact retention, CI workflow가 업데이트되어 있습니다. |
+| Stage 6 finishing wave | implemented, verified, gated, not live truth | Stage6PostFX, wet PBR road, reflection/decal atlas, rain/weather particle, wheel spray, vehicle LOD/material smoothing, camera/clutter/road props, quality preset, performance/visual-diff gate, proof artifact가 포함되어 있습니다. |
+
+최신 proof artifact:
+
+```text
+artifacts/r3f-dashboard-desktop-canvas.png
+artifacts/r3f-dashboard-mobile-canvas.png
+artifacts/r3f-dashboard-webgl-off.png
+artifacts/r3f-dashboard-details.json
+artifacts/r3f-security-gates.json
+```
 
 ## 랜딩 페이지 3D 방향
 
@@ -205,10 +223,13 @@ npm run test:web
 npm run build:web
 npm run verify:r3f-assets
 npm run verify:r3f-dashboard
+npm run verify:r3f-performance
+npm run verify:r3f-visual-diff
+npm run verify:security
 git diff --check
 ```
 
-`npm run verify` is the normal local quality gate. It includes the R3F asset proof (`npm run verify:r3f-assets`) and the R3F dashboard browser proof (`npm run verify:r3f-dashboard`) before the final whitespace diff check.
+`npm run verify`는 기본 local quality gate입니다. API/web test, production build, R3F asset proof, R3F dashboard browser proof, performance telemetry proof, visual scenario proof, security gate, whitespace diff check를 순서대로 실행합니다.
 
 개별 검증:
 
@@ -218,6 +239,9 @@ npm run test:web
 npm run build:web
 npm run verify:r3f-assets
 npm run verify:r3f-dashboard
+npm run verify:r3f-performance
+npm run verify:r3f-visual-diff
+npm run verify:security
 npm run runtime:readiness
 npm run runtime:readiness:strict
 ```
@@ -282,14 +306,18 @@ apps/api/app/adapters/    Vision and SUMO/TraCI adapter boundaries
 apps/api/app/services/    Chat, recommendation, knowledge, runtime readiness services
 apps/api/alembic/         Database migrations
 apps/api/networks/        SUMO network fixture
-apps/web/                 Next.js landing page and frontend
-apps/web/app/page.tsx     Cinematic landing page
-apps/web/components/      Dashboard cockpit, digital twin, simulation viewport components
-artifacts/                Local QA screenshots and generated evidence, not required for runtime
-archive/unreal/original/  Archived Unreal renderer, scripts, docs, plans, and tracked proof artifacts
-docs/                     Runtime docs, runbooks, design notes
+apps/web/                 Next.js landing page와 frontend
+apps/web/app/page.tsx     cinematic landing page
+apps/web/components/      dashboard cockpit, digital twin, simulation viewport component
+apps/web/components/r3f/  R3F dashboard renderer, Stage 6 postFX/weather/vehicle/road layer
+apps/web/public/simulation/r3f/assets/
+                          R3F GLB, texture, sprite, generated atlas runtime asset
+artifacts/                local QA screenshot과 generated evidence, runtime 필수 아님
+archive/unreal/original/  보관된 Unreal renderer, script, docs, plan, tracked proof artifact
+docs/                     runtime docs, runbook, design note
 infra/docker-compose.yml  PostgreSQL/pgvector dev service
 scripts/launch-local.sh   Local launch helper
+scripts/verify-r3f-*.mjs  R3F asset, dashboard, performance, visual proof verifier
 ```
 
 ## 개발 문서
@@ -301,27 +329,33 @@ scripts/launch-local.sh   Local launch helper
 2. [`docs/launch-runbook.md`](docs/launch-runbook.md)
    - 로컬 런칭, OpenAI live mode, simulation stream mount, production checklist
 3. `archive/unreal/original/docs/unreal-pixel-streaming.md`
-   - Archived Unreal Engine 5 project opening and Pixel Streaming connection procedure
+   - 보관된 Unreal Engine 5 project opening과 Pixel Streaming 연결 절차
 4. [`docs/landing-3d-references.md`](docs/landing-3d-references.md)
    - 랜딩 페이지 3D/digital-twin 레퍼런스와 이미지 방향
 5. [`docs/runtime-setup.md`](docs/runtime-setup.md)
    - YOLO/OpenCV, SUMO/TraCI, OpenAI, pgvector runtime setup
-6. `docs/superpowers/plans/2026-06-08-smart-intersection-mvp.md`
+6. [`docs/technotes/r3f-photoreal-dashboard-renderer.md`](docs/technotes/r3f-photoreal-dashboard-renderer.md)
+   - R3F dashboard renderer, proof artifact, telemetry, verification notes
+7. `docs/superpowers/plans/2026-06-19-r3f-photoreal-finishing-wave.md`
+   - Stage 6 R3F photoreal finishing wave 실행 계획과 acceptance gate
+8. `docs/superpowers/plans/2026-06-08-smart-intersection-mvp.md`
    - 최초 MVP 계획
-7. `docs/superpowers/specs/2026-06-08-smart-intersection-mvp-design.md`
+9. `docs/superpowers/specs/2026-06-08-smart-intersection-mvp-design.md`
    - 시스템 설계와 확장 방향
-8. `docs/superpowers/plans/2026-06-11-phase-b-vite-react-spa-migration.md`
+10. `docs/superpowers/plans/2026-06-11-phase-b-vite-react-spa-migration.md`
    - Next.js에서 Vite React SPA로 전환하는 Phase B 계획
-9. `docs/superpowers/plans/2026-06-11-launch-grade-unity-openai.md`
+11. `docs/superpowers/plans/2026-06-11-launch-grade-unity-openai.md`
    - launch-grade Unity/OpenAI polish 계획
 
 ## 남은 개발 범위
 
 우선순위 기준으로 아직 더 개발해야 할 부분은 아래와 같습니다.
 
-### 1. 3D renderer direction
+### 1. R3F dashboard 운영 고도화
 
-The previous Unreal Engine / Pixel Streaming path is archived under `archive/unreal/original/`. If this path is resumed, restore those files first and use the archived docs/scripts from that directory.
+- 현재 기본 renderer는 R3F입니다. 새 장면/효과를 추가할 때도 `SimulationFrameSnapshot.vehicles` truth boundary와 fallback label을 유지해야 합니다.
+- Low/Medium/High/Ultra preset별 heavy feature budget을 유지하고, 새 visual scenario를 추가하면 `verify:r3f-visual-diff` baseline도 함께 갱신합니다.
+- 이전 Unreal Engine / Pixel Streaming 경로는 `archive/unreal/original/`에 보관되어 있습니다. 해당 경로를 재개할 때만 archived docs/scripts를 먼저 복원합니다.
 
 ### 2. SUMO/TraCI live simulation 강화
 - fixture comparison에서 실제 TraCI stepping으로 전환
@@ -404,7 +438,7 @@ apps/web/public/landing/operator-proof-room.png          proof / operator valida
 apps/web/public/landing/final-cta-city.png               final CTA background
 ```
 
-대시보드는 차분한 유리 질감의 운영 도구 UI를 지향합니다. 중앙 시뮬레이션 영역은 `apps/web/components/SimulationViewport.tsx`로 분리되어 있으며, 현재는 WebGL-style fallback, hosted stream mount slot, legacy Unity WebGL alias를 제공합니다.
+대시보드는 차분한 유리 질감의 운영 도구 UI를 지향합니다. 중앙 시뮬레이션 영역은 `apps/web/components/SimulationViewport.tsx`가 renderer 우선순위를 정하고, 기본 화면은 `apps/web/components/r3f/R3FSimulationViewport.tsx`의 R3F digital twin이 담당합니다. WebGL failure, hosted stream mount slot, legacy Unity WebGL alias는 fallback/compatibility 경로입니다.
 
 관련 기록:
 
@@ -415,9 +449,9 @@ docs/design/assets/dashboard-concept-approved.png
 docs/design/dashboard-concept-notes.md
 ```
 
-## Archived Unreal road render captures
+## 보관된 Unreal road render capture
 
-The previous Unreal road-render capture workflow and tracked proof images are archived under:
+이전 Unreal road-render capture workflow와 tracked proof image는 아래 경로에 보관되어 있습니다.
 
 ```text
 archive/unreal/original/scripts/
@@ -425,4 +459,4 @@ archive/unreal/original/artifacts/
 archive/unreal/original/docs/
 ```
 
-Ignored local UE proof/cache artifacts were deleted after the tracked checkpoint commit. Restore from commit `4faf3281` or the tracked archive paths if that renderer path is resumed.
+Git에 추적되지 않던 local UE proof/cache artifact는 tracked checkpoint commit 이후 삭제되었습니다. 해당 renderer 경로를 재개한다면 commit `4faf3281` 또는 tracked archive path에서 복원하세요.
