@@ -62,7 +62,17 @@ if ($node) {
 
 if ($npm) {
   Write-Output "WINDOWS_NPM_FOUND=$($npm.Source)"
-  & $npm.Source --version
+  $previousLocation = Get-Location
+  try {
+    # npm.cmd is launched through cmd.exe, and cmd.exe refuses UNC working
+    # directories such as \\wsl.localhost\Ubuntu\home\chan\abc_project.
+    # Run the version probe from a normal Windows directory so WSL-hosted
+    # repos can still use Windows Node/npm tools without noisy UNC warnings.
+    Set-Location $env:TEMP
+    & $npm.Source --version
+  } finally {
+    Set-Location $previousLocation
+  }
 } else {
   Write-Output 'WINDOWS_NPM_FOUND=false'
 }
