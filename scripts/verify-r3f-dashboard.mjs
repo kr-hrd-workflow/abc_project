@@ -2753,12 +2753,23 @@ function buildReadableCompositionCheck(metrics) {
 }
 
 function buildPhotorealismCheck(metrics, rendererProof) {
+  const thresholds = {
+    min_wet_asphalt_dark_ratio: 0.18,
+    min_wet_asphalt_bright_ratio: 0.001,
+    min_wet_asphalt_luminance_stddev: 22,
+    min_marking_ratio: 0.0025,
+    min_realistic_light_ratio: 0.0015,
+    min_realistic_bright_ratio: 0.001,
+    min_city_color_buckets: 28,
+    min_city_non_background_ratio: 0.04,
+    min_city_luminance_stddev: 20
+  };
   const check = {
     pbr_wet_asphalt:
-      metrics.dark_ratio > 0.22 &&
-      metrics.bright_ratio > 0.0015 &&
-      metrics.luminance_stddev > 24,
-    worn_markings: metrics.marking_ratio > 0.0025,
+      metrics.dark_ratio > thresholds.min_wet_asphalt_dark_ratio &&
+      metrics.bright_ratio > thresholds.min_wet_asphalt_bright_ratio &&
+      metrics.luminance_stddev > thresholds.min_wet_asphalt_luminance_stddev,
+    worn_markings: metrics.marking_ratio > thresholds.min_marking_ratio,
     vehicle_contact_shadows:
       rendererProof.visibleVehicleCount >= minVisibleVehicles &&
       rendererProof.streetFurnitureShadowCount >= 2 &&
@@ -2770,12 +2781,13 @@ function buildPhotorealismCheck(metrics, rendererProof) {
     street_furniture_contact_shadows:
       rendererProof.streetFurnitureShadowCount >= 2,
     realistic_signal_and_street_lighting:
-      metrics.warm_light_ratio + metrics.cool_light_ratio > 0.0015 &&
-      metrics.bright_ratio > 0.001,
+      metrics.warm_light_ratio + metrics.cool_light_ratio >
+        thresholds.min_realistic_light_ratio &&
+      metrics.bright_ratio > thresholds.min_realistic_bright_ratio,
     city_depth:
-      metrics.color_bucket_count >= 28 &&
-      metrics.non_background_ratio > 0.04 &&
-      metrics.luminance_stddev > 20,
+      metrics.color_bucket_count >= thresholds.min_city_color_buckets &&
+      metrics.non_background_ratio > thresholds.min_city_non_background_ratio &&
+      metrics.luminance_stddev > thresholds.min_city_luminance_stddev,
     placeholder_geometry_visible:
       rendererProof.visibleVehicleCount < minVisibleVehicles ||
       rendererProof.vehicleSilhouettePartCount < 12 ||
@@ -2785,6 +2797,8 @@ function buildPhotorealismCheck(metrics, rendererProof) {
 
   return {
     ...check,
+    thresholds,
+    metrics,
     passed:
       check.pbr_wet_asphalt &&
       check.worn_markings &&
