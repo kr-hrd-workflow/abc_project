@@ -56,6 +56,31 @@ class FakeLaneApi:
         return {"north-inbound-1": 1, "east-inbound-1": 26}[lane_id]
 
 
+class FakePersonApi:
+    def getIDList(self) -> list[str]:
+        return ["person-1", "person-waiting"]
+
+    def getPosition(self, person_id: str) -> tuple[float, float]:
+        return {
+            "person-1": (2.5, -12.0),
+            "person-waiting": (-4.0, 8.25),
+        }[person_id]
+
+    def getAngle(self, person_id: str) -> float:
+        return {"person-1": 180.0, "person-waiting": 90.0}[person_id]
+
+    def getSpeed(self, person_id: str) -> float:
+        return {"person-1": 1.35, "person-waiting": 0.0}[person_id]
+
+    def getRoadID(self, person_id: str) -> str:
+        return {"person-1": "crosswalk-east", "person-waiting": "north-sidewalk"}[
+            person_id
+        ]
+
+    def getWaitingTime(self, person_id: str) -> float:
+        return {"person-1": 0.0, "person-waiting": 12.5}[person_id]
+
+
 class FakeSumoClient:
     simulation = FakeSimulation()
     vehicle = FakeVehicleApi()
@@ -116,6 +141,123 @@ def test_fake_sumo_client_maps_to_simulation_frame_snapshot_fields() -> None:
         ("queue_threshold_exceeded", "east"),
     }
     assert any("spillback" in event.ai_summary.lower() for event in frame.events)
+
+
+def test_fake_sumo_client_maps_person_api_to_pedestrian_snapshots() -> None:
+    class PersonClient(FakeSumoClient):
+        person = FakePersonApi()
+
+    frame = build_sumo_simulation_frame(
+        scenario_id="normal",
+        mode="sumo_traci",
+        client=PersonClient(),
+        step_index=8,
+    )
+
+    assert [pedestrian.model_dump() for pedestrian in frame.pedestrians] == [
+        {
+            "id": "person-1",
+            "x_meters": 2.5,
+            "y_meters": -12.0,
+            "heading_degrees": 180.0,
+            "speed_mps": 1.35,
+            "lane_id": None,
+            "edge_id": "crosswalk-east",
+            "waiting_seconds": 0.0,
+            "source": "sumo_person",
+        },
+        {
+            "id": "person-waiting",
+            "x_meters": -4.0,
+            "y_meters": 8.25,
+            "heading_degrees": 90.0,
+            "speed_mps": 0.0,
+            "lane_id": None,
+            "edge_id": "north-sidewalk",
+            "waiting_seconds": 12.5,
+            "source": "sumo_person",
+        },
+    ]
+
+
+def test_sumo_person_mapping_defaults_waiting_seconds_when_unavailable() -> None:
+    class PersonApiWithoutWaiting:
+        def getIDList(self) -> list[str]:
+            return ["person-1"]
+
+        def getPosition(self, _person_id: str) -> tuple[float, float]:
+            return (2.5, -12.0)
+
+        def getAngle(self, _person_id: str) -> float:
+            return 180.0
+
+        def getSpeed(self, _person_id: str) -> float:
+            return 1.35
+
+        def getLaneID(self, _person_id: str) -> str:
+            return "north-crosswalk-lane"
+
+        def getRoadID(self, _person_id: str) -> str:
+            return ""
+
+    class PersonClient(FakeSumoClient):
+        person = PersonApiWithoutWaiting()
+
+    frame = build_sumo_simulation_frame(
+        scenario_id="normal",
+        mode="sumo_libsumo",
+        client=PersonClient(),
+        step_index=8,
+    )
+
+    assert frame.pedestrians[0].waiting_seconds == 0.0
+    assert frame.pedestrians[0].lane_id == "north-crosswalk-lane"
+    assert frame.pedestrians[0].edge_id is None
+
+
+def test_sumo_person_mapping_skips_invalid_positions_without_dropping_vehicles() -> None:
+    class InvalidPositionPersonApi(FakePersonApi):
+        def getIDList(self) -> list[str]:
+            return ["person-1", "sentinel-person", "nan-person"]
+
+        def getPosition(self, person_id: str) -> tuple[float, float]:
+            if person_id == "sentinel-person":
+                return (-1073741824.0, -1073741824.0)
+            if person_id == "nan-person":
+                return (float("nan"), 0.0)
+            return super().getPosition(person_id)
+
+    class PersonClient(FakeSumoClient):
+        person = InvalidPositionPersonApi()
+
+    frame = build_sumo_simulation_frame(
+        scenario_id="normal",
+        mode="sumo_traci",
+        client=PersonClient(),
+        step_index=8,
+    )
+
+    assert [pedestrian.id for pedestrian in frame.pedestrians] == ["person-1"]
+    assert [vehicle.id for vehicle in frame.vehicles] == ["veh-1", "ambulance-east-9"]
+
+
+def test_sumo_person_mapping_returns_empty_when_person_api_unavailable() -> None:
+    class FailingPersonApi:
+        def getIDList(self) -> list[str]:
+            raise RuntimeError("TraCI person API unavailable")
+
+    class PersonClient(FakeSumoClient):
+        person = FailingPersonApi()
+
+    frame = build_sumo_simulation_frame(
+        scenario_id="normal",
+        mode="sumo_traci",
+        client=PersonClient(),
+        step_index=8,
+    )
+
+    assert frame.pedestrians == []
+    assert [vehicle.id for vehicle in frame.vehicles] == ["veh-1", "ambulance-east-9"]
 
 
 def test_sumo_mapping_keeps_density_aggregate_when_no_precise_vehicles_exist() -> None:

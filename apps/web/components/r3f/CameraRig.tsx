@@ -13,6 +13,7 @@ export type CameraRigPresetName =
   | "operatorWide"
   | "nightRainClose"
   | "mobileWide"
+  | "photorealProof"
   | "proofDeterministic";
 
 export type CameraRigWeather = "clear" | "cloudy" | "rain";
@@ -48,9 +49,9 @@ type CameraRigConfigInput = CameraRigSelectionInput & {
 export const CAMERA_RIG_PRESETS = {
   operatorWide: {
     name: "operatorWide",
-    position: STAGE5_CAMERA.position,
-    target: STAGE5_CAMERA.target,
-    fov: STAGE5_CAMERA.fov,
+    position: [18, 42, 58],
+    target: [0, 0, -8],
+    fov: 54,
     near: STAGE5_CAMERA.near,
     far: STAGE5_CAMERA.far
   },
@@ -70,6 +71,14 @@ export const CAMERA_RIG_PRESETS = {
     near: STAGE5_TALL_VIEWPORT_CAMERA.near,
     far: STAGE5_TALL_VIEWPORT_CAMERA.far
   },
+  photorealProof: {
+    name: "photorealProof",
+    position: [-2, 8.5, 26],
+    target: [-18, 3.2, 14.4],
+    fov: 30,
+    near: STAGE5_CAMERA.near,
+    far: STAGE5_CAMERA.far
+  },
   proofDeterministic: {
     name: "proofDeterministic",
     position: STAGE5_CAMERA.position,
@@ -79,11 +88,15 @@ export const CAMERA_RIG_PRESETS = {
     far: STAGE5_CAMERA.far
   }
 } as const satisfies Record<CameraRigPresetName, CameraRigPresetConfig>;
+const CAMERA_RIG_PRESET_NAMES = Object.keys(
+  CAMERA_RIG_PRESETS
+) as CameraRigPresetName[];
 
 const CAMERA_SHAKE_OFFSETS = {
   operatorWide: [0.12, 0.035, -0.09],
   nightRainClose: [0.055, -0.018, 0.038],
   mobileWide: [0.075, 0.025, -0.06],
+  photorealProof: [0.04, 0.012, -0.028],
   proofDeterministic: [0, 0, 0]
 } as const satisfies Record<CameraRigPresetName, Vector3Tuple>;
 
@@ -95,7 +108,7 @@ export function selectCameraRigPreset({
 }: CameraRigSelectionInput): CameraRigPresetName {
   if (visualRegressionMode) return "proofDeterministic";
   if (Number.isFinite(aspect) && aspect > 0 && aspect < 1.08) return "mobileWide";
-  if (weather === "rain" || timeOfDay === "night") return "nightRainClose";
+  if (timeOfDay === "night") return "nightRainClose";
 
   return "operatorWide";
 }
@@ -127,8 +140,8 @@ export function getCameraRigConfig(input: CameraRigConfigInput): CameraRigConfig
 }
 
 export function CameraRig({
-  preset,
-  weather = "rain",
+  preset = readRuntimeCameraPresetOverride(),
+  weather = "clear",
   timeOfDay = "day",
   visualRegressionMode = readVisualRegressionMode()
 }: {
@@ -168,6 +181,16 @@ export function CameraRig({
 
 CameraRig.displayName = "Stage3CameraRig";
 
+export function parseCameraRigPresetOverride(
+  value: string | null | undefined
+): CameraRigPresetName | undefined {
+  if (!value) return undefined;
+
+  return CAMERA_RIG_PRESET_NAMES.includes(value as CameraRigPresetName)
+    ? (value as CameraRigPresetName)
+    : undefined;
+}
+
 function applyCameraRigConfig(
   camera: RootState["camera"],
   cameraConfig: CameraRigPresetConfig
@@ -206,6 +229,24 @@ function readVisualRegressionMode() {
     process.env.NEXT_PUBLIC_R3F_CAMERA_PRESET;
 
   return value === "true" || value === "1" || value === "proofDeterministic";
+}
+
+function readRuntimeCameraPresetOverride() {
+  const envPreset = parseCameraRigPresetOverride(
+    typeof process === "undefined"
+      ? undefined
+      : process.env.NEXT_PUBLIC_R3F_CAMERA_PRESET
+  );
+
+  if (envPreset) return envPreset;
+  if (typeof window === "undefined") return undefined;
+
+  const params = new URLSearchParams(window.location.search);
+
+  return (
+    parseCameraRigPresetOverride(params.get("r3fCameraPreset")) ??
+    parseCameraRigPresetOverride(params.get("cameraPreset"))
+  );
 }
 
 function isJsdomRuntime() {

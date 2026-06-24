@@ -1,5 +1,13 @@
 "use client";
 
+import { useEffect, useMemo } from "react";
+import {
+  CanvasTexture,
+  DoubleSide,
+  LinearFilter,
+  SRGBColorSpace
+} from "three";
+
 import type { Direction } from "../../lib/types";
 import type { SceneSnapshot } from "./buildSceneSnapshot";
 import type { Vector3Tuple } from "./roadGeometry";
@@ -16,6 +24,8 @@ type SignalPlacement = {
   position: Vector3Tuple;
   rotationY: number;
 };
+type SignalSnapshot = SceneSnapshot["signals"][number];
+type SignalAssemblyVariant = "standard" | "proof_foreground";
 
 const SIGNAL_PLACEMENTS: Record<Direction, SignalPlacement> = {
   north: { position: [-13.5, 5.2, -19.5], rotationY: Math.PI },
@@ -24,7 +34,7 @@ const SIGNAL_PLACEMENTS: Record<Direction, SignalPlacement> = {
   west: { position: [-19.5, 5.2, 13.5], rotationY: -Math.PI / 2 }
 };
 
-const LENS_OFF = "#1b2427";
+const LENS_OFF = "#172024";
 const LENS_COLORS = {
   red: "#ff3b30",
   yellow: "#ffd34d",
@@ -42,19 +52,6 @@ const SIGNAL_MATERIALS = {
     roughness: 0.48,
     metalness: 0.42,
     envMapIntensity: 0.82
-  },
-  hood: {
-    color: "#0a1014",
-    roughness: 0.56,
-    metalness: 0.32,
-    envMapIntensity: 0.5
-  },
-  lensGlass: {
-    roughness: 0.16,
-    metalness: 0.01,
-    transparent: true,
-    opacity: 0.72,
-    envMapIntensity: 1.08
   }
 } as const;
 const SIGNAL_LENS_EMISSIVE_SCALE_BY_PRESET = {
@@ -65,6 +62,25 @@ const SIGNAL_LENS_EMISSIVE_SCALE_BY_PRESET = {
 } as const satisfies Record<SignalHardwareLightingPreset, number>;
 const ACTIVE_SIGNAL_HARDWARE_LIGHTING_PRESET: SignalHardwareLightingPreset =
   "rain";
+const SEOUL_FOREGROUND_PROOF_SIGNAL = {
+  direction: "west" as Direction,
+  faceMeters: [3.65, 1.78] as [number, number],
+  position: [-19.2, 5.35, 14.2] as Vector3Tuple,
+  rotationY: Math.PI / 3,
+  hangulLabelPlacement: "signal_face_texture" as const,
+  signalStateSource: "SceneSnapshot.signals" as const,
+  visibilityTier: "proof_foreground" as const
+};
+
+export const SEOUL_SIGNAL_HARDWARE_CUES = {
+  horizontalOverheadHeads: true,
+  pedestrianSignalBoxes: true,
+  blackBackplates: true,
+  hangulSafetyPlaques: ["보행신호", "정지선"],
+  maxDrawCallMeshesPerDirection: 3,
+  canvasFaceMeters: [3.35, 1.7],
+  foregroundProofSignal: SEOUL_FOREGROUND_PROOF_SIGNAL
+} as const;
 
 export function SignalHardware({
   signals,
@@ -84,92 +100,247 @@ export function SignalHardware({
         signalStateSource: "SceneSnapshot.signals",
         realSignalControlClaim: false,
         lightingPreset,
-        lensEmissiveScale
+        lensEmissiveScale,
+        ...SEOUL_SIGNAL_HARDWARE_CUES
       }}
     >
       {uniqueSignals.map((signal) => {
         const placement = SIGNAL_PLACEMENTS[signal.direction];
 
         return (
-          <group
+          <SeoulSignalHardwareAssembly
             key={signal.direction}
-            name={`signal-head-${signal.direction}-${signal.state}`}
-            position={placement.position}
-            rotation-y={placement.rotationY}
-          >
-            <mesh
-              position={[0, -2.4, 0]}
-              castShadow={STAGE5_SHADOWS_ENABLED}
-              receiveShadow
-            >
-              <cylinderGeometry args={[0.09, 0.13, 5.1, 10]} />
-              <meshStandardMaterial {...SIGNAL_MATERIALS.pole} />
-            </mesh>
-            <mesh
-              name={`signal-housing-${signal.direction}`}
-              position={[0, 0.28, 0]}
-              castShadow={STAGE5_SHADOWS_ENABLED}
-              receiveShadow
-            >
-              <boxGeometry args={[0.92, 1.72, 0.42]} />
-              <meshStandardMaterial {...SIGNAL_MATERIALS.housing} />
-            </mesh>
-            {(["red", "yellow", "green"] as const).map((state, index) => {
-              const active = signal.state === state;
-
-              return (
-                <group
-                  key={state}
-                  name={`signal-lens-assembly-${signal.direction}-${state}`}
-                  position={[0, 0.82 - index * 0.54, -0.24]}
-                >
-                  <mesh
-                    name={`signal-hood-${signal.direction}-${state}`}
-                    position={[0, 0.08, -0.08]}
-                    castShadow={STAGE5_SHADOWS_ENABLED}
-                  >
-                    <boxGeometry args={[0.52, 0.14, 0.34]} />
-                    <meshStandardMaterial {...SIGNAL_MATERIALS.hood} />
-                  </mesh>
-                  <mesh name={`signal-lens-glass-${signal.direction}-${state}`}>
-                    <sphereGeometry args={[0.19, 18, 12]} />
-                    <meshStandardMaterial
-                      {...SIGNAL_MATERIALS.lensGlass}
-                      color={active ? LENS_COLORS[state] : LENS_OFF}
-                    />
-                  </mesh>
-                  <mesh
-                    name={`signal-emissive-core-${signal.direction}-${state}`}
-                    position={[0, 0, -0.018]}
-                    userData={{
-                      signalStateSource: "SceneSnapshot.signals",
-                      signalState: signal.state,
-                      lensState: state,
-                      active,
-                      bloomEligible: active,
-                      amberBloomEligible: active && state === "yellow",
-                      realSignalControlClaim: false
-                    }}
-                  >
-                    <sphereGeometry args={[0.115, 16, 10]} />
-                    <meshStandardMaterial
-                      color={active ? LENS_COLORS[state] : "#10181b"}
-                      emissive={active ? LENS_COLORS[state] : "#000000"}
-                      emissiveIntensity={active ? 2.15 * lensEmissiveScale : 0}
-                      roughness={active ? 0.12 : 0.5}
-                      metalness={0}
-                      envMapIntensity={active ? 1.28 : 0.2}
-                      toneMapped={!active}
-                    />
-                  </mesh>
-                </group>
-              );
-            })}
-          </group>
+            lensEmissiveScale={lensEmissiveScale}
+            placement={placement}
+            signal={signal}
+          />
         );
       })}
+      <SeoulSignalHardwareAssembly
+        faceMeters={SEOUL_SIGNAL_HARDWARE_CUES.foregroundProofSignal.faceMeters}
+        key="foreground-proof-seoul-signal"
+        lensEmissiveScale={lensEmissiveScale}
+        placement={SEOUL_SIGNAL_HARDWARE_CUES.foregroundProofSignal}
+        signal={getForegroundProofSignal(uniqueSignals)}
+        variant="proof_foreground"
+      />
     </group>
   );
+}
+
+function SeoulSignalHardwareAssembly({
+  faceMeters = SEOUL_SIGNAL_HARDWARE_CUES.canvasFaceMeters,
+  lensEmissiveScale,
+  placement,
+  signal,
+  variant = "standard"
+}: {
+  faceMeters?: readonly [number, number];
+  lensEmissiveScale: number;
+  placement: SignalPlacement;
+  signal: SignalSnapshot;
+  variant?: SignalAssemblyVariant;
+}) {
+  const faceTexture = useSeoulSignalFaceTexture(signal, lensEmissiveScale);
+  const isProofForeground = variant === "proof_foreground";
+  const nameSuffix = isProofForeground
+    ? `foreground-${signal.direction}`
+    : signal.direction;
+  const facePosition: Vector3Tuple = isProofForeground
+    ? [1.96, 0.52, -0.42]
+    : [1.84, 0.48, -0.42];
+  const mastArmPosition: Vector3Tuple = isProofForeground
+    ? [1.16, 1.02, -0.02]
+    : [0.95, 1.02, -0.02];
+  const mastArmScale: Vector3Tuple = isProofForeground
+    ? [3.1, 0.08, 0.08]
+    : [2.78, 0.075, 0.075];
+
+  return (
+    <group
+      name={`seoul-signal-head-${nameSuffix}-${signal.state}`}
+      position={placement.position}
+      rotation-y={placement.rotationY}
+      userData={{
+        ...SEOUL_SIGNAL_HARDWARE_CUES,
+        signalStateSource: "SceneSnapshot.signals",
+        signalState: signal.state,
+        realSignalControlClaim: false,
+        visibilityTier: isProofForeground ? "proof_foreground" : "background"
+      }}
+    >
+      <mesh
+        name={`seoul-signal-pole-${nameSuffix}`}
+        position={[0, -2.42, 0]}
+        castShadow={STAGE5_SHADOWS_ENABLED}
+        receiveShadow
+      >
+        <cylinderGeometry args={[0.09, 0.13, 5.05, 10]} />
+        <meshStandardMaterial {...SIGNAL_MATERIALS.pole} />
+      </mesh>
+      <mesh
+        name={`seoul-signal-mast-arm-${nameSuffix}`}
+        position={mastArmPosition}
+        scale={mastArmScale}
+        castShadow={STAGE5_SHADOWS_ENABLED}
+      >
+        <boxGeometry args={[1, 1, 1]} />
+        <meshStandardMaterial {...SIGNAL_MATERIALS.pole} />
+      </mesh>
+      <mesh
+        name={`seoul-signal-canvas-face-${nameSuffix}`}
+        position={facePosition}
+        userData={{
+          signalStateSource: "SceneSnapshot.signals",
+          signalState: signal.state,
+          realSignalControlClaim: false,
+          hangulSafetyPlaques: SEOUL_SIGNAL_HARDWARE_CUES.hangulSafetyPlaques,
+          visibilityTier: isProofForeground ? "proof_foreground" : "background"
+        }}
+      >
+        <planeGeometry args={faceMeters} />
+        <meshBasicMaterial
+          color={faceTexture ? "#ffffff" : SIGNAL_MATERIALS.housing.color}
+          map={faceTexture ?? undefined}
+          side={DoubleSide}
+          toneMapped={false}
+          transparent
+        />
+      </mesh>
+    </group>
+  );
+}
+
+function useSeoulSignalFaceTexture(
+  signal: SignalSnapshot,
+  lensEmissiveScale: number
+) {
+  const texture = useMemo(() => {
+    if (typeof document === "undefined" || isJsdomRuntime()) return null;
+
+    const canvas = document.createElement("canvas");
+    canvas.width = 768;
+    canvas.height = 416;
+    const context = canvas.getContext("2d");
+
+    if (!context) return null;
+
+    drawRoundedRect(context, 22, 24, 724, 368, 34, "#0b1216");
+    drawRoundedRect(context, 50, 54, 492, 154, 42, "#10191e");
+    drawRoundedRect(context, 568, 54, 130, 218, 24, "#111a1f");
+
+    (["red", "yellow", "green"] as const).forEach((state, index) => {
+      const active = signal.state === state;
+      const color = active ? LENS_COLORS[state] : LENS_OFF;
+      drawSignalLens(
+        context,
+        128 + index * 158,
+        132,
+        48,
+        color,
+        active ? lensEmissiveScale : 0
+      );
+    });
+
+    const pedestrianGreen = signal.state === "green";
+    drawSignalLens(
+      context,
+      633,
+      116,
+      28,
+      pedestrianGreen ? LENS_OFF : LENS_COLORS.red,
+      pedestrianGreen ? 0 : lensEmissiveScale
+    );
+    drawSignalLens(
+      context,
+      633,
+      178,
+      28,
+      pedestrianGreen ? LENS_COLORS.green : LENS_OFF,
+      pedestrianGreen ? lensEmissiveScale : 0
+    );
+
+    context.font =
+      "800 42px 'Malgun Gothic', 'Apple SD Gothic Neo', 'Noto Sans KR', system-ui, sans-serif";
+    context.textAlign = "center";
+    context.textBaseline = "middle";
+    context.fillStyle = "#effaf0";
+    context.strokeStyle = "rgba(0,0,0,0.72)";
+    context.lineWidth = 7;
+    context.strokeText("보행신호", 633, 247);
+    context.fillText("보행신호", 633, 247);
+
+    context.font =
+      "900 54px 'Malgun Gothic', 'Apple SD Gothic Neo', 'Noto Sans KR', system-ui, sans-serif";
+    context.fillStyle = "#f5edca";
+    context.strokeText("정지선", 296, 298);
+    context.fillText("정지선", 296, 298);
+
+    const nextTexture = new CanvasTexture(canvas);
+    nextTexture.colorSpace = SRGBColorSpace;
+    nextTexture.anisotropy = 8;
+    nextTexture.minFilter = LinearFilter;
+    nextTexture.magFilter = LinearFilter;
+    nextTexture.needsUpdate = true;
+
+    return nextTexture;
+  }, [lensEmissiveScale, signal.state]);
+
+  useEffect(
+    () => () => {
+      texture?.dispose();
+    },
+    [texture]
+  );
+
+  return texture;
+}
+
+function drawSignalLens(
+  context: CanvasRenderingContext2D,
+  x: number,
+  y: number,
+  radius: number,
+  color: string,
+  emissiveScale: number
+) {
+  context.save();
+  context.shadowColor = color;
+  context.shadowBlur = emissiveScale > 0 ? 22 * emissiveScale : 0;
+  context.fillStyle = color;
+  context.beginPath();
+  context.arc(x, y, radius, 0, Math.PI * 2);
+  context.fill();
+  context.restore();
+
+  context.strokeStyle = "#05090c";
+  context.lineWidth = 10;
+  context.beginPath();
+  context.arc(x, y, radius + 7, 0, Math.PI * 2);
+  context.stroke();
+}
+
+function drawRoundedRect(
+  context: CanvasRenderingContext2D,
+  x: number,
+  y: number,
+  width: number,
+  height: number,
+  radius: number,
+  color: string
+) {
+  context.fillStyle = color;
+  context.beginPath();
+  context.moveTo(x + radius, y);
+  context.lineTo(x + width - radius, y);
+  context.quadraticCurveTo(x + width, y, x + width, y + radius);
+  context.lineTo(x + width, y + height - radius);
+  context.quadraticCurveTo(x + width, y + height, x + width - radius, y + height);
+  context.lineTo(x + radius, y + height);
+  context.quadraticCurveTo(x, y + height, x, y + height - radius);
+  context.lineTo(x, y + radius);
+  context.quadraticCurveTo(x, y, x + radius, y);
+  context.fill();
 }
 
 function getSignalsByDirection(signals: SceneSnapshot["signals"]) {
@@ -183,5 +354,22 @@ function getSignalsByDirection(signals: SceneSnapshot["signals"]) {
 
   return Array.from(byDirection.values()).sort((left, right) =>
     left.direction.localeCompare(right.direction)
+  );
+}
+
+function getForegroundProofSignal(signals: SceneSnapshot["signals"]) {
+  return (
+    signals.find(
+      (signal) =>
+        signal.direction ===
+        SEOUL_SIGNAL_HARDWARE_CUES.foregroundProofSignal.direction
+    ) ?? signals[0]
+  );
+}
+
+function isJsdomRuntime() {
+  return (
+    typeof window !== "undefined" &&
+    /jsdom/i.test(window.navigator.userAgent)
   );
 }

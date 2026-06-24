@@ -102,11 +102,18 @@ export type Stage6EDensityRenderPlan = {
 };
 
 const DIRECTIONS: Direction[] = ["north", "south", "east", "west"];
+const PRECISE_VEHICLE_HEADING_BY_DIRECTION: Record<Direction, number> = {
+  north: 180,
+  south: 0,
+  east: 270,
+  west: 90
+};
 const STOP_LINE_OFFSET_METERS = INTERSECTION_BOX_METERS / 2;
 export const STAGE5_MIN_VISIBLE_VEHICLES = 80;
 const MAX_FIXTURE_VEHICLES_PER_DIRECTION = 24;
 const MIN_TRAFFIC_VEHICLE_WIDTH_METERS = 2.32;
 const MIN_TRAFFIC_VEHICLE_HEIGHT_METERS = 1.08;
+export const PRECISE_VEHICLE_MIN_LONGITUDINAL_CLEARANCE_METERS = 1.2;
 const QUEUE_START_METERS_FROM_STOP_LINE = 12;
 const INBOUND_LANE_VISUAL_BIAS_METERS = LANE_WIDTH_METERS * 0.45;
 const DIRECTION_INDEX: Record<Direction, number> = {
@@ -185,6 +192,20 @@ type Stage5TrafficVehicleInstance = {
   highQualityGlbEligible: boolean;
   operatorRelevant: boolean;
   materialCues: Stage6VehicleMaterialCues;
+};
+type PreciseVehicleLanePlacement = {
+  direction: Direction;
+  laneIndex: number;
+};
+type PreciseVehicleDraft = {
+  vehicle: SimulationVehicleSnapshot;
+  originalIndex: number;
+  size: Vector3Tuple;
+  lanePosition: {
+    x: number;
+    z: number;
+  };
+  lanePlacement: PreciseVehicleLanePlacement | null;
 };
 
 export const STAGE6E_REPEATED_DENSITY_GLB_ASSET_IDS = [
@@ -278,7 +299,8 @@ export function buildTrafficDensityRenderPlan(
     sceneSnapshot.vehicles,
     qualityPreset
   );
-  const farVehicles = buildFarVehicles(sceneSnapshot);
+  const farVehicles =
+    preciseVehicles.length > 0 ? [] : buildFarVehicles(sceneSnapshot);
 
   return {
     mode,
@@ -809,7 +831,7 @@ function Stage5TrafficVehicleInstances({
         index,
         localOffset: [0, vehicle.size[1] * 0.66, -vehicle.size[2] * 0.28],
         localRotation: [-Math.PI / 2, 0, 0],
-        scale: [vehicle.size[0] * 0.56, vehicle.size[2] * 0.2, 1]
+        scale: getStage5WindshieldScale(vehicle.size)
       });
       setVehiclePartMatrix({
         mesh: rearGlassRef.current,
@@ -818,7 +840,7 @@ function Stage5TrafficVehicleInstances({
         index,
         localOffset: [0, vehicle.size[1] * 0.63, vehicle.size[2] * 0.26],
         localRotation: [-Math.PI / 2, 0, 0],
-        scale: [vehicle.size[0] * 0.5, vehicle.size[2] * 0.18, 1]
+        scale: getStage5RearGlassScale(vehicle.size)
       });
       setVehiclePartMatrix({
         mesh: roofHighlightRef.current,
@@ -827,7 +849,7 @@ function Stage5TrafficVehicleInstances({
         index,
         localOffset: [0, vehicle.size[1] * 0.7, -vehicle.size[2] * 0.02],
         localRotation: [-Math.PI / 2, 0, 0],
-        scale: [vehicle.size[0] * 0.68, vehicle.size[2] * 0.68, 1]
+        scale: getStage5RoofHighlightScale(vehicle.size)
       });
       setVehiclePartMatrix({
         mesh: frontGrilleRef.current,
@@ -1040,7 +1062,7 @@ function Stage5TrafficVehicleInstances({
           emissive="#0a1418"
           emissiveIntensity={0.12}
           transparent
-          opacity={0.7}
+          opacity={0.88}
         />
       </instancedMesh>
       <instancedMesh
@@ -1049,9 +1071,9 @@ function Stage5TrafficVehicleInstances({
       >
         <Stage5VehiclePartGeometry partName="roofHighlight" />
         <meshBasicMaterial
-          color="#d7dde0"
+          color="#20323a"
           transparent
-          opacity={0.075}
+          opacity={0.008}
           depthWrite={false}
           side={DoubleSide}
         />
@@ -1071,7 +1093,7 @@ function Stage5TrafficVehicleInstances({
           thickness={0.05}
           envMapIntensity={0.84}
           transparent
-          opacity={0.68}
+          opacity={0.5}
           side={DoubleSide}
         />
       </instancedMesh>
@@ -1090,7 +1112,7 @@ function Stage5TrafficVehicleInstances({
           thickness={0.05}
           envMapIntensity={0.78}
           transparent
-          opacity={0.66}
+          opacity={0.48}
           side={DoubleSide}
         />
       </instancedMesh>
@@ -1108,7 +1130,7 @@ function Stage5TrafficVehicleInstances({
           thickness={0.04}
           envMapIntensity={0.74}
           transparent
-          opacity={0.62}
+          opacity={0.46}
           side={DoubleSide}
         />
       </instancedMesh>
@@ -1326,11 +1348,25 @@ function buildPreciseVehicles(
   vehicles: SimulationVehicleSnapshot[],
   qualityPreset: Stage6QualityPreset
 ): TrafficDensityPreciseVehicle[] {
-  return vehicles.map((vehicle) => {
-    const size = getPreciseVehicleSize(vehicle);
+  const drafts = applyPreciseVehicleLongitudinalSpacing(
+    vehicles.map((vehicle, originalIndex) => {
+      const size = getPreciseVehicleSize(vehicle);
+      const lanePlacement = resolvePreciseVehicleLanePlacement(vehicle);
+
+      return {
+        vehicle,
+        originalIndex,
+        size,
+        lanePosition: getLaneAlignedPreciseVehiclePosition(vehicle, lanePlacement),
+        lanePlacement
+      };
+    })
+  );
+
+  return drafts.map(({ vehicle, size, lanePosition }) => {
     const lodDecision = decideStage6VehicleLod({
       distanceMeters: Math.sqrt(
-        vehicle.x_meters * vehicle.x_meters + vehicle.y_meters * vehicle.y_meters
+        lanePosition.x * lanePosition.x + lanePosition.z * lanePosition.z
       ),
       sourceLabel: "snapshot",
       vehicleType: vehicle.vehicle_type,
@@ -1345,9 +1381,9 @@ function buildPreciseVehicles(
       sourceLabel: "snapshot",
       vehicleType: vehicle.vehicle_type,
       position: [
-        vehicle.x_meters,
+        lanePosition.x,
         size[1] / 2 + 0.04,
-        vehicle.y_meters
+        lanePosition.z
       ],
       rotationY: degreesToRadians(vehicle.heading_degrees),
       size,
@@ -1359,6 +1395,166 @@ function buildPreciseVehicles(
       materialCues: lodDecision.materialCues
     };
   });
+}
+
+function getLaneAlignedPreciseVehiclePosition(
+  vehicle: SimulationVehicleSnapshot,
+  lanePlacement = resolvePreciseVehicleLanePlacement(vehicle)
+) {
+  if (!lanePlacement) {
+    return {
+      x: vehicle.x_meters,
+      z: vehicle.y_meters
+    };
+  }
+
+  const laneOffset = getInboundLaneOffset(
+    lanePlacement.direction,
+    lanePlacement.laneIndex,
+    INBOUND_LANE_COUNT
+  );
+
+  if (
+    lanePlacement.direction === "north" ||
+    lanePlacement.direction === "south"
+  ) {
+    return {
+      x: laneOffset,
+      z: vehicle.y_meters
+    };
+  }
+
+  return {
+    x: vehicle.x_meters,
+    z: laneOffset
+  };
+}
+
+function applyPreciseVehicleLongitudinalSpacing(
+  drafts: PreciseVehicleDraft[]
+): PreciseVehicleDraft[] {
+  const adjustedDrafts = drafts.map((draft) => ({
+    ...draft,
+    lanePosition: { ...draft.lanePosition }
+  }));
+  const draftsByLane = new Map<string, PreciseVehicleDraft[]>();
+
+  for (const draft of adjustedDrafts) {
+    if (!draft.lanePlacement) continue;
+
+    const key = `${draft.lanePlacement.direction}:${draft.lanePlacement.laneIndex}`;
+    draftsByLane.set(key, [...(draftsByLane.get(key) ?? []), draft]);
+  }
+
+  for (const laneDrafts of draftsByLane.values()) {
+    const orderedLaneDrafts = [...laneDrafts].sort(
+      (left, right) =>
+        getApproachQueueCoordinate(left) -
+          getApproachQueueCoordinate(right) ||
+        left.originalIndex - right.originalIndex
+    );
+
+    for (let index = 1; index < orderedLaneDrafts.length; index += 1) {
+      const leader = orderedLaneDrafts[index - 1];
+      const follower = orderedLaneDrafts[index];
+      const minFollowerCoordinate =
+        getApproachQueueCoordinate(leader) +
+        getPreciseVehicleMinimumCenterSpacing(leader.size, follower.size);
+
+      if (getApproachQueueCoordinate(follower) < minFollowerCoordinate) {
+        setApproachQueueCoordinate(follower, minFollowerCoordinate);
+      }
+    }
+  }
+
+  return adjustedDrafts;
+}
+
+function getPreciseVehicleMinimumCenterSpacing(
+  leaderSize: Vector3Tuple,
+  followerSize: Vector3Tuple
+) {
+  return (
+    leaderSize[2] / 2 +
+    followerSize[2] / 2 +
+    PRECISE_VEHICLE_MIN_LONGITUDINAL_CLEARANCE_METERS
+  );
+}
+
+function getApproachQueueCoordinate(draft: PreciseVehicleDraft) {
+  const direction = draft.lanePlacement?.direction;
+
+  if (direction === "north") return -draft.lanePosition.z;
+  if (direction === "south") return draft.lanePosition.z;
+  if (direction === "east") return draft.lanePosition.x;
+  if (direction === "west") return -draft.lanePosition.x;
+
+  return Math.sqrt(
+    draft.lanePosition.x * draft.lanePosition.x +
+      draft.lanePosition.z * draft.lanePosition.z
+  );
+}
+
+function setApproachQueueCoordinate(
+  draft: PreciseVehicleDraft,
+  queueCoordinate: number
+) {
+  const direction = draft.lanePlacement?.direction;
+
+  if (direction === "north") {
+    draft.lanePosition.z = -queueCoordinate;
+    return;
+  }
+  if (direction === "south") {
+    draft.lanePosition.z = queueCoordinate;
+    return;
+  }
+  if (direction === "east") {
+    draft.lanePosition.x = queueCoordinate;
+    return;
+  }
+  if (direction === "west") {
+    draft.lanePosition.x = -queueCoordinate;
+  }
+}
+
+function resolvePreciseVehicleLanePlacement(
+  vehicle: SimulationVehicleSnapshot
+): PreciseVehicleLanePlacement | null {
+  const laneIndex = parseLaneIndex(vehicle.lane_id);
+  if (laneIndex === null) return null;
+
+  const laneDirection = parseLaneDirection(vehicle.lane_id);
+  if (!laneDirection) return null;
+  if (!headingMatchesDirection(vehicle.heading_degrees, laneDirection)) return null;
+
+  return {
+    direction: laneDirection,
+    laneIndex: clamp(laneIndex, 0, INBOUND_LANE_COUNT - 1)
+  };
+}
+
+function parseLaneDirection(laneId: string): Direction | null {
+  const normalized = laneId.toLowerCase();
+
+  return DIRECTIONS.find((direction) =>
+    new RegExp(`(^|[_:\\-.])${direction}([_:\\-.]|$)`).test(normalized)
+  ) ?? null;
+}
+
+function parseLaneIndex(laneId: string) {
+  const match = laneId.match(/(\d+)(?!.*\d)/);
+  if (!match) return null;
+
+  const laneIndex = Number.parseInt(match[1], 10);
+  return Number.isInteger(laneIndex) ? laneIndex : null;
+}
+
+function headingMatchesDirection(headingDegrees: number, direction: Direction) {
+  return angularDistanceDegrees(
+    headingDegrees,
+    PRECISE_VEHICLE_HEADING_BY_DIRECTION[direction]
+  ) <= 35;
 }
 
 function buildFarVehicles(
@@ -1373,6 +1569,24 @@ function buildFarVehicles(
   }
 
   return [];
+}
+
+export function getStage5RoofHighlightScale(
+  vehicleSize: Vector3Tuple
+): Vector3Tuple {
+  return [vehicleSize[0] * 0.16, vehicleSize[2] * 0.045, 1];
+}
+
+export function getStage5WindshieldScale(
+  vehicleSize: Vector3Tuple
+): Vector3Tuple {
+  return [vehicleSize[0] * 0.46, vehicleSize[2] * 0.12, 1];
+}
+
+export function getStage5RearGlassScale(
+  vehicleSize: Vector3Tuple
+): Vector3Tuple {
+  return [vehicleSize[0] * 0.4, vehicleSize[2] * 0.1, 1];
 }
 
 function buildFixtureQueueVehicles(
@@ -1752,6 +1966,10 @@ function getPreciseVehicleColor(vehicle: SimulationVehicleSnapshot) {
 
 function degreesToRadians(degrees: number) {
   return (degrees * Math.PI) / 180;
+}
+
+function angularDistanceDegrees(left: number, right: number) {
+  return Math.abs(((left - right + 540) % 360) - 180);
 }
 
 function canUseRuntimeDensityAssets() {

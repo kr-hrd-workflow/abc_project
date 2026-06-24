@@ -72,11 +72,13 @@ def test_emergency_simulation_frame_exposes_typed_fixture_snapshot(
         "captured_at",
         "bounds_meters",
         "vehicles",
+        "pedestrians",
         "density_segments",
         "signals",
         "queues",
         "events",
     }
+    assert payload["pedestrians"] == []
 
     emergency_vehicles = [
         vehicle for vehicle in payload["vehicles"] if vehicle["vehicle_type"] == "emergency"
@@ -139,10 +141,10 @@ def test_all_fixture_scenarios_have_deterministic_snapshot_markers(
         snapshots[scenario_id] = first.json()
         assert snapshots[scenario_id]["source"] == "simulation_snapshot_fixture"
         assert snapshots[scenario_id]["scenario_id"] == scenario_id
+        assert snapshots[scenario_id]["pedestrians"] == []
         assert len(snapshots[scenario_id]["signals"]) == 4
 
     pedestrian = snapshots["pedestrian"]
-    assert "pedestrians" not in pedestrian
     assert {
         event["event_type"] for event in pedestrian["events"]
     } == {"pedestrian_waiting"}

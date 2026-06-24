@@ -36,6 +36,7 @@ def build_fixture_simulation_frame(
         captured_at=observation.captured_at,
         bounds_meters=SNAPSHOT_BOUNDS_METERS,
         vehicles=_vehicles_for_scenario(scenario_id),
+        pedestrians=[],
         density_segments=_density_segments(observation),
         signals=_signals_for_scenario(scenario_id),
         queues=observation.queues,

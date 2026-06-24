@@ -9,6 +9,7 @@ import {
   ROAD_WIDTH_METERS,
   TURN_ARROW_MARKINGS
 } from "./roadGeometry";
+import { CanvasTextPlane } from "./CanvasTextPlane";
 import type { Vector3Tuple } from "./roadGeometry";
 import { useStage5RoadMaterials } from "./roadMaterials";
 import type { Stage6QualityPreset } from "./stage6Quality";
@@ -22,32 +23,44 @@ type PlaneBatchSpec = {
   size: [number, number];
   rotationY?: number;
 };
+export type SeoulRoadSurfaceTextMarkingSpec = {
+  id: string;
+  labelText: string;
+  position: Vector3Tuple;
+  size: [number, number];
+  rotationY?: number;
+  visibilityTier: "proof_foreground" | "background";
+  textColor: string;
+  backgroundColor: string;
+};
 
 const PLANE_ROTATION: [number, number, number] = [-Math.PI / 2, 0, 0];
 const PLANE_ROTATION_X = -Math.PI / 2;
 const HALF_INTERSECTION = INTERSECTION_BOX_METERS / 2;
 const STOP_MARKING_HEIGHT = 0.024;
 const SCUFF_HEIGHT = 0.034;
+const CROSSWALK_VISUAL_CENTER_OFFSET = HALF_INTERSECTION + 2.85;
+const CROSSWALK_APPROACH_STOP_LINE_OFFSET = HALF_INTERSECTION + 6.35;
 
 const STOP_LINE_MARKINGS: PlaneBatchSpec[] = [
   {
     id: "north-south-stop-line",
-    position: [0, STOP_MARKING_HEIGHT, -HALF_INTERSECTION],
+    position: [0, STOP_MARKING_HEIGHT, -CROSSWALK_APPROACH_STOP_LINE_OFFSET],
     size: [ROAD_WIDTH_METERS, 0.6]
   },
   {
     id: "south-north-stop-line",
-    position: [0, STOP_MARKING_HEIGHT, HALF_INTERSECTION],
+    position: [0, STOP_MARKING_HEIGHT, CROSSWALK_APPROACH_STOP_LINE_OFFSET],
     size: [ROAD_WIDTH_METERS, 0.6]
   },
   {
     id: "east-west-stop-line",
-    position: [HALF_INTERSECTION, STOP_MARKING_HEIGHT, 0],
+    position: [CROSSWALK_APPROACH_STOP_LINE_OFFSET, STOP_MARKING_HEIGHT, 0],
     size: [0.6, ROAD_WIDTH_METERS]
   },
   {
     id: "west-east-stop-line",
-    position: [-HALF_INTERSECTION, STOP_MARKING_HEIGHT, 0],
+    position: [-CROSSWALK_APPROACH_STOP_LINE_OFFSET, STOP_MARKING_HEIGHT, 0],
     size: [0.6, ROAD_WIDTH_METERS]
   }
 ];
@@ -90,29 +103,70 @@ const INTERSECTION_TIRE_SCARS: PlaneBatchSpec[] = [
 const CROSSWALK_GRIME_BANDS: PlaneBatchSpec[] = [
   {
     id: "north-crosswalk-wheel-worn-band",
-    position: [0, SCUFF_HEIGHT + 0.004, -(HALF_INTERSECTION + 3.2)],
-    size: [ROAD_WIDTH_METERS + 3.4, 1.35]
+    position: [0, SCUFF_HEIGHT + 0.004, -CROSSWALK_VISUAL_CENTER_OFFSET],
+    size: [ROAD_WIDTH_METERS - 0.4, 0.95]
   },
   {
     id: "south-crosswalk-wheel-worn-band",
-    position: [0, SCUFF_HEIGHT + 0.004, HALF_INTERSECTION + 3.2],
-    size: [ROAD_WIDTH_METERS + 3.4, 1.35]
+    position: [0, SCUFF_HEIGHT + 0.004, CROSSWALK_VISUAL_CENTER_OFFSET],
+    size: [ROAD_WIDTH_METERS - 0.4, 0.95]
   },
   {
     id: "east-crosswalk-wheel-worn-band",
-    position: [HALF_INTERSECTION + 3.2, SCUFF_HEIGHT + 0.004, 0],
-    size: [1.35, ROAD_WIDTH_METERS + 3.4]
+    position: [CROSSWALK_VISUAL_CENTER_OFFSET, SCUFF_HEIGHT + 0.004, 0],
+    size: [0.95, ROAD_WIDTH_METERS - 0.4]
   },
   {
     id: "west-crosswalk-wheel-worn-band",
-    position: [-(HALF_INTERSECTION + 3.2), SCUFF_HEIGHT + 0.004, 0],
-    size: [1.35, ROAD_WIDTH_METERS + 3.4]
+    position: [-CROSSWALK_VISUAL_CENTER_OFFSET, SCUFF_HEIGHT + 0.004, 0],
+    size: [0.95, ROAD_WIDTH_METERS - 0.4]
   }
 ];
 
 const TURN_ARROW_PARTS: PlanePrimitiveSpec[] = TURN_ARROW_MARKINGS.flatMap(
   (arrow) => arrow.parts
 );
+
+export const SEOUL_ROAD_SURFACE_TEXT_MARKINGS: SeoulRoadSurfaceTextMarkingSpec[] = [
+  {
+    id: "south-foreground-bus-only-road-text",
+    labelText: "버스전용",
+    position: [-5.45, SCUFF_HEIGHT + 0.012, 26.6],
+    size: [7.8, 2.05],
+    visibilityTier: "proof_foreground",
+    textColor: "#f5f0d8",
+    backgroundColor: "rgba(22,82,116,0.46)"
+  },
+  {
+    id: "south-foreground-gangnam-daero-road-text",
+    labelText: "강남대로",
+    position: [3.45, SCUFF_HEIGHT + 0.014, 12.6],
+    size: [7.4, 1.98],
+    visibilityTier: "proof_foreground",
+    textColor: "#f7f1d5",
+    backgroundColor: "rgba(9,18,20,0.16)"
+  },
+  {
+    id: "east-teheran-ro-road-text",
+    labelText: "테헤란로",
+    position: [24.8, SCUFF_HEIGHT + 0.012, -4.6],
+    size: [7.2, 1.92],
+    rotationY: Math.PI / 2,
+    visibilityTier: "proof_foreground",
+    textColor: "#f6efd1",
+    backgroundColor: "rgba(9,18,20,0.16)"
+  },
+  {
+    id: "north-bus-only-road-text",
+    labelText: "버스전용",
+    position: [5.25, SCUFF_HEIGHT + 0.012, -31],
+    size: [5.5, 1.46],
+    rotationY: Math.PI,
+    visibilityTier: "background",
+    textColor: "#efe8cf",
+    backgroundColor: "rgba(22,82,116,0.38)"
+  }
+];
 
 export function ProceduralIntersection({
   qualityPreset = getStage6QualityPreset("low")
@@ -160,6 +214,7 @@ export function ProceduralIntersection({
         renderOrder={3}
         receiveShadow
       />
+      <RoadSurfaceTextMarkings />
       <InstancedPlaneBatch
         name="stage5-crosswalk-road-grime-bands"
         specs={CROSSWALK_GRIME_BANDS}
@@ -167,6 +222,40 @@ export function ProceduralIntersection({
         renderOrder={4}
       />
       <WetRoadReflectors qualityPreset={qualityPreset} />
+    </group>
+  );
+}
+
+function RoadSurfaceTextMarkings() {
+  return (
+    <group
+      name="stage6-seoul-road-surface-text-markings"
+      userData={{
+        textSource: "procedural_seoul_public_road_cues",
+        realBrandClaim: false
+      }}
+    >
+      {SEOUL_ROAD_SURFACE_TEXT_MARKINGS.map((marking) => (
+        <CanvasTextPlane
+          key={marking.id}
+          backgroundColor={marking.backgroundColor}
+          fontWeight={900}
+          opacity={0.92}
+          position={marking.position}
+          renderOrder={5}
+          rotation={[PLANE_ROTATION_X, marking.rotationY ?? 0, 0]}
+          size={marking.size}
+          text={marking.labelText}
+          textColor={marking.textColor}
+          userData={{
+            id: marking.id,
+            labelText: marking.labelText,
+            visibilityTier: marking.visibilityTier,
+            realBrandClaim: false,
+            truthSource: "procedural_visual_context"
+          }}
+        />
+      ))}
     </group>
   );
 }

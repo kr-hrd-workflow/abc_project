@@ -20,6 +20,7 @@ const stage6EFirstPassRuntimeAssetIds = new Set([
   "props/streetlight",
   "props/tree_cluster",
   "props/curb_details",
+  "props/outdoor_table_chair_set_01",
   "vehicles/passenger_car_far",
   "vehicles/taxi_far",
   "vehicles/bus_far",

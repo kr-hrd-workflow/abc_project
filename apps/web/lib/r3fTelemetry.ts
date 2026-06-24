@@ -36,6 +36,14 @@ export type R3FTelemetrySourceLabels = {
   fallback_reason: string | null;
 };
 
+export type R3FTelemetryPedestrianTruth = {
+  sumo_pedestrian_count: number | null;
+  sumo_pedestrian_source: string | null;
+  ambient_pedestrian_count: number | null;
+  ambient_pedestrian_source: string | null;
+  truth_separated: boolean;
+};
+
 export type R3FTelemetryEvent = {
   renderer_mode: string | null;
   snapshot_source: string | null;
@@ -60,6 +68,7 @@ export type R3FTelemetryEvent = {
   texture_memory_bytes: number | null;
   performance: R3FTelemetryPerformance;
   source_labels: R3FTelemetrySourceLabels;
+  pedestrian_truth: R3FTelemetryPedestrianTruth;
   js_heap_bytes: number | null;
   authoritative_tick_drift_ms: number | null;
   emitted_at: string;
@@ -108,6 +117,13 @@ export type R3FTelemetryInput = {
     source?: R3FTelemetryValueSource;
     reason?: string | null;
   };
+  pedestrianTruth?: {
+    sumoPedestrianCount: number | null;
+    sumoPedestrianSource: string | null;
+    ambientPedestrianCount: number | null;
+    ambientPedestrianSource: string | null;
+    truthSeparated: boolean;
+  };
   jsHeapBytes?: number | null;
   authoritativeTickDriftMs?: number | null;
   emittedAt?: string;
@@ -150,6 +166,7 @@ export function buildR3FTelemetryEvent(
       stale: input.frameStale ?? false,
       fallback_reason: input.fallbackReason
     },
+    pedestrian_truth: normalizePedestrianTruth(input.pedestrianTruth),
     js_heap_bytes: input.jsHeapBytes ?? null,
     authoritative_tick_drift_ms: input.authoritativeTickDriftMs ?? null,
     emitted_at: input.emittedAt ?? new Date().toISOString()
@@ -225,6 +242,18 @@ function normalizePerformance(
     texture_memory_estimate_mb: textureMemoryEstimateMb,
     source: input.performance?.source ?? "browser_telemetry",
     reason: input.performance?.reason ?? buildMissingPerformanceReason(missing)
+  };
+}
+
+function normalizePedestrianTruth(
+  pedestrianTruth: R3FTelemetryInput["pedestrianTruth"]
+): R3FTelemetryPedestrianTruth {
+  return {
+    sumo_pedestrian_count: pedestrianTruth?.sumoPedestrianCount ?? null,
+    sumo_pedestrian_source: pedestrianTruth?.sumoPedestrianSource ?? null,
+    ambient_pedestrian_count: pedestrianTruth?.ambientPedestrianCount ?? null,
+    ambient_pedestrian_source: pedestrianTruth?.ambientPedestrianSource ?? null,
+    truth_separated: pedestrianTruth?.truthSeparated ?? false
   };
 }
 

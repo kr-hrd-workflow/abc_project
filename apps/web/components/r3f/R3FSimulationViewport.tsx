@@ -27,6 +27,7 @@ import {
   STAGE5_TRAFFIC_VEHICLE_SILHOUETTE_PARTS,
   buildTrafficDensityRenderPlan
 } from "./TrafficDensityLayer";
+import { SCENE_CLUTTER_SPECS } from "./SceneClutterLayer";
 import {
   STAGE5_STREET_FURNITURE_CONTACT_SHADOW_PLACEMENTS,
   STAGE5_VISIBLE_TRAFFIC_GLB_PLACEMENTS
@@ -72,6 +73,10 @@ export function R3FSimulationViewport({
   );
   const visibleVehicleCount =
     trafficRenderPlan.preciseVehicles.length + trafficRenderPlan.farVehicles.length;
+  const visibleSumoPedestrianCount = sceneSnapshot.pedestrians.length;
+  const ambientPedestrianCount = SCENE_CLUTTER_SPECS.filter(
+    (spec) => spec.kind === "pedestrian_silhouette"
+  ).length;
   const highQualityVehicleCount = trafficRenderPlan.preciseVehicles.filter(
     (vehicle) => vehicle.highQualityGlbEligible
   ).length;
@@ -134,6 +139,11 @@ export function R3FSimulationViewport({
       )}
       data-r3f-frame-stale={frameTelemetry.stale ? "true" : "false"}
       data-r3f-visible-vehicle-count={visibleVehicleCount}
+      data-r3f-sumo-pedestrian-count={visibleSumoPedestrianCount}
+      data-r3f-sumo-pedestrian-source={sceneSnapshot.precisePedestrianSource}
+      data-r3f-ambient-pedestrian-count={ambientPedestrianCount}
+      data-r3f-ambient-pedestrian-source="procedural_background_proxy"
+      data-r3f-pedestrian-truth-separated="true"
       data-r3f-glb-vehicle-count={STAGE5_VISIBLE_TRAFFIC_GLB_PLACEMENTS.length}
       data-r3f-shadow-enabled={STAGE5_SHADOWS_ENABLED ? "true" : "false"}
       data-r3f-shadow-caster-count={shadowCasterCount}

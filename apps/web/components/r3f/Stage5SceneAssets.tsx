@@ -50,7 +50,8 @@ export const STAGE5_VISIBLE_TRAFFIC_GLB_ASSET_IDS = [
 export const STAGE5_STREET_FURNITURE_GLB_ASSET_IDS = [
   "props/streetlight",
   "props/tree_cluster",
-  "props/curb_details"
+  "props/curb_details",
+  "props/outdoor_table_chair_set_01"
 ] as const satisfies readonly R3FAssetId[];
 
 export const STAGE6E_FIRST_PASS_GLB_ASSET_IDS = [
@@ -161,26 +162,28 @@ const STAGE6E_FIRST_PASS_MATERIAL_COLORS: Record<
   Stage6EFirstPassAssetId,
   string
 > = {
-  "vehicles/bus_near": "#698b9a",
+  "vehicles/bus_near": "#2f75bf",
   "vehicles/emergency_ambulance_medium": "#b74744",
   "vehicles/passenger_car_near": "#758b95",
-  "vehicles/taxi_near": "#a88d38",
+  "vehicles/taxi_near": "#d7962f",
   "vehicles/truck_near": "#87939a",
   "props/streetlight": "#515c64",
   "props/tree_cluster": "#4f6d4f",
-  "props/curb_details": "#7f786c"
+  "props/curb_details": "#7f786c",
+  "props/outdoor_table_chair_set_01": "#8f8067"
 };
 
 const STAGE6E_FIRST_PASS_INSTANCE_COLORS: Partial<
   Record<Stage6EFirstPassAssetId, readonly string[]>
 > = {
-  "vehicles/bus_near": ["#668b9b", "#7895a1"],
+  "vehicles/bus_near": ["#2f75bf", "#3d9b68"],
   "vehicles/emergency_ambulance_medium": ["#b74744", "#d9dedf"],
   "vehicles/passenger_car_near": ["#708692", "#a5b0b5", "#5f737d"],
-  "vehicles/taxi_near": ["#a88d38", "#c2a64a"],
+  "vehicles/taxi_near": ["#d7962f", "#f0c24a"],
   "vehicles/truck_near": ["#828d93", "#a5acaf"],
   "props/tree_cluster": ["#486747", "#587755"],
-  "props/curb_details": ["#756f64", "#91887b"]
+  "props/curb_details": ["#756f64", "#91887b"],
+  "props/outdoor_table_chair_set_01": ["#8f8067", "#a69472", "#6d6257"]
 };
 
 export const STAGE5_HERO_VEHICLE_PLACEMENTS: Stage5HeroVehiclePlacement[] = [
@@ -267,6 +270,13 @@ export const STAGE5_STREET_FURNITURE_PLACEMENTS: Stage5StreetFurniturePlacement[
     position: [25.2, 0.03, 10.6],
     rotationY: -Math.PI / 2,
     scale: [1, 1, 1]
+  },
+  {
+    id: "stage6e-gangnam-sidewalk-cafe-seating-glb",
+    assetId: "props/outdoor_table_chair_set_01",
+    position: [-30.2, 0.035, -25.8],
+    rotationY: Math.PI / 3,
+    scale: [0.96, 0.96, 0.96]
   }
 ];
 
@@ -318,6 +328,14 @@ export const STAGE5_STREET_FURNITURE_CONTACT_SHADOW_PLACEMENTS: Stage5StreetFurn
     rotationY: -Math.PI / 2,
     size: [3.4, 0.58],
     opacity: 0.26
+  },
+  {
+    id: "stage6e-gangnam-sidewalk-cafe-seating-contact-shadow",
+    sourcePlacementId: "stage6e-gangnam-sidewalk-cafe-seating-glb",
+    position: [-30.2, 0.024, -25.8],
+    rotationY: Math.PI / 3,
+    size: [2.15, 0.9],
+    opacity: 0.3
   }
 ];
 
@@ -451,6 +469,9 @@ function RuntimeStage5SceneAssets() {
   const streetlight = useGLTF(getR3FAssetEntry("props/streetlight").path);
   const treeCluster = useGLTF(getR3FAssetEntry("props/tree_cluster").path);
   const curbDetails = useGLTF(getR3FAssetEntry("props/curb_details").path);
+  const outdoorTableChairSet = useGLTF(
+    getR3FAssetEntry("props/outdoor_table_chair_set_01").path
+  );
   const visibleTrafficScenes: Record<Stage5VisibleTrafficAssetId, Group> = {
     "vehicles/bus_near": bus.scene,
     "vehicles/emergency_ambulance_medium": ambulance.scene,
@@ -461,7 +482,8 @@ function RuntimeStage5SceneAssets() {
   const streetFurnitureScenes: Record<Stage5StreetFurnitureAssetId, Group> = {
     "props/streetlight": streetlight.scene,
     "props/tree_cluster": treeCluster.scene,
-    "props/curb_details": curbDetails.scene
+    "props/curb_details": curbDetails.scene,
+    "props/outdoor_table_chair_set_01": outdoorTableChairSet.scene
   };
   const firstPassScenes: Record<Stage6EFirstPassAssetId, Group> = {
     ...visibleTrafficScenes,
@@ -483,6 +505,7 @@ function RuntimeStage5SceneAssets() {
       ambulance.scene,
       bus.scene,
       curbDetails.scene,
+      outdoorTableChairSet.scene,
       passengerCar.scene,
       streetlight.scene,
       taxi.scene,
@@ -763,7 +786,7 @@ function Stage5FacadePanels() {
 }
 
 function buildStage5FacadePanels(): Stage5FacadePanelSpec[] {
-  return STAGE6E_CITY_EDGE_BLOCKS.map((building) => {
+  return STAGE6E_CITY_EDGE_BLOCKS.flatMap((building) => {
     const [width, height, depth] = building.size;
     const [x, , z] = building.position;
     const isNorthSouthFacade = depth > width;
@@ -771,28 +794,73 @@ function buildStage5FacadePanels(): Stage5FacadePanelSpec[] {
 
     if (isNorthSouthFacade) {
       const side = Math.sign(x) || 1;
-      return {
+      const mainPanel: Stage5FacadePanelSpec = {
         id: `${building.id}-lit-inner-facade`,
         position: [
           x - side * (width / 2 + FACADE_INSET_METERS),
           facadeHeight / 2,
           z
-        ],
+        ] as Vector3Tuple,
         rotationY: side > 0 ? -Math.PI / 2 : Math.PI / 2,
-        size: [depth, facadeHeight]
+        size: [depth, facadeHeight] as [number, number]
       };
+
+      return [
+        mainPanel,
+        ...buildStage5FacadeAccentBands(
+          building.id,
+          mainPanel.position,
+          mainPanel.rotationY,
+          depth,
+          facadeHeight
+        )
+      ];
     }
 
     const side = Math.sign(z) || 1;
-    return {
+    const mainPanel: Stage5FacadePanelSpec = {
       id: `${building.id}-lit-inner-facade`,
       position: [
         x,
         facadeHeight / 2,
         z - side * (depth / 2 + FACADE_INSET_METERS)
-      ],
+      ] as Vector3Tuple,
       rotationY: side > 0 ? Math.PI : 0,
-      size: [width, facadeHeight]
+      size: [width, facadeHeight] as [number, number]
+    };
+
+    return [
+      mainPanel,
+      ...buildStage5FacadeAccentBands(
+        building.id,
+        mainPanel.position,
+        mainPanel.rotationY,
+        width,
+        facadeHeight
+      )
+    ];
+  });
+}
+
+function buildStage5FacadeAccentBands(
+  buildingId: string,
+  basePosition: Vector3Tuple,
+  rotationY: number,
+  facadeWidth: number,
+  facadeHeight: number
+): Stage5FacadePanelSpec[] {
+  const bandCount = Math.max(2, Math.min(5, Math.round(facadeHeight / 7)));
+  const stepHeight = facadeHeight / bandCount;
+
+  return Array.from({ length: bandCount }, (_, index) => {
+    const widthScale = index % 2 === 0 ? 0.72 : 0.86;
+    const y = stepHeight * (index + 0.5);
+
+    return {
+      id: `${buildingId}-lit-facade-band-${index}`,
+      position: [basePosition[0], y, basePosition[2]] as Vector3Tuple,
+      rotationY,
+      size: [facadeWidth * widthScale, stepHeight * 0.38] as [number, number]
     };
   });
 }

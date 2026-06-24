@@ -55,6 +55,44 @@ describe("simulation frame worker buffer", () => {
     expect(entry?.frame.captured_at).toBe("2026-06-18T00:00:02.000Z");
   });
 
+  test("keeps SUMO pedestrian snapshots from authoritative frames", () => {
+    const entry = normalizeSimulationFrameMessage({
+      type: "simulation-frame",
+      frame: {
+        ...baseFrame,
+        pedestrians: [
+          {
+            id: "person-1",
+            x_meters: -3.5,
+            y_meters: 12,
+            heading_degrees: 91,
+            speed_mps: 1.35,
+            lane_id: null,
+            edge_id: "crosswalk-west",
+            waiting_seconds: 2.25,
+            source: "sumo_person"
+          }
+        ]
+      },
+      receivedAtMs: 2500,
+      networkLatencyMs: 10
+    });
+
+    expect(entry?.frame.pedestrians).toEqual([
+      {
+        id: "person-1",
+        x_meters: -3.5,
+        y_meters: 12,
+        heading_degrees: 91,
+        speed_mps: 1.35,
+        lane_id: null,
+        edge_id: "crosswalk-west",
+        waiting_seconds: 2.25,
+        source: "sumo_person"
+      }
+    ]);
+  });
+
   test("keeps the latest two authoritative frames ordered by sim time", () => {
     const buffer = createSimulationFrameRingBuffer(2);
 
@@ -111,6 +149,30 @@ describe("simulation frame worker buffer", () => {
               speed_mps: 0,
               waiting_seconds: 0,
               emergency: false
+            }
+          ]
+        },
+        receivedAtMs: 100,
+        networkLatencyMs: 12
+      })
+    ).toBeNull();
+
+    expect(
+      normalizeSimulationFrameMessage({
+        type: "simulation-frame",
+        frame: {
+          ...baseFrame,
+          pedestrians: [
+            {
+              id: "bad-person",
+              x_meters: 0,
+              y_meters: 0,
+              heading_degrees: 0,
+              speed_mps: "1",
+              lane_id: null,
+              edge_id: "crosswalk-west",
+              waiting_seconds: 0,
+              source: "sumo_person"
             }
           ]
         },

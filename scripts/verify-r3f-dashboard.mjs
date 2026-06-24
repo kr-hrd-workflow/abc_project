@@ -1443,6 +1443,7 @@ async function collectRendererProof(page) {
             texture_memory_bytes: telemetry.texture_memory_bytes ?? null,
             performance: telemetry.performance ?? null,
             source_labels: telemetry.source_labels ?? null,
+            pedestrian_truth: telemetry.pedestrian_truth ?? null,
             js_heap_bytes: telemetry.js_heap_bytes ?? null,
             emitted_at: telemetry.emitted_at ?? null
           }
@@ -3037,6 +3038,7 @@ async function runDensitySegmentQueueProof(browser, baseUrl) {
     mutatePayloads: (payloads) => {
       payloads.frame = {
         ...payloads.frame,
+        vehicles: [],
         queues: null
       };
     }
@@ -4059,6 +4061,20 @@ function addFinalAssertions() {
     JSON.stringify(telemetry)
   );
   addAssertion(
+    "R3F telemetry separates SUMO and ambient pedestrian sources",
+    desktop.r3f_ready !== true ||
+      (
+        isRecord(telemetry.pedestrian_truth) &&
+        Number.isFinite(telemetry.pedestrian_truth.sumo_pedestrian_count) &&
+        telemetry.pedestrian_truth.sumo_pedestrian_source !== null &&
+        Number.isFinite(telemetry.pedestrian_truth.ambient_pedestrian_count) &&
+        telemetry.pedestrian_truth.ambient_pedestrian_source ===
+          "procedural_background_proxy" &&
+        telemetry.pedestrian_truth.truth_separated === true
+      ),
+    JSON.stringify(telemetry.pedestrian_truth ?? null)
+  );
+  addAssertion(
     "Stage 6 QA telemetry details are normalized with source labels",
     desktop.r3f_ready !== true ||
       (
@@ -4176,12 +4192,12 @@ function addFinalAssertions() {
     `snapshot_source=${renderer.snapshot_source ?? "missing"}, frame_stale=${renderer.frame_stale ?? "missing"}, telemetry_frame_stale=${telemetry.frame_stale ?? "missing"}, frameStaleBadge=${sourceBadges.frameStale ?? "missing"}`
   );
   addAssertion(
-    "R3F renderer uses frame-backed simulation snapshot",
+    "R3F renderer uses frame-backed snapshot vehicles without density fallback",
     desktop.r3f_ready !== true ||
       (
         renderer.snapshot_source === "simulation_snapshot_fixture" &&
         renderer.frame_bound === true &&
-        renderer.traffic_density_mode === "density_segments" &&
+        renderer.traffic_density_mode === "snapshot_vehicles" &&
         renderer.fallback_used === false
       ),
     `snapshot_source=${renderer.snapshot_source ?? "missing"}, frame_bound=${renderer.frame_bound ?? "missing"}, traffic_density_mode=${renderer.traffic_density_mode ?? "missing"}, fallback_used=${renderer.fallback_used ?? "missing"}`
@@ -4335,8 +4351,8 @@ function addFinalAssertions() {
     );
   }
   addAssertion(
-    "frame-backed density mode has at least 80 rendered vehicles",
-    renderer.traffic_density_mode === "density_segments" &&
+    "frame-backed snapshot vehicle mode has at least 80 rendered vehicles",
+    renderer.traffic_density_mode === "snapshot_vehicles" &&
       renderer.frame_bound === true &&
       renderer.visibleVehicleCount >= minVisibleVehicles,
     `mode=${renderer.traffic_density_mode}, frame_bound=${renderer.frame_bound}, visibleVehicleCount=${renderer.visibleVehicleCount ?? "missing"} / ${minVisibleVehicles}`

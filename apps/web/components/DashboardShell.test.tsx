@@ -338,6 +338,7 @@ const stage4RequiredAssetIds = [
   "props/streetlight",
   "props/tree_cluster",
   "props/curb_details",
+  "props/outdoor_table_chair_set_01",
   "textures/wet_asphalt_albedo",
   "textures/wet_asphalt_roughness",
   "decals/worn_lane_markings",
@@ -832,13 +833,18 @@ describe("DashboardShell", () => {
   });
 
   test("allows long-road density fill only from density segments or explicit fixture mode", () => {
-    const densityScene = buildSceneSnapshot(frameSnapshot);
+    const densityScene = buildSceneSnapshot({
+      ...frameSnapshot,
+      vehicles: []
+    });
     const fixtureScene = buildSceneSnapshot({
       ...frameSnapshot,
+      vehicles: [],
       density_segments: []
     });
     const unlabeledScene = buildSceneSnapshot({
       ...frameSnapshot,
+      vehicles: [],
       source: "sumo_traci",
       density_segments: []
     });
@@ -981,7 +987,7 @@ describe("DashboardShell", () => {
     });
   });
 
-  test("invalidates demand rendering after applying the Stage 6 rain camera target", () => {
+  test("invalidates demand rendering after applying the Seoul operator-wide camera target", () => {
     r3fCameraMock.position.set.mockClear();
     r3fCameraMock.lookAt.mockClear();
     r3fCameraMock.updateProjectionMatrix.mockClear();
@@ -996,7 +1002,7 @@ describe("DashboardShell", () => {
       />
     );
 
-    const stage6RainCamera = CAMERA_RIG_PRESETS.nightRainClose;
+    const stage6RainCamera = CAMERA_RIG_PRESETS.operatorWide;
 
     expect(r3fCameraMock.position.set).toHaveBeenCalledWith(
       ...stage6RainCamera.position
@@ -1222,10 +1228,11 @@ describe("DashboardShell", () => {
     expect(STAGE5_STREET_FURNITURE_GLB_ASSET_IDS).toEqual([
       "props/streetlight",
       "props/tree_cluster",
-      "props/curb_details"
+      "props/curb_details",
+      "props/outdoor_table_chair_set_01"
     ]);
-    expect(STAGE5_STREET_FURNITURE_PLACEMENTS).toHaveLength(6);
-    expect(STAGE5_STREET_FURNITURE_CONTACT_SHADOW_PLACEMENTS).toHaveLength(6);
+    expect(STAGE5_STREET_FURNITURE_PLACEMENTS).toHaveLength(7);
+    expect(STAGE5_STREET_FURNITURE_CONTACT_SHADOW_PLACEMENTS).toHaveLength(7);
     expect(
       new Set(
         STAGE5_STREET_FURNITURE_CONTACT_SHADOW_PLACEMENTS.map(
@@ -1233,13 +1240,15 @@ describe("DashboardShell", () => {
         )
       )
     ).toEqual(new Set(STAGE5_STREET_FURNITURE_PLACEMENTS.map((light) => light.id)));
-    expect(STAGE5_FACADE_PANELS).toHaveLength(STAGE6E_CITY_EDGE_BLOCKS.length);
-    expect(STAGE5_FACADE_PANELS.length).toBeGreaterThan(8);
+    expect(STAGE5_FACADE_PANELS.length).toBeGreaterThan(
+      STAGE6E_CITY_EDGE_BLOCKS.length
+    );
+    expect(STAGE5_FACADE_PANELS.length).toBeGreaterThanOrEqual(48);
     expect(new Set(STAGE5_FACADE_PANELS.map((panel) => panel.size[1])).size)
       .toBeGreaterThan(1);
     expect(
       Math.max(...STAGE5_FACADE_PANELS.map((panel) => panel.size[1]))
-    ).toBeLessThanOrEqual(7.2);
+    ).toBeGreaterThanOrEqual(18);
 
     STAGE5_VISIBLE_TRAFFIC_GLB_ASSET_IDS.forEach((assetId) => {
       const asset = getR3FAssetEntry(assetId);
@@ -1288,7 +1297,8 @@ describe("DashboardShell", () => {
       "vehicles/truck_near",
       "props/streetlight",
       "props/tree_cluster",
-      "props/curb_details"
+      "props/curb_details",
+      "props/outdoor_table_chair_set_01"
     ];
 
     expect(new Set(runtimePlan.firstPassAssetIds)).toEqual(
@@ -1317,7 +1327,8 @@ describe("DashboardShell", () => {
       expect.arrayContaining([
         "props/streetlight",
         "props/tree_cluster",
-        "props/curb_details"
+        "props/curb_details",
+        "props/outdoor_table_chair_set_01"
       ])
     );
     expect(runtimePlan.byLod.near).toEqual(
@@ -1325,7 +1336,8 @@ describe("DashboardShell", () => {
         "vehicles/bus_near",
         "vehicles/passenger_car_near",
         "vehicles/taxi_near",
-        "vehicles/truck_near"
+        "vehicles/truck_near",
+        "props/outdoor_table_chair_set_01"
       ])
     );
     expect(runtimePlan.byLod.medium).toEqual(
@@ -1356,7 +1368,8 @@ describe("DashboardShell", () => {
         "vehicles/bus_near",
         "vehicles/passenger_car_near",
         "vehicles/taxi_near",
-        "vehicles/truck_near"
+        "vehicles/truck_near",
+        "props/outdoor_table_chair_set_01"
       ])
     );
     expect(runtimePlan.firstPassPayloadBytes).toBeLessThanOrEqual(
@@ -1367,7 +1380,16 @@ describe("DashboardShell", () => {
       const asset = getR3FAssetEntry(assetId);
 
       expect(asset.path).toMatch(/^\/simulation\/r3f\/assets\/glb\//);
-      expect(asset.details?.provenance).toMatch(/project-authored/i);
+      if (asset.authorship === "third-party") {
+        expect(asset.details?.sourceUrl).toBe(
+          "https://polyhaven.com/a/outdoor_table_chair_set_01"
+        );
+        expect(asset.details?.licenseDocumentation).toBe(
+          "https://polyhaven.com/license"
+        );
+      } else {
+        expect(asset.details?.provenance).toMatch(/project-authored/i);
+      }
     });
   });
 
@@ -1478,8 +1500,6 @@ describe("DashboardShell", () => {
           }>;
           proceduralVehicles: Array<{ assetId: string; sourceLabel: string }>;
           totalInstancedVehicleCount: number;
-          glbVehicles?: unknown[];
-          maxGlbVehicles?: number;
         };
       }
     ).buildStage6EDensityRenderPlan;
@@ -1496,8 +1516,6 @@ describe("DashboardShell", () => {
       (group) => group.assetId
     );
 
-    expect(densityRenderPlan.glbVehicles ?? []).toHaveLength(0);
-    expect(densityRenderPlan.maxGlbVehicles).toBeUndefined();
     expect(densityRenderPlan.proceduralVehicles).toHaveLength(0);
     expect(densityRenderPlan.totalInstancedVehicleCount).toBe(
       plan.farVehicles.length
@@ -1601,7 +1619,7 @@ describe("DashboardShell", () => {
     expect(viewport.getAttribute("data-r3f-photoreal-stage")).toBe("5");
     expect(viewport.getAttribute("data-r3f-snapshot-source")).toBe("simulation_snapshot_fixture");
     expect(viewport.getAttribute("data-r3f-frame-bound")).toBe("true");
-    expect(viewport.getAttribute("data-r3f-traffic-density-mode")).toBe("density_segments");
+    expect(viewport.getAttribute("data-r3f-traffic-density-mode")).toBe("snapshot_vehicles");
     expect(viewport.getAttribute("data-r3f-signal-state")).toBe("east:green,north:red");
     expect(viewport.getAttribute("data-r3f-scenario-id")).toBe("emergency");
     expect(viewport.getAttribute("data-r3f-queue-source")).toBe("frame");
@@ -1615,7 +1633,7 @@ describe("DashboardShell", () => {
       Number(viewport.getAttribute("data-r3f-visible-vehicle-count"))
     ).toBeGreaterThan(0);
     expect(viewport.getAttribute("data-r3f-glb-vehicle-count")).toBe("5");
-    expect(viewport.getAttribute("data-r3f-street-shadow-count")).toBe("6");
+    expect(viewport.getAttribute("data-r3f-street-shadow-count")).toBe("7");
     expect(viewport.getAttribute("data-r3f-vehicle-silhouette-part-count")).toBe("12");
   });
 
@@ -1709,7 +1727,7 @@ describe("DashboardShell", () => {
     const viewport = await screen.findByTestId("r3f-simulation-viewport");
 
     expect(viewport.getAttribute("data-r3f-frame-bound")).toBe("true");
-    expect(viewport.getAttribute("data-r3f-traffic-density-mode")).toBe("density_segments");
+    expect(viewport.getAttribute("data-r3f-traffic-density-mode")).toBe("snapshot_vehicles");
     expect(viewport.getAttribute("data-r3f-queue-source")).toBe("density_segment");
     expect(screen.getByTestId("r3f-queue-source-badge").textContent).toContain(
       "density_segment"

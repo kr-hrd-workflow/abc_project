@@ -48,6 +48,13 @@ describe("R3F telemetry", () => {
       triangles: 42000,
       textureMemoryBytes: null,
       textureMemoryEstimateMb: 8.5,
+      pedestrianTruth: {
+        sumoPedestrianCount: 2,
+        sumoPedestrianSource: "simulation_frame_snapshot",
+        ambientPedestrianCount: 6,
+        ambientPedestrianSource: "procedural_background_proxy",
+        truthSeparated: true
+      },
       jsHeapBytes: 2048,
       authoritativeTickDriftMs: 5,
       emittedAt: "2026-06-18T00:00:00.000Z"
@@ -100,6 +107,13 @@ describe("R3F telemetry", () => {
         stale: false,
         fallback_reason: null
       },
+      pedestrian_truth: {
+        sumo_pedestrian_count: 2,
+        sumo_pedestrian_source: "simulation_frame_snapshot",
+        ambient_pedestrian_count: 6,
+        ambient_pedestrian_source: "procedural_background_proxy",
+        truth_separated: true
+      },
       js_heap_bytes: 2048,
       authoritative_tick_drift_ms: 5,
       emitted_at: "2026-06-18T00:00:00.000Z"
@@ -151,6 +165,13 @@ describe("R3F telemetry", () => {
       snapshot_source: "simulation_snapshot_fixture",
       stale: false,
       fallback_reason: null
+    });
+    expect(event.pedestrian_truth).toEqual({
+      sumo_pedestrian_count: null,
+      sumo_pedestrian_source: null,
+      ambient_pedestrian_count: null,
+      ambient_pedestrian_source: null,
+      truth_separated: false
     });
   });
 });

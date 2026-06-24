@@ -8,6 +8,7 @@ from collections.abc import Callable
 from dataclasses import dataclass
 from datetime import UTC, datetime
 from importlib import import_module
+from math import isfinite
 from pathlib import Path
 from shutil import which
 from typing import Literal, Protocol, cast
@@ -17,6 +18,7 @@ from app.domain.schemas import QueueMetrics, TrafficEventRead
 from app.domain.simulation_snapshot import (
     SimulationDensitySegment,
     SimulationFrameSnapshot,
+    SimulationPedestrianSnapshot,
     SimulationSignalSnapshot,
     SimulationVehicleSnapshot,
 )
@@ -33,6 +35,7 @@ NEAR_STOPPED_SPEED_MPS = 0.5
 BLOCKED_LANE_SPEED_MPS = 0.2
 HIGH_WAIT_SECONDS = 60.0
 SAFE_SCENARIO_ID_PATTERN = re.compile(r"^[A-Za-z0-9_-]+$")
+SUMO_INVALID_POSITION_SENTINEL = float(-(2**30))
 
 
 class SumoRuntimeError(RuntimeError):
@@ -348,6 +351,7 @@ def build_sumo_simulation_frame(
 ) -> SimulationFrameSnapshot:
     captured_at = datetime.now(UTC)
     vehicles = _map_vehicles(client)
+    pedestrians = _map_pedestrians(client)
     density_segments = _map_density_segments(client)
     queues = _map_queues(client)
     return SimulationFrameSnapshot(
@@ -358,6 +362,7 @@ def build_sumo_simulation_frame(
         captured_at=captured_at,
         bounds_meters=SNAPSHOT_BOUNDS_METERS,
         vehicles=vehicles,
+        pedestrians=pedestrians,
         density_segments=density_segments,
         signals=_map_signals(client),
         queues=queues,
@@ -395,6 +400,138 @@ def _map_vehicles(client: SumoClient) -> list[SimulationVehicleSnapshot]:
             )
         )
     return vehicles
+
+
+def _map_pedestrians(client: SumoClient) -> list[SimulationPedestrianSnapshot]:
+    person_api = getattr(client, "person", None)
+    get_id_list = getattr(person_api, "getIDList", None)
+    if not callable(get_id_list):
+        return []
+    try:
+        person_ids = get_id_list()
+    except Exception:
+        return []
+
+    pedestrians: list[SimulationPedestrianSnapshot] = []
+    for raw_person_id in person_ids:
+        pedestrian = _map_person(person_api, str(raw_person_id))
+        if pedestrian is not None:
+            pedestrians.append(pedestrian)
+    return pedestrians
+
+
+def _map_person(
+    person_api: object,
+    person_id: str,
+) -> SimulationPedestrianSnapshot | None:
+    try:
+        position = _person_position(person_api, person_id)
+        if position is None:
+            return None
+        x_meters, y_meters = position
+        return SimulationPedestrianSnapshot(
+            id=person_id,
+            x_meters=x_meters,
+            y_meters=y_meters,
+            heading_degrees=_required_person_float(
+                person_api,
+                "getAngle",
+                person_id,
+            ),
+            speed_mps=_required_person_float(person_api, "getSpeed", person_id),
+            lane_id=_optional_person_string(person_api, ("getLaneID",), person_id),
+            edge_id=_optional_person_string(
+                person_api,
+                ("getRoadID", "getEdgeID"),
+                person_id,
+            ),
+            # Waiting time is optional across SUMO adapters; 0.0 means unavailable,
+            # not inferred wait truth.
+            waiting_seconds=_optional_person_float(
+                person_api,
+                "getWaitingTime",
+                person_id,
+                default=0.0,
+            ),
+            source="sumo_person",
+        )
+    except Exception:
+        return None
+
+
+def _person_position(
+    person_api: object,
+    person_id: str,
+) -> tuple[float, float] | None:
+    get_position = getattr(person_api, "getPosition", None)
+    if not callable(get_position):
+        return None
+    raw_position = get_position(person_id)
+    try:
+        x_meters = float(raw_position[0])
+        y_meters = float(raw_position[1])
+    except (TypeError, IndexError, ValueError):
+        return None
+    if (
+        not isfinite(x_meters)
+        or not isfinite(y_meters)
+        or x_meters == SUMO_INVALID_POSITION_SENTINEL
+        or y_meters == SUMO_INVALID_POSITION_SENTINEL
+    ):
+        return None
+    return x_meters, y_meters
+
+
+def _required_person_float(
+    person_api: object,
+    method_name: str,
+    person_id: str,
+) -> float:
+    method = getattr(person_api, method_name, None)
+    if not callable(method):
+        raise AttributeError(method_name)
+    value = float(method(person_id))
+    if not isfinite(value):
+        raise ValueError(method_name)
+    return value
+
+
+def _optional_person_float(
+    person_api: object,
+    method_name: str,
+    person_id: str,
+    *,
+    default: float,
+) -> float:
+    method = getattr(person_api, method_name, None)
+    if not callable(method):
+        return default
+    try:
+        value = float(method(person_id))
+    except (TypeError, ValueError):
+        return default
+    return value if isfinite(value) else default
+
+
+def _optional_person_string(
+    person_api: object,
+    method_names: tuple[str, ...],
+    person_id: str,
+) -> str | None:
+    for method_name in method_names:
+        method = getattr(person_api, method_name, None)
+        if not callable(method):
+            continue
+        try:
+            value = method(person_id)
+        except Exception:
+            continue
+        if value is None:
+            continue
+        text = str(value)
+        if text:
+            return text
+    return None
 
 
 def _map_signals(client: SumoClient) -> list[SimulationSignalSnapshot]:

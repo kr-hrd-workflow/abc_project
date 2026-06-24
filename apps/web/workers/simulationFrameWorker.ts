@@ -91,6 +91,8 @@ function normalizeSimulationFrame(value: unknown): SimulationFrameSnapshot | nul
   if (!boundsMeters) return null;
   const vehicles = normalizeVehicles(value.vehicles);
   if (!vehicles) return null;
+  const pedestrians = normalizePedestrians(value.pedestrians);
+  if (!pedestrians) return null;
   const densitySegments = normalizeDensitySegments(value.density_segments);
   if (!densitySegments) return null;
   const signals = normalizeSignals(value.signals);
@@ -111,6 +113,7 @@ function normalizeSimulationFrame(value: unknown): SimulationFrameSnapshot | nul
     captured_at: capturedAt,
     bounds_meters: boundsMeters,
     vehicles,
+    pedestrians,
     density_segments: densitySegments,
     signals,
     queues,
@@ -159,6 +162,50 @@ function normalizeVehicles(
   }
 
   return vehicles;
+}
+
+function normalizePedestrians(
+  value: unknown
+): SimulationFrameSnapshot["pedestrians"] | null {
+  if (typeof value === "undefined") return [];
+  if (!Array.isArray(value)) return null;
+
+  const pedestrians: NonNullable<SimulationFrameSnapshot["pedestrians"]> = [];
+  for (const pedestrian of value) {
+    if (!isRecord(pedestrian)) return null;
+    if (typeof pedestrian.id !== "string") return null;
+    if (pedestrian.source !== "sumo_person") return null;
+    const xMeters = finiteNumber(pedestrian.x_meters);
+    const yMeters = finiteNumber(pedestrian.y_meters);
+    const headingDegrees = finiteNumber(pedestrian.heading_degrees);
+    const speedMps = finiteNumber(pedestrian.speed_mps);
+    const waitingSeconds = finiteNumber(pedestrian.waiting_seconds);
+    if (
+      xMeters === null ||
+      yMeters === null ||
+      headingDegrees === null ||
+      speedMps === null ||
+      waitingSeconds === null ||
+      !isOptionalString(pedestrian.lane_id) ||
+      !isOptionalString(pedestrian.edge_id)
+    ) {
+      return null;
+    }
+
+    pedestrians.push({
+      id: pedestrian.id,
+      x_meters: xMeters,
+      y_meters: yMeters,
+      heading_degrees: headingDegrees,
+      speed_mps: speedMps,
+      lane_id: pedestrian.lane_id ?? null,
+      edge_id: pedestrian.edge_id ?? null,
+      waiting_seconds: waitingSeconds,
+      source: pedestrian.source
+    });
+  }
+
+  return pedestrians;
 }
 
 function normalizeDensitySegments(
@@ -304,6 +351,9 @@ function cloneEntry(entry: SimulationFrameBufferEntry): SimulationFrameBufferEnt
       ...entry.frame,
       bounds_meters: { ...entry.frame.bounds_meters },
       vehicles: entry.frame.vehicles.map((vehicle) => ({ ...vehicle })),
+      pedestrians: entry.frame.pedestrians?.map((pedestrian) => ({
+        ...pedestrian
+      })) ?? [],
       density_segments: entry.frame.density_segments.map((segment) => ({ ...segment })),
       signals: entry.frame.signals.map((signal) => ({ ...signal })),
       queues: { ...entry.frame.queues },
@@ -322,6 +372,14 @@ function integerNumber(value: unknown) {
 
 function isRecord(value: unknown): value is Record<string, unknown> {
   return Boolean(value) && typeof value === "object";
+}
+
+function isOptionalString(value: unknown) {
+  return (
+    typeof value === "undefined" ||
+    value === null ||
+    typeof value === "string"
+  );
 }
 
 function isVehicleType(

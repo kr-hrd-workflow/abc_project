@@ -954,6 +954,71 @@
     },
     "provenanceEvidencePath": "docs/compliance/r3f-asset-licenses.md"
   },
+  "props/outdoor_table_chair_set_01": {
+    "id": "props/outdoor_table_chair_set_01",
+    "path": "/simulation/r3f/assets/glb/props/outdoor_table_chair_set_01.glb",
+    "kind": "prop",
+    "source": "polyhaven-outdoor-table-chair-set-01",
+    "license": "CC0",
+    "units": "meters",
+    "pbr": true,
+    "lod": "near",
+    "maxTextureSize": 1024,
+    "maxTriangles": 12000,
+    "maxFileSizeBytes": 1300000,
+    "realisticSilhouette": true,
+    "realismStatus": "stage4_1_ready",
+    "visualRejectIfToyLike": true,
+    "details": {
+      "scaleReferenceMeters": {
+        "sourceFootprintLength": 1.83,
+        "sourceFootprintDepth": 0.78,
+        "sourceMaximumHeight": 0.86
+      },
+      "functionalParts": [
+        "two folding chairs",
+        "folding table",
+        "wood chair slats",
+        "wood table slats",
+        "thin metal chair frames",
+        "thin metal table frame",
+        "separate chair backs",
+        "separate chair seats",
+        "ground-contact feet"
+      ],
+      "groundContact": true,
+      "pbrMaterials": [
+        "wood slat base color",
+        "metal frame metallic roughness",
+        "chair normal texture",
+        "table normal texture",
+        "1k embedded jpeg pbr textures"
+      ],
+      "sourceUrl": "https://polyhaven.com/a/outdoor_table_chair_set_01",
+      "licenseDocumentation": "https://polyhaven.com/license",
+      "sourceAuthor": "James Ray Cock / Poly Haven",
+      "downloadPackage": "Poly Haven 1K glTF package converted to a single GLB with glTF-Transform 4.4.0 copy",
+      "realismNotes": "compact outdoor table and two chairs provide a human-scale sidewalk seating cue for the Seoul/Gangnam facade edge without introducing real brand or storefront logos",
+      "triangleCount": 9828,
+      "fileSizeBytes": 1239772,
+      "provenance": "Downloaded after explicit user approval on 2026-06-24 from the Poly Haven 1K glTF package for Outdoor Table Chair Set 01, authored by James Ray Cock / Poly Haven and licensed CC0; converted to one runtime GLB with glTF-Transform copy and no real brands, logos, storefronts, or SUMO truth data were introduced."
+    },
+    "authorship": "third-party",
+    "runtimeUsage": "single sidewalk cafe-style seating prop in the R3F dashboard scene dressing layer",
+    "pbrChannels": [
+      "baseColor",
+      "metallic",
+      "roughness",
+      "normal"
+    ],
+    "compression": {
+      "status": "uncompressed-under-budget",
+      "geometry": "raw-glb-2.0-embedded-buffer",
+      "texture": "embedded-1k-jpeg-pbr",
+      "evidence": "npm --workspace apps/web exec gltf-transform -- inspect public/simulation/r3f/assets/glb/props/outdoor_table_chair_set_01.glb"
+    },
+    "provenanceEvidencePath": "docs/compliance/r3f-asset-licenses.md"
+  },
   "textures/wet_asphalt_albedo": {
     "id": "textures/wet_asphalt_albedo",
     "path": "/simulation/r3f/assets/textures/wet_asphalt_albedo.webp",

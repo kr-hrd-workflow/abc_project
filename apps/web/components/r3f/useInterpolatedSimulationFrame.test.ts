@@ -2,12 +2,25 @@ import { describe, expect, test } from "vitest";
 
 import type {
   SimulationFrameBufferEntry,
-  SimulationFrameSnapshot
+  SimulationFrameSnapshot,
+  SimulationPedestrianSnapshot
 } from "../../lib/simulationSnapshot";
 import {
   interpolateHeadingDegrees,
   interpolateSimulationFrame
 } from "./useInterpolatedSimulationFrame";
+
+const basePedestrian: SimulationPedestrianSnapshot = {
+  id: "person-1",
+  x_meters: -2,
+  y_meters: 4,
+  heading_degrees: 90,
+  speed_mps: 1.2,
+  lane_id: "west_crosswalk",
+  edge_id: null,
+  waiting_seconds: 0,
+  source: "sumo_person"
+};
 
 const baseFrame: SimulationFrameSnapshot = {
   source: "sumo_traci",
@@ -29,6 +42,7 @@ const baseFrame: SimulationFrameSnapshot = {
       emergency: false
     }
   ],
+  pedestrians: [basePedestrian],
   density_segments: [],
   signals: [
     {
@@ -179,6 +193,79 @@ describe("interpolateSimulationFrame", () => {
     ]);
   });
 
+  test("interpolates pedestrians by id and keeps missing next pedestrians until the frame boundary", () => {
+    const nextFrame: SimulationFrameSnapshot = {
+      ...baseFrame,
+      sim_time_seconds: 10.1,
+      captured_at: "2026-06-18T00:00:10.100Z",
+      pedestrians: [
+        {
+          ...basePedestrian,
+          x_meters: 2,
+          y_meters: 8,
+          heading_degrees: 180,
+          speed_mps: 0.6,
+          waiting_seconds: 3
+        },
+        {
+          ...basePedestrian,
+          id: "person-entering",
+          x_meters: 8
+        }
+      ]
+    };
+
+    const beforeBoundary = interpolateSimulationFrame(
+      [entry(baseFrame, 1000), entry(nextFrame, 1100)],
+      {
+        nowMs: 1200,
+        interpolationDelayMs: 150
+      }
+    );
+
+    expect(
+      beforeBoundary.frame?.pedestrians?.map((pedestrian) => pedestrian.id)
+    ).toEqual(["person-1"]);
+    const interpolatedPedestrian = beforeBoundary.frame?.pedestrians?.[0];
+    expect(interpolatedPedestrian?.x_meters).toBeCloseTo(0);
+    expect(interpolatedPedestrian?.y_meters).toBeCloseTo(6);
+    expect(interpolatedPedestrian?.heading_degrees).toBeCloseTo(135);
+    expect(interpolatedPedestrian?.speed_mps).toBeCloseTo(0.9);
+    expect(interpolatedPedestrian?.waiting_seconds).toBeCloseTo(1.5);
+
+    const atBoundary = interpolateSimulationFrame(
+      [entry(baseFrame, 1000), entry(nextFrame, 1100)],
+      {
+        nowMs: 1250,
+        interpolationDelayMs: 150
+      }
+    );
+
+    expect(
+      atBoundary.frame?.pedestrians?.map((pedestrian) => pedestrian.id)
+    ).toEqual(["person-1", "person-entering"]);
+  });
+
+  test("extrapolates pedestrians in the bounded window and clones them safely", () => {
+    const fresh = interpolateSimulationFrame([entry(baseFrame, 1000)], {
+      nowMs: 1200,
+      interpolationDelayMs: 150,
+      maxExtrapolationMs: 300,
+      staleAfterMs: 1000
+    });
+
+    const freshPedestrian = fresh.frame?.pedestrians?.[0];
+
+    expect(freshPedestrian?.x_meters).toBeCloseTo(-2);
+    expect(freshPedestrian?.y_meters).toBeCloseTo(4.06);
+
+    if (freshPedestrian) {
+      freshPedestrian.x_meters = 99;
+    }
+
+    expect(basePedestrian.x_meters).toBe(-2);
+  });
+
   test("extrapolates a missing next frame only for the bounded window before marking stale", () => {
     const fresh = interpolateSimulationFrame([entry(baseFrame, 1000)], {
       nowMs: 1200,
@@ -206,6 +293,7 @@ describe("interpolateSimulationFrame", () => {
     const densityFrame: SimulationFrameSnapshot = {
       ...baseFrame,
       vehicles: [],
+      pedestrians: [],
       density_segments: [
         {
           segment_id: "west-queue-1",
@@ -226,6 +314,7 @@ describe("interpolateSimulationFrame", () => {
     });
 
     expect(interpolated.frame?.vehicles).toEqual([]);
+    expect(interpolated.frame?.pedestrians).toEqual([]);
     expect(interpolated.frame?.density_segments).toHaveLength(1);
   });
 });

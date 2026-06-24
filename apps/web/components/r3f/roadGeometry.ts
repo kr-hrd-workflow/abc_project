@@ -101,8 +101,10 @@ export const CORRIDOR_LENGTH_METERS: Record<Direction, number> = {
 
 const HALF_INTERSECTION = INTERSECTION_BOX_METERS / 2;
 const MARKING_HEIGHT = 0.018;
-const LANE_DIVIDER_MARKING_WIDTH = 0.58;
-const CROSSWALK_STRIPE_WIDTH = 0.86;
+const LANE_DIVIDER_MARKING_WIDTH = 0.46;
+const LANE_DIVIDER_SEGMENT_LENGTH = 7.8;
+const LANE_DIVIDER_SEGMENT_GAP = 5.2;
+const CROSSWALK_STRIPE_WIDTH = 0.62;
 const CURB_WIDTH = 0.45;
 const CURB_HEIGHT = 0.22;
 const SIDEWALK_WIDTH = 5.5;
@@ -158,32 +160,46 @@ export const APPROACH_CORRIDORS: ApproachCorridorSpec[] = [
 export const LANE_DIVIDER_MARKINGS = APPROACH_CORRIDORS.flatMap((corridor) => {
   const dividers: PlanePrimitiveSpec[] = [];
   const laneCount = corridor.inboundLanes + corridor.outboundLanes;
+  const usableLength = corridor.lengthMeters - 12;
+  const segmentPitch = LANE_DIVIDER_SEGMENT_LENGTH + LANE_DIVIDER_SEGMENT_GAP;
+  const segmentCount = Math.max(4, Math.floor(usableLength / segmentPitch));
+  const firstSegmentOffset = -usableLength / 2 + LANE_DIVIDER_SEGMENT_LENGTH / 2;
 
   for (let laneIndex = 1; laneIndex < laneCount; laneIndex += 1) {
     const laneOffset = -ROAD_WIDTH_METERS / 2 + laneIndex * LANE_WIDTH_METERS;
 
-    if (corridor.orientation === "north_south") {
-      dividers.push({
-        id: `${corridor.direction}-lane-divider-${laneIndex}`,
-        direction: corridor.direction,
-        position: [
-          laneOffset,
-          MARKING_HEIGHT,
-          corridor.position[2]
-        ],
-        size: [LANE_DIVIDER_MARKING_WIDTH, corridor.lengthMeters - 8]
-      });
-    } else {
-      dividers.push({
-        id: `${corridor.direction}-lane-divider-${laneIndex}`,
-        direction: corridor.direction,
-        position: [
-          corridor.position[0],
-          MARKING_HEIGHT,
-          laneOffset
-        ],
-        size: [corridor.lengthMeters - 8, LANE_DIVIDER_MARKING_WIDTH]
-      });
+    for (let segmentIndex = 0; segmentIndex < segmentCount; segmentIndex += 1) {
+      const along = firstSegmentOffset + segmentIndex * segmentPitch;
+      const wearPattern = (segmentIndex + laneIndex) % 4;
+      const segmentLength =
+        LANE_DIVIDER_SEGMENT_LENGTH * (wearPattern === 0 ? 0.72 : 0.92);
+      const segmentWidth =
+        LANE_DIVIDER_MARKING_WIDTH * (wearPattern === 1 ? 0.82 : 1);
+      const laneWobble = (wearPattern - 1.5) * 0.035;
+
+      if (corridor.orientation === "north_south") {
+        dividers.push({
+          id: `${corridor.direction}-lane-divider-${laneIndex}-segment-${segmentIndex}`,
+          direction: corridor.direction,
+          position: [
+            laneOffset + laneWobble,
+            MARKING_HEIGHT,
+            corridor.position[2] + along
+          ],
+          size: [segmentWidth, segmentLength]
+        });
+      } else {
+        dividers.push({
+          id: `${corridor.direction}-lane-divider-${laneIndex}-segment-${segmentIndex}`,
+          direction: corridor.direction,
+          position: [
+            corridor.position[0] + along,
+            MARKING_HEIGHT,
+            laneOffset + laneWobble
+          ],
+          size: [segmentLength, segmentWidth]
+        });
+      }
     }
   }
 
@@ -325,9 +341,11 @@ export function getCorridorLengthDataAttribute() {
 
 function buildCrosswalkStripes(): PlanePrimitiveSpec[] {
   const stripes: PlanePrimitiveSpec[] = [];
-  const stripeCount = 7;
-  const spacing = 1.1;
-  const crosswalkOffset = HALF_INTERSECTION + 3.2;
+  const stripeCount = 11;
+  const crosswalkLateralSpan = ROAD_WIDTH_METERS - 1.4;
+  const spacing = crosswalkLateralSpan / (stripeCount - 1);
+  const crosswalkOffset = HALF_INTERSECTION + 2.75;
+  const crosswalkDepth = 5.0;
   const centeredIndex = (stripeCount - 1) / 2;
 
   for (let index = 0; index < stripeCount; index += 1) {
@@ -336,25 +354,25 @@ function buildCrosswalkStripes(): PlanePrimitiveSpec[] {
       id: `north-crosswalk-${index}`,
       direction: "north",
       position: [offset, MARKING_HEIGHT + 0.008, -crosswalkOffset],
-      size: [CROSSWALK_STRIPE_WIDTH, ROAD_WIDTH_METERS + 0.8]
+      size: [CROSSWALK_STRIPE_WIDTH, crosswalkDepth]
     });
     stripes.push({
       id: `south-crosswalk-${index}`,
       direction: "south",
       position: [offset, MARKING_HEIGHT + 0.008, crosswalkOffset],
-      size: [CROSSWALK_STRIPE_WIDTH, ROAD_WIDTH_METERS + 0.8]
+      size: [CROSSWALK_STRIPE_WIDTH, crosswalkDepth]
     });
     stripes.push({
       id: `east-crosswalk-${index}`,
       direction: "east",
       position: [crosswalkOffset, MARKING_HEIGHT + 0.008, offset],
-      size: [ROAD_WIDTH_METERS + 0.8, CROSSWALK_STRIPE_WIDTH]
+      size: [crosswalkDepth, CROSSWALK_STRIPE_WIDTH]
     });
     stripes.push({
       id: `west-crosswalk-${index}`,
       direction: "west",
       position: [-crosswalkOffset, MARKING_HEIGHT + 0.008, offset],
-      size: [ROAD_WIDTH_METERS + 0.8, CROSSWALK_STRIPE_WIDTH]
+      size: [crosswalkDepth, CROSSWALK_STRIPE_WIDTH]
     });
   }
 
@@ -476,7 +494,7 @@ function buildStage6ECityEdgeBlocks(): CityEdgeBlockSpec[] {
 }
 
 function getStage6ECityEdgeHeight(buildingId: string, segmentIndex: number) {
-  const heights = [4.8, 6.2, 5.4, 7.1, 5.0, 6.6, 4.5] as const;
+  const heights = [16, 23, 18.5, 31, 14.5, 27, 20.5] as const;
   return heights[getStage6EPatternIndex(buildingId, segmentIndex, heights.length)];
 }
 

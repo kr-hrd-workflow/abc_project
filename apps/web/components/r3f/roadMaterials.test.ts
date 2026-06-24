@@ -9,7 +9,10 @@ import {
   ROAD_MATERIALS,
   getStage6RoadMaterialCoverage
 } from "./roadMaterials";
-import { getStage6FacadePanelMaterialContract } from "./Stage5SceneAssets";
+import {
+  STAGE5_FACADE_PANELS,
+  getStage6FacadePanelMaterialContract
+} from "./Stage5SceneAssets";
 import {
   STAGE6_WEATHER_ATLAS_PATH,
   getStage6WeatherAtlasCell
@@ -172,6 +175,17 @@ describe("Stage 6 road material contract", () => {
       color: "#d2c6aa",
       opacity: 0.54
     });
+  });
+
+  test("uses taller segmented facade panels for Gangnam office-tower scale", () => {
+    const panelHeights = STAGE5_FACADE_PANELS.map((panel) => panel.size[1]);
+    const roundedPanelHeights = new Set(
+      panelHeights.map((height) => Math.round(height * 10) / 10)
+    );
+
+    expect(Math.max(...panelHeights)).toBeGreaterThanOrEqual(18);
+    expect(roundedPanelHeights.size).toBeGreaterThanOrEqual(5);
+    expect(STAGE5_FACADE_PANELS.length).toBeGreaterThanOrEqual(48);
   });
 
   test("keeps wet road paint readable under rainy CCTV proof", () => {

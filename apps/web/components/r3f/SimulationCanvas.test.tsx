@@ -6,7 +6,12 @@ import {
   SRGBColorSpace,
   type WebGLRenderer
 } from "three";
-import { Children, isValidElement, type ReactElement } from "react";
+import {
+  Children,
+  isValidElement,
+  type ReactElement,
+  type ReactNode
+} from "react";
 import { describe, expect, test, vi } from "vitest";
 
 import {
@@ -42,6 +47,10 @@ import type {
   SimulationSignalSnapshot,
   SimulationVehicleSnapshot
 } from "../../lib/simulationSnapshot";
+
+type TestElementProps = {
+  children?: ReactNode;
+};
 
 function createWebGLContextMock(
   contextLost = false
@@ -167,6 +176,17 @@ describe("SimulationCanvas Stage 5 telemetry", () => {
     viewport.setAttribute("data-r3f-weather-particles-enabled", "true");
     viewport.setAttribute("data-r3f-high-quality-vehicle-count", "14");
     viewport.setAttribute("data-r3f-texture-memory-estimate-mb", "12");
+    viewport.setAttribute("data-r3f-sumo-pedestrian-count", "2");
+    viewport.setAttribute(
+      "data-r3f-sumo-pedestrian-source",
+      "simulation_frame_snapshot"
+    );
+    viewport.setAttribute("data-r3f-ambient-pedestrian-count", "6");
+    viewport.setAttribute(
+      "data-r3f-ambient-pedestrian-source",
+      "procedural_background_proxy"
+    );
+    viewport.setAttribute("data-r3f-pedestrian-truth-separated", "true");
     viewport.append(renderer.domElement);
     document.body.append(viewport);
 
@@ -242,7 +262,14 @@ describe("SimulationCanvas Stage 5 telemetry", () => {
           draw_calls: 128,
           visible_vehicles: 160,
           texture_memory_estimate_mb: 12
-        })
+        }),
+        pedestrian_truth: {
+          sumo_pedestrian_count: 2,
+          sumo_pedestrian_source: "simulation_frame_snapshot",
+          ambient_pedestrian_count: 6,
+          ambient_pedestrian_source: "procedural_background_proxy",
+          truth_separated: true
+        }
       })
     );
     expect(STAGE5_DRAW_CALL_BUDGET).toBe(900);
@@ -291,6 +318,7 @@ describe("SimulationCanvas Stage 5 telemetry", () => {
       "EnvironmentLayer",
       "StaticRoadLayer",
       "DynamicVehicleLayer",
+      "DynamicPedestrianLayer",
       "SignalLayer"
     ]);
   });
@@ -337,9 +365,11 @@ function buildShadowCountSceneSnapshot({
     ...baseSnapshot,
     source: "simulation_snapshot_fixture",
     vehicles: buildVehicles(vehicleCount),
+    pedestrians: [],
     densitySegments: includeDensity ? [buildDensitySegment()] : [],
     signals: buildSignals(),
     preciseVehicleSource: vehicleCount > 0 ? "simulation_frame_snapshot" : "none",
+    precisePedestrianSource: "none",
     allowsDensityFill: includeDensity,
     densityFillSource: includeDensity ? "density_segments" : "none",
     trafficDensityMode: includeDensity ? "density_segments" : "snapshot_vehicles",
@@ -385,22 +415,25 @@ function buildDensitySegment(): SimulationDensitySegment {
   };
 }
 
-function getChildDisplayNames(element: ReactElement) {
+function getChildDisplayNames(element: ReactElement<TestElementProps>) {
   return Children.toArray(element.props.children)
-    .filter(isValidElement)
-    .map((child) => getElementDisplayName(child as ReactElement));
+    .filter((child): child is ReactElement => isValidElement(child))
+    .map(getElementDisplayName);
 }
 
 function getElementDisplayName(element: ReactElement) {
-  const type = element.type;
+  const type = element.type as unknown;
 
   if (typeof type === "string") return type;
   if (typeof type === "symbol") return type.description ?? "symbol";
-  if ("displayName" in type && typeof type.displayName === "string") {
-    return type.displayName;
-  }
-  if ("name" in type && typeof type.name === "string") {
-    return type.name;
+  if (type && (typeof type === "function" || typeof type === "object")) {
+    const candidate = type as { displayName?: unknown; name?: unknown };
+    if (typeof candidate.displayName === "string") {
+      return candidate.displayName;
+    }
+    if (typeof candidate.name === "string") {
+      return candidate.name;
+    }
   }
 
   return "unknown";

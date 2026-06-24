@@ -19,6 +19,20 @@ export type SimulationVehicleSnapshot = {
   emergency: boolean;
 };
 
+export type SimulationPedestrianSnapshotSource = "sumo_person";
+
+export type SimulationPedestrianSnapshot = {
+  id: string;
+  x_meters: number;
+  y_meters: number;
+  heading_degrees: number;
+  speed_mps: number;
+  lane_id?: string | null;
+  edge_id?: string | null;
+  waiting_seconds: number;
+  source: SimulationPedestrianSnapshotSource;
+};
+
 export type SimulationDensitySegmentSource =
   | "aggregate_density_proxy"
   | "fixture_density_proxy";
@@ -51,6 +65,7 @@ export type SimulationFrameSnapshot = {
   captured_at: string;
   bounds_meters: Record<string, number>;
   vehicles: SimulationVehicleSnapshot[];
+  pedestrians?: SimulationPedestrianSnapshot[];
   density_segments: SimulationDensitySegment[];
   signals: SimulationSignalSnapshot[];
   queues: QueueMetrics;

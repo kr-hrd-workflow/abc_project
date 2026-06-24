@@ -566,6 +566,16 @@ function publishStage5Telemetry(
     viewport,
     "data-r3f-texture-memory-estimate-mb"
   );
+  const sumoPedestrianCount = readNumberAttribute(
+    viewport,
+    "data-r3f-sumo-pedestrian-count"
+  );
+  const ambientPedestrianCount = readNumberAttribute(
+    viewport,
+    "data-r3f-ambient-pedestrian-count"
+  );
+  const pedestrianTruthSeparated =
+    viewport?.getAttribute("data-r3f-pedestrian-truth-separated") === "true";
 
   publishR3FTelemetryEvent(
     buildR3FTelemetryEvent({
@@ -622,6 +632,15 @@ function publishStage5Telemetry(
         reason: textureMemoryEstimateMb === null
           ? "texture memory estimate was not reported by DOM attributes"
           : null
+      },
+      pedestrianTruth: {
+        sumoPedestrianCount,
+        sumoPedestrianSource:
+          viewport?.getAttribute("data-r3f-sumo-pedestrian-source") ?? null,
+        ambientPedestrianCount,
+        ambientPedestrianSource:
+          viewport?.getAttribute("data-r3f-ambient-pedestrian-source") ?? null,
+        truthSeparated: pedestrianTruthSeparated
       },
       jsHeapBytes: proof.jsHeapBytes,
       authoritativeTickDriftMs

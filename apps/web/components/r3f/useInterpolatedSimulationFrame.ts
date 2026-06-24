@@ -6,6 +6,7 @@ import type {
   SimulationFrameBufferEntry,
   SimulationFrameSnapshot,
   SimulationFrameTelemetry,
+  SimulationPedestrianSnapshot,
   SimulationVehicleSnapshot
 } from "../../lib/simulationSnapshot";
 import {
@@ -210,6 +211,9 @@ function interpolateBetweenFrames(
   const nextVehicleById = new Map(
     next.vehicles.map((vehicle) => [vehicle.id, vehicle])
   );
+  const nextPedestrianById = new Map(
+    getFramePedestrians(next).map((pedestrian) => [pedestrian.id, pedestrian])
+  );
 
   if (ratio >= 1) {
     return {
@@ -236,6 +240,13 @@ function interpolateBetweenFrames(
       return nextVehicle
         ? interpolateVehicle(vehicle, nextVehicle, ratio)
         : { ...vehicle };
+    }),
+    pedestrians: getFramePedestrians(previous).map((pedestrian) => {
+      const nextPedestrian = nextPedestrianById.get(pedestrian.id);
+
+      return nextPedestrian
+        ? interpolatePedestrian(pedestrian, nextPedestrian, ratio)
+        : { ...pedestrian };
     })
   };
 }
@@ -249,6 +260,9 @@ function extrapolateFrame(
     sim_time_seconds: frame.sim_time_seconds + extrapolationSeconds,
     vehicles: frame.vehicles.map((vehicle) =>
       extrapolateVehicle(vehicle, extrapolationSeconds)
+    ),
+    pedestrians: getFramePedestrians(frame).map((pedestrian) =>
+      extrapolatePedestrian(pedestrian, extrapolationSeconds)
     )
   };
 }
@@ -290,16 +304,64 @@ function extrapolateVehicle(
   };
 }
 
+function interpolatePedestrian(
+  previous: SimulationPedestrianSnapshot,
+  next: SimulationPedestrianSnapshot,
+  ratio: number
+): SimulationPedestrianSnapshot {
+  return {
+    ...previous,
+    lane_id: ratio >= 1 ? next.lane_id : previous.lane_id,
+    edge_id: ratio >= 1 ? next.edge_id : previous.edge_id,
+    source: ratio >= 1 ? next.source : previous.source,
+    x_meters: lerp(previous.x_meters, next.x_meters, ratio),
+    y_meters: lerp(previous.y_meters, next.y_meters, ratio),
+    heading_degrees: interpolateHeadingDegrees(
+      previous.heading_degrees,
+      next.heading_degrees,
+      ratio
+    ),
+    speed_mps: lerp(previous.speed_mps, next.speed_mps, ratio),
+    waiting_seconds: lerp(previous.waiting_seconds, next.waiting_seconds, ratio)
+  };
+}
+
+function extrapolatePedestrian(
+  pedestrian: SimulationPedestrianSnapshot,
+  extrapolationSeconds: number
+): SimulationPedestrianSnapshot {
+  const radians = (pedestrian.heading_degrees * Math.PI) / 180;
+
+  return {
+    ...pedestrian,
+    x_meters:
+      pedestrian.x_meters +
+      Math.cos(radians) * pedestrian.speed_mps * extrapolationSeconds,
+    y_meters:
+      pedestrian.y_meters +
+      Math.sin(radians) * pedestrian.speed_mps * extrapolationSeconds
+  };
+}
+
 function cloneFrame(frame: SimulationFrameSnapshot): SimulationFrameSnapshot {
   return {
     ...frame,
     bounds_meters: { ...frame.bounds_meters },
     vehicles: frame.vehicles.map((vehicle) => ({ ...vehicle })),
+    pedestrians: getFramePedestrians(frame).map((pedestrian) => ({
+      ...pedestrian
+    })),
     density_segments: frame.density_segments.map((segment) => ({ ...segment })),
     signals: frame.signals.map((signal) => ({ ...signal })),
     queues: { ...frame.queues },
     events: frame.events.map((event) => ({ ...event }))
   };
+}
+
+function getFramePedestrians(
+  frame: SimulationFrameSnapshot
+): SimulationPedestrianSnapshot[] {
+  return Array.isArray(frame.pedestrians) ? frame.pedestrians : [];
 }
 
 function lerp(start: number, end: number, ratio: number) {

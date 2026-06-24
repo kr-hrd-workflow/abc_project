@@ -6,6 +6,20 @@ from pydantic import BaseModel, Field
 from app.domain.schemas import QueueMetrics, TrafficEventRead
 
 
+class SimulationPedestrianSnapshot(BaseModel):
+    id: str
+    x_meters: float
+    y_meters: float
+    heading_degrees: float
+    speed_mps: float
+    lane_id: str | None = None
+    edge_id: str | None = None
+    # SUMO exposes waiting time for people, but some adapters omit it; keep the
+    # truth source explicit and default only this optional timing field.
+    waiting_seconds: float = 0.0
+    source: Literal["sumo_person"] = "sumo_person"
+
+
 class SimulationVehicleSnapshot(BaseModel):
     id: str
     vehicle_type: Literal["car", "bus", "taxi", "truck", "emergency"]
@@ -44,6 +58,7 @@ class SimulationFrameSnapshot(BaseModel):
     captured_at: datetime
     bounds_meters: dict[str, float]
     vehicles: list[SimulationVehicleSnapshot]
+    pedestrians: list[SimulationPedestrianSnapshot] = Field(default_factory=list)
     density_segments: list[SimulationDensitySegment] = Field(default_factory=list)
     signals: list[SimulationSignalSnapshot]
     queues: QueueMetrics

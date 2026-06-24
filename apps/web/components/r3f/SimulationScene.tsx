@@ -2,6 +2,7 @@
 
 import type { SceneSnapshot } from "./buildSceneSnapshot";
 import { CameraRig } from "./CameraRig";
+import { DynamicPedestrianLayer } from "./DynamicPedestrianLayer";
 import { DynamicVehicleLayer } from "./DynamicVehicleLayer";
 import { EnvironmentLayer } from "./EnvironmentLayer";
 import { RoadDetailProps } from "./RoadDetailProps";
@@ -41,6 +42,7 @@ export function SimulationScene({
         sceneSnapshot={sceneSnapshot}
         qualityPreset={qualityPreset}
       />
+      <DynamicPedestrianLayer sceneSnapshot={sceneSnapshot} />
       <SignalLayer signals={sceneSnapshot.signals} />
     </group>
   );

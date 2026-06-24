@@ -1,6 +1,7 @@
 import type {
   SimulationDensitySegment,
   SimulationFrameSnapshot,
+  SimulationPedestrianSnapshot,
   SimulationSignalSnapshot,
   SimulationVehicleSnapshot
 } from "../../lib/simulationSnapshot";
@@ -12,6 +13,10 @@ export type SceneDensityFillSource =
   | "none";
 
 export type ScenePreciseVehicleSource =
+  | "simulation_frame_snapshot"
+  | "none";
+
+export type ScenePrecisePedestrianSource =
   | "simulation_frame_snapshot"
   | "none";
 
@@ -31,11 +36,13 @@ export type SceneSnapshot = {
   source: string | null;
   scenarioId: string | null;
   vehicles: SimulationVehicleSnapshot[];
+  pedestrians: SimulationPedestrianSnapshot[];
   densitySegments: SimulationDensitySegment[];
   signals: SimulationSignalSnapshot[];
   queues: QueueMetrics | null;
   events: TrafficEvent[];
   preciseVehicleSource: ScenePreciseVehicleSource;
+  precisePedestrianSource: ScenePrecisePedestrianSource;
   allowsDensityFill: boolean;
   densityFillSource: SceneDensityFillSource;
   trafficDensityMode: SceneTrafficDensityMode;
@@ -47,10 +54,17 @@ export function buildSceneSnapshot(
 ): SceneSnapshot {
   const source = typeof frame?.source === "string" ? frame.source : null;
   const vehicles = Array.isArray(frame?.vehicles) ? [...frame.vehicles] : [];
+  const pedestrians = Array.isArray(frame?.pedestrians)
+    ? frame.pedestrians.map((pedestrian) => ({ ...pedestrian }))
+    : [];
   const densitySegments = Array.isArray(frame?.density_segments)
     ? frame.density_segments.filter(isExplicitDensityProxy)
     : [];
-  const densityFillSource = resolveDensityFillSource(source, densitySegments);
+  const densityFillSource = resolveDensityFillSource(
+    source,
+    vehicles,
+    densitySegments
+  );
   const trafficDensityMode = resolveTrafficDensityMode(
     source,
     vehicles,
@@ -62,12 +76,15 @@ export function buildSceneSnapshot(
     source,
     scenarioId: typeof frame?.scenario_id === "string" ? frame.scenario_id : null,
     vehicles,
+    pedestrians,
     densitySegments,
     signals: Array.isArray(frame?.signals) ? [...frame.signals] : [],
     queues: isQueueMetrics(frame?.queues) ? { ...frame.queues } : null,
     events: Array.isArray(frame?.events) ? [...frame.events] : [],
     preciseVehicleSource:
       vehicles.length > 0 ? "simulation_frame_snapshot" : "none",
+    precisePedestrianSource:
+      pedestrians.length > 0 ? "simulation_frame_snapshot" : "none",
     allowsDensityFill: densityFillSource !== "none",
     densityFillSource,
     trafficDensityMode,
@@ -86,11 +103,13 @@ export function buildFixtureSceneSnapshot({
     source: "simulation_snapshot_fixture",
     scenarioId: null,
     vehicles: [],
+    pedestrians: [],
     densitySegments: [],
     signals: [],
     queues: { ...queues },
     events: [...events],
     preciseVehicleSource: "none",
+    precisePedestrianSource: "none",
     allowsDensityFill: true,
     densityFillSource: "fixture_mode",
     trafficDensityMode: "fixture_queues",
@@ -109,8 +128,10 @@ function resolveFrameQueueSource(
 
 function resolveDensityFillSource(
   source: string | null,
+  vehicles: SimulationVehicleSnapshot[],
   densitySegments: SimulationDensitySegment[]
 ): SceneDensityFillSource {
+  if (vehicles.length > 0) return "none";
   if (densitySegments.length > 0) return "density_segments";
   if (source === "simulation_snapshot_fixture") return "fixture_mode";
   return "none";
@@ -122,8 +143,8 @@ function resolveTrafficDensityMode(
   densitySegments: SimulationDensitySegment[],
   densityFillSource: SceneDensityFillSource
 ): SceneTrafficDensityMode {
-  if (densitySegments.length > 0) return "density_segments";
   if (vehicles.length > 0) return "snapshot_vehicles";
+  if (densitySegments.length > 0) return "density_segments";
   if (source === "simulation_snapshot_fixture") return "fixture_queues";
   return "none";
 }
