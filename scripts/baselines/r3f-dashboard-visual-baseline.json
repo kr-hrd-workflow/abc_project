@@ -1,0 +1,20 @@
+{
+  "baseline_id": "r3f-dashboard-visual-baseline-2026-06-19",
+  "source_artifact": "artifacts/r3f-dashboard-details.json",
+  "desktop": {
+    "canvas_metrics": {
+      "width": 914,
+      "height": 680,
+      "sampled_pixels": 621520,
+      "non_background_ratio": 0.88788132320762,
+      "bright_ratio": 0.028097245462736516,
+      "dark_ratio": 0.29861790449221265,
+      "warm_light_ratio": 0.0004585532243531986,
+      "cool_light_ratio": 0.004583923284850045,
+      "marking_ratio": 0.06013965761359248,
+      "saturated_ratio": 0.1743145836014931,
+      "color_bucket_count": 301,
+      "luminance_stddev": 42.55488318091921
+    }
+  }
+}

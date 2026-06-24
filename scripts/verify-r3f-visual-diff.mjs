@@ -7,9 +7,16 @@ import { fileURLToPath } from "node:url";
 const scriptDir = path.dirname(fileURLToPath(import.meta.url));
 const repoRoot = path.resolve(scriptDir, "..");
 const detailsPath = path.join(repoRoot, "artifacts", "r3f-dashboard-details.json");
+const defaultBaselineDetailsPath = path.join(
+  repoRoot,
+  "scripts",
+  "baselines",
+  "r3f-dashboard-visual-baseline.json"
+);
 const baselineDetailsPath = process.env.R3F_VISUAL_BASELINE_DETAILS
   ? path.resolve(repoRoot, process.env.R3F_VISUAL_BASELINE_DETAILS)
-  : detailsPath;
+  : defaultBaselineDetailsPath;
+const allowSelfBaseline = process.env.R3F_VISUAL_ALLOW_SELF_BASELINE === "1";
 const requiredScenarios = [
   "day/high",
   "night/high",
@@ -129,11 +136,21 @@ const currentMetrics = details.desktop?.canvas_metrics;
 const baselineMetrics = baselineDetails.desktop?.canvas_metrics;
 const comparison = compareMetrics(currentMetrics, baselineMetrics);
 const scenarios = scenarioById(details);
+const selfBaseline = baselineDetailsPath === detailsPath;
 
 addCheck(
   "desktop canvas artifact exists",
   await fileExists(artifacts.desktop_canvas),
   artifacts.desktop_canvas ?? "missing"
+);
+addCheck(
+  "visual baseline is stable for final readiness",
+  !selfBaseline || allowSelfBaseline,
+  JSON.stringify({
+    baseline: path.relative(repoRoot, baselineDetailsPath).replace(/\\/g, "/"),
+    self_baseline: selfBaseline,
+    mode: selfBaseline && allowSelfBaseline ? "non_final_self_baseline" : "final"
+  })
 );
 addCheck(
   "desktop canvas is structurally nonblank",
@@ -152,7 +169,7 @@ addCheck(
   JSON.stringify({
     baseline: path.relative(repoRoot, baselineDetailsPath).replace(/\\/g, "/"),
     deltas: comparison.deltas,
-    self_baseline: baselineDetailsPath === detailsPath
+    self_baseline: selfBaseline
   })
 );
 

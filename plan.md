@@ -26,7 +26,8 @@ fixture fallback, Stage 6 evidence boundaries, and `SimulationFrameSnapshot` tru
   Evidence: focused web tests -> 3 files/78 passed and final reviewer-focused 5 files/86 passed; full web tests -> 9 files/100 passed; `npm run build:web` passed; `git diff --check` exit 0 with LF/CRLF warnings only. Final spec and code-quality/security reviews approved after scenario-scope, interpolation-boundary, and event-validation fixes.
 - [x] Worker 3: R3F scene layers, PBR materials, lighting, shadows, draw-call controls.
   Evidence: focused R3F test -> 1 file/9 passed; full web tests -> 9 files/103 passed; `npm run build:web` passed; `node --check scripts/verify-r3f-dashboard.mjs` passed; `git diff --check` exit 0 with LF/CRLF warnings only. Final spec approved after shadow-verifier assertions; code-quality/security approved with final artifact-regeneration caveat.
-- [ ] Worker 4: Asset pipeline, verifiers, docs, artifact evidence.
+- [x] Worker 4: Weather/CCTV overlay, camera rig, rain/wheel-spray layers, road-detail props, scene clutter.
+  Evidence: focused Worker 4 web tests -> 3 files/87 passed; `npm run build:web` passed; `git diff --check` passed in fresh read-only review.
 - [ ] Fresh slice reviews: spec compliance and code-quality/security/artifact hygiene.
 - [ ] Final evidence collection and final-readiness review.
 - [ ] Stage intended files, commit, push `origin main`, and verify refs only if all gates pass.
@@ -42,8 +43,10 @@ fixture fallback, Stage 6 evidence boundaries, and `SimulationFrameSnapshot` tru
 - `npm run verify`
 - `git diff --check`
 
-## Blockers
+## Current Readiness Notes
 
+- Python security remediation is resolved in source, lockfile, and the API venv: `pydantic-settings>=2.14.2`, `msgpack>=1.2.1`, and `npm run verify:security` passes.
+- Headless R3F performance proof is currently `PASS_WITH_CONCERNS` when `frameTimeMs` is unmeasurable in Chromium demand-loop mode; final readiness still needs measurable frame-time proof or explicit acceptance of this concern.
 - External installs/downloads for SUMO, TraCI, libsumo, Blender, glTF/KTX2 tooling, or assets
   require approval.
 - GitHub settings, deploys, releases, tags, and `archive/` changes require approval.

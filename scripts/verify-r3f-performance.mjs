@@ -17,16 +17,22 @@ const targetFrameTimeMsByQuality = {
 };
 
 const failures = [];
+const concerns = [];
 const checks = [];
 
 function isRecord(value) {
   return Boolean(value) && typeof value === "object" && !Array.isArray(value);
 }
 
-function addCheck(name, passed, evidence) {
-  checks.push({ name, passed, evidence });
+function addCheck(name, passed, evidence, options = {}) {
+  const severity = options.severity ?? "failure";
+  checks.push({ name, passed, evidence, severity });
   if (!passed) {
-    failures.push(`${name}: ${evidence}`);
+    if (severity === "concern") {
+      concerns.push(`${name}: ${evidence}`);
+    } else {
+      failures.push(`${name}: ${evidence}`);
+    }
   }
 }
 
@@ -105,7 +111,15 @@ function hasStaleLabel(details) {
 
 function printReport() {
   if (failures.length === 0) {
-    console.log("R3F performance verification passed.");
+    if (concerns.length === 0) {
+      console.log("R3F performance verification passed.");
+    } else {
+      console.log("R3F performance verification PASS_WITH_CONCERNS.");
+      console.log("Concerns:");
+      for (const concern of concerns) {
+        console.log(`- ${concern}`);
+      }
+    }
   } else {
     console.error("R3F performance verification failed:");
     for (const failure of failures) {
@@ -115,8 +129,13 @@ function printReport() {
 
   console.log("Checks:");
   for (const check of checks) {
+    const status = check.passed
+      ? "PASS"
+      : check.severity === "concern"
+        ? "CONCERN"
+        : "FAIL";
     console.log(
-      `- ${check.passed ? "PASS" : "FAIL"} ${check.name}: ${check.evidence}`
+      `- ${status} ${check.name}: ${check.evidence}`
     );
   }
 }
@@ -132,6 +151,14 @@ const postFx = isRecord(details.postFx) ? details.postFx : null;
 const heavyFeatures = isRecord(details.heavyFeatures) ? details.heavyFeatures : null;
 const staleLabel = hasStaleLabel(details);
 const dashboardFailures = Array.isArray(details.failures) ? details.failures : [];
+const measuredFrameTimePass =
+  performance.frameTimeMs !== null &&
+  targetFrameTimeMs !== null &&
+  performance.frameTimeMs <= targetFrameTimeMs;
+const honestlyUnmeasurable =
+  performance.measurementStatus === "unmeasurable_headless_static_demand_loop" &&
+  typeof performance.reason === "string" &&
+  performance.reason.length > 0;
 
 addCheck(
   "dashboard details are from a passing verifier run",
@@ -178,15 +205,15 @@ addCheck(
   `stale=${staleLabel.stale}, label=${staleLabel.staleBadge || "missing"}`
 );
 addCheck(
-  "frame-time target is met or honestly unmeasurable",
-  (performance.frameTimeMs !== null &&
-    targetFrameTimeMs !== null &&
-    performance.frameTimeMs <= targetFrameTimeMs) ||
-    (performance.measurementStatus ===
-      "unmeasurable_headless_static_demand_loop" &&
-      typeof performance.reason === "string" &&
-      performance.reason.length > 0),
-  `qualityPreset=${qualityPreset ?? "missing"}, frameTimeMs=${performance.frameTimeMs ?? "missing"}, target=${targetFrameTimeMs ?? "missing"}, measurementStatus=${performance.measurementStatus ?? "missing"}, rawFrameTimeMs=${performance.rawFrameTimeMs ?? "missing"}, reason=${performance.reason ?? "missing"}`
+  "frame-time target has final measurable proof",
+  measuredFrameTimePass,
+  `qualityPreset=${qualityPreset ?? "missing"}, frameTimeMs=${performance.frameTimeMs ?? "missing"}, target=${targetFrameTimeMs ?? "missing"}, measurementStatus=${performance.measurementStatus ?? "missing"}, rawFrameTimeMs=${performance.rawFrameTimeMs ?? "missing"}, reason=${performance.reason ?? "missing"}`,
+  { severity: honestlyUnmeasurable ? "concern" : "failure" }
+);
+addCheck(
+  "headless fallback is honestly labeled when frame-time is unmeasurable",
+  performance.frameTimeMs !== null || honestlyUnmeasurable,
+  `measurementStatus=${performance.measurementStatus ?? "missing"}, reason=${performance.reason ?? "missing"}`
 );
 
 printReport();
