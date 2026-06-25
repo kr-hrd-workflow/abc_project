@@ -1030,7 +1030,13 @@ describe("DashboardShell", () => {
 
   test("defines the Stage 4 R3F asset manifest contract", () => {
     const assets = listR3FAssetEntries();
-    const assetIds = new Set(assets.map((asset) => asset.id));
+    // Background plates are a deliberately new asset category outside the
+    // Stage 4 runtime contract (projected visual source, not a truth surface),
+    // so they are excluded from the exact Stage 4 manifest set assertion.
+    const stage4Assets = assets.filter(
+      (asset) => asset.runtimeUsage !== "background-plate"
+    );
+    const assetIds = new Set(stage4Assets.map((asset) => asset.id));
 
     expect(assetIds).toEqual(new Set(stage4RequiredAssetIds));
 
