@@ -102,7 +102,7 @@ export function SimulationCanvas({
   sceneSnapshot,
   qualityPreset = getStage6QualityPreset("high"),
   weather = "rain",
-  timeOfDay = "day"
+  timeOfDay = "night"
 }: {
   sceneSnapshot: SceneSnapshot;
   qualityPreset?: Stage6QualityPreset;
