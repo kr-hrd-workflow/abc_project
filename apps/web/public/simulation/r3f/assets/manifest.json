@@ -1366,7 +1366,7 @@
         "wet asphalt reflections",
         "central bus-only lane cue"
       ],
-      "provenance": "Placeholder background plate registered ahead of the imagegen-generated Gangnam night plate (Task 6). Generated via the imagegen skill from a SUMO-derived structural guide with no real brands, logos, or store names; background visual only and never a vehicle/pedestrian/signal truth surface. Runtime proof must come from browser-rendered night frames."
+      "provenance": "Imagegen-generated Gangnam Teheran-ro night plate (1536x1024), conditioned on a structural guide rendered from the actual R3F scene layout. No real brands, logos, or store names (signage abstract/illegible); background visual only and never a vehicle/pedestrian/signal truth surface. Runtime proof must come from browser-rendered night frames."
     },
     "pbrChannels": [
       "sourceColor"
