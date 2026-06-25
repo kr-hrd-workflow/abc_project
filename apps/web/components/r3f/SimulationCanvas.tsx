@@ -142,7 +142,9 @@ export function SimulationCanvas({
           timeOfDay={timeOfDay}
         />
       ) : null}
-      {renderScene ? <Stage6PostFX qualityPreset={qualityPreset.name} /> : null}
+      {renderScene && timeOfDay !== "night" ? (
+        <Stage6PostFX qualityPreset={qualityPreset.name} />
+      ) : null}
     </Canvas>
   );
 }

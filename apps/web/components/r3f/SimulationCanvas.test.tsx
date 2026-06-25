@@ -320,8 +320,46 @@ describe("SimulationCanvas Stage 5 telemetry", () => {
       "StaticRoadLayer",
       "DynamicVehicleLayer",
       "DynamicPedestrianLayer",
-      "SignalLayer"
+      "SignalLayer",
+      "SceneFinishing"
     ]);
+  });
+
+  test("mounts the fresh night seamless visual layer at night, not the legacy look", () => {
+    const sceneSnapshot = buildShadowCountSceneSnapshot({ vehicleCount: 2 });
+    const nightScene = SimulationScene({ sceneSnapshot, timeOfDay: "night" });
+
+    // The fresh night lighting replaces EnvironmentLayer's night preset: the
+    // lighting slot resolves to NightSeamlessLighting (rendered via SceneLighting).
+    const lighting = findChildByDisplayName(nightScene, "EnvironmentLayer");
+    expect(lighting).toBeTruthy();
+    const renderedLighting = renderElement(lighting as ReactElement);
+    expect(getElementDisplayName(renderedLighting)).toBe("NightSeamlessLighting");
+
+    // Fresh night finishing (ACES tonemap + bloom + exposure sync) mounts.
+    const finishing = findChildByDisplayName(nightScene, "SceneFinishing");
+    expect(finishing).toBeTruthy();
+    const renderedFinishing = renderElement(finishing as ReactElement);
+    const finishingNames = Children.toArray(
+      (renderedFinishing as ReactElement<TestElementProps>).props.children
+    )
+      .filter((child): child is ReactElement => isValidElement(child))
+      .map(getElementDisplayName);
+    expect(finishingNames).toContain("NightSeamlessPostFX");
+    expect(finishingNames).toContain("NightExposureSync");
+
+    // Fresh night vehicle treatment wraps the SUMO-truth vehicle layer.
+    const vehicles = findChildByDisplayName(nightScene, "DynamicVehicleLayer");
+    expect(vehicles).toBeTruthy();
+    const renderedVehicles = renderElement(vehicles as ReactElement);
+    const vehicleChildNames = Children.toArray(
+      (renderedVehicles as ReactElement<TestElementProps>).props.children
+    )
+      .filter((child): child is ReactElement => isValidElement(child))
+      .map(getElementDisplayName);
+    expect(vehicleChildNames).toContain("NightVehicleTreatment");
+    // Legacy wet-weather spray cue is not mounted in the night grounding path.
+    expect(vehicleChildNames).not.toContain("WheelSprayLayer");
   });
 
   test("mounts the background plate layer for the night proof view", () => {
@@ -451,6 +489,22 @@ function getChildDisplayNames(element: ReactElement<TestElementProps>) {
   return Children.toArray(element.props.children)
     .filter((child): child is ReactElement => isValidElement(child))
     .map(getElementDisplayName);
+}
+
+function findChildByDisplayName(
+  element: ReactElement<TestElementProps>,
+  displayName: string
+) {
+  return Children.toArray(element.props.children)
+    .filter((child): child is ReactElement => isValidElement(child))
+    .find((child) => getElementDisplayName(child) === displayName);
+}
+
+function renderElement(element: ReactElement) {
+  const renderFn = element.type as (
+    props: Record<string, unknown>
+  ) => ReactElement<TestElementProps>;
+  return renderFn(element.props as Record<string, unknown>);
 }
 
 function getElementDisplayName(element: ReactElement) {
