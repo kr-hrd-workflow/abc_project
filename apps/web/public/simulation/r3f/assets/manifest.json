@@ -1341,5 +1341,43 @@
     },
     "provenanceEvidencePath": "apps/web/public/simulation/r3f/assets/textures/PROVENANCE.md",
     "runtimeUsage": "Runtime source atlas sampled by Stage 6 road materials, billboard clutter, road detail props, rain particle sprites, and wheel-spray sprites through named UV cells for wet asphalt, lane/crosswalk wear, puddle masks, billboard panels, road signs, guardrails, rain streaks, splash puffs, and wheel spray."
+  },
+  "plates/gangnam_night_operator_wide": {
+    "id": "plates/gangnam_night_operator_wide",
+    "path": "/simulation/r3f/assets/plates/gangnam_night_operator_wide.png",
+    "kind": "texture",
+    "source": "imagegen-generated-night-plate",
+    "license": "Project-generated via imagegen; no real brands, logos, or store names; provenance in docs/compliance/r3f-asset-licenses.md",
+    "authorship": "generated",
+    "units": "meters",
+    "pbr": false,
+    "lod": "atlas",
+    "maxTextureSize": 2048,
+    "maxTriangles": 0,
+    "maxFileSizeBytes": 4000000,
+    "allowNonPowerOfTwo": false,
+    "realismStatus": "stage6_finishing_source_ready",
+    "visualRejectIfToyLike": true,
+    "details": {
+      "spriteFeatures": [
+        "night neon Gangnam Teheran-ro arterial backdrop",
+        "high-rise glass office towers",
+        "brandless glowing signage",
+        "wet asphalt reflections",
+        "central bus-only lane cue"
+      ],
+      "provenance": "Placeholder background plate registered ahead of the imagegen-generated Gangnam night plate (Task 6). Generated via the imagegen skill from a SUMO-derived structural guide with no real brands, logos, or store names; background visual only and never a vehicle/pedestrian/signal truth surface. Runtime proof must come from browser-rendered night frames."
+    },
+    "pbrChannels": [
+      "sourceColor"
+    ],
+    "compression": {
+      "status": "png-source-atlas",
+      "geometry": "not-applicable",
+      "texture": "png-source-atlas",
+      "evidence": "background plate projected onto proxy geometry; not a runtime truth surface; scripts/verify-r3f-assets.mjs"
+    },
+    "provenanceEvidencePath": "docs/compliance/r3f-asset-licenses.md",
+    "runtimeUsage": "background-plate"
   }
 }

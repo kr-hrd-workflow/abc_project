@@ -885,6 +885,13 @@ function validateEntryShape(assetId, entry) {
   validateCompressionFields(assetId, entry);
   validateRuntimeUsage(assetId, entry);
 
+  // Background plates are texture-only visual sources, not runtime truth
+  // surfaces. They project onto coarse proxy geometry; they must never be a
+  // mesh/vehicle kind that could be mistaken for SUMO truth geometry.
+  if (entry.runtimeUsage === "background-plate" && entry.kind !== "texture") {
+    addFailure(`${assetId}: background-plate must use kind "texture"`);
+  }
+
   if (!isRepoRelativePath(entry.provenanceEvidencePath)) {
     addFailure(`${assetId}: provenanceEvidencePath must be a repo-relative evidence path`);
   }
