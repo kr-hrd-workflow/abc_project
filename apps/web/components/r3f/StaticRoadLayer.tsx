@@ -11,9 +11,11 @@ import type { Stage6QualityPreset } from "./stage6Quality";
 import { getStage6QualityPreset } from "./stage6Quality";
 
 function StaticRoadLayerComponent({
-  qualityPreset = getStage6QualityPreset("high")
+  qualityPreset = getStage6QualityPreset("high"),
+  isNight = false
 }: {
   qualityPreset?: Stage6QualityPreset;
+  isNight?: boolean;
 }) {
   const groupRef = useRef<Group>(null);
 
@@ -23,12 +25,17 @@ function StaticRoadLayerComponent({
 
   return (
     <group ref={groupRef} name="stage5-static-road-layer">
-      <ApproachCorridors />
+      <ApproachCorridors isNight={isNight} />
       <ProceduralIntersection qualityPreset={qualityPreset} />
       <Stage6SurfaceDecals qualityPreset={qualityPreset} />
-      <Suspense fallback={null}>
-        <Stage5SceneAssets />
-      </Suspense>
+      {/* Stage5SceneAssets renders the procedural building facades. At night the
+          photoreal plate supplies the city, so these are suppressed to avoid a
+          second toy-looking skyline in front of the plate. */}
+      {!isNight && (
+        <Suspense fallback={null}>
+          <Stage5SceneAssets />
+        </Suspense>
+      )}
     </group>
   );
 }

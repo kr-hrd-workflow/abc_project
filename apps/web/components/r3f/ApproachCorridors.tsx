@@ -174,7 +174,7 @@ const BUILDING_BASE_WET_SHADOWS: PlaneBatchSpec[] = CITY_EDGE_BLOCKS.map(
   }
 );
 
-export function ApproachCorridors() {
+export function ApproachCorridors({ isNight = false }: { isNight?: boolean }) {
   const roadMaterials = useStage5RoadMaterials();
 
   return (
@@ -229,19 +229,26 @@ export function ApproachCorridors() {
         material={roadMaterials.sidewalk}
         receiveShadow
       />
-      <InstancedBoxBatch
-        name="stage5-city-edge-building-blocks"
-        specs={CITY_EDGE_BLOCKS}
-        material={roadMaterials.buildingBlock}
-        castShadow
-        receiveShadow
-      />
-      <InstancedPlaneBatch
-        name="stage5-building-base-wet-shadows"
-        specs={BUILDING_BASE_WET_SHADOWS}
-        material={roadMaterials.edgeGrime}
-        renderOrder={1}
-      />
+      {/* The procedural city-edge building blocks are suppressed at night so
+          the photoreal plate backdrop is the city (Option A). The road, curbs,
+          sidewalks, and markings stay so vehicles keep a real surface. */}
+      {!isNight && (
+        <>
+          <InstancedBoxBatch
+            name="stage5-city-edge-building-blocks"
+            specs={CITY_EDGE_BLOCKS}
+            material={roadMaterials.buildingBlock}
+            castShadow
+            receiveShadow
+          />
+          <InstancedPlaneBatch
+            name="stage5-building-base-wet-shadows"
+            specs={BUILDING_BASE_WET_SHADOWS}
+            material={roadMaterials.edgeGrime}
+            renderOrder={1}
+          />
+        </>
+      )}
     </group>
   );
 }

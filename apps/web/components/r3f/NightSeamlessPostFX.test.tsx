@@ -19,12 +19,13 @@ describe("NightSeamlessPostFX", () => {
     expect(config.bloomIntensity).toBe(grade.bloomIntensity);
   });
 
-  it("renders an ACES tonemap + bloom composer driven by the grade", () => {
+  it("renders a bloom composer driven by the grade (no plate-washing tonemap)", () => {
     const element = NightSeamlessPostFX();
 
     expect(isValidElement(element)).toBe(true);
     // The fresh night composer is built directly on @react-three/postprocessing
-    // (EffectComposer) and is NOT the legacy Stage6PostFX look.
+    // (EffectComposer) and is NOT the legacy Stage6PostFX look. ACES tonemapping
+    // is intentionally omitted so the display-referred plate is not washed out.
     expect(element.type).toBe(EffectComposer);
   });
 });

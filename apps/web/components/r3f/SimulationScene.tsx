@@ -48,7 +48,7 @@ export function SimulationScene({
         timeOfDay={timeOfDay}
       />
       <BackgroundPlateBoundary timeOfDay={timeOfDay} />
-      <StaticRoadLayerWithDetails qualityPreset={qualityPreset} />
+      <StaticRoadLayerWithDetails isNight={isNight} qualityPreset={qualityPreset} />
       <DynamicVehicleLayerWithWeather
         isNight={isNight}
         timeOfDay={timeOfDay}
@@ -129,13 +129,23 @@ function BackgroundPlateBoundary({
 BackgroundPlateBoundary.displayName = "BackgroundPlateBoundary";
 
 function StaticRoadLayerWithDetails({
+  isNight,
   qualityPreset
 }: {
+  isNight: boolean;
   qualityPreset: Stage6QualityPreset;
 }) {
+  // At night the projected plate IS the road + city (BackgroundPlateLayer), so
+  // the entire procedural road/markings/curbs/clutter is suppressed to avoid a
+  // second road overlapping the plate. Vehicle contact shadows come from
+  // NightVehicleTreatment's shadow catcher, not this procedural surface.
+  if (isNight) {
+    return null;
+  }
+
   return (
     <>
-      <StaticRoadLayer qualityPreset={qualityPreset} />
+      <StaticRoadLayer qualityPreset={qualityPreset} isNight={isNight} />
       <RoadDetailProps />
       <SceneClutterLayer />
     </>

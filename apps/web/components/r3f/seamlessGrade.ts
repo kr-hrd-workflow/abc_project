@@ -14,7 +14,9 @@ export const GANGNAM_NIGHT_GRADE: SeamlessGrade = {
   toneMappingExposure: 0.85,
   neonColor: "#2e6cff",
   environmentIntensity: 0.34,
-  bloomIntensity: 0.9,
+  // The plate is already a finished photo with baked glow; keep bloom modest so
+  // the dense distant neon does not wash the upper frame into a milky haze.
+  bloomIntensity: 0.4,
   vehicleEmissiveIntensity: 1.6
 };
 

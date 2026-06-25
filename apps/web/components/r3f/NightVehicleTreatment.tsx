@@ -1,7 +1,7 @@
 "use client";
 
 import { memo, useMemo, type ReactNode } from "react";
-import { ContactShadows, MeshReflectorMaterial } from "@react-three/drei";
+import { ContactShadows } from "@react-three/drei";
 
 import { getSeamlessGrade } from "./seamlessGrade";
 import type { Stage6TimeOfDay } from "./stage6Quality";
@@ -87,29 +87,10 @@ function NightVehicleTreatmentComponent({
         wetReflection: config.wetReflection.enabled
       }}
     >
-      {/* Planar wet reflection beneath the traffic: the neon backdrop and
-          headlights reflect off the asphalt so vehicles share the wet ground. */}
-      {config.wetReflection.enabled ? (
-        <mesh
-          name="night-wet-reflection"
-          rotation={[-Math.PI / 2, 0, 0]}
-          position={[0, 0.01, 0]}
-          renderOrder={-1}
-        >
-          <planeGeometry
-            args={[INTERSECTION_BOX_METERS * 3, INTERSECTION_BOX_METERS * 3]}
-          />
-          <MeshReflectorMaterial
-            mixStrength={config.wetReflection.mixStrength}
-            roughness={config.wetReflection.roughness}
-            resolution={512}
-            blur={[256, 256]}
-            mirror={0}
-            color="#0a0d12"
-            metalness={0.5}
-          />
-        </mesh>
-      ) : null}
+      {/* Wet reflection is now supplied by the projected plate itself (the plate
+          IS the wet asphalt), so the separate dark MeshReflectorMaterial plane is
+          intentionally NOT rendered — it overlapped and darkened the plate at the
+          intersection. config.wetReflection stays as look intent / for tests. */}
 
       {/* Soft contact shadow so each car is anchored to the ground plane. */}
       {config.contactShadow.enabled ? (

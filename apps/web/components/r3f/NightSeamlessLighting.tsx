@@ -2,12 +2,7 @@
 
 import { memo, useEffect, useMemo } from "react";
 import { useThree } from "@react-three/fiber";
-import {
-  Color,
-  PMREMGenerator,
-  type Scene,
-  type WebGLRenderer
-} from "three";
+import { PMREMGenerator, type Scene, type WebGLRenderer } from "three";
 import { RoomEnvironment } from "three/examples/jsm/environments/RoomEnvironment.js";
 
 import { GANGNAM_NIGHT_GRADE } from "./seamlessGrade";
@@ -88,19 +83,18 @@ function NightNeonIBL({ config }: { config: NightLightingConfig }) {
 
     const previousEnvironment = scene.environment;
     const previousIntensity = readEnvironmentIntensity(scene);
-    const previousBackground = scene.background;
 
     scene.environment = environmentTexture;
     writeEnvironmentIntensity(scene, config.environmentIntensity);
-    // Tint the scene background toward the neon cast so off-plate edges blend.
-    scene.background = new Color(config.neonColor).multiplyScalar(0.06);
+    // Background is owned by BackgroundPlateLayer (the photoreal night plate).
+    // This IBL only drives lighting, never the visible backdrop, so it must not
+    // clobber the plate with a solid color.
     invalidate();
 
     return () => {
       if (scene.environment === environmentTexture) {
         scene.environment = previousEnvironment;
         writeEnvironmentIntensity(scene, previousIntensity);
-        scene.background = previousBackground;
       }
       environmentTexture.dispose();
       pmrem.dispose();

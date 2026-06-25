@@ -98,7 +98,7 @@ describe("Camera/weather/clutter finishing slice", () => {
         timeOfDay: "night",
         visualRegressionMode: false
       })
-    ).toBe("nightRainClose");
+    ).toBe("nightAerialProof");
     expect(
       selectCameraRigPreset({
         aspect: 914 / 680,

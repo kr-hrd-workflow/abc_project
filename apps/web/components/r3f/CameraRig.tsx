@@ -12,6 +12,7 @@ import {
 export type CameraRigPresetName =
   | "operatorWide"
   | "nightRainClose"
+  | "nightAerialProof"
   | "mobileWide"
   | "photorealProof"
   | "proofDeterministic";
@@ -63,6 +64,18 @@ export const CAMERA_RIG_PRESETS = {
     near: STAGE5_CAMERA.near,
     far: STAGE5_CAMERA.far
   },
+  // High aerial oblique matching the plate projector camera (PLATE_CAMERA_ANGLES
+  // "operator-wide" === STAGE5_CAMERA) so the projective-textured plate paints
+  // onto the ground + building proxies aligned to screen, and the small SUMO
+  // vehicles sit on the intersection below it (Option A, projector == viewer).
+  nightAerialProof: {
+    name: "nightAerialProof",
+    position: STAGE5_CAMERA.position,
+    target: STAGE5_CAMERA.target,
+    fov: STAGE5_CAMERA.fov,
+    near: STAGE5_CAMERA.near,
+    far: STAGE5_CAMERA.far
+  },
   mobileWide: {
     name: "mobileWide",
     position: [4, 18, 34],
@@ -95,6 +108,7 @@ const CAMERA_RIG_PRESET_NAMES = Object.keys(
 const CAMERA_SHAKE_OFFSETS = {
   operatorWide: [0.12, 0.035, -0.09],
   nightRainClose: [0.055, -0.018, 0.038],
+  nightAerialProof: [0.02, 0.006, -0.014],
   mobileWide: [0.075, 0.025, -0.06],
   photorealProof: [0.04, 0.012, -0.028],
   proofDeterministic: [0, 0, 0]
@@ -108,7 +122,7 @@ export function selectCameraRigPreset({
 }: CameraRigSelectionInput): CameraRigPresetName {
   if (visualRegressionMode) return "proofDeterministic";
   if (Number.isFinite(aspect) && aspect > 0 && aspect < 1.08) return "mobileWide";
-  if (timeOfDay === "night") return "nightRainClose";
+  if (timeOfDay === "night") return "nightAerialProof";
 
   return "operatorWide";
 }

@@ -1,9 +1,9 @@
 "use client";
 
 import { useEffect } from "react";
-import { Bloom, EffectComposer, ToneMapping } from "@react-three/postprocessing";
+import { Bloom, EffectComposer } from "@react-three/postprocessing";
 import { useThree } from "@react-three/fiber";
-import { BlendFunction, ToneMappingMode } from "postprocessing";
+import { BlendFunction } from "postprocessing";
 import type { ReactElement } from "react";
 
 import { GANGNAM_NIGHT_GRADE } from "./seamlessGrade";
@@ -23,10 +23,11 @@ export function resolveNightPostFXConfig(): NightPostFXConfig {
   return {
     toneMappingExposure: GANGNAM_NIGHT_GRADE.toneMappingExposure,
     bloomIntensity: GANGNAM_NIGHT_GRADE.bloomIntensity,
-    // Neon signage and headlights sit well above mid-grey; threshold keeps the
-    // bloom on the bright emitters rather than washing the whole night frame.
-    bloomLuminanceThreshold: 0.6,
-    bloomLuminanceSmoothing: 0.3
+    // High threshold so only genuinely bright emitters (headlights, neon signs)
+    // bloom — the plate's many mid-bright lit windows must NOT bloom, or the
+    // distant city washes the upper frame into a milky haze.
+    bloomLuminanceThreshold: 0.85,
+    bloomLuminanceSmoothing: 0.2
   };
 }
 
@@ -58,12 +59,12 @@ NightExposureSync.displayName = "NightExposureSync";
 export function NightSeamlessPostFX(): ReactElement {
   const config = resolveNightPostFXConfig();
 
+  // NO ACES tonemapping: the plate is a finished, display-referred photo, and
+  // ACES washed its bright distance into a milky haze. The plate round-trips
+  // sRGB->linear->sRGB unchanged; only a gentle bloom adds glow to the bright
+  // emitters (headlights, neon) so the live cars sit in the neon scene.
   return (
     <EffectComposer enabled multisampling={0}>
-      <ToneMapping
-        blendFunction={BlendFunction.NORMAL}
-        mode={ToneMappingMode.ACES_FILMIC}
-      />
       <Bloom
         blendFunction={BlendFunction.SCREEN}
         intensity={config.bloomIntensity}
