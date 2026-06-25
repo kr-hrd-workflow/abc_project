@@ -1355,7 +1355,7 @@
     "maxTextureSize": 2048,
     "maxTriangles": 0,
     "maxFileSizeBytes": 4000000,
-    "allowNonPowerOfTwo": false,
+    "allowNonPowerOfTwo": true,
     "realismStatus": "stage6_finishing_source_ready",
     "visualRejectIfToyLike": true,
     "details": {
@@ -1378,6 +1378,7 @@
       "evidence": "background plate projected onto proxy geometry; not a runtime truth surface; scripts/verify-r3f-assets.mjs"
     },
     "provenanceEvidencePath": "docs/compliance/r3f-asset-licenses.md",
-    "runtimeUsage": "background-plate"
+    "runtimeUsage": "background-plate",
+    "nonPowerOfTwoReason": "Full-frame background plate projected onto a backdrop quad (no mipmapping/tiling); 1536x1024 generated landscape kept as-is."
   }
 }
