@@ -19,6 +19,18 @@ import { buildPlateProxy } from "./plateProxyGeometry";
 import { getPlateEntry } from "./plateManifest";
 import { getSeamlessGrade } from "./seamlessGrade";
 
+// Preload BOTH plate variants (day + night) so the screen-space plate is ready
+// on first paint of either time-of-day. The day plate was newly added, and an
+// on-demand load could miss the render harness's capture window (black frame);
+// preloading keeps both warm. Browser-only (jsdom/SSR have no loader).
+if (
+  typeof window !== "undefined" &&
+  !/jsdom/i.test(window.navigator?.userAgent ?? "")
+) {
+  useTexture.preload(getPlateEntry("operator-wide", "night").path);
+  useTexture.preload(getPlateEntry("operator-wide", "day").path);
+}
+
 // Visual-only truth marker. The background plate NEVER produces vehicle,
 // pedestrian, or signal truth — that comes solely from SimulationFrameSnapshot.
 export const BACKGROUND_PLATE_TRUTH_SOURCE = "background_plate_visual_only";
@@ -63,19 +75,29 @@ type BackgroundPlateLayerProps = {
   enabled?: boolean;
 };
 
+// The projected plate uses R3F hooks (useTexture/useThree) that require a live
+// WebGL Canvas, so it is a no-op outside a real browser (jsdom tests render the
+// scene tree without a Canvas). Real renders (verify:r3f-dashboard) show it.
+function canRenderProjectedPlate() {
+  return (
+    typeof window !== "undefined" &&
+    !/jsdom/i.test(window.navigator.userAgent)
+  );
+}
+
 function BackgroundPlateLayerComponent({
   angleId,
   timeOfDay,
   enabled = true
 }: BackgroundPlateLayerProps) {
-  if (!enabled || timeOfDay !== "night") {
+  if (!enabled || !canRenderProjectedPlate()) {
     return null;
   }
 
-  return <NightBackgroundPlate angleId={angleId} timeOfDay={timeOfDay} />;
+  return <ProjectedBackgroundPlate angleId={angleId} timeOfDay={timeOfDay} />;
 }
 
-function NightBackgroundPlate({
+function ProjectedBackgroundPlate({
   angleId,
   timeOfDay
 }: {
@@ -83,7 +105,10 @@ function NightBackgroundPlate({
   timeOfDay: Stage6TimeOfDay;
 }) {
   const grade = useMemo(() => getSeamlessGrade(timeOfDay), [timeOfDay]);
-  const plate = useMemo(() => getPlateEntry(angleId), [angleId]);
+  const plate = useMemo(
+    () => getPlateEntry(angleId, timeOfDay === "night" ? "night" : "day"),
+    [angleId, timeOfDay]
+  );
   const proxy = useMemo(() => buildPlateProxy(), []);
 
   const texture = useTexture(plate.path) as Texture;

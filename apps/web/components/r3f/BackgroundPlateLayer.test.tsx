@@ -26,9 +26,13 @@ describe("BackgroundPlateLayer", () => {
     expect(container.firstChild).toBeNull();
   });
 
-  it("is a no-op in the day path (night plate only)", () => {
+  it("is a no-op when disabled in the day path too", () => {
     const { container } = render(
-      <BackgroundPlateLayer angleId="operator-wide" timeOfDay="day" />
+      <BackgroundPlateLayer
+        angleId="operator-wide"
+        timeOfDay="day"
+        enabled={false}
+      />
     );
 
     expect(container.firstChild).toBeNull();

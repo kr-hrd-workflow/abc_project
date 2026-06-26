@@ -8,8 +8,20 @@ export const PLATE_ASSET_ID_BY_ANGLE: Record<string, string> = {
   "operator-wide": "plates/gangnam_night_operator_wide"
 };
 
-export function getPlateEntry(angleId: string): R3FAssetEntry {
-  const assetId = PLATE_ASSET_ID_BY_ANGLE[angleId];
+// Daytime variant per angle: img2img-derived from the night plate, identical
+// layout. The night map above stays the default so callers without a time
+// argument resolve the night plate (back-compatible).
+export const DAY_PLATE_ASSET_ID_BY_ANGLE: Record<string, string> = {
+  "operator-wide": "plates/gangnam_day_operator_wide"
+};
+
+export function getPlateEntry(
+  angleId: string,
+  timeOfDay: "day" | "night" = "night"
+): R3FAssetEntry {
+  const map =
+    timeOfDay === "day" ? DAY_PLATE_ASSET_ID_BY_ANGLE : PLATE_ASSET_ID_BY_ANGLE;
+  const assetId = map[angleId];
 
   if (!assetId) {
     throw new Error(`No plate mapped for camera angle: ${angleId}`);

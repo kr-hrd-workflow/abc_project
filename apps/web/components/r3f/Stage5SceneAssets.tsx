@@ -3,19 +3,19 @@
 import { useEffect, useMemo, useRef } from "react";
 import { useGLTF } from "@react-three/drei";
 import {
-  BufferGeometry,
-  Color,
   DoubleSide,
-  Float32BufferAttribute,
-  MeshStandardMaterial,
   Object3D,
   type Group,
-  type InstancedMesh,
-  type Material,
-  type Mesh
+  type InstancedMesh
 } from "three";
-import { mergeGeometries } from "three/examples/jsm/utils/BufferGeometryUtils.js";
 
+import {
+  buildVehicleGlbGeometryGroups,
+  InstancedVehicleGlbMesh,
+  VehicleGlbContactShadows,
+  type VehicleGlbGeometryGroup,
+  type VehicleGlbInstance
+} from "./InstancedVehicleGlb";
 import {
   STAGE6E_CITY_EDGE_BLOCKS,
   type Vector3Tuple
@@ -138,20 +138,13 @@ export type Stage6EFirstPassInstancedAssetGroup = {
   placements: Stage6EFirstPassPlacement[];
   placementCount: number;
   placementIds: string[];
-  renderMode: "instanced_silhouette";
+  renderMode: "glb_material_groups";
 };
 
 export type Stage6EFirstPassInstancingPlan = {
   assetGroups: Stage6EFirstPassInstancedAssetGroup[];
   clonePlacements: [];
   drawCallUpperBound: number;
-};
-
-type Stage6EFirstPassSilhouetteGeometry = {
-  key: string;
-  assetId: Stage6EFirstPassAssetId;
-  geometry: BufferGeometry;
-  material: Material;
 };
 
 const FACADE_HEIGHT_METERS = 4.8;
@@ -409,7 +402,7 @@ export function buildStage6EFirstPassInstancingPlan(): Stage6EFirstPassInstancin
       placements: groupPlacements,
       placementCount: groupPlacements.length,
       placementIds: groupPlacements.map((placement) => placement.id),
-      renderMode: "instanced_silhouette" as const
+      renderMode: "glb_material_groups" as const
     };
   }).filter((group) => group.placementCount > 0);
 
@@ -490,17 +483,14 @@ function RuntimeStage5SceneAssets() {
     ...streetFurnitureScenes
   };
   const instancingPlan = buildStage6EFirstPassInstancingPlan();
-  const silhouettesByAsset = useMemo(
+  const geometryGroupsByAsset = useMemo(
     () =>
       Object.fromEntries(
         STAGE6E_FIRST_PASS_GLB_ASSET_IDS.map((assetId) => [
           assetId,
-          buildStage6EFirstPassSilhouetteGeometry(assetId, firstPassScenes[assetId])
+          buildVehicleGlbGeometryGroups(assetId, firstPassScenes[assetId])
         ])
-      ) as Record<
-        Stage6EFirstPassAssetId,
-        Stage6EFirstPassSilhouetteGeometry | null
-      >,
+      ) as Record<Stage6EFirstPassAssetId, VehicleGlbGeometryGroup[]>,
     [
       ambulance.scene,
       bus.scene,
@@ -513,84 +503,74 @@ function RuntimeStage5SceneAssets() {
       truck.scene
     ]
   );
+  const heroVehicleShadowInstances = useMemo(
+    () => buildHeroVehicleContactShadowInstances(),
+    []
+  );
 
   return (
     <group name="stage5-realism-asset-layer">
       <Stage5FacadePanels />
-      {instancingPlan.assetGroups.map((assetGroup) => {
-        const silhouette = silhouettesByAsset[assetGroup.assetId];
+      {instancingPlan.assetGroups.flatMap((assetGroup) => {
+        const geometryGroups = geometryGroupsByAsset[assetGroup.assetId];
+        if (!geometryGroups || geometryGroups.length === 0) return [];
 
-        if (!silhouette) return null;
-
-        return (
-          <Stage6EFirstPassInstancedSilhouette
-            key={assetGroup.assetId}
-            silhouette={silhouette}
-            placements={assetGroup.placements}
-          />
+        const instances: VehicleGlbInstance[] = assetGroup.placements.map(
+          (placement, index) => ({
+            x: placement.position[0],
+            z: placement.position[2],
+            rotationY: placement.rotationY,
+            scale: placement.scale[0],
+            color: getStage6EFirstPassInstanceColor(
+              assetGroup.assetId,
+              placement,
+              index
+            )
+          })
         );
+        const castShadow =
+          STAGE5_SHADOWS_ENABLED && assetGroup.assetId === "props/streetlight";
+
+        return geometryGroups.map((group) => (
+          <InstancedVehicleGlbMesh
+            key={group.key}
+            name={`stage6e-first-pass-${assetGroup.assetId}-${group.role}`}
+            group={group}
+            instances={instances}
+            castShadow={castShadow}
+          />
+        ));
       })}
+      <VehicleGlbContactShadows
+        name="stage6e-hero-vehicle-contact-shadows"
+        instances={heroVehicleShadowInstances}
+        opacity={0.42}
+      />
       <Stage5StreetFurnitureContactShadows />
     </group>
   );
 }
 
-function Stage6EFirstPassInstancedSilhouette({
-  silhouette,
-  placements
-}: {
-  silhouette: Stage6EFirstPassSilhouetteGeometry;
-  placements: Stage6EFirstPassPlacement[];
-}) {
-  const meshRef = useRef<InstancedMesh>(null);
-  const tempObjectRef = useRef(new Object3D());
-  const tempColorRef = useRef(new Color());
+// Approximate ground footprint [width, length] in meters per hero vehicle asset,
+// used only to size the grounding contact-shadow disc under each hero GLB.
+const STAGE6E_HERO_VEHICLE_FOOTPRINTS: Partial<
+  Record<Stage5VisibleTrafficAssetId, [number, number]>
+> = {
+  "vehicles/bus_near": [2.8, 9],
+  "vehicles/emergency_ambulance_medium": [2.4, 5.3],
+  "vehicles/passenger_car_near": [2.1, 4.6],
+  "vehicles/taxi_near": [2.1, 4.7],
+  "vehicles/truck_near": [2.7, 7.2]
+};
 
-  useEffect(() => {
-    const mesh = meshRef.current;
-    if (!mesh) return;
-
-    const tempObject = tempObjectRef.current;
-    const tempColor = tempColorRef.current;
-
-    placements.forEach((placement, index) => {
-      tempObject.position.set(...placement.position);
-      tempObject.rotation.set(0, placement.rotationY, 0);
-      tempObject.scale.set(...placement.scale);
-      tempObject.updateMatrix();
-      mesh.setMatrixAt(index, tempObject.matrix);
-      mesh.setColorAt(
-        index,
-        tempColor.set(getStage6EFirstPassInstanceColor(silhouette.assetId, placement, index))
-      );
-    });
-
-    mesh.instanceMatrix.needsUpdate = true;
-    if (mesh.instanceColor) {
-      mesh.instanceColor.needsUpdate = true;
-    }
-  }, [placements, silhouette.assetId]);
-
-  if (placements.length === 0) return null;
-
-  return (
-    <instancedMesh
-      ref={meshRef}
-      name={`stage6e-first-pass-${silhouette.assetId}-instanced-silhouette`}
-      args={[silhouette.geometry, silhouette.material, placements.length]}
-      castShadow={
-        STAGE5_SHADOWS_ENABLED && silhouette.assetId === "props/streetlight"
-      }
-      receiveShadow={false}
-      userData={{
-        stage6eAssetId: silhouette.assetId,
-        firstPassInstancedSilhouette: true,
-        realShadowWhitelist:
-          STAGE5_SHADOWS_ENABLED && silhouette.assetId === "props/streetlight",
-        placementCount: placements.length
-      }}
-    />
-  );
+function buildHeroVehicleContactShadowInstances(): VehicleGlbInstance[] {
+  return STAGE5_HERO_VEHICLE_PLACEMENTS.map((placement) => ({
+    x: placement.position[0],
+    z: placement.position[2],
+    rotationY: placement.rotationY,
+    scale: placement.scale[0],
+    footprint: STAGE6E_HERO_VEHICLE_FOOTPRINTS[placement.assetId] ?? [2.3, 4.6]
+  }));
 }
 
 function getStage6EFirstPassInstanceColor(
@@ -661,85 +641,6 @@ function Stage5StreetFurnitureContactShadows() {
         toneMapped={false}
       />
     </instancedMesh>
-  );
-}
-
-function buildStage6EFirstPassSilhouetteGeometry(
-  assetId: Stage6EFirstPassAssetId,
-  scene: Group
-): Stage6EFirstPassSilhouetteGeometry | null {
-  const geometries: BufferGeometry[] = [];
-
-  scene.updateMatrixWorld(true);
-  scene.traverse((object) => {
-    if (!isRenderableMesh(object)) return;
-
-    const geometry = normalizeStage6EFirstPassGeometryForMerge(object.geometry);
-    geometry.applyMatrix4(object.matrixWorld);
-
-    if (geometry.attributes.position) {
-      geometries.push(geometry);
-    }
-  });
-
-  if (geometries.length === 0) return null;
-
-  const geometry =
-    geometries.length === 1 ? geometries[0] : mergeGeometries(geometries);
-
-  if (!geometry) return null;
-
-  return {
-    key: `${assetId}:first-pass-silhouette`,
-    assetId,
-    geometry,
-    material: createStage6EFirstPassMaterial(assetId)
-  };
-}
-
-function normalizeStage6EFirstPassGeometryForMerge(
-  geometry: BufferGeometry
-): BufferGeometry {
-  const sourceGeometry = geometry.index ? geometry.toNonIndexed() : geometry;
-  const position = sourceGeometry.getAttribute("position");
-  const positions: number[] = [];
-
-  if (!position) return new BufferGeometry();
-
-  for (let index = 0; index < position.count; index += 1) {
-    positions.push(
-      position.getX(index),
-      position.getY(index),
-      position.getZ(index)
-    );
-  }
-
-  const normalizedGeometry = new BufferGeometry();
-
-  normalizedGeometry.setAttribute(
-    "position",
-    new Float32BufferAttribute(positions, 3)
-  );
-  normalizedGeometry.computeVertexNormals();
-  normalizedGeometry.clearGroups();
-
-  return normalizedGeometry;
-}
-
-function createStage6EFirstPassMaterial(assetId: Stage6EFirstPassAssetId) {
-  return new MeshStandardMaterial({
-    color: STAGE6E_FIRST_PASS_MATERIAL_COLORS[assetId],
-    roughness: assetId.startsWith("vehicles/") ? 0.5 : 0.64,
-    metalness: assetId === "props/streetlight" ? 0.36 : 0.16,
-    envMapIntensity: assetId.startsWith("vehicles/") ? 0.92 : 0.76
-  });
-}
-
-function isRenderableMesh(object: Object3D): object is Mesh {
-  return Boolean(
-    (object as Mesh).isMesh &&
-      (object as Mesh).geometry &&
-      (object as Mesh).material
   );
 }
 

@@ -3,25 +3,27 @@
 import { Suspense, useEffect, useMemo, useRef } from "react";
 import { useGLTF } from "@react-three/drei";
 import {
-  BufferGeometry,
   Color,
   DoubleSide,
-  Float32BufferAttribute,
   Object3D,
   Shape,
   type Group,
-  type InstancedMesh,
-  type Material,
-  type Mesh,
-  MeshStandardMaterial
+  type InstancedMesh
 } from "three";
-import { mergeGeometries } from "three/examples/jsm/utils/BufferGeometryUtils.js";
 
+import {
+  buildVehicleGlbGeometryGroups,
+  InstancedVehicleGlbMesh,
+  VehicleGlbContactShadows,
+  type VehicleGlbGeometryGroup,
+  type VehicleGlbInstance
+} from "./InstancedVehicleGlb";
 import type { Direction } from "../../lib/types";
 import type {
   SimulationDensitySegment,
   SimulationDensitySegmentSource,
-  SimulationVehicleSnapshot
+  SimulationVehicleSnapshot,
+  SimulationVehicleType
 } from "../../lib/simulationSnapshot";
 import type { SceneSnapshot, SceneTrafficDensityMode } from "./buildSceneSnapshot";
 import type {
@@ -218,23 +220,6 @@ export const STAGE6E_REPEATED_DENSITY_GLB_ASSET_IDS = [
 export type Stage6ERepeatedDensityAssetId =
   (typeof STAGE6E_REPEATED_DENSITY_GLB_ASSET_IDS)[number];
 
-type Stage6EInstancedGeometryGroup = {
-  key: string;
-  assetId: Stage6ERepeatedDensityAssetId;
-  geometry: BufferGeometry;
-  material: Material;
-};
-
-const STAGE6E_DENSITY_MATERIAL_COLORS: Record<
-  Stage6ERepeatedDensityAssetId,
-  string
-> = {
-  "vehicles/passenger_car_far": "#4d5b62",
-  "vehicles/taxi_far": "#8f742c",
-  "vehicles/bus_far": "#536b73",
-  "vehicles/truck_far": "#59646a"
-};
-
 const STAGE6E_DENSITY_ASSET_BY_PROFILE: Record<
   TrafficVehicleProfileName,
   Stage6ERepeatedDensityAssetId
@@ -400,39 +385,62 @@ export function TrafficDensityLayer({
           : allProceduralFarVehicles.length
       }}
     >
-      <Stage5TrafficVehicleInstances
-        name="stage5-near-precise-shadow-vehicles"
-        vehicles={preciseShadowVehicles}
-        castRealShadows={STAGE5_SHADOWS_ENABLED}
-      />
-      <Stage5TrafficVehicleInstances
-        name="stage5-precise-contact-shadow-vehicles"
-        vehicles={preciseContactOnlyVehicles}
-      />
       {canUseDensityGlbs ? (
-        <Suspense
-          fallback={
-            <Stage5TrafficVehicleInstances
-              name="stage5-density-procedural-contact-shadow-fallback"
-              vehicles={allProceduralFarVehicles}
-            />
-          }
-        >
-          <Stage6EDensityVehicleGlbs
-            assetGroups={densityRenderPlan.instancedAssetGroups}
-          />
-          {densityRenderPlan.proceduralVehicles.length > 0 ? (
-            <Stage5TrafficVehicleInstances
-              name="stage5-density-procedural-contact-shadow-vehicles"
-              vehicles={proceduralFallbackVehicles}
-            />
+        <>
+          {plan.preciseVehicles.length > 0 ? (
+            <Suspense
+              fallback={
+                <>
+                  <Stage5TrafficVehicleInstances
+                    name="stage5-near-precise-shadow-vehicles"
+                    vehicles={preciseShadowVehicles}
+                    castRealShadows={STAGE5_SHADOWS_ENABLED}
+                  />
+                  <Stage5TrafficVehicleInstances
+                    name="stage5-precise-contact-shadow-vehicles"
+                    vehicles={preciseContactOnlyVehicles}
+                  />
+                </>
+              }
+            >
+              <PreciseVehicleGlbs vehicles={plan.preciseVehicles} />
+            </Suspense>
           ) : null}
-        </Suspense>
+          <Suspense
+            fallback={
+              <Stage5TrafficVehicleInstances
+                name="stage5-density-procedural-contact-shadow-fallback"
+                vehicles={allProceduralFarVehicles}
+              />
+            }
+          >
+            <Stage6EDensityVehicleGlbs
+              assetGroups={densityRenderPlan.instancedAssetGroups}
+            />
+            {densityRenderPlan.proceduralVehicles.length > 0 ? (
+              <Stage5TrafficVehicleInstances
+                name="stage5-density-procedural-contact-shadow-vehicles"
+                vehicles={proceduralFallbackVehicles}
+              />
+            ) : null}
+          </Suspense>
+        </>
       ) : (
-        <Stage5TrafficVehicleInstances
-          name="stage5-density-procedural-contact-shadow-vehicles"
-          vehicles={allProceduralFarVehicles}
-        />
+        <>
+          <Stage5TrafficVehicleInstances
+            name="stage5-near-precise-shadow-vehicles"
+            vehicles={preciseShadowVehicles}
+            castRealShadows={STAGE5_SHADOWS_ENABLED}
+          />
+          <Stage5TrafficVehicleInstances
+            name="stage5-precise-contact-shadow-vehicles"
+            vehicles={preciseContactOnlyVehicles}
+          />
+          <Stage5TrafficVehicleInstances
+            name="stage5-density-procedural-contact-shadow-vehicles"
+            vehicles={allProceduralFarVehicles}
+          />
+        </>
       )}
     </group>
   );
@@ -504,10 +512,7 @@ function Stage6EDensityVehicleGlbs({
           assetId,
           buildStage6EInstancedGeometryGroups(assetId, densityScenes[assetId])
         ])
-      ) as Record<
-        Stage6ERepeatedDensityAssetId,
-        Stage6EInstancedGeometryGroup[]
-      >,
+      ) as Record<Stage6ERepeatedDensityAssetId, VehicleGlbGeometryGroup[]>,
     [bus.scene, passengerCar.scene, taxi.scene, truck.scene]
   );
   const visibleVehicles = useMemo(
@@ -519,69 +524,32 @@ function Stage6EDensityVehicleGlbs({
 
   return (
     <group name="stage6e-manifest-density-glb-vehicles">
-      {assetGroups.flatMap((assetGroup) =>
-        geometryGroupsByAsset[assetGroup.assetId].map((geometryGroup) => (
-          <Stage6EInstancedDensityMesh
-            key={geometryGroup.key}
-            geometryGroup={geometryGroup}
-            vehicles={assetGroup.vehicles}
+      {assetGroups.flatMap((assetGroup) => {
+        const instances = toDensityGlbInstances(assetGroup.vehicles);
+
+        return geometryGroupsByAsset[assetGroup.assetId].map((group) => (
+          <InstancedVehicleGlbMesh
+            key={group.key}
+            name={`stage6e-density-${assetGroup.assetId}-${group.role}`}
+            group={group}
+            instances={instances}
           />
-        ))
-      )}
+        ));
+      })}
       <Stage6EDensityContactShadows vehicles={visibleVehicles} />
     </group>
   );
 }
 
-function Stage6EInstancedDensityMesh({
-  geometryGroup,
-  vehicles
-}: {
-  geometryGroup: Stage6EInstancedGeometryGroup;
-  vehicles: TrafficDensityFarVehicle[];
-}) {
-  const meshRef = useRef<InstancedMesh>(null);
-  const tempObjectRef = useRef(new Object3D());
-  const tempColorRef = useRef(new Color());
-
-  useEffect(() => {
-    const mesh = meshRef.current;
-    if (!isThreeInstancedMesh(mesh)) return;
-
-    const tempObject = tempObjectRef.current;
-    const tempColor = tempColorRef.current;
-
-    vehicles.forEach((vehicle, index) => {
-      tempObject.position.set(vehicle.position[0], 0.04, vehicle.position[2]);
-      tempObject.rotation.set(0, vehicle.rotationY, 0);
-      tempObject.scale.set(1, 1, 1);
-      tempObject.updateMatrix();
-      mesh.setMatrixAt(index, tempObject.matrix);
-      mesh.setColorAt(index, tempColor.set(vehicle.color));
-    });
-
-    mesh.instanceMatrix.needsUpdate = true;
-    if (mesh.instanceColor) {
-      mesh.instanceColor.needsUpdate = true;
-    }
-  }, [vehicles]);
-
-  if (vehicles.length === 0) return null;
-
-  return (
-    <instancedMesh
-      ref={meshRef}
-      args={[geometryGroup.geometry, geometryGroup.material, vehicles.length]}
-      castShadow={false}
-      receiveShadow={false}
-      userData={{
-        densityAssetId: geometryGroup.assetId,
-        densitySilhouetteGroupKey: geometryGroup.key,
-        aggregateDensityOnly: true,
-        instancedDensityVehicleCount: vehicles.length
-      }}
-    />
-  );
+function toDensityGlbInstances(
+  vehicles: TrafficDensityFarVehicle[]
+): VehicleGlbInstance[] {
+  return vehicles.map((vehicle) => ({
+    x: vehicle.position[0],
+    z: vehicle.position[2],
+    rotationY: vehicle.rotationY,
+    color: vehicle.color
+  }));
 }
 
 function Stage6EDensityContactShadows({
@@ -629,145 +597,138 @@ function Stage6EDensityContactShadows({
   );
 }
 
+// Splits a density (far-LOD) vehicle GLB into one merged geometry per authored
+// material so far traffic keeps real per-part PBR (paint / glass / tire / hub /
+// emitters) instead of the old flat position-only silhouette. The body group is
+// white and tintable so the per-instance Korean livery color renders faithfully.
 export function buildStage6EInstancedGeometryGroups(
   assetId: Stage6ERepeatedDensityAssetId,
   scene: Group
-): Stage6EInstancedGeometryGroup[] {
-  const geometries: BufferGeometry[] = [];
-
-  scene.updateMatrixWorld(true);
-  scene.traverse((object) => {
-    if (!isRenderableMesh(object)) return;
-
-    const geometry = normalizeStage6EDensityGeometryForMerge(object.geometry);
-    geometry.applyMatrix4(object.matrixWorld);
-
-    if (geometry.attributes.position) {
-      geometries.push(geometry);
-    }
-  });
-
-  if (geometries.length === 0) return [];
-
-  const geometry =
-    geometries.length === 1
-      ? geometries[0]
-      : canMergeStage6EGeometries(geometries)
-        ? mergeGeometries(geometries)
-        : geometries[0];
-
-  if (!geometry) return [];
-
-  return [
-    {
-      key: `${assetId}:silhouette`,
-      assetId,
-      geometry,
-      material: createStage6EDensityMaterial(assetId)
-    }
-  ];
+): VehicleGlbGeometryGroup[] {
+  return buildVehicleGlbGeometryGroups(assetId, scene);
 }
 
-export function normalizeStage6EDensityGeometryForMerge(
-  geometry: BufferGeometry
-): BufferGeometry {
-  const sourceGeometry = geometry.index ? geometry.toNonIndexed() : geometry;
-  const position = sourceGeometry.getAttribute("position");
-  const positions: number[] = [];
+// Near-LOD GLB assets used for the precise SUMO-truth stream. Each is already
+// preloaded for the hero placements, so reusing the path here hits the cache.
+const PRECISE_VEHICLE_GLB_ASSET_IDS = [
+  "vehicles/passenger_car_near",
+  "vehicles/taxi_near",
+  "vehicles/bus_near",
+  "vehicles/truck_near",
+  "vehicles/emergency_ambulance_medium"
+] as const satisfies readonly R3FAssetId[];
 
-  if (!position) return new BufferGeometry();
+type PreciseVehicleGlbAssetId = (typeof PRECISE_VEHICLE_GLB_ASSET_IDS)[number];
 
-  for (let index = 0; index < position.count; index += 1) {
-    positions.push(
-      position.getX(index),
-      position.getY(index),
-      position.getZ(index)
-    );
+const PRECISE_VEHICLE_GLB_ASSET_BY_TYPE: Record<
+  SimulationVehicleType,
+  PreciseVehicleGlbAssetId
+> = {
+  car: "vehicles/passenger_car_near",
+  taxi: "vehicles/taxi_near",
+  bus: "vehicles/bus_near",
+  truck: "vehicles/truck_near",
+  emergency: "vehicles/emergency_ambulance_medium"
+};
+
+// Renders the precise SUMO-truth vehicles with their real GLB geometry + authored
+// per-part PBR materials, grouped per (asset, material) into InstancedMeshes so
+// the ~precise stream stays a handful of draw calls. SUMO position/heading/type
+// are passed through unchanged; only the body-paint group is livery-tinted.
+function PreciseVehicleGlbs({
+  vehicles
+}: {
+  vehicles: TrafficDensityPreciseVehicle[];
+}) {
+  const passengerCar = useGLTF(
+    getR3FAssetEntry("vehicles/passenger_car_near").path
+  );
+  const taxi = useGLTF(getR3FAssetEntry("vehicles/taxi_near").path);
+  const bus = useGLTF(getR3FAssetEntry("vehicles/bus_near").path);
+  const truck = useGLTF(getR3FAssetEntry("vehicles/truck_near").path);
+  const ambulance = useGLTF(
+    getR3FAssetEntry("vehicles/emergency_ambulance_medium").path
+  );
+  const scenesByAsset: Record<PreciseVehicleGlbAssetId, Group> = {
+    "vehicles/passenger_car_near": passengerCar.scene,
+    "vehicles/taxi_near": taxi.scene,
+    "vehicles/bus_near": bus.scene,
+    "vehicles/truck_near": truck.scene,
+    "vehicles/emergency_ambulance_medium": ambulance.scene
+  };
+  const geometryGroupsByAsset = useMemo(
+    () =>
+      Object.fromEntries(
+        PRECISE_VEHICLE_GLB_ASSET_IDS.map((assetId) => [
+          assetId,
+          buildVehicleGlbGeometryGroups(assetId, scenesByAsset[assetId])
+        ])
+      ) as Record<PreciseVehicleGlbAssetId, VehicleGlbGeometryGroup[]>,
+    [ambulance.scene, bus.scene, passengerCar.scene, taxi.scene, truck.scene]
+  );
+  const instancesByAsset = useMemo(
+    () => groupPreciseVehicleGlbInstances(vehicles),
+    [vehicles]
+  );
+  const contactShadowInstances = useMemo<VehicleGlbInstance[]>(
+    () =>
+      vehicles.map((vehicle) => ({
+        x: vehicle.position[0],
+        z: vehicle.position[2],
+        rotationY: vehicle.rotationY,
+        footprint: [vehicle.size[0], vehicle.size[2]]
+      })),
+    [vehicles]
+  );
+
+  if (vehicles.length === 0) return null;
+
+  return (
+    <group name="stage5-precise-vehicle-glbs">
+      {PRECISE_VEHICLE_GLB_ASSET_IDS.flatMap((assetId) => {
+        const instances = instancesByAsset[assetId];
+        if (instances.length === 0) return [];
+
+        return geometryGroupsByAsset[assetId].map((group) => (
+          <InstancedVehicleGlbMesh
+            key={group.key}
+            name={`stage5-precise-${assetId}-${group.role}`}
+            group={group}
+            instances={instances}
+          />
+        ));
+      })}
+      <VehicleGlbContactShadows
+        name="stage5-precise-vehicle-contact-shadows"
+        instances={contactShadowInstances}
+        opacity={0.5}
+      />
+    </group>
+  );
+}
+
+function groupPreciseVehicleGlbInstances(
+  vehicles: TrafficDensityPreciseVehicle[]
+): Record<PreciseVehicleGlbAssetId, VehicleGlbInstance[]> {
+  const grouped: Record<PreciseVehicleGlbAssetId, VehicleGlbInstance[]> = {
+    "vehicles/passenger_car_near": [],
+    "vehicles/taxi_near": [],
+    "vehicles/bus_near": [],
+    "vehicles/truck_near": [],
+    "vehicles/emergency_ambulance_medium": []
+  };
+
+  for (const vehicle of vehicles) {
+    const assetId = PRECISE_VEHICLE_GLB_ASSET_BY_TYPE[vehicle.vehicleType];
+    grouped[assetId].push({
+      x: vehicle.position[0],
+      z: vehicle.position[2],
+      rotationY: vehicle.rotationY,
+      color: vehicle.color
+    });
   }
 
-  const normalizedGeometry = new BufferGeometry();
-
-  normalizedGeometry.setAttribute(
-    "position",
-    new Float32BufferAttribute(positions, 3)
-  );
-  normalizedGeometry.computeVertexNormals();
-  normalizedGeometry.clearGroups();
-
-  return normalizedGeometry;
-}
-
-function createStage6EDensityMaterial(assetId: Stage6ERepeatedDensityAssetId) {
-  return new MeshStandardMaterial({
-    color: STAGE6E_DENSITY_MATERIAL_COLORS[assetId],
-    roughness: 0.62,
-    metalness: 0.14,
-    envMapIntensity: 0.68
-  });
-}
-
-function canMergeStage6EGeometries(geometries: BufferGeometry[]) {
-  if (geometries.length < 2) return false;
-
-  const firstSignature = getStage6EGeometryMergeSignature(geometries[0]);
-
-  return geometries.every(
-    (geometry) =>
-      geometry.index === null &&
-      geometry.attributes.position &&
-      getStage6EGeometryMergeSignature(geometry) === firstSignature
-  );
-}
-
-function getStage6EGeometryMergeSignature(geometry: BufferGeometry) {
-  const attributeSignature = Object.keys(geometry.attributes)
-    .sort()
-    .map((name) => {
-      const attribute = geometry.attributes[name];
-
-      return `${name}:${getStage6EAttributeMergeSignature(attribute)}`;
-    })
-    .join("|");
-  const morphSignature = Object.entries(geometry.morphAttributes)
-    .sort(([leftName], [rightName]) => leftName.localeCompare(rightName))
-    .map(([name, morphAttributes]) => {
-      return `${name}[${(morphAttributes ?? [])
-        .map(getStage6EAttributeMergeSignature)
-        .join(",")}]`;
-    })
-    .join("|");
-
-  return [
-    "index:none",
-    `attributes:${attributeSignature}`,
-    `morphRelative:${geometry.morphTargetsRelative ? "true" : "false"}`,
-    `morph:${morphSignature}`
-  ].join(";");
-}
-
-function getStage6EAttributeMergeSignature(
-  attribute: BufferGeometry["attributes"][string]
-) {
-  const arrayType =
-    "array" in attribute && attribute.array
-      ? attribute.array.constructor.name
-      : "interleaved";
-  const gpuType = "gpuType" in attribute ? attribute.gpuType : "none";
-
-  return [
-    arrayType,
-    `size:${attribute.itemSize}`,
-    `normalized:${attribute.normalized ? "true" : "false"}`,
-    `gpu:${gpuType}`
-  ].join("/");
-}
-
-function isRenderableMesh(object: Object3D): object is Mesh {
-  return Boolean(
-    (object as Mesh).isMesh &&
-      (object as Mesh).geometry &&
-      (object as Mesh).material
-  );
+  return grouped;
 }
 
 function Stage5TrafficVehicleInstances({

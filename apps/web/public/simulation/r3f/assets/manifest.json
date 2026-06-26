@@ -1380,5 +1380,44 @@
     "provenanceEvidencePath": "docs/compliance/r3f-asset-licenses.md",
     "runtimeUsage": "background-plate",
     "nonPowerOfTwoReason": "Full-frame background plate projected onto a backdrop quad (no mipmapping/tiling); 1536x1024 generated landscape kept as-is."
+  },
+  "plates/gangnam_day_operator_wide": {
+    "id": "plates/gangnam_day_operator_wide",
+    "path": "/simulation/r3f/assets/plates/gangnam_day_operator_wide.png",
+    "kind": "texture",
+    "source": "imagegen-generated-day-plate",
+    "license": "Project-generated via imagegen; no real brands, logos, or store names; provenance in docs/compliance/r3f-asset-licenses.md",
+    "authorship": "generated",
+    "units": "meters",
+    "pbr": false,
+    "lod": "atlas",
+    "maxTextureSize": 2048,
+    "maxTriangles": 0,
+    "maxFileSizeBytes": 4000000,
+    "allowNonPowerOfTwo": true,
+    "realismStatus": "stage6_finishing_source_ready",
+    "visualRejectIfToyLike": true,
+    "details": {
+      "spriteFeatures": [
+        "daytime Gangnam Teheran-ro arterial backdrop",
+        "high-rise glass office towers",
+        "brandless signage",
+        "dry asphalt",
+        "central bus-only lanes both directions"
+      ],
+      "provenance": "Imagegen-generated Gangnam Teheran-ro daytime plate (1536x1024), derived img2img from the night plate to keep an identical road and building layout. No real brands, logos, or store names (signage abstract/illegible); background visual only and never a vehicle/pedestrian/signal truth surface. Runtime proof must come from browser-rendered day frames."
+    },
+    "pbrChannels": [
+      "sourceColor"
+    ],
+    "compression": {
+      "status": "png-source-atlas",
+      "geometry": "not-applicable",
+      "texture": "png-source-atlas",
+      "evidence": "background plate projected onto proxy geometry; not a runtime truth surface; scripts/verify-r3f-assets.mjs"
+    },
+    "provenanceEvidencePath": "docs/compliance/r3f-asset-licenses.md",
+    "runtimeUsage": "background-plate",
+    "nonPowerOfTwoReason": "Full-frame background plate projected onto a backdrop quad (no mipmapping/tiling); 1536x1024 generated landscape kept as-is."
   }
 }

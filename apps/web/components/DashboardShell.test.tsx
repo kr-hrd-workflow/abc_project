@@ -1399,7 +1399,7 @@ describe("DashboardShell", () => {
     });
   });
 
-  test("plans Stage 6E first-pass GLBs as instanced silhouette families", async () => {
+  test("plans Stage 6E first-pass GLBs as per-material instanced families", async () => {
     const stage5Assets = await import("./r3f/Stage5SceneAssets");
     const buildStage6EFirstPassInstancingPlan = (
       stage5Assets as typeof stage5Assets & {
@@ -1451,7 +1451,7 @@ describe("DashboardShell", () => {
           (placement) => placement.assetId === group.assetId
         ).length;
 
-      expect(group.renderMode).toBe("instanced_silhouette");
+      expect(group.renderMode).toBe("glb_material_groups");
       expect(group.placementCount).toBe(expectedCount);
       expect(group.placementIds).toHaveLength(expectedCount);
     });
@@ -1550,14 +1550,14 @@ describe("DashboardShell", () => {
     });
   });
 
-  test("collapses mixed-material density GLB geometry into one asset silhouette", async () => {
+  test("splits density GLB geometry into one merged group per authored material", async () => {
     const {
       BoxGeometry,
       BufferGeometry,
       Float32BufferAttribute,
       Group,
       Mesh,
-      MeshBasicMaterial
+      MeshStandardMaterial
     } = await import("three");
     const trafficDensity = await import("./r3f/TrafficDensityLayer");
     const buildStage6EInstancedGeometryGroups = (
@@ -1565,11 +1565,19 @@ describe("DashboardShell", () => {
         buildStage6EInstancedGeometryGroups?: (
           assetId: string,
           scene: InstanceType<typeof Group>
-        ) => Array<{ geometry: InstanceType<typeof BufferGeometry> }>;
+        ) => Array<{
+          geometry: InstanceType<typeof BufferGeometry>;
+          role: string;
+          tintable: boolean;
+        }>;
       }
     ).buildStage6EInstancedGeometryGroups;
-    const bodyMaterial = new MeshBasicMaterial({ color: "#94a3b8" });
-    const glassMaterial = new MeshBasicMaterial({ color: "#38bdf8" });
+    // Authored material names follow the project GLB convention so the splitter
+    // can recognise the tintable body paint and the transparent glass parts.
+    const bodyMaterial = new MeshStandardMaterial({ color: "#94a3b8" });
+    bodyMaterial.name = "passenger_car_far_pbr_body_paint_material";
+    const glassMaterial = new MeshStandardMaterial({ color: "#38bdf8" });
+    glassMaterial.name = "passenger_car_far_blue_tinted_window_glass_material";
     const nonIndexedTriangle = new BufferGeometry();
 
     nonIndexedTriangle.setAttribute(
@@ -1603,8 +1611,16 @@ describe("DashboardShell", () => {
     );
 
     expect(errorSpy).not.toHaveBeenCalled();
-    expect(geometryGroups).toHaveLength(1);
-    expect(geometryGroups[0].geometry.index).toBeNull();
+    // One merged geometry per authored material (body + glass), keeping real
+    // per-part PBR instead of one flat synthetic silhouette material.
+    expect(geometryGroups).toHaveLength(2);
+    geometryGroups.forEach((group) => {
+      expect(group.geometry.index).toBeNull();
+    });
+    const bodyGroup = geometryGroups.find((group) => group.role === "body");
+    const glassGroup = geometryGroups.find((group) => group.role === "glass");
+    expect(bodyGroup?.tintable).toBe(true);
+    expect(glassGroup?.tintable).toBe(false);
   });
 
   test("mounts frame-backed browser-only R3F when it is enabled and WebGL is supported", async () => {

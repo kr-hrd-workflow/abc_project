@@ -11,11 +11,8 @@ import { EnvironmentLayer } from "./EnvironmentLayer";
 import { NightExposureSync, NightSeamlessPostFX } from "./NightSeamlessPostFX";
 import { NightSeamlessLighting } from "./NightSeamlessLighting";
 import { NightVehicleTreatment } from "./NightVehicleTreatment";
-import { RoadDetailProps } from "./RoadDetailProps";
-import { SceneClutterLayer } from "./SceneClutterLayer";
 import { GANGNAM_NIGHT_GRADE } from "./seamlessGrade";
 import { SignalLayer } from "./SignalLayer";
-import { StaticRoadLayer } from "./StaticRoadLayer";
 import { WheelSprayLayer } from "./WheelSprayLayer";
 import type {
   Stage6QualityPreset,
@@ -128,28 +125,16 @@ function BackgroundPlateBoundary({
 
 BackgroundPlateBoundary.displayName = "BackgroundPlateBoundary";
 
-function StaticRoadLayerWithDetails({
-  isNight,
-  qualityPreset
-}: {
+function StaticRoadLayerWithDetails(_props: {
   isNight: boolean;
   qualityPreset: Stage6QualityPreset;
 }) {
-  // At night the projected plate IS the road + city (BackgroundPlateLayer), so
-  // the entire procedural road/markings/curbs/clutter is suppressed to avoid a
-  // second road overlapping the plate. Vehicle contact shadows come from
-  // NightVehicleTreatment's shadow catcher, not this procedural surface.
-  if (isNight) {
-    return null;
-  }
-
-  return (
-    <>
-      <StaticRoadLayer qualityPreset={qualityPreset} isNight={isNight} />
-      <RoadDetailProps />
-      <SceneClutterLayer />
-    </>
-  );
+  // Both day and night now project a photoreal plate (BackgroundPlateLayer) that
+  // IS the road + city, so the entire procedural road/markings/curbs/clutter is
+  // suppressed for both to avoid a second road overlapping the plate. Dynamic
+  // vehicles carry their own contact shadows; the procedural surface is not
+  // needed.
+  return null;
 }
 
 StaticRoadLayerWithDetails.displayName = "StaticRoadLayer";
