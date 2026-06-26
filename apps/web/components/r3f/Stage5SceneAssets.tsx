@@ -166,14 +166,26 @@ const STAGE6E_FIRST_PASS_MATERIAL_COLORS: Record<
   "props/outdoor_table_chair_set_01": "#8f8067"
 };
 
+// Near hero per-instance liveries. Not luminance-constrained (these are the
+// foreground hero vehicles), so they carry the realistic Korean palette including
+// the dark passenger-car range, weighted toward neutrals. Emergency keeps a white
+// body; its red comes from the GLB emitter materials.
 const STAGE6E_FIRST_PASS_INSTANCE_COLORS: Partial<
   Record<Stage6EFirstPassAssetId, readonly string[]>
 > = {
-  "vehicles/bus_near": ["#2f75bf", "#3d9b68"],
-  "vehicles/emergency_ambulance_medium": ["#b74744", "#d9dedf"],
-  "vehicles/passenger_car_near": ["#708692", "#a5b0b5", "#5f737d"],
-  "vehicles/taxi_near": ["#d7962f", "#f0c24a"],
-  "vehicles/truck_near": ["#828d93", "#a5acaf"],
+  "vehicles/bus_near": ["#1d4ea2", "#1d4ea2", "#1d4ea2", "#3d9b68"],
+  "vehicles/emergency_ambulance_medium": ["#f2f4f5", "#e4e8ea"],
+  "vehicles/passenger_car_near": [
+    "#eef1f2",
+    "#d7dadc",
+    "#b7bdc0",
+    "#8f989d",
+    "#2c3136",
+    "#6e1f24",
+    "#1d2740"
+  ],
+  "vehicles/taxi_near": ["#ef7c00", "#f0892a"],
+  "vehicles/truck_near": ["#e8ebec", "#cfd4d6", "#a7b0b4", "#9fb6c9"],
   "props/tree_cluster": ["#486747", "#587755"],
   "props/curb_details": ["#756f64", "#91887b"],
   "props/outdoor_table_chair_set_01": ["#8f8067", "#a69472", "#6d6257"]

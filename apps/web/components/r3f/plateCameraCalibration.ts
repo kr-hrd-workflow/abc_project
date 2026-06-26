@@ -16,6 +16,16 @@ export const PLATE_CAMERA_ANGLES: PlateCameraAngle[] = [
     position: STAGE5_CAMERA.position,
     target: STAGE5_CAMERA.target,
     fovDegrees: STAGE5_CAMERA.fov
+  },
+  // Low, oblique CCTV-style pole view of the same intersection. Its plate was
+  // generated from a structural guide rendered at these camera params, so the
+  // runtime camera matches the plate. The low angle makes traffic signals
+  // readable (the project's signal-control purpose).
+  {
+    id: "operator-cctv",
+    position: [34, 18, 40],
+    target: [-4, 1, -12],
+    fovDegrees: 50
   }
 ];
 

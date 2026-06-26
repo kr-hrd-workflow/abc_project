@@ -40,6 +40,20 @@ const LENS_COLORS = {
   yellow: "#ffd34d",
   green: "#35f090"
 } as const;
+// Real Seoul vehicle head (가로형 4색등), left -> right on a black backplate:
+// RED | YELLOW | GREEN-LEFT-ARROW | GREEN(circular). SUMO truth only carries
+// red/yellow/green, so the protected-left arrow aspect has no truth phase and
+// stays unlit (litWhen: null); signal.state still drives which lens glows.
+const VEHICLE_SIGNAL_ASPECTS = [
+  { color: "red", litWhen: "red", glyph: "circle" },
+  { color: "yellow", litWhen: "yellow", glyph: "circle" },
+  { color: "green", litWhen: null, glyph: "arrowLeft" },
+  { color: "green", litWhen: "green", glyph: "circle" }
+] as const satisfies ReadonlyArray<{
+  color: keyof typeof LENS_COLORS;
+  litWhen: SignalSnapshot["state"] | null;
+  glyph: "circle" | "arrowLeft";
+}>;
 const SIGNAL_MATERIALS = {
   pole: {
     color: "#2c383d",
@@ -76,9 +90,10 @@ export const SEOUL_SIGNAL_HARDWARE_CUES = {
   horizontalOverheadHeads: true,
   pedestrianSignalBoxes: true,
   blackBackplates: true,
+  vehicleAspectLayout: "horizontal_4_red_yellow_greenleft_green",
   hangulSafetyPlaques: ["보행신호", "정지선"],
   maxDrawCallMeshesPerDirection: 3,
-  canvasFaceMeters: [3.35, 1.7],
+  canvasFaceMeters: [3.6, 1.7],
   foregroundProofSignal: SEOUL_FOREGROUND_PROOF_SIGNAL
 } as const;
 
@@ -146,15 +161,14 @@ function SeoulSignalHardwareAssembly({
   const nameSuffix = isProofForeground
     ? `foreground-${signal.direction}`
     : signal.direction;
-  const facePosition: Vector3Tuple = isProofForeground
-    ? [1.96, 0.52, -0.42]
-    : [1.84, 0.48, -0.42];
-  const mastArmPosition: Vector3Tuple = isProofForeground
-    ? [1.16, 1.02, -0.02]
-    : [0.95, 1.02, -0.02];
-  const mastArmScale: Vector3Tuple = isProofForeground
-    ? [3.1, 0.08, 0.08]
-    : [2.78, 0.075, 0.075];
+  // The group is rotated by placement.rotationY so the face-plane normal (+Z)
+  // already points back at the oncoming inbound traffic. Cantilever the mast arm
+  // and head out over the roadway along local -X so the head hangs above the
+  // inbound stop line instead of behind the roadside pole.
+  const mastArmReach = isProofForeground ? 5.2 : 8.5;
+  const mastArmPosition: Vector3Tuple = [-mastArmReach / 2, 0.12, 0];
+  const mastArmScale: Vector3Tuple = [mastArmReach, 0.12, 0.12];
+  const facePosition: Vector3Tuple = [-(mastArmReach - 0.3), -0.52, 0];
 
   return (
     <group
@@ -219,62 +233,81 @@ function useSeoulSignalFaceTexture(
     if (typeof document === "undefined" || isJsdomRuntime()) return null;
 
     const canvas = document.createElement("canvas");
-    canvas.width = 768;
+    canvas.width = 880;
     canvas.height = 416;
     const context = canvas.getContext("2d");
 
     if (!context) return null;
 
-    drawRoundedRect(context, 22, 24, 724, 368, 34, "#0b1216");
-    drawRoundedRect(context, 50, 54, 492, 154, 42, "#10191e");
-    drawRoundedRect(context, 568, 54, 130, 218, 24, "#111a1f");
+    // Wide horizontal 4-aspect vehicle head on its own black backplate.
+    const headX = 28;
+    const headY = 36;
+    const headW = 612;
+    const headH = 188;
+    drawRoundedRect(context, headX, headY, headW, headH, 30, "#0a1014");
 
-    (["red", "yellow", "green"] as const).forEach((state, index) => {
-      const active = signal.state === state;
-      const color = active ? LENS_COLORS[state] : LENS_OFF;
+    // Pedestrian 2-aspect box (red over green) on a separate black backplate.
+    const pedX = 668;
+    const pedY = 36;
+    const pedW = 156;
+    const pedH = 244;
+    drawRoundedRect(context, pedX, pedY, pedW, pedH, 26, "#0c1418");
+
+    const aspectRadius = 62;
+    const aspectY = headY + headH / 2;
+    const aspectFirstX = headX + 86;
+    const aspectGap = (headW - 2 * 86) / (VEHICLE_SIGNAL_ASPECTS.length - 1);
+
+    VEHICLE_SIGNAL_ASPECTS.forEach((aspect, index) => {
+      const active = aspect.litWhen !== null && signal.state === aspect.litWhen;
+      const color = active ? LENS_COLORS[aspect.color] : LENS_OFF;
       drawSignalLens(
         context,
-        128 + index * 158,
-        132,
-        48,
+        aspectFirstX + index * aspectGap,
+        aspectY,
+        aspectRadius,
         color,
-        active ? lensEmissiveScale : 0
+        active ? lensEmissiveScale : 0,
+        aspect.glyph
       );
     });
 
-    const pedestrianGreen = signal.state === "green";
+    // Pedestrians walk only while the vehicle approach is stopped at red.
+    const pedestrianWalk = signal.state === "red";
+    const pedRadius = 44;
+    const pedCx = pedX + pedW / 2;
     drawSignalLens(
       context,
-      633,
-      116,
-      28,
-      pedestrianGreen ? LENS_OFF : LENS_COLORS.red,
-      pedestrianGreen ? 0 : lensEmissiveScale
+      pedCx,
+      pedY + 64,
+      pedRadius,
+      pedestrianWalk ? LENS_OFF : LENS_COLORS.red,
+      pedestrianWalk ? 0 : lensEmissiveScale
     );
     drawSignalLens(
       context,
-      633,
-      178,
-      28,
-      pedestrianGreen ? LENS_COLORS.green : LENS_OFF,
-      pedestrianGreen ? lensEmissiveScale : 0
+      pedCx,
+      pedY + 168,
+      pedRadius,
+      pedestrianWalk ? LENS_COLORS.green : LENS_OFF,
+      pedestrianWalk ? lensEmissiveScale : 0
     );
 
     context.font =
-      "800 42px 'Malgun Gothic', 'Apple SD Gothic Neo', 'Noto Sans KR', system-ui, sans-serif";
+      "800 38px 'Malgun Gothic', 'Apple SD Gothic Neo', 'Noto Sans KR', system-ui, sans-serif";
     context.textAlign = "center";
     context.textBaseline = "middle";
     context.fillStyle = "#effaf0";
     context.strokeStyle = "rgba(0,0,0,0.72)";
     context.lineWidth = 7;
-    context.strokeText("보행신호", 633, 247);
-    context.fillText("보행신호", 633, 247);
+    context.strokeText("보행신호", pedCx, pedY + pedH + 36);
+    context.fillText("보행신호", pedCx, pedY + pedH + 36);
 
     context.font =
-      "900 54px 'Malgun Gothic', 'Apple SD Gothic Neo', 'Noto Sans KR', system-ui, sans-serif";
+      "900 60px 'Malgun Gothic', 'Apple SD Gothic Neo', 'Noto Sans KR', system-ui, sans-serif";
     context.fillStyle = "#f5edca";
-    context.strokeText("정지선", 296, 298);
-    context.fillText("정지선", 296, 298);
+    context.strokeText("정지선", headX + headW / 2, headY + headH + 76);
+    context.fillText("정지선", headX + headW / 2, headY + headH + 76);
 
     const nextTexture = new CanvasTexture(canvas);
     nextTexture.colorSpace = SRGBColorSpace;
@@ -302,22 +335,58 @@ function drawSignalLens(
   y: number,
   radius: number,
   color: string,
-  emissiveScale: number
+  emissiveScale: number,
+  glyph: "circle" | "arrowLeft" = "circle"
 ) {
   context.save();
   context.shadowColor = color;
-  context.shadowBlur = emissiveScale > 0 ? 22 * emissiveScale : 0;
+  context.shadowBlur = emissiveScale > 0 ? 26 * emissiveScale : 0;
   context.fillStyle = color;
   context.beginPath();
   context.arc(x, y, radius, 0, Math.PI * 2);
   context.fill();
   context.restore();
 
+  if (glyph === "arrowLeft") {
+    drawLeftArrowGlyph(
+      context,
+      x,
+      y,
+      radius,
+      emissiveScale > 0 ? "#04130b" : "#21503a"
+    );
+  }
+
   context.strokeStyle = "#05090c";
   context.lineWidth = 10;
   context.beginPath();
   context.arc(x, y, radius + 7, 0, Math.PI * 2);
   context.stroke();
+}
+
+function drawLeftArrowGlyph(
+  context: CanvasRenderingContext2D,
+  cx: number,
+  cy: number,
+  radius: number,
+  color: string
+) {
+  const reach = radius * 0.64;
+  const headDepth = reach * 0.7;
+  const shaftHalf = reach * 0.3;
+  context.save();
+  context.fillStyle = color;
+  context.beginPath();
+  context.moveTo(cx - reach, cy);
+  context.lineTo(cx - reach + headDepth, cy - headDepth);
+  context.lineTo(cx - reach + headDepth, cy - shaftHalf);
+  context.lineTo(cx + reach, cy - shaftHalf);
+  context.lineTo(cx + reach, cy + shaftHalf);
+  context.lineTo(cx - reach + headDepth, cy + shaftHalf);
+  context.lineTo(cx - reach + headDepth, cy + headDepth);
+  context.closePath();
+  context.fill();
+  context.restore();
 }
 
 function drawRoundedRect(

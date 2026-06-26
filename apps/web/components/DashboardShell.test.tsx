@@ -346,6 +346,8 @@ const stage4RequiredAssetIds = [
   "decals/curb_grime",
   "textures/sidewalk_paver_variation",
   "textures/facade_window_emissive",
+  "textures/vehicle_paint_detail",
+  "textures/vehicle_paint_normal",
   "sprites/stage6_weather_material_source_atlas"
 ];
 

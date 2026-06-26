@@ -11,6 +11,7 @@ import {
 
 export type CameraRigPresetName =
   | "operatorWide"
+  | "operatorCctv"
   | "nightRainClose"
   | "nightAerialProof"
   | "mobileWide"
@@ -53,6 +54,16 @@ export const CAMERA_RIG_PRESETS = {
     position: [18, 42, 58],
     target: [0, 0, -8],
     fov: 54,
+    near: STAGE5_CAMERA.near,
+    far: STAGE5_CAMERA.far
+  },
+  // Low oblique CCTV pole view; matches the operator-cctv plate camera so the
+  // CCTV plate aligns and traffic signals read at a glance.
+  operatorCctv: {
+    name: "operatorCctv",
+    position: [34, 18, 40],
+    target: [-4, 1, -12],
+    fov: 50,
     near: STAGE5_CAMERA.near,
     far: STAGE5_CAMERA.far
   },
@@ -107,6 +118,7 @@ const CAMERA_RIG_PRESET_NAMES = Object.keys(
 
 const CAMERA_SHAKE_OFFSETS = {
   operatorWide: [0.12, 0.035, -0.09],
+  operatorCctv: [0.05, 0.016, -0.035],
   nightRainClose: [0.055, -0.018, 0.038],
   nightAerialProof: [0.02, 0.006, -0.014],
   mobileWide: [0.075, 0.025, -0.06],

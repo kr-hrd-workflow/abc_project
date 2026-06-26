@@ -1419,5 +1419,158 @@
     "provenanceEvidencePath": "docs/compliance/r3f-asset-licenses.md",
     "runtimeUsage": "background-plate",
     "nonPowerOfTwoReason": "Full-frame background plate projected onto a backdrop quad (no mipmapping/tiling); 1536x1024 generated landscape kept as-is."
+  },
+  "textures/vehicle_paint_detail": {
+    "id": "textures/vehicle_paint_detail",
+    "path": "/simulation/r3f/assets/textures/vehicle_paint_detail.png",
+    "kind": "texture",
+    "source": "imagegen-generated-vehicle-paint-texture",
+    "license": "Project-generated via imagegen; no real brands, logos, or store names; provenance in docs/compliance/r3f-asset-licenses.md",
+    "units": "meters",
+    "pbr": true,
+    "lod": "material",
+    "maxTextureSize": 1024,
+    "maxTriangles": 0,
+    "maxFileSizeBytes": 800000,
+    "realismStatus": "stage4_1_ready",
+    "visualRejectIfToyLike": true,
+    "authorship": "generated",
+    "compression": {
+      "status": "uncompressed-under-budget",
+      "geometry": "not-applicable",
+      "texture": "png",
+      "evidence": "scripts/verify-r3f-assets.mjs"
+    },
+    "provenanceEvidencePath": "docs/compliance/r3f-asset-licenses.md",
+    "details": {
+      "dimensions": "1024x1024",
+      "fileSizeBytes": 475517,
+      "materialFeatures": [
+        "tiling car-paint micro-detail",
+        "metallic flake speckle",
+        "faint road dust/grime",
+        "micro-scratches",
+        "orange-peel clearcoat"
+      ],
+      "provenance": "Imagegen-generated seamless tiling vehicle paint-detail map (1024x1024), tiled over vehicle body UVs as a subtle base-color detail so paint reads as real rather than flat CG. No real brands, logos, or store names. Runtime proof must come from browser-rendered frames."
+    },
+    "pbrChannels": [
+      "baseColor"
+    ],
+    "runtimeUsage": "Tiling base-color detail map on vehicle body materials for photoreal paint micro-variation."
+  },
+  "textures/vehicle_paint_normal": {
+    "id": "textures/vehicle_paint_normal",
+    "path": "/simulation/r3f/assets/textures/vehicle_paint_normal.png",
+    "kind": "texture",
+    "source": "derived-from-imagegen-vehicle-paint-texture",
+    "license": "Project-generated via imagegen; no real brands, logos, or store names; provenance in docs/compliance/r3f-asset-licenses.md",
+    "units": "meters",
+    "pbr": true,
+    "lod": "material",
+    "maxTextureSize": 1024,
+    "maxTriangles": 0,
+    "maxFileSizeBytes": 800000,
+    "realismStatus": "stage4_1_ready",
+    "visualRejectIfToyLike": true,
+    "authorship": "generated",
+    "compression": {
+      "status": "uncompressed-under-budget",
+      "geometry": "not-applicable",
+      "texture": "png",
+      "evidence": "scripts/verify-r3f-assets.mjs"
+    },
+    "provenanceEvidencePath": "docs/compliance/r3f-asset-licenses.md",
+    "details": {
+      "dimensions": "1024x1024",
+      "fileSizeBytes": 571504,
+      "materialFeatures": [
+        "tangent-space normal",
+        "micro surface relief derived from paint detail"
+      ],
+      "provenance": "Tangent-space normal map derived (Sobel) from the imagegen vehicle paint-detail map (1024x1024); adds micro surface relief on vehicle bodies. No real brands, logos, or store names. Runtime proof must come from browser-rendered frames."
+    },
+    "pbrChannels": [
+      "normal"
+    ],
+    "runtimeUsage": "Tangent-space normal map for vehicle body micro surface relief (paired with the paint-detail map)."
+  },
+  "plates/gangnam_night_operator_cctv": {
+    "id": "plates/gangnam_night_operator_cctv",
+    "path": "/simulation/r3f/assets/plates/gangnam_night_operator_cctv.webp",
+    "kind": "texture",
+    "source": "imagegen-generated-night-cctv-plate",
+    "license": "Project-generated via imagegen; no real brands, logos, or store names; provenance in docs/compliance/r3f-asset-licenses.md",
+    "authorship": "generated",
+    "units": "meters",
+    "pbr": false,
+    "lod": "atlas",
+    "maxTextureSize": 2048,
+    "maxTriangles": 0,
+    "maxFileSizeBytes": 4000000,
+    "allowNonPowerOfTwo": true,
+    "realismStatus": "stage6_finishing_source_ready",
+    "visualRejectIfToyLike": true,
+    "details": {
+      "spriteFeatures": [
+        "night CCTV low-oblique Gangnam intersection backdrop",
+        "four-way intersection with crosswalks",
+        "glass high-rise office towers",
+        "street trees",
+        "central bus lanes both directions"
+      ],
+      "provenance": "Imagegen-generated night CCTV-style low-oblique plate (1536x1024) of the same Gangnam Teheran-ro intersection, generated from a structural guide rendered at the operator-cctv camera so it aligns with that camera. No real brands, logos, or store names; background visual only and never a vehicle/pedestrian/signal truth surface. Runtime proof must come from browser-rendered night frames."
+    },
+    "pbrChannels": [
+      "sourceColor"
+    ],
+    "compression": {
+      "status": "webp-runtime",
+      "geometry": "not-applicable",
+      "texture": "webp",
+      "evidence": "background plate projected onto proxy geometry; not a runtime truth surface; scripts/verify-r3f-assets.mjs"
+    },
+    "provenanceEvidencePath": "docs/compliance/r3f-asset-licenses.md",
+    "runtimeUsage": "background-plate",
+    "nonPowerOfTwoReason": "Full-frame background plate projected onto a backdrop quad (no mipmapping/tiling); 1536x1024 generated landscape kept as-is."
+  },
+  "plates/gangnam_day_operator_cctv": {
+    "id": "plates/gangnam_day_operator_cctv",
+    "path": "/simulation/r3f/assets/plates/gangnam_day_operator_cctv.webp",
+    "kind": "texture",
+    "source": "imagegen-generated-day-cctv-plate",
+    "license": "Project-generated via imagegen; no real brands, logos, or store names; provenance in docs/compliance/r3f-asset-licenses.md",
+    "authorship": "generated",
+    "units": "meters",
+    "pbr": false,
+    "lod": "atlas",
+    "maxTextureSize": 2048,
+    "maxTriangles": 0,
+    "maxFileSizeBytes": 4000000,
+    "allowNonPowerOfTwo": true,
+    "realismStatus": "stage6_finishing_source_ready",
+    "visualRejectIfToyLike": true,
+    "details": {
+      "spriteFeatures": [
+        "day CCTV low-oblique Gangnam intersection backdrop",
+        "four-way intersection with crosswalks",
+        "glass high-rise office towers",
+        "street trees",
+        "central bus lanes both directions"
+      ],
+      "provenance": "Imagegen-generated daytime CCTV-style low-oblique plate (1536x1024) of the same Gangnam Teheran-ro intersection, generated from a structural guide rendered at the operator-cctv camera so it aligns with that camera. No real brands, logos, or store names; background visual only and never a vehicle/pedestrian/signal truth surface. Runtime proof must come from browser-rendered day frames."
+    },
+    "pbrChannels": [
+      "sourceColor"
+    ],
+    "compression": {
+      "status": "webp-runtime",
+      "geometry": "not-applicable",
+      "texture": "webp",
+      "evidence": "background plate projected onto proxy geometry; not a runtime truth surface; scripts/verify-r3f-assets.mjs"
+    },
+    "provenanceEvidencePath": "docs/compliance/r3f-asset-licenses.md",
+    "runtimeUsage": "background-plate",
+    "nonPowerOfTwoReason": "Full-frame background plate projected onto a backdrop quad (no mipmapping/tiling); 1536x1024 generated landscape kept as-is."
   }
 }

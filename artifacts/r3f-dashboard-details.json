@@ -1,10 +1,10 @@
 {
-  "generated_at": "2026-06-26T05:16:00.660Z",
+  "generated_at": "2026-06-26T06:39:58.233Z",
   "route": "/dashboard",
   "server": {
     "mode": "started-production",
-    "base_url": "http://127.0.0.1:44047",
-    "port": 44047,
+    "base_url": "http://127.0.0.1:34441",
+    "port": 34441,
     "env": {
       "FORCE_COLOR": "0",
       "NEXT_PUBLIC_API_BASE_URL": "http://127.0.0.1:8000",
@@ -46,7 +46,7 @@
     "weather": "rain",
     "time_of_day": "day",
     "fallback_reason": null,
-    "frame_age_ms": 1853,
+    "frame_age_ms": 2024,
     "network_latency_ms": 1390,
     "sim_to_render_delay_ms": 0,
     "authoritative_hz": 10,
@@ -93,7 +93,7 @@
     "scenarioId": "emergency",
     "queueSource": "frame",
     "fallbackReason": null,
-    "frameAgeMs": 1853,
+    "frameAgeMs": 2024,
     "networkLatencyMs": 1390,
     "simToRenderDelayMs": 0,
     "authoritativeHz": 10,
@@ -106,7 +106,7 @@
       "textureMemoryEstimateMb": 12,
       "source": "browser_telemetry_or_renderer_info+desktop_performance_sample",
       "reason": "Headless Chromium throttled requestAnimationFrame while the R3F canvas uses frameloop=demand; FPS/frame-time target sampling is not measurable in this proof mode, so draw calls, triangles, telemetry fields, and raw rAF data are recorded instead.",
-      "rawFrameTimeMs": 708.924994879683,
+      "rawFrameTimeMs": 606.5656562638791,
       "measurementStatus": "unmeasurable_headless_static_demand_loop"
     },
     "sourceLabels": {
@@ -131,7 +131,7 @@
       "cssWidth": 915,
       "cssHeight": 680,
       "backingWidth": 914,
-      "backingHeight": 680
+      "backingHeight": 679
     },
     "drawCalls": 1,
     "peakDrawCalls": 351,
@@ -148,7 +148,7 @@
       "webgl_context_loss_count": 0,
       "fallback_reason": null,
       "visible_vehicle_count": 96,
-      "frame_age_ms": 1853,
+      "frame_age_ms": 2024,
       "network_latency_ms": 1390,
       "sim_to_render_delay_ms": 0,
       "authoritative_hz": 10,
@@ -189,7 +189,7 @@
         "texture_memory_estimate_mb": 12,
         "source": "app_proof+desktop_performance_sample",
         "reason": "Headless Chromium throttled requestAnimationFrame while the R3F canvas uses frameloop=demand; FPS/frame-time target sampling is not measurable in this proof mode, so draw calls, triangles, telemetry fields, and raw rAF data are recorded instead.",
-        "raw_frame_time_ms": 708.924994879683,
+        "raw_frame_time_ms": 606.5656562638791,
         "measurement_status": "unmeasurable_headless_static_demand_loop"
       },
       "source_labels": {
@@ -205,9 +205,9 @@
         "truth_separated": true
       },
       "js_heap_bytes": 47400000,
-      "emitted_at": "2026-06-26T05:16:28.544Z",
-      "raw_fps": 3.04,
-      "raw_average_frame_time_ms": 327.73
+      "emitted_at": "2026-06-26T06:40:28.798Z",
+      "raw_fps": 3.41,
+      "raw_average_frame_time_ms": 294.47
     },
     "appProof": {
       "renderer": "r3f",
@@ -220,9 +220,9 @@
       "drawCallBudget": 900,
       "shadowEnabled": true,
       "shadowCasterCount": 18,
-      "fps": 1.410586461505307,
-      "averageFrameTimeMs": 708.924994879683,
-      "cpuFrameTimeMs": 708.924994879683,
+      "fps": 1.6486261456994888,
+      "averageFrameTimeMs": 606.5656562638791,
+      "cpuFrameTimeMs": 606.5656562638791,
       "gpuFrameTimeMs": null,
       "triangles": 1,
       "textureMemoryBytes": 12582912,
@@ -232,7 +232,7 @@
       "canvasHeight": 680,
       "canvasConnected": true,
       "drawingBufferWidth": 914,
-      "drawingBufferHeight": 680
+      "drawingBufferHeight": 679
     },
     "domProof": {
       "viewport": {
@@ -339,8 +339,8 @@
       "weather": "rain",
       "time_of_day": "day",
       "fallback_reason": null,
-      "frame_age_ms": 6788,
-      "network_latency_ms": 136,
+      "frame_age_ms": 1568,
+      "network_latency_ms": 6506,
       "sim_to_render_delay_ms": 0,
       "authoritative_hz": 10,
       "authoritative_tick_drift_ms": 0,
@@ -386,15 +386,15 @@
       "scenarioId": "emergency",
       "queueSource": "frame",
       "fallbackReason": null,
-      "frameAgeMs": 6788,
-      "networkLatencyMs": 136,
+      "frameAgeMs": 1568,
+      "networkLatencyMs": 6506,
       "simToRenderDelayMs": 0,
       "authoritativeHz": 10,
       "authoritativeTickDriftMs": 0,
       "frameStale": true,
       "performance": {
         "drawCalls": 1,
-        "frameTimeMs": 2620.519999999553,
+        "frameTimeMs": 1449.2198400000634,
         "visibleVehicles": 96,
         "textureMemoryEstimateMb": 12,
         "source": "browser_telemetry_or_renderer_info",
@@ -422,7 +422,7 @@
         "cssWidth": 915,
         "cssHeight": 680,
         "backingWidth": 914,
-        "backingHeight": 680
+        "backingHeight": 679
       },
       "drawCalls": 1,
       "peakDrawCalls": 351,
@@ -439,8 +439,8 @@
         "webgl_context_loss_count": 0,
         "fallback_reason": null,
         "visible_vehicle_count": 96,
-        "frame_age_ms": 6788,
-        "network_latency_ms": 136,
+        "frame_age_ms": 1568,
+        "network_latency_ms": 6506,
         "sim_to_render_delay_ms": 0,
         "authoritative_hz": 10,
         "authoritative_tick_drift_ms": 0,
@@ -467,15 +467,15 @@
           "source": "dom_attribute",
           "reason": null
         },
-        "fps": 0.38160365118379963,
-        "average_frame_time_ms": 2620.519999999553,
-        "cpu_frame_time_ms": 2620.519999999553,
+        "fps": 0.6900264351887124,
+        "average_frame_time_ms": 1449.2198400000634,
+        "cpu_frame_time_ms": 1449.2198400000634,
         "gpu_frame_time_ms": null,
         "triangles": 1,
         "texture_memory_bytes": 12582912,
         "performance": {
           "draw_calls": 1,
-          "frame_time_ms": 2620.519999999553,
+          "frame_time_ms": 1449.2198400000634,
           "visible_vehicles": 96,
           "texture_memory_estimate_mb": 12,
           "source": "app_proof",
@@ -494,7 +494,7 @@
           "truth_separated": true
         },
         "js_heap_bytes": 47400000,
-        "emitted_at": "2026-06-26T05:16:23.583Z"
+        "emitted_at": "2026-06-26T06:40:23.574Z"
       },
       "appProof": {
         "renderer": "r3f",
@@ -507,9 +507,9 @@
         "drawCallBudget": 900,
         "shadowEnabled": true,
         "shadowCasterCount": 18,
-        "fps": 0.38160365118379963,
-        "averageFrameTimeMs": 2620.519999999553,
-        "cpuFrameTimeMs": 2620.519999999553,
+        "fps": 0.6900264351887124,
+        "averageFrameTimeMs": 1449.2198400000634,
+        "cpuFrameTimeMs": 1449.2198400000634,
         "gpuFrameTimeMs": null,
         "triangles": 1,
         "textureMemoryBytes": 12582912,
@@ -519,7 +519,7 @@
         "canvasHeight": 680,
         "canvasConnected": true,
         "drawingBufferWidth": 914,
-        "drawingBufferHeight": 680
+        "drawingBufferHeight": 679
       },
       "domProof": {
         "viewport": {
@@ -617,11 +617,11 @@
     }
   },
   "payload": {
-    "bytes": 19436438,
-    "mb": 18.54,
+    "bytes": 21309127,
+    "mb": 20.32,
     "limit_bytes": 26214400,
     "limit_mb": 25,
-    "asset_count": 27
+    "asset_count": 31
   },
   "desktop": {
     "viewport": {
@@ -630,7 +630,7 @@
     },
     "r3f_ready": true,
     "page_state": {
-      "url": "http://127.0.0.1:44047/dashboard",
+      "url": "http://127.0.0.1:34441/dashboard",
       "title": "Smart Intersection Ops",
       "bodyTextExcerpt": "스마트 교차로 운영 시스템 Smart Intersection Ops 선택된 교차로 강남대로 / 테헤란로 INT-SEO-0001 · 서울 강남 · Asia/Seoul 보행·버스 수요가 높은 도심 간선 교차로 INC-2025-0516-0007 Active Live 09:00:00 분석 완료 Analysis Complete Fresh 12s 데이터 최신 알림 리포트 시나리오 한국어 EN 서울 보행·버스 수요가 높은 도심 간선 교차로 뉴욕 보행 밀도가 높은 격자형 도심 교차로 파리 버스·택시 우선 검토가 필요한 대로형 교차로 런던 보행 중심 상업지와 버스 회랑이 만나는 교차로 운영 모드 AI가 시뮬레이션 권고를 자동으로 준비합니다. AI 권고 자동 준비 AI Automatic 관리자 직접 검토 Admin Manual 자동 준비 중 신뢰도 92% 다음 권고 emergency_priority Simulation only / No real signal control 권고와 시뮬레이션만 제공합니다. 실제 교통 신호 제어는 수행하지 않습니다. 운영자 A Operator A Live evidence rail Incident Brief Spine 이벤트, 증거, 현장 흐름 전체",
       "hasNextErrorOverlay": false,
@@ -694,43 +694,43 @@
     "performance": {
       "measurement_status": "unmeasurable_headless_static_demand_loop",
       "reason": "Headless Chromium throttled requestAnimationFrame while the R3F canvas uses frameloop=demand; FPS/frame-time target sampling is not measurable in this proof mode, so draw calls, triangles, telemetry fields, and raw rAF data are recorded instead.",
-      "sample_ms": 986,
+      "sample_ms": 881,
       "frame_count": 3,
-      "expected_frame_count": 59,
+      "expected_frame_count": 53,
       "fps": null,
       "average_frame_time_ms": null,
       "cpu_frame_time_ms": null,
       "gpu_frame_time_ms": null,
       "texture_memory_bytes": null,
       "js_heap_bytes": 47400000,
-      "raw_fps": 3.04,
-      "raw_average_frame_time_ms": 327.73,
+      "raw_fps": 3.41,
+      "raw_average_frame_time_ms": 294.47,
       "target_fps": 60
     },
     "canvas_metrics": {
       "width": 914,
-      "height": 680,
-      "sampled_pixels": 621520,
-      "non_background_ratio": 0.8976139142746814,
-      "bright_ratio": 0.16588042219075813,
-      "dark_ratio": 0.4017714635088171,
-      "warm_light_ratio": 0.007982044021109538,
-      "cool_light_ratio": 0.022071695198867293,
-      "marking_ratio": 0.27786233749517314,
-      "saturated_ratio": 0.40645353327326555,
-      "color_bucket_count": 691,
-      "luminance_stddev": 71.81147281197313
+      "height": 679,
+      "sampled_pixels": 620606,
+      "non_background_ratio": 0.8971763083179989,
+      "bright_ratio": 0.16592491854735533,
+      "dark_ratio": 0.40119496105419544,
+      "warm_light_ratio": 0.00826772541677006,
+      "cool_light_ratio": 0.019414894474110787,
+      "marking_ratio": 0.2778171658024576,
+      "saturated_ratio": 0.4066090240829125,
+      "color_bucket_count": 773,
+      "luminance_stddev": 71.79503547836815
     },
     "canvas_composition": {
       "width": 914,
-      "height": 680,
-      "scene_coverage_ratio": 0.7766250482687604,
-      "empty_near_black_ratio": 0.2231255631355387,
-      "top_band_scene_ratio": 0.650984682713348,
-      "bottom_band_scene_ratio": 0.7608926502767409,
-      "left_band_scene_ratio": 0.7208052073288331,
-      "right_band_scene_ratio": 0.5066338073691015,
-      "center_band_scene_ratio": 0.9815033730534014,
+      "height": 679,
+      "scene_coverage_ratio": 0.777633474378269,
+      "empty_near_black_ratio": 0.22208132051575397,
+      "top_band_scene_ratio": 0.6507513837044665,
+      "bottom_band_scene_ratio": 0.7609611799983791,
+      "left_band_scene_ratio": 0.7195329035788728,
+      "right_band_scene_ratio": 0.5065302885626891,
+      "center_band_scene_ratio": 0.9829692327091608,
       "occupied_grid_cell_count": 25,
       "grid_cell_count": 25,
       "scene_bbox_width_ratio": 1,
@@ -744,40 +744,40 @@
           0.267
         ],
         [
-          0.786,
-          0.841,
-          0.974,
+          0.787,
+          0.845,
+          0.976,
           0.84,
-          0.668
+          0.669
         ],
         [
-          0.775,
-          0.963,
+          0.77,
+          0.987,
           0.997,
           0.915,
-          0.697
+          0.695
         ],
         [
           0.682,
           0.991,
-          0.994,
-          0.908,
+          0.99,
+          0.913,
           0.321
         ],
         [
-          0.789,
+          0.79,
           0.995,
           0.906,
-          0.534,
-          0.58
+          0.531,
+          0.582
         ]
       ]
     },
     "canvas_screenshot": {
       "exists": true,
-      "bytes": 1413274,
+      "bytes": 1413072,
       "width": 914,
-      "height": 680,
+      "height": 679,
       "expected_viewport": {
         "width": 1440,
         "height": 1000
@@ -785,7 +785,7 @@
     },
     "screenshot": {
       "exists": true,
-      "bytes": 1010551,
+      "bytes": 999527,
       "width": 1440,
       "height": 1000,
       "expected_viewport": {
@@ -801,7 +801,7 @@
     },
     "r3f_ready": true,
     "page_state": {
-      "url": "http://127.0.0.1:44047/dashboard",
+      "url": "http://127.0.0.1:34441/dashboard",
       "title": "Smart Intersection Ops",
       "bodyTextExcerpt": "스마트 교차로 운영 시스템 Smart Intersection Ops 선택된 교차로 강남대로 / 테헤란로 INT-SEO-0001 · 서울 강남 · Asia/Seoul 보행·버스 수요가 높은 도심 간선 교차로 INC-2025-0516-0007 Active Live 09:00:00 분석 완료 Analysis Complete Fresh 12s 데이터 최신 알림 리포트 시나리오 한국어 EN 서울 보행·버스 수요가 높은 도심 간선 교차로 뉴욕 보행 밀도가 높은 격자형 도심 교차로 파리 버스·택시 우선 검토가 필요한 대로형 교차로 런던 보행 중심 상업지와 버스 회랑이 만나는 교차로 운영 모드 AI가 시뮬레이션 권고를 자동으로 준비합니다. AI 권고 자동 준비 AI Automatic 관리자 직접 검토 Admin Manual 자동 준비 중 신뢰도 92% 다음 권고 emergency_priority Simulation only / No real signal control 운영자 A Operator A Live evidence rail Incident Brief Spine 이벤트, 증거, 현장 흐름 전체 최근 이벤트 표시 1/1 09:00:00 긴급 CRITICAL 긴급차량 접",
       "hasNextErrorOverlay": false,
@@ -813,26 +813,26 @@
       "width": 368,
       "height": 375,
       "sampled_pixels": 138000,
-      "non_background_ratio": 0.7770507246376812,
-      "bright_ratio": 0.13916666666666666,
-      "dark_ratio": 0.44953623188405795,
-      "warm_light_ratio": 0.002572463768115942,
-      "cool_light_ratio": 0.012949275362318841,
-      "marking_ratio": 0.2574275362318841,
-      "saturated_ratio": 0.45660869565217393,
-      "color_bucket_count": 525,
-      "luminance_stddev": 67.87856110035632
+      "non_background_ratio": 0.7739710144927536,
+      "bright_ratio": 0.13732608695652174,
+      "dark_ratio": 0.451268115942029,
+      "warm_light_ratio": 0.0025869565217391303,
+      "cool_light_ratio": 0.012659420289855073,
+      "marking_ratio": 0.2550942028985507,
+      "saturated_ratio": 0.45457246376811594,
+      "color_bucket_count": 533,
+      "luminance_stddev": 67.7472950936378
     },
     "canvas_composition": {
       "width": 368,
       "height": 375,
-      "scene_coverage_ratio": 0.8654420289855073,
-      "empty_near_black_ratio": 0.13396376811594202,
-      "top_band_scene_ratio": 0.9197826086956522,
-      "bottom_band_scene_ratio": 0.8630434782608696,
-      "left_band_scene_ratio": 0.7913873873873873,
-      "right_band_scene_ratio": 0.6809132420091324,
-      "center_band_scene_ratio": 0.9940622222222222,
+      "scene_coverage_ratio": 0.8657101449275363,
+      "empty_near_black_ratio": 0.13327536231884057,
+      "top_band_scene_ratio": 0.92,
+      "bottom_band_scene_ratio": 0.8632246376811594,
+      "left_band_scene_ratio": 0.7975495495495496,
+      "right_band_scene_ratio": 0.6826301369863014,
+      "center_band_scene_ratio": 0.9886222222222222,
       "occupied_grid_cell_count": 25,
       "grid_cell_count": 25,
       "scene_bbox_width_ratio": 1,
@@ -841,14 +841,14 @@
         [
           0.891,
           0.974,
-          0.975,
+          0.976,
           0.975,
           0.783
         ],
         [
-          0.791,
-          0.948,
-          0.984,
+          0.821,
+          0.935,
+          0.97,
           0.885,
           0.669
         ],
@@ -860,35 +860,35 @@
           0.79
         ],
         [
-          0.698,
+          0.699,
           0.995,
           1,
-          0.917,
+          0.918,
           0.347
         ],
         [
           0.806,
           0.989,
-          0.908,
-          0.797,
-          0.816
+          0.902,
+          0.796,
+          0.824
         ]
       ]
     },
     "performance": {
       "measurement_status": "unmeasurable_headless_static_demand_loop",
       "reason": "Headless Chromium throttled requestAnimationFrame while the R3F canvas uses frameloop=demand; FPS/frame-time target sampling is not measurable in this proof mode, so draw calls, triangles, telemetry fields, and raw rAF data are recorded instead.",
-      "sample_ms": 928,
+      "sample_ms": 870,
       "frame_count": 4,
-      "expected_frame_count": 28,
+      "expected_frame_count": 26,
       "fps": null,
       "average_frame_time_ms": null,
       "cpu_frame_time_ms": null,
       "gpu_frame_time_ms": null,
       "texture_memory_bytes": null,
       "js_heap_bytes": 47400000,
-      "raw_fps": 4.31,
-      "raw_average_frame_time_ms": 233.33,
+      "raw_fps": 4.6,
+      "raw_average_frame_time_ms": 216.65,
       "target_fps": 30
     },
     "renderer": {
@@ -903,8 +903,8 @@
       "weather": "rain",
       "time_of_day": "day",
       "fallback_reason": null,
-      "frame_age_ms": 1600,
-      "network_latency_ms": 906,
+      "frame_age_ms": 1482,
+      "network_latency_ms": 889,
       "sim_to_render_delay_ms": 0,
       "authoritative_hz": 10,
       "authoritative_tick_drift_ms": 0,
@@ -950,15 +950,15 @@
       "scenarioId": "emergency",
       "queueSource": "frame",
       "fallbackReason": null,
-      "frameAgeMs": 1600,
-      "networkLatencyMs": 906,
+      "frameAgeMs": 1482,
+      "networkLatencyMs": 889,
       "simToRenderDelayMs": 0,
       "authoritativeHz": 10,
       "authoritativeTickDriftMs": 0,
       "frameStale": true,
       "performance": {
         "drawCalls": 1,
-        "frameTimeMs": 319.2739645776212,
+        "frameTimeMs": 296.1180902942555,
         "visibleVehicles": 96,
         "textureMemoryEstimateMb": 12,
         "source": "browser_telemetry_or_renderer_info",
@@ -1003,8 +1003,8 @@
         "webgl_context_loss_count": 0,
         "fallback_reason": null,
         "visible_vehicle_count": 96,
-        "frame_age_ms": 1600,
-        "network_latency_ms": 906,
+        "frame_age_ms": 1482,
+        "network_latency_ms": 889,
         "sim_to_render_delay_ms": 0,
         "authoritative_hz": 10,
         "authoritative_tick_drift_ms": 0,
@@ -1031,15 +1031,15 @@
           "source": "dom_attribute",
           "reason": null
         },
-        "fps": 3.1321063129057056,
-        "average_frame_time_ms": 319.2739645776212,
-        "cpu_frame_time_ms": 319.2739645776212,
+        "fps": 3.3770310993370583,
+        "average_frame_time_ms": 296.1180902942555,
+        "cpu_frame_time_ms": 296.1180902942555,
         "gpu_frame_time_ms": null,
         "triangles": 1,
         "texture_memory_bytes": 12582912,
         "performance": {
           "draw_calls": 1,
-          "frame_time_ms": 319.2739645776212,
+          "frame_time_ms": 296.1180902942555,
           "visible_vehicles": 96,
           "texture_memory_estimate_mb": 12,
           "source": "app_proof",
@@ -1058,7 +1058,7 @@
           "truth_separated": true
         },
         "js_heap_bytes": 47400000,
-        "emitted_at": "2026-06-26T05:16:48.711Z"
+        "emitted_at": "2026-06-26T06:40:47.706Z"
       },
       "appProof": {
         "renderer": "r3f",
@@ -1071,9 +1071,9 @@
         "drawCallBudget": 900,
         "shadowEnabled": true,
         "shadowCasterCount": 18,
-        "fps": 3.1321063129057056,
-        "averageFrameTimeMs": 319.2739645776212,
-        "cpuFrameTimeMs": 319.2739645776212,
+        "fps": 3.3770310993370583,
+        "averageFrameTimeMs": 296.1180902942555,
+        "cpuFrameTimeMs": 296.1180902942555,
         "gpuFrameTimeMs": null,
         "triangles": 1,
         "textureMemoryBytes": 12582912,
@@ -1242,7 +1242,7 @@
     },
     "canvas_screenshot": {
       "exists": true,
-      "bytes": 210428,
+      "bytes": 211211,
       "width": 368,
       "height": 375,
       "expected_viewport": {
@@ -1252,7 +1252,7 @@
     },
     "screenshot": {
       "exists": true,
-      "bytes": 246389,
+      "bytes": 247283,
       "width": 390,
       "height": 844,
       "expected_viewport": {
@@ -1262,7 +1262,7 @@
     },
     "overlay_screenshot": {
       "exists": true,
-      "bytes": 238361,
+      "bytes": 238962,
       "width": 390,
       "height": 844,
       "expected_viewport": {
@@ -1276,7 +1276,7 @@
     "fallbackCanvasVisible": true,
     "safetyTextVisible": true,
     "page_state": {
-      "url": "http://127.0.0.1:44047/dashboard",
+      "url": "http://127.0.0.1:34441/dashboard",
       "title": "Smart Intersection Ops",
       "bodyTextExcerpt": "스마트 교차로 운영 시스템 Smart Intersection Ops 선택된 교차로 강남대로 / 테헤란로 INT-SEO-0001 · 서울 강남 · Asia/Seoul 보행·버스 수요가 높은 도심 간선 교차로 INC-2025-0516-0007 Active Live 09:00:00 분석 완료 Analysis Complete Fresh 12s 데이터 최신 알림 리포트 시나리오 한국어 EN 서울 보행·버스 수요가 높은 도심 간선 교차로 뉴욕 보행 밀도가 높은 격자형 도심 교차로 파리 버스·택시 우선 검토가 필요한 대로형 교차로 런던 보행 중심 상업지와 버스 회랑이 만나는 교차로 운영 모드 AI가 시뮬레이션 권고를 자동으로 준비합니다. AI 권고 자동 준비 AI Automatic 관리자 직접 검토 Admin Manual 자동 준비 중 신뢰도 92% 다음 권고 emergency_priority Simulation only / No real signal control 권고와 시뮬레이션만 제공합니다. 실제 교통 신호 제어는 수행하지 않습니다. 운영자 A Operator A Live evidence rail Incident Brief Spine 이벤트, 증거, 현장 흐름 전체",
       "hasNextErrorOverlay": false,
@@ -1286,7 +1286,7 @@
     },
     "screenshot": {
       "exists": true,
-      "bytes": 863384,
+      "bytes": 863378,
       "width": 1440,
       "height": 1000,
       "expected_viewport": {
@@ -1307,7 +1307,7 @@
     "webgl_context_loss_count": 0,
     "fallback_reason": null,
     "visible_vehicle_count": 96,
-    "frame_age_ms": 1853,
+    "frame_age_ms": 2024,
     "network_latency_ms": 1390,
     "sim_to_render_delay_ms": 0,
     "authoritative_hz": 10,
@@ -1348,7 +1348,7 @@
       "texture_memory_estimate_mb": 12,
       "source": "app_proof+desktop_performance_sample",
       "reason": "Headless Chromium throttled requestAnimationFrame while the R3F canvas uses frameloop=demand; FPS/frame-time target sampling is not measurable in this proof mode, so draw calls, triangles, telemetry fields, and raw rAF data are recorded instead.",
-      "raw_frame_time_ms": 708.924994879683,
+      "raw_frame_time_ms": 606.5656562638791,
       "measurement_status": "unmeasurable_headless_static_demand_loop"
     },
     "source_labels": {
@@ -1364,9 +1364,9 @@
       "truth_separated": true
     },
     "js_heap_bytes": 47400000,
-    "emitted_at": "2026-06-26T05:16:28.544Z",
-    "raw_fps": 3.04,
-    "raw_average_frame_time_ms": 327.73
+    "emitted_at": "2026-06-26T06:40:28.798Z",
+    "raw_fps": 3.41,
+    "raw_average_frame_time_ms": 294.47
   },
   "qualityPreset": "high",
   "qualityPresetEvidence": {
@@ -1402,7 +1402,7 @@
     "textureMemoryEstimateMb": 12,
     "source": "browser_telemetry_or_renderer_info+desktop_performance_sample",
     "reason": "Headless Chromium throttled requestAnimationFrame while the R3F canvas uses frameloop=demand; FPS/frame-time target sampling is not measurable in this proof mode, so draw calls, triangles, telemetry fields, and raw rAF data are recorded instead.",
-    "rawFrameTimeMs": 708.924994879683,
+    "rawFrameTimeMs": 606.5656562638791,
     "measurementStatus": "unmeasurable_headless_static_demand_loop"
   },
   "sourceLabels": {
@@ -1428,10 +1428,10 @@
       "source_label": "Snapshotsimulation_snapshot_fixture",
       "safety_copy_visible": true,
       "no_overflow": null,
-      "nonblank_canvas_ratio": 0.8977724997824706,
+      "nonblank_canvas_ratio": 0.8978530661965884,
       "screenshot": {
         "exists": true,
-        "bytes": 999842,
+        "bytes": 1000966,
         "width": 1440,
         "height": 1000,
         "expected_viewport": {
@@ -1441,7 +1441,7 @@
       },
       "canvas_screenshot": {
         "exists": true,
-        "bytes": 1419772,
+        "bytes": 1422110,
         "width": 914,
         "height": 679,
         "expected_viewport": {
@@ -1461,8 +1461,8 @@
         "weather": "clear",
         "time_of_day": "day",
         "fallback_reason": null,
-        "frame_age_ms": 1257,
-        "network_latency_ms": 1532,
+        "frame_age_ms": 1537,
+        "network_latency_ms": 1335,
         "sim_to_render_delay_ms": 0,
         "authoritative_hz": 10,
         "authoritative_tick_drift_ms": 0,
@@ -1508,15 +1508,15 @@
         "scenarioId": "emergency",
         "queueSource": "frame",
         "fallbackReason": null,
-        "frameAgeMs": 1257,
-        "networkLatencyMs": 1532,
+        "frameAgeMs": 1537,
+        "networkLatencyMs": 1335,
         "simToRenderDelayMs": 0,
         "authoritativeHz": 10,
         "authoritativeTickDriftMs": 0,
         "frameStale": true,
         "performance": {
           "drawCalls": 1,
-          "frameTimeMs": 695.2580679260228,
+          "frameTimeMs": 630.6006535870339,
           "visibleVehicles": 96,
           "textureMemoryEstimateMb": 12,
           "source": "browser_telemetry_or_renderer_info",
@@ -1561,8 +1561,8 @@
           "webgl_context_loss_count": 0,
           "fallback_reason": null,
           "visible_vehicle_count": 96,
-          "frame_age_ms": 1257,
-          "network_latency_ms": 1532,
+          "frame_age_ms": 1537,
+          "network_latency_ms": 1335,
           "sim_to_render_delay_ms": 0,
           "authoritative_hz": 10,
           "authoritative_tick_drift_ms": 0,
@@ -1589,15 +1589,15 @@
             "source": "dom_attribute",
             "reason": null
           },
-          "fps": 1.4383148447065592,
-          "average_frame_time_ms": 695.2580679260228,
-          "cpu_frame_time_ms": 695.2580679260228,
+          "fps": 1.5857896662677382,
+          "average_frame_time_ms": 630.6006535870339,
+          "cpu_frame_time_ms": 630.6006535870339,
           "gpu_frame_time_ms": null,
           "triangles": 1,
           "texture_memory_bytes": 12582912,
           "performance": {
             "draw_calls": 1,
-            "frame_time_ms": 695.2580679260228,
+            "frame_time_ms": 630.6006535870339,
             "visible_vehicles": 96,
             "texture_memory_estimate_mb": 12,
             "source": "app_proof",
@@ -1615,8 +1615,8 @@
             "ambient_pedestrian_source": "procedural_background_proxy",
             "truth_separated": true
           },
-          "js_heap_bytes": 50400000,
-          "emitted_at": "2026-06-26T05:17:05.707Z"
+          "js_heap_bytes": 44700000,
+          "emitted_at": "2026-06-26T06:41:03.499Z"
         },
         "appProof": {
           "renderer": "r3f",
@@ -1629,13 +1629,13 @@
           "drawCallBudget": 900,
           "shadowEnabled": true,
           "shadowCasterCount": 18,
-          "fps": 1.4383148447065592,
-          "averageFrameTimeMs": 695.2580679260228,
-          "cpuFrameTimeMs": 695.2580679260228,
+          "fps": 1.5857896662677382,
+          "averageFrameTimeMs": 630.6006535870339,
+          "cpuFrameTimeMs": 630.6006535870339,
           "gpuFrameTimeMs": null,
           "triangles": 1,
           "textureMemoryBytes": 12582912,
-          "jsHeapBytes": 50400000,
+          "jsHeapBytes": 44700000,
           "authoritativeTickDriftMs": 0,
           "canvasWidth": 915,
           "canvasHeight": 680,
@@ -1751,10 +1751,10 @@
       "source_label": "Snapshotsimulation_snapshot_fixture",
       "safety_copy_visible": true,
       "no_overflow": null,
-      "nonblank_canvas_ratio": 0.4146189985841164,
+      "nonblank_canvas_ratio": 0.4147815034109924,
       "screenshot": {
         "exists": true,
-        "bytes": 960453,
+        "bytes": 960393,
         "width": 1440,
         "height": 1000,
         "expected_viewport": {
@@ -1764,7 +1764,7 @@
       },
       "canvas_screenshot": {
         "exists": true,
-        "bytes": 1368275,
+        "bytes": 1368513,
         "width": 914,
         "height": 680,
         "expected_viewport": {
@@ -1784,8 +1784,8 @@
         "weather": "rain",
         "time_of_day": "night",
         "fallback_reason": null,
-        "frame_age_ms": 813,
-        "network_latency_ms": 335,
+        "frame_age_ms": 804,
+        "network_latency_ms": 248,
         "sim_to_render_delay_ms": 0,
         "authoritative_hz": 10,
         "authoritative_tick_drift_ms": 0,
@@ -1831,15 +1831,15 @@
         "scenarioId": "emergency",
         "queueSource": "frame",
         "fallbackReason": null,
-        "frameAgeMs": 813,
-        "networkLatencyMs": 335,
+        "frameAgeMs": 804,
+        "networkLatencyMs": 248,
         "simToRenderDelayMs": 0,
         "authoritativeHz": 10,
         "authoritativeTickDriftMs": 0,
         "frameStale": true,
         "performance": {
           "drawCalls": 1,
-          "frameTimeMs": 321.2143648891018,
+          "frameTimeMs": 344.9642862868185,
           "visibleVehicles": 96,
           "textureMemoryEstimateMb": 12,
           "source": "browser_telemetry_or_renderer_info",
@@ -1884,8 +1884,8 @@
           "webgl_context_loss_count": 0,
           "fallback_reason": null,
           "visible_vehicle_count": 96,
-          "frame_age_ms": 813,
-          "network_latency_ms": 335,
+          "frame_age_ms": 804,
+          "network_latency_ms": 248,
           "sim_to_render_delay_ms": 0,
           "authoritative_hz": 10,
           "authoritative_tick_drift_ms": 0,
@@ -1912,15 +1912,15 @@
             "source": "dom_attribute",
             "reason": null
           },
-          "fps": 3.1131858014670257,
-          "average_frame_time_ms": 321.2143648891018,
-          "cpu_frame_time_ms": 321.2143648891018,
+          "fps": 2.8988508079023463,
+          "average_frame_time_ms": 344.9642862868185,
+          "cpu_frame_time_ms": 344.9642862868185,
           "gpu_frame_time_ms": null,
           "triangles": 1,
           "texture_memory_bytes": 12582912,
           "performance": {
             "draw_calls": 1,
-            "frame_time_ms": 321.2143648891018,
+            "frame_time_ms": 344.9642862868185,
             "visible_vehicles": 96,
             "texture_memory_estimate_mb": 12,
             "source": "app_proof",
@@ -1939,7 +1939,7 @@
             "truth_separated": true
           },
           "js_heap_bytes": 47400000,
-          "emitted_at": "2026-06-26T05:17:16.551Z"
+          "emitted_at": "2026-06-26T06:41:12.890Z"
         },
         "appProof": {
           "renderer": "r3f",
@@ -1952,9 +1952,9 @@
           "drawCallBudget": 900,
           "shadowEnabled": true,
           "shadowCasterCount": 18,
-          "fps": 3.1131858014670257,
-          "averageFrameTimeMs": 321.2143648891018,
-          "cpuFrameTimeMs": 321.2143648891018,
+          "fps": 2.8988508079023463,
+          "averageFrameTimeMs": 344.9642862868185,
+          "cpuFrameTimeMs": 344.9642862868185,
           "gpuFrameTimeMs": null,
           "triangles": 1,
           "textureMemoryBytes": 12582912,
@@ -2074,10 +2074,10 @@
       "source_label": "Snapshotsimulation_snapshot_fixture",
       "safety_copy_visible": true,
       "no_overflow": null,
-      "nonblank_canvas_ratio": 0.8975994336465439,
+      "nonblank_canvas_ratio": 0.8973017762903849,
       "screenshot": {
         "exists": true,
-        "bytes": 1010579,
+        "bytes": 1012096,
         "width": 1440,
         "height": 1000,
         "expected_viewport": {
@@ -2087,7 +2087,7 @@
       },
       "canvas_screenshot": {
         "exists": true,
-        "bytes": 1413260,
+        "bytes": 1415178,
         "width": 914,
         "height": 680,
         "expected_viewport": {
@@ -2107,8 +2107,8 @@
         "weather": "rain",
         "time_of_day": "day",
         "fallback_reason": null,
-        "frame_age_ms": 1694,
-        "network_latency_ms": 918,
+        "frame_age_ms": 1494,
+        "network_latency_ms": 1371,
         "sim_to_render_delay_ms": 0,
         "authoritative_hz": 10,
         "authoritative_tick_drift_ms": 0,
@@ -2154,15 +2154,15 @@
         "scenarioId": "emergency",
         "queueSource": "frame",
         "fallbackReason": null,
-        "frameAgeMs": 1694,
-        "networkLatencyMs": 918,
+        "frameAgeMs": 1494,
+        "networkLatencyMs": 1371,
         "simToRenderDelayMs": 0,
         "authoritativeHz": 10,
         "authoritativeTickDriftMs": 0,
         "frameStale": true,
         "performance": {
           "drawCalls": 1,
-          "frameTimeMs": 687.7058848833148,
+          "frameTimeMs": 650.2773728355826,
           "visibleVehicles": 96,
           "textureMemoryEstimateMb": 12,
           "source": "browser_telemetry_or_renderer_info",
@@ -2207,8 +2207,8 @@
           "webgl_context_loss_count": 0,
           "fallback_reason": null,
           "visible_vehicle_count": 96,
-          "frame_age_ms": 1694,
-          "network_latency_ms": 918,
+          "frame_age_ms": 1494,
+          "network_latency_ms": 1371,
           "sim_to_render_delay_ms": 0,
           "authoritative_hz": 10,
           "authoritative_tick_drift_ms": 0,
@@ -2235,15 +2235,15 @@
             "source": "dom_attribute",
             "reason": null
           },
-          "fps": 1.4541099937943285,
-          "average_frame_time_ms": 687.7058848833148,
-          "cpu_frame_time_ms": 687.7058848833148,
+          "fps": 1.5378053147373498,
+          "average_frame_time_ms": 650.2773728355826,
+          "cpu_frame_time_ms": 650.2773728355826,
           "gpu_frame_time_ms": null,
           "triangles": 1,
           "texture_memory_bytes": 12582912,
           "performance": {
             "draw_calls": 1,
-            "frame_time_ms": 687.7058848833148,
+            "frame_time_ms": 650.2773728355826,
             "visible_vehicles": 96,
             "texture_memory_estimate_mb": 12,
             "source": "app_proof",
@@ -2261,8 +2261,8 @@
             "ambient_pedestrian_source": "procedural_background_proxy",
             "truth_separated": true
           },
-          "js_heap_bytes": 44700000,
-          "emitted_at": "2026-06-26T05:17:31.089Z"
+          "js_heap_bytes": 53500000,
+          "emitted_at": "2026-06-26T06:41:26.570Z"
         },
         "appProof": {
           "renderer": "r3f",
@@ -2275,13 +2275,13 @@
           "drawCallBudget": 900,
           "shadowEnabled": true,
           "shadowCasterCount": 18,
-          "fps": 1.4541099937943285,
-          "averageFrameTimeMs": 687.7058848833148,
-          "cpuFrameTimeMs": 687.7058848833148,
+          "fps": 1.5378053147373498,
+          "averageFrameTimeMs": 650.2773728355826,
+          "cpuFrameTimeMs": 650.2773728355826,
           "gpuFrameTimeMs": null,
           "triangles": 1,
           "textureMemoryBytes": 12582912,
-          "jsHeapBytes": 44700000,
+          "jsHeapBytes": 53500000,
           "authoritativeTickDriftMs": 0,
           "canvasWidth": 915,
           "canvasHeight": 680,
@@ -2397,10 +2397,10 @@
       "source_label": "Snapshotsimulation_snapshot_fixture",
       "safety_copy_visible": true,
       "no_overflow": null,
-      "nonblank_canvas_ratio": 0.446915626206719,
+      "nonblank_canvas_ratio": 0.44824140816063845,
       "screenshot": {
         "exists": true,
-        "bytes": 901215,
+        "bytes": 901793,
         "width": 1440,
         "height": 1000,
         "expected_viewport": {
@@ -2410,7 +2410,7 @@
       },
       "canvas_screenshot": {
         "exists": true,
-        "bytes": 1261349,
+        "bytes": 1261906,
         "width": 914,
         "height": 680,
         "expected_viewport": {
@@ -2430,8 +2430,8 @@
         "weather": "rain",
         "time_of_day": "day",
         "fallback_reason": null,
-        "frame_age_ms": 5331,
-        "network_latency_ms": 3570,
+        "frame_age_ms": 5022,
+        "network_latency_ms": 3372,
         "sim_to_render_delay_ms": 0,
         "authoritative_hz": 10,
         "authoritative_tick_drift_ms": 0,
@@ -2470,15 +2470,15 @@
         "scenarioId": "emergency",
         "queueSource": "frame",
         "fallbackReason": null,
-        "frameAgeMs": 5331,
-        "networkLatencyMs": 3570,
+        "frameAgeMs": 5022,
+        "networkLatencyMs": 3372,
         "simToRenderDelayMs": 0,
         "authoritativeHz": 10,
         "authoritativeTickDriftMs": 0,
         "frameStale": true,
         "performance": {
           "drawCalls": 123,
-          "frameTimeMs": 1355.6108019199191,
+          "frameTimeMs": 1447.3524869121916,
           "visibleVehicles": 96,
           "textureMemoryEstimateMb": 12,
           "source": "browser_telemetry_or_renderer_info",
@@ -2523,8 +2523,8 @@
           "webgl_context_loss_count": 0,
           "fallback_reason": null,
           "visible_vehicle_count": 96,
-          "frame_age_ms": 5331,
-          "network_latency_ms": 3570,
+          "frame_age_ms": 5022,
+          "network_latency_ms": 3372,
           "sim_to_render_delay_ms": 0,
           "authoritative_hz": 10,
           "authoritative_tick_drift_ms": 0,
@@ -2544,15 +2544,15 @@
             "source": "dom_attribute",
             "reason": null
           },
-          "fps": 0.7376748537144466,
-          "average_frame_time_ms": 1355.6108019199191,
-          "cpu_frame_time_ms": 1355.6108019199191,
+          "fps": 0.690916697240365,
+          "average_frame_time_ms": 1447.3524869121916,
+          "cpu_frame_time_ms": 1447.3524869121916,
           "gpu_frame_time_ms": null,
           "triangles": 1202518,
           "texture_memory_bytes": 12582912,
           "performance": {
             "draw_calls": 123,
-            "frame_time_ms": 1355.6108019199191,
+            "frame_time_ms": 1447.3524869121916,
             "visible_vehicles": 96,
             "texture_memory_estimate_mb": 12,
             "source": "app_proof",
@@ -2571,7 +2571,7 @@
             "truth_separated": true
           },
           "js_heap_bytes": 44700000,
-          "emitted_at": "2026-06-26T05:17:50.764Z"
+          "emitted_at": "2026-06-26T06:41:45.444Z"
         },
         "appProof": {
           "renderer": "r3f",
@@ -2584,9 +2584,9 @@
           "drawCallBudget": 900,
           "shadowEnabled": true,
           "shadowCasterCount": 18,
-          "fps": 0.7376748537144466,
-          "averageFrameTimeMs": 1355.6108019199191,
-          "cpuFrameTimeMs": 1355.6108019199191,
+          "fps": 0.690916697240365,
+          "averageFrameTimeMs": 1447.3524869121916,
+          "cpuFrameTimeMs": 1447.3524869121916,
           "gpuFrameTimeMs": null,
           "triangles": 1202518,
           "textureMemoryBytes": 12582912,
@@ -2704,7 +2704,7 @@
       "source_label": "Snapshotsimulation_snapshot_fixture",
       "safety_copy_visible": true,
       "no_overflow": null,
-      "nonblank_canvas_ratio": 0.8977724997824706,
+      "nonblank_canvas_ratio": 0.8978530661965884,
       "quality_preset": "high",
       "weather": "clear",
       "time_of_day": "day",
@@ -2718,7 +2718,7 @@
       "source_label": "Snapshotsimulation_snapshot_fixture",
       "safety_copy_visible": true,
       "no_overflow": null,
-      "nonblank_canvas_ratio": 0.4146189985841164,
+      "nonblank_canvas_ratio": 0.4147815034109924,
       "quality_preset": "high",
       "weather": "rain",
       "time_of_day": "night",
@@ -2732,7 +2732,7 @@
       "source_label": "Snapshotsimulation_snapshot_fixture",
       "safety_copy_visible": true,
       "no_overflow": null,
-      "nonblank_canvas_ratio": 0.8975994336465439,
+      "nonblank_canvas_ratio": 0.8973017762903849,
       "quality_preset": "high",
       "weather": "rain",
       "time_of_day": "day",
@@ -2746,7 +2746,7 @@
       "source_label": "Snapshotsimulation_snapshot_fixture",
       "safety_copy_visible": true,
       "no_overflow": null,
-      "nonblank_canvas_ratio": 0.446915626206719,
+      "nonblank_canvas_ratio": 0.44824140816063845,
       "quality_preset": "low",
       "weather": "rain",
       "time_of_day": "day",
@@ -2759,7 +2759,7 @@
       "source_label": "Snapshotsimulation_snapshot_fixture",
       "safety_copy_visible": true,
       "no_overflow": true,
-      "nonblank_canvas_ratio": 0.7770507246376812,
+      "nonblank_canvas_ratio": 0.7739710144927536,
       "quality_preset": "high",
       "weather": "rain",
       "time_of_day": "day",
@@ -2782,7 +2782,7 @@
       "source_label": "Snapshotsimulation_snapshot_fixture",
       "safety_copy_visible": true,
       "no_overflow": true,
-      "nonblank_canvas_ratio": 0.8976139142746814,
+      "nonblank_canvas_ratio": 0.8971763083179989,
       "reason": null
     }
   ],
@@ -2790,15 +2790,18 @@
   "console_errors": [
     "[warning] THREE.Clock: This module has been deprecated. Please use THREE.Timer instead.",
     "[warning] THREE.WebGLShadowMap: PCFSoftShadowMap has been deprecated. Using PCFShadowMap instead.",
+    "[warning] [.WebGL-0x6e40acdc200]GL Driver Message (OpenGL, Performance, GL_CLOSE_PATH_NV, High): GPU stall due to ReadPixels",
     "[warning] THREE.sigmaRadians, 0.045, is too large and will clip, as it requested 22 samples when the maximum is set to 20",
     "[warning] THREE.sigmaRadians, 0.045, is too large and will clip, as it requested 22 samples when the maximum is set to 20",
     "[warning] THREE.WebGLShadowMap: PCFSoftShadowMap has been deprecated. Using PCFShadowMap instead.",
-    "[warning] [.WebGL-0x391c0289c000]GL Driver Message (OpenGL, Performance, GL_CLOSE_PATH_NV, High): GPU stall due to ReadPixels",
-    "[warning] [.WebGL-0x391c0289c000]GL Driver Message (OpenGL, Performance, GL_CLOSE_PATH_NV, High): GPU stall due to ReadPixels",
+    "[warning] [.WebGL-0x6e40acdc200]GL Driver Message (OpenGL, Performance, GL_CLOSE_PATH_NV, High): GPU stall due to ReadPixels",
+    "[warning] [.WebGL-0x6e40acdc200]GL Driver Message (OpenGL, Performance, GL_CLOSE_PATH_NV, High): GPU stall due to ReadPixels",
     "[warning] THREE.WebGLShadowMap: PCFSoftShadowMap has been deprecated. Using PCFShadowMap instead.",
-    "[warning] [.WebGL-0x391c0289c000]GL Driver Message (OpenGL, Performance, GL_CLOSE_PATH_NV, High): GPU stall due to ReadPixels",
+    "[warning] [.WebGL-0x6e40acdc200]GL Driver Message (OpenGL, Performance, GL_CLOSE_PATH_NV, High): GPU stall due to ReadPixels (this message will no longer repeat)",
     "[warning] THREE.WebGLShadowMap: PCFSoftShadowMap has been deprecated. Using PCFShadowMap instead.",
-    "[warning] [.WebGL-0x391c0289c000]GL Driver Message (OpenGL, Performance, GL_CLOSE_PATH_NV, High): GPU stall due to ReadPixels (this message will no longer repeat)",
+    "[warning] THREE.WebGLShadowMap: PCFSoftShadowMap has been deprecated. Using PCFShadowMap instead.",
+    "[warning] THREE.WebGLShadowMap: PCFSoftShadowMap has been deprecated. Using PCFShadowMap instead.",
+    "[warning] THREE.WebGLShadowMap: PCFSoftShadowMap has been deprecated. Using PCFShadowMap instead.",
     "[warning] THREE.WebGLShadowMap: PCFSoftShadowMap has been deprecated. Using PCFShadowMap instead.",
     "[warning] THREE.WebGLShadowMap: PCFSoftShadowMap has been deprecated. Using PCFShadowMap instead.",
     "[warning] THREE.WebGLShadowMap: PCFSoftShadowMap has been deprecated. Using PCFShadowMap instead.",
@@ -2819,6 +2822,7 @@
     "[warning] THREE.WebGLShadowMap: PCFSoftShadowMap has been deprecated. Using PCFShadowMap instead.",
     "[warning] THREE.sigmaRadians, 0.045, is too large and will clip, as it requested 22 samples when the maximum is set to 20",
     "[warning] THREE.sigmaRadians, 0.045, is too large and will clip, as it requested 22 samples when the maximum is set to 20",
+    "[warning] THREE.WebGLShadowMap: PCFSoftShadowMap has been deprecated. Using PCFShadowMap instead.",
     "[warning] THREE.WebGLShadowMap: PCFSoftShadowMap has been deprecated. Using PCFShadowMap instead.",
     "[warning] THREE.WebGLShadowMap: PCFSoftShadowMap has been deprecated. Using PCFShadowMap instead.",
     "[warning] THREE.WebGLShadowMap: PCFSoftShadowMap has been deprecated. Using PCFShadowMap instead.",
@@ -2926,17 +2930,16 @@
     "[warning] THREE.sigmaRadians, 0.045, is too large and will clip, as it requested 22 samples when the maximum is set to 20",
     "[warning] THREE.sigmaRadians, 0.045, is too large and will clip, as it requested 22 samples when the maximum is set to 20",
     "[warning] THREE.WebGLShadowMap: PCFSoftShadowMap has been deprecated. Using PCFShadowMap instead.",
-    "[warning] THREE.WebGLShadowMap: PCFSoftShadowMap has been deprecated. Using PCFShadowMap instead.",
-    "[warning] THREE.WebGLShadowMap: PCFSoftShadowMap has been deprecated. Using PCFShadowMap instead.",
-    "[warning] THREE.WebGLShadowMap: PCFSoftShadowMap has been deprecated. Using PCFShadowMap instead.",
-    "[warning] THREE.WebGLShadowMap: PCFSoftShadowMap has been deprecated. Using PCFShadowMap instead.",
-    "[warning] THREE.WebGLShadowMap: PCFSoftShadowMap has been deprecated. Using PCFShadowMap instead.",
-    "[warning] THREE.WebGLShadowMap: PCFSoftShadowMap has been deprecated. Using PCFShadowMap instead.",
-    "[warning] THREE.WebGLShadowMap: PCFSoftShadowMap has been deprecated. Using PCFShadowMap instead.",
     "[warning] THREE.Clock: This module has been deprecated. Please use THREE.Timer instead.",
     "[warning] THREE.WebGLShadowMap: PCFSoftShadowMap has been deprecated. Using PCFShadowMap instead.",
     "[warning] THREE.sigmaRadians, 0.045, is too large and will clip, as it requested 22 samples when the maximum is set to 20",
     "[warning] THREE.sigmaRadians, 0.045, is too large and will clip, as it requested 22 samples when the maximum is set to 20",
+    "[warning] THREE.WebGLShadowMap: PCFSoftShadowMap has been deprecated. Using PCFShadowMap instead.",
+    "[warning] THREE.WebGLShadowMap: PCFSoftShadowMap has been deprecated. Using PCFShadowMap instead.",
+    "[warning] THREE.WebGLShadowMap: PCFSoftShadowMap has been deprecated. Using PCFShadowMap instead.",
+    "[warning] THREE.WebGLShadowMap: PCFSoftShadowMap has been deprecated. Using PCFShadowMap instead.",
+    "[warning] THREE.WebGLShadowMap: PCFSoftShadowMap has been deprecated. Using PCFShadowMap instead.",
+    "[warning] THREE.WebGLShadowMap: PCFSoftShadowMap has been deprecated. Using PCFShadowMap instead.",
     "[warning] THREE.WebGLShadowMap: PCFSoftShadowMap has been deprecated. Using PCFShadowMap instead.",
     "[warning] THREE.WebGLShadowMap: PCFSoftShadowMap has been deprecated. Using PCFShadowMap instead."
   ],
@@ -2964,17 +2967,17 @@
     },
     "metrics": {
       "width": 914,
-      "height": 680,
-      "sampled_pixels": 621520,
-      "non_background_ratio": 0.8976139142746814,
-      "bright_ratio": 0.16588042219075813,
-      "dark_ratio": 0.4017714635088171,
-      "warm_light_ratio": 0.007982044021109538,
-      "cool_light_ratio": 0.022071695198867293,
-      "marking_ratio": 0.27786233749517314,
-      "saturated_ratio": 0.40645353327326555,
-      "color_bucket_count": 691,
-      "luminance_stddev": 71.81147281197313
+      "height": 679,
+      "sampled_pixels": 620606,
+      "non_background_ratio": 0.8971763083179989,
+      "bright_ratio": 0.16592491854735533,
+      "dark_ratio": 0.40119496105419544,
+      "warm_light_ratio": 0.00826772541677006,
+      "cool_light_ratio": 0.019414894474110787,
+      "marking_ratio": 0.2778171658024576,
+      "saturated_ratio": 0.4066090240829125,
+      "color_bucket_count": 773,
+      "luminance_stddev": 71.79503547836815
     },
     "passed": true
   },
@@ -2996,14 +2999,14 @@
     },
     "metrics": {
       "width": 914,
-      "height": 680,
-      "scene_coverage_ratio": 0.7766250482687604,
-      "empty_near_black_ratio": 0.2231255631355387,
-      "top_band_scene_ratio": 0.650984682713348,
-      "bottom_band_scene_ratio": 0.7608926502767409,
-      "left_band_scene_ratio": 0.7208052073288331,
-      "right_band_scene_ratio": 0.5066338073691015,
-      "center_band_scene_ratio": 0.9815033730534014,
+      "height": 679,
+      "scene_coverage_ratio": 0.777633474378269,
+      "empty_near_black_ratio": 0.22208132051575397,
+      "top_band_scene_ratio": 0.6507513837044665,
+      "bottom_band_scene_ratio": 0.7609611799983791,
+      "left_band_scene_ratio": 0.7195329035788728,
+      "right_band_scene_ratio": 0.5065302885626891,
+      "center_band_scene_ratio": 0.9829692327091608,
       "occupied_grid_cell_count": 25,
       "grid_cell_count": 25,
       "scene_bbox_width_ratio": 1,
@@ -3017,32 +3020,32 @@
           0.267
         ],
         [
-          0.786,
-          0.841,
-          0.974,
+          0.787,
+          0.845,
+          0.976,
           0.84,
-          0.668
+          0.669
         ],
         [
-          0.775,
-          0.963,
+          0.77,
+          0.987,
           0.997,
           0.915,
-          0.697
+          0.695
         ],
         [
           0.682,
           0.991,
-          0.994,
-          0.908,
+          0.99,
+          0.913,
           0.321
         ],
         [
-          0.789,
+          0.79,
           0.995,
           0.906,
-          0.534,
-          0.58
+          0.531,
+          0.582
         ]
       ]
     },
@@ -3067,13 +3070,13 @@
     "metrics": {
       "width": 368,
       "height": 375,
-      "scene_coverage_ratio": 0.8654420289855073,
-      "empty_near_black_ratio": 0.13396376811594202,
-      "top_band_scene_ratio": 0.9197826086956522,
-      "bottom_band_scene_ratio": 0.8630434782608696,
-      "left_band_scene_ratio": 0.7913873873873873,
-      "right_band_scene_ratio": 0.6809132420091324,
-      "center_band_scene_ratio": 0.9940622222222222,
+      "scene_coverage_ratio": 0.8657101449275363,
+      "empty_near_black_ratio": 0.13327536231884057,
+      "top_band_scene_ratio": 0.92,
+      "bottom_band_scene_ratio": 0.8632246376811594,
+      "left_band_scene_ratio": 0.7975495495495496,
+      "right_band_scene_ratio": 0.6826301369863014,
+      "center_band_scene_ratio": 0.9886222222222222,
       "occupied_grid_cell_count": 25,
       "grid_cell_count": 25,
       "scene_bbox_width_ratio": 1,
@@ -3082,14 +3085,14 @@
         [
           0.891,
           0.974,
-          0.975,
+          0.976,
           0.975,
           0.783
         ],
         [
-          0.791,
-          0.948,
-          0.984,
+          0.821,
+          0.935,
+          0.97,
           0.885,
           0.669
         ],
@@ -3101,18 +3104,18 @@
           0.79
         ],
         [
-          0.698,
+          0.699,
           0.995,
           1,
-          0.917,
+          0.918,
           0.347
         ],
         [
           0.806,
           0.989,
-          0.908,
-          0.797,
-          0.816
+          0.902,
+          0.796,
+          0.824
         ]
       ]
     },
@@ -3141,8 +3144,8 @@
       "weather": "rain",
       "time_of_day": "day",
       "fallback_reason": null,
-      "frame_age_ms": 2308,
-      "network_latency_ms": 129,
+      "frame_age_ms": 12,
+      "network_latency_ms": 1315,
       "sim_to_render_delay_ms": 0,
       "authoritative_hz": 10,
       "authoritative_tick_drift_ms": 0,
@@ -3188,15 +3191,15 @@
       "scenarioId": "emergency",
       "queueSource": "frame",
       "fallbackReason": null,
-      "frameAgeMs": 2308,
-      "networkLatencyMs": 129,
+      "frameAgeMs": 12,
+      "networkLatencyMs": 1315,
       "simToRenderDelayMs": 0,
       "authoritativeHz": 10,
       "authoritativeTickDriftMs": 0,
       "frameStale": true,
       "performance": {
         "drawCalls": 1,
-        "frameTimeMs": 16.666666666666668,
+        "frameTimeMs": 1219.884735999302,
         "visibleVehicles": 96,
         "textureMemoryEstimateMb": 12,
         "source": "browser_telemetry_or_renderer_info",
@@ -3241,8 +3244,8 @@
         "webgl_context_loss_count": 0,
         "fallback_reason": null,
         "visible_vehicle_count": 96,
-        "frame_age_ms": 2308,
-        "network_latency_ms": 129,
+        "frame_age_ms": 12,
+        "network_latency_ms": 1315,
         "sim_to_render_delay_ms": 0,
         "authoritative_hz": 10,
         "authoritative_tick_drift_ms": 0,
@@ -3269,15 +3272,15 @@
           "source": "dom_attribute",
           "reason": null
         },
-        "fps": 59.99999999999999,
-        "average_frame_time_ms": 16.666666666666668,
-        "cpu_frame_time_ms": 16.666666666666668,
+        "fps": 0.8197495800132483,
+        "average_frame_time_ms": 1219.884735999302,
+        "cpu_frame_time_ms": 1219.884735999302,
         "gpu_frame_time_ms": null,
         "triangles": 1,
         "texture_memory_bytes": 12582912,
         "performance": {
           "draw_calls": 1,
-          "frame_time_ms": 16.666666666666668,
+          "frame_time_ms": 1219.884735999302,
           "visible_vehicles": 96,
           "texture_memory_estimate_mb": 12,
           "source": "app_proof",
@@ -3295,8 +3298,8 @@
           "ambient_pedestrian_source": "procedural_background_proxy",
           "truth_separated": true
         },
-        "js_heap_bytes": 47400000,
-        "emitted_at": "2026-06-26T05:18:07.805Z"
+        "js_heap_bytes": 44700000,
+        "emitted_at": "2026-06-26T06:42:03.079Z"
       },
       "appProof": {
         "renderer": "r3f",
@@ -3309,13 +3312,13 @@
         "drawCallBudget": 900,
         "shadowEnabled": true,
         "shadowCasterCount": 18,
-        "fps": 59.99999999999999,
-        "averageFrameTimeMs": 16.666666666666668,
-        "cpuFrameTimeMs": 16.666666666666668,
+        "fps": 0.8197495800132483,
+        "averageFrameTimeMs": 1219.884735999302,
+        "cpuFrameTimeMs": 1219.884735999302,
         "gpuFrameTimeMs": null,
         "triangles": 1,
         "textureMemoryBytes": 12582912,
-        "jsHeapBytes": 47400000,
+        "jsHeapBytes": 44700000,
         "authoritativeTickDriftMs": 0,
         "canvasWidth": 915,
         "canvasHeight": 680,
@@ -3418,7 +3421,7 @@
       }
     },
     "page_state": {
-      "url": "http://127.0.0.1:44047/dashboard",
+      "url": "http://127.0.0.1:34441/dashboard",
       "title": "Smart Intersection Ops",
       "bodyTextExcerpt": "스마트 교차로 운영 시스템 Smart Intersection Ops 선택된 교차로 강남대로 / 테헤란로 INT-SEO-0001 · 서울 강남 · Asia/Seoul 보행·버스 수요가 높은 도심 간선 교차로 INC-2025-0516-0007 Active Live 09:00:00 분석 완료 Analysis Complete Fresh 12s 데이터 최신 알림 리포트 시나리오 한국어 EN 서울 보행·버스 수요가 높은 도심 간선 교차로 뉴욕 보행 밀도가 높은 격자형 도심 교차로 파리 버스·택시 우선 검토가 필요한 대로형 교차로 런던 보행 중심 상업지와 버스 회랑이 만나는 교차로 운영 모드 AI가 시뮬레이션 권고를 자동으로 준비합니다. AI 권고 자동 준비 AI Automatic 관리자 직접 검토 Admin Manual 자동 준비 중 신뢰도 92% 다음 권고 emergency_priority Simulation only / No real signal control 권고와 시뮬레이션만 제공합니다. 실제 교통 신호 제어는 수행하지 않습니다. 운영자 A Operator A Live evidence rail Incident Brief Spine 이벤트, 증거, 현장 흐름 전체",
       "hasNextErrorOverlay": false,
@@ -3431,6 +3434,12 @@
       "[warning] THREE.WebGLShadowMap: PCFSoftShadowMap has been deprecated. Using PCFShadowMap instead.",
       "[warning] THREE.sigmaRadians, 0.045, is too large and will clip, as it requested 22 samples when the maximum is set to 20",
       "[warning] THREE.sigmaRadians, 0.045, is too large and will clip, as it requested 22 samples when the maximum is set to 20",
+      "[warning] THREE.WebGLShadowMap: PCFSoftShadowMap has been deprecated. Using PCFShadowMap instead.",
+      "[warning] THREE.WebGLShadowMap: PCFSoftShadowMap has been deprecated. Using PCFShadowMap instead.",
+      "[warning] THREE.WebGLShadowMap: PCFSoftShadowMap has been deprecated. Using PCFShadowMap instead.",
+      "[warning] THREE.WebGLShadowMap: PCFSoftShadowMap has been deprecated. Using PCFShadowMap instead.",
+      "[warning] THREE.WebGLShadowMap: PCFSoftShadowMap has been deprecated. Using PCFShadowMap instead.",
+      "[warning] THREE.WebGLShadowMap: PCFSoftShadowMap has been deprecated. Using PCFShadowMap instead.",
       "[warning] THREE.WebGLShadowMap: PCFSoftShadowMap has been deprecated. Using PCFShadowMap instead.",
       "[warning] THREE.WebGLShadowMap: PCFSoftShadowMap has been deprecated. Using PCFShadowMap instead.",
       "[warning] THREE.WebGLShadowMap: PCFSoftShadowMap has been deprecated. Using PCFShadowMap instead."
@@ -3453,11 +3462,11 @@
   "assertions": {
     "canvas has non-background pixels": {
       "passed": true,
-      "evidence": "desktop canvas non-background ratio 0.8976139142746814"
+      "evidence": "desktop canvas non-background ratio 0.8971763083179989"
     },
     "dashboard mounts Stage 5 R3F renderer": {
       "passed": true,
-      "evidence": "rendererMode=r3f_photoreal_stage5, photorealStage=5, appProof={\"renderer\":\"r3f\",\"stage\":5,\"contextLost\":false,\"contextLossEvents\":0,\"drawCalls\":1,\"peakDrawCalls\":1,\"normalDrawCallBudget\":180,\"drawCallBudget\":900,\"shadowEnabled\":true,\"shadowCasterCount\":18,\"fps\":1.410586461505307,\"averageFrameTimeMs\":708.924994879683,\"cpuFrameTimeMs\":708.924994879683,\"gpuFrameTimeMs\":null,\"triangles\":1,\"textureMemoryBytes\":12582912,\"jsHeapBytes\":47400000,\"authoritativeTickDriftMs\":0,\"canvasWidth\":915,\"canvasHeight\":680,\"canvasConnected\":true,\"drawingBufferWidth\":914,\"drawingBufferHeight\":680}"
+      "evidence": "rendererMode=r3f_photoreal_stage5, photorealStage=5, appProof={\"renderer\":\"r3f\",\"stage\":5,\"contextLost\":false,\"contextLossEvents\":0,\"drawCalls\":1,\"peakDrawCalls\":1,\"normalDrawCallBudget\":180,\"drawCallBudget\":900,\"shadowEnabled\":true,\"shadowCasterCount\":18,\"fps\":1.6486261456994888,\"averageFrameTimeMs\":606.5656562638791,\"cpuFrameTimeMs\":606.5656562638791,\"gpuFrameTimeMs\":null,\"triangles\":1,\"textureMemoryBytes\":12582912,\"jsHeapBytes\":47400000,\"authoritativeTickDriftMs\":0,\"canvasWidth\":915,\"canvasHeight\":680,\"canvasConnected\":true,\"drawingBufferWidth\":914,\"drawingBufferHeight\":679}"
     },
     "renderer.info draw call budget is reported": {
       "passed": true,
@@ -3473,7 +3482,7 @@
     },
     "R3F shadow proof fields are present and consistent": {
       "passed": true,
-      "evidence": "shadow_enabled=true, shadow_caster_count=18, appProof={\"renderer\":\"r3f\",\"stage\":5,\"contextLost\":false,\"contextLossEvents\":0,\"drawCalls\":1,\"peakDrawCalls\":1,\"normalDrawCallBudget\":180,\"drawCallBudget\":900,\"shadowEnabled\":true,\"shadowCasterCount\":18,\"fps\":1.410586461505307,\"averageFrameTimeMs\":708.924994879683,\"cpuFrameTimeMs\":708.924994879683,\"gpuFrameTimeMs\":null,\"triangles\":1,\"textureMemoryBytes\":12582912,\"jsHeapBytes\":47400000,\"authoritativeTickDriftMs\":0,\"canvasWidth\":915,\"canvasHeight\":680,\"canvasConnected\":true,\"drawingBufferWidth\":914,\"drawingBufferHeight\":680}"
+      "evidence": "shadow_enabled=true, shadow_caster_count=18, appProof={\"renderer\":\"r3f\",\"stage\":5,\"contextLost\":false,\"contextLossEvents\":0,\"drawCalls\":1,\"peakDrawCalls\":1,\"normalDrawCallBudget\":180,\"drawCallBudget\":900,\"shadowEnabled\":true,\"shadowCasterCount\":18,\"fps\":1.6486261456994888,\"averageFrameTimeMs\":606.5656562638791,\"cpuFrameTimeMs\":606.5656562638791,\"gpuFrameTimeMs\":null,\"triangles\":1,\"textureMemoryBytes\":12582912,\"jsHeapBytes\":47400000,\"authoritativeTickDriftMs\":0,\"canvasWidth\":915,\"canvasHeight\":680,\"canvasConnected\":true,\"drawingBufferWidth\":914,\"drawingBufferHeight\":679}"
     },
     "R3F shadow caster count stays inside whitelist budget": {
       "passed": true,
@@ -3481,11 +3490,11 @@
     },
     "desktop dashboard screenshot matches viewport": {
       "passed": true,
-      "evidence": "1440x1000, expected 1440x1000, 1010551 bytes at artifacts/r3f-dashboard-desktop.png"
+      "evidence": "1440x1000, expected 1440x1000, 999527 bytes at artifacts/r3f-dashboard-desktop.png"
     },
     "mobile dashboard screenshot matches viewport": {
       "passed": true,
-      "evidence": "390x844, expected 390x844, 246389 bytes at artifacts/r3f-dashboard-mobile.png"
+      "evidence": "390x844, expected 390x844, 247283 bytes at artifacts/r3f-dashboard-mobile.png"
     },
     "no page or console errors": {
       "passed": true,
@@ -3501,11 +3510,11 @@
     },
     "R3F frame timing telemetry fields are present": {
       "passed": true,
-      "evidence": "frame_age_ms=1853, network_latency_ms=1390, sim_to_render_delay_ms=0, authoritative_hz=10, authoritative_tick_drift_ms=0, frame_stale=true"
+      "evidence": "frame_age_ms=2024, network_latency_ms=1390, sim_to_render_delay_ms=0, authoritative_hz=10, authoritative_tick_drift_ms=0, frame_stale=true"
     },
     "R3F telemetry proof is reported when renderer is mounted": {
       "passed": true,
-      "evidence": "{\"renderer_mode\":\"r3f_photoreal_stage5\",\"snapshot_source\":\"simulation_snapshot_fixture\",\"frame_bound\":true,\"draw_call_count\":1,\"webgl_context_loss_count\":0,\"fallback_reason\":null,\"visible_vehicle_count\":96,\"frame_age_ms\":1853,\"network_latency_ms\":1390,\"sim_to_render_delay_ms\":0,\"authoritative_hz\":10,\"authoritative_tick_drift_ms\":0,\"frame_stale\":true,\"quality_preset\":\"high\",\"post_fx\":{\"enabled\":true,\"chain\":[\"SMAA\",\"SSAO\",\"Bloom\",\"ToneMapping\",\"Noise\",\"Vignette\"],\"source\":\"dom_attribute\",\"reason\":null},\"heavy_features\":{\"planar_reflection\":true,\"weather_particles\":true,\"high_quality_vehicles\":1,\"shadow_casters\":18,\"source\":\"dom_attribute\",\"reason\":null},\"fps\":null,\"average_frame_time_ms\":null,\"cpu_frame_time_ms\":null,\"gpu_frame_time_ms\":null,\"triangles\":1,\"texture_memory_bytes\":12582912,\"performance\":{\"draw_calls\":1,\"frame_time_ms\":null,\"visible_vehicles\":96,\"texture_memory_estimate_mb\":12,\"source\":\"app_proof+desktop_performance_sample\",\"reason\":\"Headless Chromium throttled requestAnimationFrame while the R3F canvas uses frameloop=demand; FPS/frame-time target sampling is not measurable in this proof mode, so draw calls, triangles, telemetry fields, and raw rAF data are recorded instead.\",\"raw_frame_time_ms\":708.924994879683,\"measurement_status\":\"unmeasurable_headless_static_demand_loop\"},\"source_labels\":{\"snapshot_source\":\"simulation_snapshot_fixture\",\"stale\":true,\"fallback_reason\":null},\"pedestrian_truth\":{\"sumo_pedestrian_count\":0,\"sumo_pedestrian_source\":\"none\",\"ambient_pedestrian_count\":2,\"ambient_pedestrian_source\":\"procedural_background_proxy\",\"truth_separated\":true},\"js_heap_bytes\":47400000,\"emitted_at\":\"2026-06-26T05:16:28.544Z\",\"raw_fps\":3.04,\"raw_average_frame_time_ms\":327.73}"
+      "evidence": "{\"renderer_mode\":\"r3f_photoreal_stage5\",\"snapshot_source\":\"simulation_snapshot_fixture\",\"frame_bound\":true,\"draw_call_count\":1,\"webgl_context_loss_count\":0,\"fallback_reason\":null,\"visible_vehicle_count\":96,\"frame_age_ms\":2024,\"network_latency_ms\":1390,\"sim_to_render_delay_ms\":0,\"authoritative_hz\":10,\"authoritative_tick_drift_ms\":0,\"frame_stale\":true,\"quality_preset\":\"high\",\"post_fx\":{\"enabled\":true,\"chain\":[\"SMAA\",\"SSAO\",\"Bloom\",\"ToneMapping\",\"Noise\",\"Vignette\"],\"source\":\"dom_attribute\",\"reason\":null},\"heavy_features\":{\"planar_reflection\":true,\"weather_particles\":true,\"high_quality_vehicles\":1,\"shadow_casters\":18,\"source\":\"dom_attribute\",\"reason\":null},\"fps\":null,\"average_frame_time_ms\":null,\"cpu_frame_time_ms\":null,\"gpu_frame_time_ms\":null,\"triangles\":1,\"texture_memory_bytes\":12582912,\"performance\":{\"draw_calls\":1,\"frame_time_ms\":null,\"visible_vehicles\":96,\"texture_memory_estimate_mb\":12,\"source\":\"app_proof+desktop_performance_sample\",\"reason\":\"Headless Chromium throttled requestAnimationFrame while the R3F canvas uses frameloop=demand; FPS/frame-time target sampling is not measurable in this proof mode, so draw calls, triangles, telemetry fields, and raw rAF data are recorded instead.\",\"raw_frame_time_ms\":606.5656562638791,\"measurement_status\":\"unmeasurable_headless_static_demand_loop\"},\"source_labels\":{\"snapshot_source\":\"simulation_snapshot_fixture\",\"stale\":true,\"fallback_reason\":null},\"pedestrian_truth\":{\"sumo_pedestrian_count\":0,\"sumo_pedestrian_source\":\"none\",\"ambient_pedestrian_count\":2,\"ambient_pedestrian_source\":\"procedural_background_proxy\",\"truth_separated\":true},\"js_heap_bytes\":47400000,\"emitted_at\":\"2026-06-26T06:40:28.798Z\",\"raw_fps\":3.41,\"raw_average_frame_time_ms\":294.47}"
     },
     "R3F telemetry separates SUMO and ambient pedestrian sources": {
       "passed": true,
@@ -3513,15 +3522,15 @@
     },
     "Stage 6 QA telemetry details are normalized with source labels": {
       "passed": true,
-      "evidence": "{\"qualityPreset\":\"high\",\"qualityPresetEvidence\":{\"value\":\"high\",\"source\":\"dom_attribute\",\"reason\":null},\"postFx\":{\"enabled\":true,\"chain\":[\"SMAA\",\"SSAO\",\"Bloom\",\"ToneMapping\",\"Noise\",\"Vignette\"],\"source\":\"browser_telemetry_or_dom_attribute\",\"reason\":null},\"heavyFeatures\":{\"planarReflection\":true,\"weatherParticles\":true,\"highQualityVehicles\":1,\"shadowCasters\":18,\"source\":\"browser_telemetry_or_dom_attribute\",\"reason\":null},\"performance\":{\"drawCalls\":1,\"frameTimeMs\":null,\"visibleVehicles\":96,\"textureMemoryEstimateMb\":12,\"source\":\"browser_telemetry_or_renderer_info+desktop_performance_sample\",\"reason\":\"Headless Chromium throttled requestAnimationFrame while the R3F canvas uses frameloop=demand; FPS/frame-time target sampling is not measurable in this proof mode, so draw calls, triangles, telemetry fields, and raw rAF data are recorded instead.\",\"rawFrameTimeMs\":708.924994879683,\"measurementStatus\":\"unmeasurable_headless_static_demand_loop\"},\"sourceLabels\":{\"snapshotSource\":\"simulation_snapshot_fixture\",\"stale\":true,\"fallbackReason\":null,\"frameStaleBadge\":\"Framestale missing-next\",\"snapshotBadge\":\"Snapshotsimulation_snapshot_fixture\",\"trafficDensityBadge\":\"Trafficsnapshot_vehicles\",\"signalStateBadge\":\"Signalseast:green,north:red,south:red,west:red\",\"queueSourceBadge\":\"Queueframe\"}}"
+      "evidence": "{\"qualityPreset\":\"high\",\"qualityPresetEvidence\":{\"value\":\"high\",\"source\":\"dom_attribute\",\"reason\":null},\"postFx\":{\"enabled\":true,\"chain\":[\"SMAA\",\"SSAO\",\"Bloom\",\"ToneMapping\",\"Noise\",\"Vignette\"],\"source\":\"browser_telemetry_or_dom_attribute\",\"reason\":null},\"heavyFeatures\":{\"planarReflection\":true,\"weatherParticles\":true,\"highQualityVehicles\":1,\"shadowCasters\":18,\"source\":\"browser_telemetry_or_dom_attribute\",\"reason\":null},\"performance\":{\"drawCalls\":1,\"frameTimeMs\":null,\"visibleVehicles\":96,\"textureMemoryEstimateMb\":12,\"source\":\"browser_telemetry_or_renderer_info+desktop_performance_sample\",\"reason\":\"Headless Chromium throttled requestAnimationFrame while the R3F canvas uses frameloop=demand; FPS/frame-time target sampling is not measurable in this proof mode, so draw calls, triangles, telemetry fields, and raw rAF data are recorded instead.\",\"rawFrameTimeMs\":606.5656562638791,\"measurementStatus\":\"unmeasurable_headless_static_demand_loop\"},\"sourceLabels\":{\"snapshotSource\":\"simulation_snapshot_fixture\",\"stale\":true,\"fallbackReason\":null,\"frameStaleBadge\":\"Framestale missing-next\",\"snapshotBadge\":\"Snapshotsimulation_snapshot_fixture\",\"trafficDensityBadge\":\"Trafficsnapshot_vehicles\",\"signalStateBadge\":\"Signalseast:green,north:red,south:red,west:red\",\"queueSourceBadge\":\"Queueframe\"}}"
     },
     "desktop performance sample meets target or is honestly unmeasurable": {
       "passed": true,
-      "evidence": "{\"performance\":{\"measurement_status\":\"unmeasurable_headless_static_demand_loop\",\"reason\":\"Headless Chromium throttled requestAnimationFrame while the R3F canvas uses frameloop=demand; FPS/frame-time target sampling is not measurable in this proof mode, so draw calls, triangles, telemetry fields, and raw rAF data are recorded instead.\",\"sample_ms\":986,\"frame_count\":3,\"expected_frame_count\":59,\"fps\":null,\"average_frame_time_ms\":null,\"cpu_frame_time_ms\":null,\"gpu_frame_time_ms\":null,\"texture_memory_bytes\":null,\"js_heap_bytes\":47400000,\"raw_fps\":3.04,\"raw_average_frame_time_ms\":327.73,\"target_fps\":60},\"appProof\":{\"fps\":1.410586461505307,\"averageFrameTimeMs\":708.924994879683,\"triangles\":1}}"
+      "evidence": "{\"performance\":{\"measurement_status\":\"unmeasurable_headless_static_demand_loop\",\"reason\":\"Headless Chromium throttled requestAnimationFrame while the R3F canvas uses frameloop=demand; FPS/frame-time target sampling is not measurable in this proof mode, so draw calls, triangles, telemetry fields, and raw rAF data are recorded instead.\",\"sample_ms\":881,\"frame_count\":3,\"expected_frame_count\":53,\"fps\":null,\"average_frame_time_ms\":null,\"cpu_frame_time_ms\":null,\"gpu_frame_time_ms\":null,\"texture_memory_bytes\":null,\"js_heap_bytes\":47400000,\"raw_fps\":3.41,\"raw_average_frame_time_ms\":294.47,\"target_fps\":60},\"appProof\":{\"fps\":1.6486261456994888,\"averageFrameTimeMs\":606.5656562638791,\"triangles\":1}}"
     },
     "mobile performance sample meets target or is honestly unmeasurable": {
       "passed": true,
-      "evidence": "{\"performance\":{\"measurement_status\":\"unmeasurable_headless_static_demand_loop\",\"reason\":\"Headless Chromium throttled requestAnimationFrame while the R3F canvas uses frameloop=demand; FPS/frame-time target sampling is not measurable in this proof mode, so draw calls, triangles, telemetry fields, and raw rAF data are recorded instead.\",\"sample_ms\":928,\"frame_count\":4,\"expected_frame_count\":28,\"fps\":null,\"average_frame_time_ms\":null,\"cpu_frame_time_ms\":null,\"gpu_frame_time_ms\":null,\"texture_memory_bytes\":null,\"js_heap_bytes\":47400000,\"raw_fps\":4.31,\"raw_average_frame_time_ms\":233.33,\"target_fps\":30},\"appProof\":{\"fps\":1.410586461505307,\"averageFrameTimeMs\":708.924994879683,\"triangles\":1}}"
+      "evidence": "{\"performance\":{\"measurement_status\":\"unmeasurable_headless_static_demand_loop\",\"reason\":\"Headless Chromium throttled requestAnimationFrame while the R3F canvas uses frameloop=demand; FPS/frame-time target sampling is not measurable in this proof mode, so draw calls, triangles, telemetry fields, and raw rAF data are recorded instead.\",\"sample_ms\":870,\"frame_count\":4,\"expected_frame_count\":26,\"fps\":null,\"average_frame_time_ms\":null,\"cpu_frame_time_ms\":null,\"gpu_frame_time_ms\":null,\"texture_memory_bytes\":null,\"js_heap_bytes\":47400000,\"raw_fps\":4.6,\"raw_average_frame_time_ms\":216.65,\"target_fps\":30},\"appProof\":{\"fps\":1.6486261456994888,\"averageFrameTimeMs\":606.5656562638791,\"triangles\":1}}"
     },
     "R3F source labels match renderer data attributes": {
       "passed": true,
@@ -3565,15 +3574,15 @@
     },
     "photorealism checklist passes against real screenshot": {
       "passed": true,
-      "evidence": "{\"pbr_wet_asphalt\":true,\"worn_markings\":true,\"vehicle_contact_shadows\":true,\"detailed_vehicle_silhouettes\":true,\"street_furniture_contact_shadows\":true,\"realistic_signal_and_street_lighting\":true,\"city_depth\":true,\"placeholder_geometry_visible\":false,\"thresholds\":{\"min_wet_asphalt_dark_ratio\":0.18,\"min_wet_asphalt_bright_ratio\":0.001,\"min_wet_asphalt_luminance_stddev\":22,\"min_marking_ratio\":0.0025,\"min_realistic_light_ratio\":0.0015,\"min_realistic_bright_ratio\":0.001,\"min_city_color_buckets\":28,\"min_city_non_background_ratio\":0.04,\"min_city_luminance_stddev\":20},\"metrics\":{\"width\":914,\"height\":680,\"sampled_pixels\":621520,\"non_background_ratio\":0.8976139142746814,\"bright_ratio\":0.16588042219075813,\"dark_ratio\":0.4017714635088171,\"warm_light_ratio\":0.007982044021109538,\"cool_light_ratio\":0.022071695198867293,\"marking_ratio\":0.27786233749517314,\"saturated_ratio\":0.40645353327326555,\"color_bucket_count\":691,\"luminance_stddev\":71.81147281197313},\"passed\":true}"
+      "evidence": "{\"pbr_wet_asphalt\":true,\"worn_markings\":true,\"vehicle_contact_shadows\":true,\"detailed_vehicle_silhouettes\":true,\"street_furniture_contact_shadows\":true,\"realistic_signal_and_street_lighting\":true,\"city_depth\":true,\"placeholder_geometry_visible\":false,\"thresholds\":{\"min_wet_asphalt_dark_ratio\":0.18,\"min_wet_asphalt_bright_ratio\":0.001,\"min_wet_asphalt_luminance_stddev\":22,\"min_marking_ratio\":0.0025,\"min_realistic_light_ratio\":0.0015,\"min_realistic_bright_ratio\":0.001,\"min_city_color_buckets\":28,\"min_city_non_background_ratio\":0.04,\"min_city_luminance_stddev\":20},\"metrics\":{\"width\":914,\"height\":679,\"sampled_pixels\":620606,\"non_background_ratio\":0.8971763083179989,\"bright_ratio\":0.16592491854735533,\"dark_ratio\":0.40119496105419544,\"warm_light_ratio\":0.00826772541677006,\"cool_light_ratio\":0.019414894474110787,\"marking_ratio\":0.2778171658024576,\"saturated_ratio\":0.4066090240829125,\"color_bucket_count\":773,\"luminance_stddev\":71.79503547836815},\"passed\":true}"
     },
     "desktop canvas composition is readable and not miniature": {
       "passed": true,
-      "evidence": "{\"usable_scene_coverage\":true,\"empty_void_not_dominant\":true,\"north_approach_uses_frame\":true,\"south_approach_uses_frame\":true,\"east_west_approaches_readable\":true,\"distributed_scene_detail\":true,\"not_miniature_strip\":true,\"thresholds\":{\"min_scene_coverage_ratio\":0.5,\"max_empty_near_black_ratio\":0.5,\"min_top_band_scene_ratio\":0.04,\"min_side_band_scene_ratio\":0.08,\"min_bottom_band_scene_ratio\":0.16,\"min_occupied_grid_cell_count\":17},\"metrics\":{\"width\":914,\"height\":680,\"scene_coverage_ratio\":0.7766250482687604,\"empty_near_black_ratio\":0.2231255631355387,\"top_band_scene_ratio\":0.650984682713348,\"bottom_band_scene_ratio\":0.7608926502767409,\"left_band_scene_ratio\":0.7208052073288331,\"right_band_scene_ratio\":0.5066338073691015,\"center_band_scene_ratio\":0.9815033730534014,\"occupied_grid_cell_count\":25,\"grid_cell_count\":25,\"scene_bbox_width_ratio\":1,\"scene_bbox_height_ratio\":1,\"grid_cell_scene_ratios\":[[0.57,0.757,0.797,0.861,0.267],[0.786,0.841,0.974,0.84,0.668],[0.775,0.963,0.997,0.915,0.697],[0.682,0.991,0.994,0.908,0.321],[0.789,0.995,0.906,0.534,0.58]]},\"passed\":true}"
+      "evidence": "{\"usable_scene_coverage\":true,\"empty_void_not_dominant\":true,\"north_approach_uses_frame\":true,\"south_approach_uses_frame\":true,\"east_west_approaches_readable\":true,\"distributed_scene_detail\":true,\"not_miniature_strip\":true,\"thresholds\":{\"min_scene_coverage_ratio\":0.5,\"max_empty_near_black_ratio\":0.5,\"min_top_band_scene_ratio\":0.04,\"min_side_band_scene_ratio\":0.08,\"min_bottom_band_scene_ratio\":0.16,\"min_occupied_grid_cell_count\":17},\"metrics\":{\"width\":914,\"height\":679,\"scene_coverage_ratio\":0.777633474378269,\"empty_near_black_ratio\":0.22208132051575397,\"top_band_scene_ratio\":0.6507513837044665,\"bottom_band_scene_ratio\":0.7609611799983791,\"left_band_scene_ratio\":0.7195329035788728,\"right_band_scene_ratio\":0.5065302885626891,\"center_band_scene_ratio\":0.9829692327091608,\"occupied_grid_cell_count\":25,\"grid_cell_count\":25,\"scene_bbox_width_ratio\":1,\"scene_bbox_height_ratio\":1,\"grid_cell_scene_ratios\":[[0.57,0.757,0.797,0.861,0.267],[0.787,0.845,0.976,0.84,0.669],[0.77,0.987,0.997,0.915,0.695],[0.682,0.991,0.99,0.913,0.321],[0.79,0.995,0.906,0.531,0.582]]},\"passed\":true}"
     },
     "mobile canvas composition is readable and not mostly void": {
       "passed": true,
-      "evidence": "{\"usable_scene_coverage\":true,\"empty_void_not_dominant\":true,\"north_approach_uses_frame\":true,\"south_approach_uses_frame\":true,\"east_west_approaches_readable\":true,\"distributed_scene_detail\":true,\"not_miniature_strip\":true,\"thresholds\":{\"min_scene_coverage_ratio\":0.5,\"max_empty_near_black_ratio\":0.5,\"min_top_band_scene_ratio\":0.04,\"min_side_band_scene_ratio\":0.08,\"min_bottom_band_scene_ratio\":0.16,\"min_occupied_grid_cell_count\":17},\"metrics\":{\"width\":368,\"height\":375,\"scene_coverage_ratio\":0.8654420289855073,\"empty_near_black_ratio\":0.13396376811594202,\"top_band_scene_ratio\":0.9197826086956522,\"bottom_band_scene_ratio\":0.8630434782608696,\"left_band_scene_ratio\":0.7913873873873873,\"right_band_scene_ratio\":0.6809132420091324,\"center_band_scene_ratio\":0.9940622222222222,\"occupied_grid_cell_count\":25,\"grid_cell_count\":25,\"scene_bbox_width_ratio\":1,\"scene_bbox_height_ratio\":1,\"grid_cell_scene_ratios\":[[0.891,0.974,0.975,0.975,0.783],[0.791,0.948,0.984,0.885,0.669],[0.771,0.997,0.999,0.927,0.79],[0.698,0.995,1,0.917,0.347],[0.806,0.989,0.908,0.797,0.816]]},\"passed\":true}"
+      "evidence": "{\"usable_scene_coverage\":true,\"empty_void_not_dominant\":true,\"north_approach_uses_frame\":true,\"south_approach_uses_frame\":true,\"east_west_approaches_readable\":true,\"distributed_scene_detail\":true,\"not_miniature_strip\":true,\"thresholds\":{\"min_scene_coverage_ratio\":0.5,\"max_empty_near_black_ratio\":0.5,\"min_top_band_scene_ratio\":0.04,\"min_side_band_scene_ratio\":0.08,\"min_bottom_band_scene_ratio\":0.16,\"min_occupied_grid_cell_count\":17},\"metrics\":{\"width\":368,\"height\":375,\"scene_coverage_ratio\":0.8657101449275363,\"empty_near_black_ratio\":0.13327536231884057,\"top_band_scene_ratio\":0.92,\"bottom_band_scene_ratio\":0.8632246376811594,\"left_band_scene_ratio\":0.7975495495495496,\"right_band_scene_ratio\":0.6826301369863014,\"center_band_scene_ratio\":0.9886222222222222,\"occupied_grid_cell_count\":25,\"grid_cell_count\":25,\"scene_bbox_width_ratio\":1,\"scene_bbox_height_ratio\":1,\"grid_cell_scene_ratios\":[[0.891,0.974,0.976,0.975,0.783],[0.821,0.935,0.97,0.885,0.669],[0.771,0.997,0.999,0.927,0.79],[0.699,0.995,1,0.918,0.347],[0.806,0.989,0.902,0.796,0.824]]},\"passed\":true}"
     },
     "Stage 5 exposes detailed vehicle silhouettes and street-furniture shadows": {
       "passed": true,
@@ -3581,11 +3590,11 @@
     },
     "payload under 25MB": {
       "passed": true,
-      "evidence": "18.54 MB / 25.00 MB"
+      "evidence": "20.32 MB / 25.00 MB"
     },
     "mobile usable, nonblank, and no horizontal overflow": {
       "passed": true,
-      "evidence": "viewportVisible=true, canvasVisible=true, horizontalOverflow=false, nonBackground=0.7770507246376812"
+      "evidence": "viewportVisible=true, canvasVisible=true, horizontalOverflow=false, nonBackground=0.7739710144927536"
     },
     "no-overflow evidence is captured in details JSON": {
       "passed": true,

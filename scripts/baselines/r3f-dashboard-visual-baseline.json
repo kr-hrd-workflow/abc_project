@@ -4,17 +4,17 @@
   "desktop": {
     "canvas_metrics": {
       "width": 914,
-      "height": 680,
-      "sampled_pixels": 621520,
-      "non_background_ratio": 0.8976139142746814,
-      "bright_ratio": 0.16588042219075813,
-      "dark_ratio": 0.4017714635088171,
-      "warm_light_ratio": 0.007982044021109538,
-      "cool_light_ratio": 0.022071695198867293,
-      "marking_ratio": 0.27786233749517314,
-      "saturated_ratio": 0.40645353327326555,
-      "color_bucket_count": 691,
-      "luminance_stddev": 71.81147281197313
+      "height": 679,
+      "sampled_pixels": 620606,
+      "non_background_ratio": 0.8971763083179989,
+      "bright_ratio": 0.16592491854735533,
+      "dark_ratio": 0.40119496105419544,
+      "warm_light_ratio": 0.00826772541677006,
+      "cool_light_ratio": 0.019414894474110787,
+      "marking_ratio": 0.2778171658024576,
+      "saturated_ratio": 0.4066090240829125,
+      "color_bucket_count": 773,
+      "luminance_stddev": 71.79503547836815
     }
   }
 }

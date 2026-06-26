@@ -5,14 +5,16 @@ import { getR3FAssetEntry, type R3FAssetEntry } from "./assetManifest";
 // for the active angle through this map so the manifest stays the single source
 // of truth for the plate path, provenance, and budget.
 export const PLATE_ASSET_ID_BY_ANGLE: Record<string, string> = {
-  "operator-wide": "plates/gangnam_night_operator_wide"
+  "operator-wide": "plates/gangnam_night_operator_wide",
+  "operator-cctv": "plates/gangnam_night_operator_cctv"
 };
 
 // Daytime variant per angle: img2img-derived from the night plate, identical
 // layout. The night map above stays the default so callers without a time
 // argument resolve the night plate (back-compatible).
 export const DAY_PLATE_ASSET_ID_BY_ANGLE: Record<string, string> = {
-  "operator-wide": "plates/gangnam_day_operator_wide"
+  "operator-wide": "plates/gangnam_day_operator_wide",
+  "operator-cctv": "plates/gangnam_day_operator_cctv"
 };
 
 export function getPlateEntry(

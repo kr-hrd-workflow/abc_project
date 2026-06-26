@@ -233,11 +233,17 @@ const STAGE6E_DENSITY_ASSET_BY_PROFILE: Record<
   cityBus: "vehicles/bus_far"
 };
 
+// Far/density traffic palettes. These vehicles are seen from an oblique camera
+// and a test enforces every far color has luminance > 72, so this set is kept
+// LIGHT only (white / silver / light-grey / taxi-orange / bus-blue). The dark
+// realistic liveries (charcoal / near-black / deep red / navy) live exclusively
+// in the near/precise stream (PRECISE_VEHICLE_COLOR_PALETTES), which is not
+// luminance-constrained.
 const TRAFFIC_VEHICLE_PROFILES: TrafficVehicleProfile[] = [
   {
     name: "sedan",
     size: [2.36, 1.14, 4.65],
-    colors: ["#c8cdd0", "#8f989d", "#747f86", "#6a7175"]
+    colors: ["#e9ecee", "#d3d7da", "#bcc2c5", "#9aa2a7", "#8f989d", "#747f86"]
   },
   {
     name: "hatchback",
@@ -246,32 +252,32 @@ const TRAFFIC_VEHICLE_PROFILES: TrafficVehicleProfile[] = [
       MIN_TRAFFIC_VEHICLE_HEIGHT_METERS,
       4.32
     ],
-    colors: ["#c6cccf", "#7f8b91", "#697276"]
+    colors: ["#e6eaec", "#cdd2d5", "#aab1b5", "#7f8b91"]
   },
   {
     name: "taxi",
     size: [2.38, 1.16, 4.72],
-    colors: ["#d9bd52", "#e0c866"]
+    colors: ["#ef7c00", "#f0892a", "#f59a3d"]
   },
   {
     name: "suv",
     size: [2.52, 1.34, 4.9],
-    colors: ["#9fa9ad", "#5e6f78", "#6d504c"]
+    colors: ["#e4e8ea", "#c6cccf", "#9fa9ad", "#7c878c"]
   },
   {
     name: "van",
     size: [2.62, 1.62, 5.62],
-    colors: ["#b9c1c5", "#72858e", "#9c8d5b"]
+    colors: ["#e2e6e8", "#c0c7ca", "#9aa6ac", "#8f9fb0"]
   },
   {
     name: "boxTruck",
     size: [2.68, 2.02, 7.15],
-    colors: ["#aeb8bd", "#6b777d"]
+    colors: ["#e8ebec", "#cfd4d6", "#aeb8bd", "#9fb6c9"]
   },
   {
     name: "cityBus",
     size: [2.76, 2.18, 8.85],
-    colors: ["#607c87", "#8c9ca3"]
+    colors: ["#3f74c0", "#5b8fd6", "#7fa7dd", "#8c9ca3"]
   }
 ];
 
@@ -1917,12 +1923,58 @@ function getPreciseVehicleSize(
   return [2.12, 1.32, 4.55];
 }
 
+// Per-instance Korean traffic liveries for the near/precise SUMO stream. This
+// stream is not luminance-constrained, so passenger cars can use the realistic
+// dark end of the palette (charcoal / near-black / deep red / dark navy) while
+// staying weighted toward neutrals (repeated white/silver) so the fleet reads
+// as varied but believable. The body GLB base stays white and is tinted by these
+// per-instance colors. Emergency keeps a white body; its red comes from emitters.
+const PRECISE_VEHICLE_COLOR_PALETTES: Record<
+  SimulationVehicleType,
+  readonly string[]
+> = {
+  car: [
+    "#eef1f2",
+    "#eef1f2",
+    "#d7dadc",
+    "#d7dadc",
+    "#b7bdc0",
+    "#8f989d",
+    "#5b6166",
+    "#2c3136",
+    "#1a1d20",
+    "#6e1f24",
+    "#1d2740"
+  ],
+  taxi: ["#ef7c00", "#f0892a"],
+  bus: ["#1d4ea2", "#1d4ea2", "#1d4ea2", "#3d9b68"],
+  truck: ["#e8ebec", "#cfd4d6", "#a7b0b4", "#9fb6c9"],
+  emergency: ["#f2f4f5"]
+};
+
 function getPreciseVehicleColor(vehicle: SimulationVehicleSnapshot) {
-  if (vehicle.emergency || vehicle.vehicle_type === "emergency") return "#a73532";
-  if (vehicle.vehicle_type === "bus") return "#607c87";
-  if (vehicle.vehicle_type === "truck") return "#6b777d";
-  if (vehicle.vehicle_type === "taxi") return "#b99734";
-  return "#aeb8bd";
+  if (vehicle.emergency || vehicle.vehicle_type === "emergency") {
+    return PRECISE_VEHICLE_COLOR_PALETTES.emergency[0];
+  }
+
+  const palette =
+    PRECISE_VEHICLE_COLOR_PALETTES[vehicle.vehicle_type] ??
+    PRECISE_VEHICLE_COLOR_PALETTES.car;
+
+  return palette[hashIdToPaletteIndex(vehicle.id, palette.length)];
+}
+
+// Stable per-vehicle hash so each SUMO vehicle keeps a consistent livery across
+// frames while the same type shows varied colors across the fleet.
+function hashIdToPaletteIndex(id: string, length: number) {
+  if (length <= 1) return 0;
+
+  let hash = 0;
+  for (let index = 0; index < id.length; index += 1) {
+    hash = (hash * 31 + id.charCodeAt(index)) >>> 0;
+  }
+
+  return hash % length;
 }
 
 function degreesToRadians(degrees: number) {

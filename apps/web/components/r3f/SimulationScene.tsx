@@ -21,22 +21,41 @@ import type {
 } from "./stage6Quality";
 import { getStage6QualityPreset } from "./stage6Quality";
 
+export type SimulationViewpoint = "wide" | "cctv";
+
+function resolveViewpoint(explicit?: SimulationViewpoint): SimulationViewpoint {
+  if (explicit) return explicit;
+  if (typeof window === "undefined") return "wide";
+  return new URLSearchParams(window.location.search).get("viewpoint") === "cctv"
+    ? "cctv"
+    : "wide";
+}
+
 export function SimulationScene({
   sceneSnapshot,
   qualityPreset = getStage6QualityPreset("high"),
   weather = "rain",
-  timeOfDay = "day"
+  timeOfDay = "day",
+  viewpoint
 }: {
   sceneSnapshot: SceneSnapshot;
   qualityPreset?: Stage6QualityPreset;
   weather?: Stage6WeatherPresetName;
   timeOfDay?: Stage6TimeOfDay;
+  viewpoint?: SimulationViewpoint;
 }) {
   const isNight = timeOfDay === "night";
+  // The CCTV viewpoint swaps to the low oblique camera + its matching plate so
+  // traffic signals read at a glance (signal-control purpose). "wide" keeps the
+  // default high operator view.
+  const activeViewpoint = resolveViewpoint(viewpoint);
+  const cameraPreset = activeViewpoint === "cctv" ? "operatorCctv" : undefined;
+  const plateAngleId =
+    activeViewpoint === "cctv" ? "operator-cctv" : "operator-wide";
 
   return (
     <group name={`smart-intersection-stage5-${sceneSnapshot.trafficDensityMode}`}>
-      <CameraRig weather={weather} timeOfDay={timeOfDay} />
+      <CameraRig weather={weather} timeOfDay={timeOfDay} preset={cameraPreset} />
       <SceneLighting
         isNight={isNight}
         sceneSnapshot={sceneSnapshot}
@@ -44,7 +63,7 @@ export function SimulationScene({
         weather={weather}
         timeOfDay={timeOfDay}
       />
-      <BackgroundPlateBoundary timeOfDay={timeOfDay} />
+      <BackgroundPlateBoundary timeOfDay={timeOfDay} angleId={plateAngleId} />
       <StaticRoadLayerWithDetails isNight={isNight} qualityPreset={qualityPreset} />
       <DynamicVehicleLayerWithWeather
         isNight={isNight}
@@ -112,13 +131,15 @@ SceneFinishing.displayName = "SceneFinishing";
 // still-loading plate degrades to the procedural background already present in
 // the scene (BackgroundPlateLayer itself is a no-op for the day path).
 function BackgroundPlateBoundary({
-  timeOfDay
+  timeOfDay,
+  angleId = "operator-wide"
 }: {
   timeOfDay: Stage6TimeOfDay;
+  angleId?: string;
 }) {
   return (
     <Suspense fallback={null}>
-      <BackgroundPlateLayer angleId="operator-wide" timeOfDay={timeOfDay} />
+      <BackgroundPlateLayer angleId={angleId} timeOfDay={timeOfDay} />
     </Suspense>
   );
 }

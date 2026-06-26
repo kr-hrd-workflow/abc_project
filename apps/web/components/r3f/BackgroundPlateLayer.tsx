@@ -29,6 +29,8 @@ if (
 ) {
   useTexture.preload(getPlateEntry("operator-wide", "night").path);
   useTexture.preload(getPlateEntry("operator-wide", "day").path);
+  useTexture.preload(getPlateEntry("operator-cctv", "night").path);
+  useTexture.preload(getPlateEntry("operator-cctv", "day").path);
 }
 
 // Visual-only truth marker. The background plate NEVER produces vehicle,
