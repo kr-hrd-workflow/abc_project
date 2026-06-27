@@ -1,3 +1,4 @@
+from app.services.simulation_snapshot import SNAPSHOT_BOUNDS_METERS
 from app.services.sumo_runtime import build_sumo_simulation_frame
 
 
@@ -101,12 +102,7 @@ def test_fake_sumo_client_maps_to_simulation_frame_snapshot_fields() -> None:
     assert frame.source == "sumo_traci"
     assert frame.scenario_id == "emergency"
     assert frame.sim_time_seconds == 12.5
-    assert frame.bounds_meters == {
-        "north": -160.0,
-        "south": 140.0,
-        "east": 160.0,
-        "west": -160.0,
-    }
+    assert frame.bounds_meters == SNAPSHOT_BOUNDS_METERS
     assert frame.vehicles[0].model_dump() == {
         "id": "veh-1",
         "vehicle_type": "car",

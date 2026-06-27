@@ -1,4 +1,7 @@
+import json
 from collections.abc import Sequence
+from functools import lru_cache
+from pathlib import Path
 
 from app.domain.schemas import TrafficEventRead, VisionObservation
 from app.domain.simulation_snapshot import (
@@ -9,18 +12,36 @@ from app.domain.simulation_snapshot import (
 )
 
 SNAPSHOT_SOURCE = "simulation_snapshot_fixture"
-SNAPSHOT_BOUNDS_METERS = {
-    "north": -160.0,
-    "south": 140.0,
-    "east": 160.0,
-    "west": -160.0,
-}
-APPROACH_LENGTH_METERS = {
-    "north": 160.0,
-    "south": 140.0,
-    "east": 160.0,
-    "west": 160.0,
-}
+_BOUNDS_SIGN: dict[str, float] = {"north": -1.0, "south": 1.0, "east": 1.0, "west": -1.0}
+_INTERSECTION_TRUTH_PATH = (
+    Path(__file__).resolve().parents[2] / "networks" / "intersection_truth.json"
+)
+
+
+@lru_cache(maxsize=1)
+def _load_intersection_truth() -> dict:
+    with _INTERSECTION_TRUTH_PATH.open(encoding="utf-8") as truth_file:
+        return json.load(truth_file)
+
+
+def _corridor_length_meters(truth: dict, approach: str) -> float:
+    return float(truth["approaches"][approach]["corridorLengthM"])
+
+
+def _approach_inbound_lanes(truth: dict, approach: str) -> int:
+    return int(truth["approaches"][approach]["inboundLanes"])
+
+
+def _derive_approach_length_meters(truth: dict) -> dict[str, float]:
+    return {a: _corridor_length_meters(truth, a) for a in _BOUNDS_SIGN}
+
+
+def _derive_snapshot_bounds_meters(truth: dict) -> dict[str, float]:
+    return {a: _BOUNDS_SIGN[a] * _corridor_length_meters(truth, a) for a in _BOUNDS_SIGN}
+
+
+APPROACH_LENGTH_METERS = _derive_approach_length_meters(_load_intersection_truth())
+SNAPSHOT_BOUNDS_METERS = _derive_snapshot_bounds_meters(_load_intersection_truth())
 
 
 def build_fixture_simulation_frame(
@@ -47,6 +68,7 @@ def build_fixture_simulation_frame(
 def _density_segments(
     observation: VisionObservation,
 ) -> list[SimulationDensitySegment]:
+    truth = _load_intersection_truth()
     queues = observation.queues.model_dump()
     return [
         SimulationDensitySegment(
@@ -54,7 +76,7 @@ def _density_segments(
             approach=approach,
             start_meters_from_stop_line=0.0,
             end_meters_from_stop_line=APPROACH_LENGTH_METERS[approach],
-            lane_count=3,
+            lane_count=_approach_inbound_lanes(truth, approach),
             vehicle_count=queue,
             average_speed_mps=_average_speed_for_queue(queue),
             source="fixture_density_proxy",

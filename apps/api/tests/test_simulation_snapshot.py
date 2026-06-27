@@ -18,8 +18,28 @@ from app.services.simulation_frame_provider import (
     SumoSimulationFrameProvider,
     get_simulation_frame_provider,
 )
-from app.services.simulation_snapshot import build_fixture_simulation_frame
+from app.services.simulation_snapshot import (
+    SNAPSHOT_BOUNDS_METERS,
+    _derive_approach_length_meters,
+    _derive_snapshot_bounds_meters,
+    build_fixture_simulation_frame,
+)
 from app.services.sumo_runtime import SumoRuntimeError, SumoRuntimeService
+
+def test_bounds_derive_signed_corridor_length_from_truth() -> None:
+    truth = {"laneWidthM": 3.6, "approaches": {
+        "north": {"corridorLengthM": 140.0, "inboundLanes": 5},
+        "south": {"corridorLengthM": 120.0, "inboundLanes": 5},
+        "east":  {"corridorLengthM": 140.0, "inboundLanes": 5},
+        "west":  {"corridorLengthM": 140.0, "inboundLanes": 4},
+    }}
+    assert _derive_snapshot_bounds_meters(truth) == {
+        "north": -140.0, "south": 120.0, "east": 140.0, "west": -140.0,
+    }
+    assert _derive_approach_length_meters(truth) == {
+        "north": 140.0, "south": 120.0, "east": 140.0, "west": 140.0,
+    }
+
 
 engine = create_engine(
     "sqlite+pysqlite:///:memory:",
@@ -57,13 +77,14 @@ def test_emergency_simulation_frame_exposes_typed_fixture_snapshot(
     assert payload["scenario_id"] == "emergency"
     assert payload["sim_time_seconds"] == 0
     assert payload["captured_at"] == "2026-06-08T10:24:30+09:00"
-    assert payload["bounds_meters"] == {
-        "north": -160.0,
-        "south": 140.0,
-        "east": 160.0,
-        "west": -160.0,
-    }
+    assert payload["bounds_meters"] == SNAPSHOT_BOUNDS_METERS
     assert payload["queues"] == {"north": 32, "south": 11, "east": 18, "west": 8}
+    lane_count_by_approach = {
+        segment["approach"]: segment["lane_count"]
+        for segment in payload["density_segments"]
+    }
+    assert lane_count_by_approach["north"] == 5
+    assert lane_count_by_approach["west"] == 4
     assert set(payload) == {
         "source",
         "intersection_id",
