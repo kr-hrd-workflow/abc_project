@@ -402,3 +402,31 @@ def test_events_cover_blocked_lane_and_high_wait_derivations() -> None:
     }
     assert any("blocked lane" in event.ai_summary.lower() for event in frame.events)
     assert any("high wait" in event.ai_summary.lower() for event in frame.events)
+
+
+import pytest
+
+from app.services.sumo_runtime import _approach_from_lane_id
+
+
+@pytest.mark.parametrize(
+    ("lane_id", "expected"),
+    [
+        ("north_in_0", "north"), ("north_in_4", "north"), ("north_out_0", "north"),
+        ("south_in_0", "south"), ("south_out_4", "south"),
+        ("east_in_0", "east"), ("east_in_4", "east"), ("east_out_2", "east"),
+        ("west_in_0", "west"), ("west_in_3", "west"), ("west_out_3", "west"),
+    ],
+)
+def test_approach_from_lane_id_maps_new_inbound_and_outbound_scheme(
+    lane_id: str, expected: str
+) -> None:
+    assert _approach_from_lane_id(lane_id) == expected
+
+
+@pytest.mark.parametrize(
+    "lane_id",
+    ["A0A1_0", "A1B1_0", "B0B1_0", ":J0_0", "clockwise_0"],
+)
+def test_approach_from_lane_id_rejects_retired_grid_lane_ids(lane_id: str) -> None:
+    assert _approach_from_lane_id(lane_id) is None
