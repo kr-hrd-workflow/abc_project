@@ -10,7 +10,11 @@ import {
 
 import type { Direction } from "../../lib/types";
 import type { SceneSnapshot } from "./buildSceneSnapshot";
-import type { Vector3Tuple } from "./roadGeometry";
+import {
+  APPROACH_CORRIDORS,
+  INTERSECTION_BOX_EXTENT_METERS,
+  type Vector3Tuple
+} from "./roadGeometry";
 import { STAGE5_SHADOWS_ENABLED } from "./shadowPolicy";
 
 export type SignalHardwareLightingPreset = "day" | "cloudy" | "rain" | "night";
@@ -27,11 +31,32 @@ type SignalPlacement = {
 type SignalSnapshot = SceneSnapshot["signals"][number];
 type SignalAssemblyVariant = "standard" | "proof_foreground";
 
-const SIGNAL_PLACEMENTS: Record<Direction, SignalPlacement> = {
-  north: { position: [-13.5, 5.2, -19.5], rotationY: Math.PI },
-  south: { position: [13.5, 5.2, 19.5], rotationY: 0 },
-  east: { position: [19.5, 5.2, -13.5], rotationY: Math.PI / 2 },
-  west: { position: [-19.5, 5.2, 13.5], rotationY: -Math.PI / 2 }
+const SIGNAL_HEAD_HEIGHT_METERS = 5.2;
+// Pole stands on the sidewalk just past the carriageway edge; the mast arm
+// cantilevers the head back over the inbound stop line (handled by the assembly).
+const SIGNAL_CURB_SETBACK_METERS = 4.5;
+
+function approachCarriagewayHalfWidth(direction: Direction): number {
+  const corridor = APPROACH_CORRIDORS.find((c) => c.direction === direction)!;
+  const acrossWidth =
+    corridor.orientation === "north_south" ? corridor.size[0] : corridor.size[1];
+  return acrossWidth / 2;
+}
+
+const NS_HALF = INTERSECTION_BOX_EXTENT_METERS.ns / 2;
+const EW_HALF = INTERSECTION_BOX_EXTENT_METERS.ew / 2;
+const NORTH_CURB = approachCarriagewayHalfWidth("north") + SIGNAL_CURB_SETBACK_METERS;
+const SOUTH_CURB = approachCarriagewayHalfWidth("south") + SIGNAL_CURB_SETBACK_METERS;
+const EAST_CURB = approachCarriagewayHalfWidth("east") + SIGNAL_CURB_SETBACK_METERS;
+const WEST_CURB = approachCarriagewayHalfWidth("west") + SIGNAL_CURB_SETBACK_METERS;
+const NS_CORNER = NS_HALF + SIGNAL_CURB_SETBACK_METERS;
+const EW_CORNER = EW_HALF + SIGNAL_CURB_SETBACK_METERS;
+
+export const SIGNAL_PLACEMENTS: Record<Direction, SignalPlacement> = {
+  north: { position: [-NORTH_CURB, SIGNAL_HEAD_HEIGHT_METERS, -NS_CORNER], rotationY: Math.PI },
+  south: { position: [SOUTH_CURB, SIGNAL_HEAD_HEIGHT_METERS, NS_CORNER], rotationY: 0 },
+  east: { position: [EW_CORNER, SIGNAL_HEAD_HEIGHT_METERS, -EAST_CURB], rotationY: Math.PI / 2 },
+  west: { position: [-EW_CORNER, SIGNAL_HEAD_HEIGHT_METERS, WEST_CURB], rotationY: -Math.PI / 2 }
 };
 
 const LENS_OFF = "#172024";
@@ -79,7 +104,7 @@ const ACTIVE_SIGNAL_HARDWARE_LIGHTING_PRESET: SignalHardwareLightingPreset =
 const SEOUL_FOREGROUND_PROOF_SIGNAL = {
   direction: "west" as Direction,
   faceMeters: [3.65, 1.78] as [number, number],
-  position: [-19.2, 5.35, 14.2] as Vector3Tuple,
+  position: [-EW_CORNER + 0.3, 5.35, WEST_CURB + 0.7] as Vector3Tuple,
   rotationY: Math.PI / 3,
   hangulLabelPlacement: "signal_face_texture" as const,
   signalStateSource: "SceneSnapshot.signals" as const,

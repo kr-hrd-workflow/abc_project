@@ -19,7 +19,9 @@ import {
 } from "./RoadDetailProps";
 import { getApproachRoadWidthMeters } from "./intersectionTruth";
 import {
+  APPROACH_CORRIDORS,
   CROSSWALK_STRIPES,
+  INTERSECTION_BOX_EXTENT_METERS,
   INTERSECTION_BOX_METERS,
   INTERSECTION_BOX_X_METERS,
   LANE_DIVIDER_MARKINGS,
@@ -637,6 +639,44 @@ describe("Camera/weather/clutter finishing slice", () => {
     expect(screen.getByTestId("r3f-cctv-effect-badge").textContent).toContain(
       "rain lens"
     );
+  });
+
+  test("anchors Seoul signal heads to the asymmetric junction corners facing inbound traffic", () => {
+    const placements = (SignalHardwareModule as typeof SignalHardwareModule & {
+      SIGNAL_PLACEMENTS: Record<
+        "north" | "south" | "east" | "west",
+        { position: [number, number, number]; rotationY: number }
+      >;
+    }).SIGNAL_PLACEMENTS;
+
+    const nsHalf = INTERSECTION_BOX_EXTENT_METERS.ns / 2;
+    const ewHalf = INTERSECTION_BOX_EXTENT_METERS.ew / 2;
+    const across = (dir: "north" | "south" | "east" | "west") => {
+      const c = APPROACH_CORRIDORS.find((corridor) => corridor.direction === dir)!;
+      return (c.orientation === "north_south" ? c.size[0] : c.size[1]) / 2;
+    };
+
+    // Heads sit just beyond the junction box on the approach's near corner.
+    expect(placements.north.position[2]).toBeLessThanOrEqual(-nsHalf);
+    expect(placements.south.position[2]).toBeGreaterThanOrEqual(nsHalf);
+    expect(placements.east.position[0]).toBeGreaterThanOrEqual(ewHalf);
+    expect(placements.west.position[0]).toBeLessThanOrEqual(-ewHalf);
+
+    // Poles stand on the curb outside each approach's own carriageway half.
+    expect(Math.abs(placements.north.position[0])).toBeGreaterThanOrEqual(across("north"));
+    expect(Math.abs(placements.west.position[2])).toBeGreaterThanOrEqual(across("west"));
+
+    // Faces oncoming inbound traffic (matches PRECISE_VEHICLE_HEADING mapping).
+    expect(placements.north.rotationY).toBeCloseTo(Math.PI, 5);
+    expect(placements.south.rotationY).toBeCloseTo(0, 5);
+    expect(placements.east.rotationY).toBeCloseTo(Math.PI / 2, 5);
+    expect(placements.west.rotationY).toBeCloseTo(-Math.PI / 2, 5);
+
+    // Proof signal stays an overhead head with a legible face (cue invariants).
+    const proof = SignalHardwareModule.SEOUL_SIGNAL_HARDWARE_CUES.foregroundProofSignal;
+    expect(proof.position[1]).toBeGreaterThanOrEqual(5);
+    expect(proof.faceMeters[0]).toBeGreaterThanOrEqual(3.2);
+    expect(proof.faceMeters[1]).toBeGreaterThanOrEqual(1.5);
   });
 });
 
