@@ -33,17 +33,22 @@ export const PLATE_CAMERA_ANGLES: PlateCameraAngle[] = [
     calibrationOffset: [0.051, 0.059]
   },
   // Low, oblique CCTV-style pole view of the same intersection. Its plate was
-  // generated from a structural guide rendered at these camera params, so the
-  // runtime camera matches the plate. The low angle makes traffic signals
-  // readable (the project's signal-control purpose).
+  // generated from a structural guide rendered at these EXACT camera params
+  // (render-plate-guides.mjs → CameraRig "operatorCctv"), so the runtime camera
+  // must match these. These values are the SSOT and the CameraRig operatorCctv
+  // preset mirrors them. (A prior interim value [38,20,44]/[-4,1,-14] did not
+  // match the generated plate — it pointed the guide at building massing — and
+  // is corrected back to the plate-generation camera here.) The low angle keeps
+  // traffic signals readable (the project's signal-control purpose).
   {
     id: "operator-cctv",
-    position: [38, 20, 44],
-    target: [-4, 1, -14],
+    position: [34, 18, 40],
+    target: [-4, 1, -12],
     fovDegrees: 50,
     plateAspect: 1536 / 1024, // = 1.5
-    // CCTV camera exactly matches the plate calibration → expect near-zero drift.
-    // Set to [0, 0] until empirical COVER-corrected measurement is available.
+    // The guide building proxies occlude the road in the diagnostic overlay, so a
+    // precise COVER-corrected offset could not be measured cleanly; vehicles sit
+    // on the plate road at [0, 0]. Left at [0, 0] pending a cleaner measurement.
     calibrationOffset: [0, 0]
   }
 ];
