@@ -1501,7 +1501,7 @@ function resolvePreciseVehicleLanePlacement(
   };
 }
 
-function parseLaneDirection(laneId: string): Direction | null {
+export function parseLaneDirection(laneId: string): Direction | null {
   const normalized = laneId.toLowerCase();
 
   return DIRECTIONS.find((direction) =>
@@ -1509,7 +1509,7 @@ function parseLaneDirection(laneId: string): Direction | null {
   ) ?? null;
 }
 
-function parseLaneIndex(laneId: string) {
+export function parseLaneIndex(laneId: string) {
   const match = laneId.match(/(\d+)(?!.*\d)/);
   if (!match) return null;
 
