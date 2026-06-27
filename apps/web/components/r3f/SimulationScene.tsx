@@ -13,6 +13,7 @@ import { NightSeamlessLighting } from "./NightSeamlessLighting";
 import { NightVehicleTreatment } from "./NightVehicleTreatment";
 import { GANGNAM_NIGHT_GRADE } from "./seamlessGrade";
 import { SignalLayer } from "./SignalLayer";
+import { StructuralGuideLayer } from "./StructuralGuideLayer";
 import { WheelSprayLayer } from "./WheelSprayLayer";
 import type {
   Stage6QualityPreset,
@@ -29,6 +30,14 @@ function resolveViewpoint(explicit?: SimulationViewpoint): SimulationViewpoint {
   return new URLSearchParams(window.location.search).get("viewpoint") === "cctv"
     ? "cctv"
     : "wide";
+}
+
+// Guide mode: ?guide=1 — suppresses plate, vehicles, PostFX and renders a flat
+// structural guide (road layout + lane markings + building massing) for use as
+// imagegen conditioning input. Normal scene is completely unaffected.
+function resolveGuideMode(): boolean {
+  if (typeof window === "undefined") return false;
+  return new URLSearchParams(window.location.search).get("guide") === "1";
 }
 
 export function SimulationScene({
@@ -52,6 +61,24 @@ export function SimulationScene({
   const cameraPreset = activeViewpoint === "cctv" ? "operatorCctv" : undefined;
   const plateAngleId =
     activeViewpoint === "cctv" ? "operator-cctv" : "operator-wide";
+
+  // Guide mode (?guide=1): suppress plate, vehicles, PostFX; render flat
+  // structural guide. Camera stays aligned with the plate camera angles via
+  // the same viewpoint/cameraPreset path so the guide matches the plate frame.
+  const isGuide = resolveGuideMode();
+
+  if (isGuide) {
+    // Use "nightAerialProof" for wide (= STAGE5_CAMERA, exact plate-camera match)
+    // and "operatorCctv" for cctv. No plate, no vehicles, no PostFX.
+    const guideCameraPreset =
+      activeViewpoint === "cctv" ? "operatorCctv" : "nightAerialProof";
+    return (
+      <group name="structural-guide-scene">
+        <CameraRig preset={guideCameraPreset} />
+        <StructuralGuideLayer />
+      </group>
+    );
+  }
 
   return (
     <group name={`smart-intersection-stage5-${sceneSnapshot.trafficDensityMode}`}>

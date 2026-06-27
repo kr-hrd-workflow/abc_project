@@ -43,6 +43,8 @@ media/
 
 # Generated artifacts stay ignored, except proof files required by CI.
 /artifacts/*
+!/artifacts/plate-guides/
+!/artifacts/plate-guides/*.png
 !/artifacts/r3f-stage4.1-asset-realism-contact-sheet.png
 !/artifacts/r3f-stage4.1-glb-turntable-contact-sheet.png
 !/artifacts/r3f-dashboard-desktop.png
