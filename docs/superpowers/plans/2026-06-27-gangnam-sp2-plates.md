@@ -57,7 +57,14 @@
 
 > Acceptance gate = **human visual review** + alignment check. A subagent MUST NOT self-accept a generated plate. Generate → render in scene → present to user → iterate.
 
-**Chosen generation path (locked):** use the imagegen skill's **built-in `image_gen` tool in `edit`/img2img mode**, conditioning each plate on its structural guide (Phase A) so the road/junction composition is preserved and the plate aligns with the fixed-camera proxy. Drive it via `codex exec` (codex is **chatgpt-authed**, so the built-in tool works without an API key). Rationale: of the three CLI subcommands (`generate`/`edit`/`generate-batch`), only `edit` conditions on an input image — text-only `generate` cannot guarantee proxy alignment and `generate-batch` is just batching. Do NOT use the CLI fallback (`scripts/image_gen.py`, models gpt-image-2/1.5/1/mini): it **requires `OPENAI_API_KEY`, which is not set in this environment** (escalate to the user for a key only if the built-in tool fails). gpt-image-2 would be the model of choice if the CLI is ever used (photoreal, always-high input fidelity, fewer retries).
+**Chosen generation path — depends on API key (decision pending):** The skill is `.system/imagegen` (general photoreal; the `imagegen-frontend-web`/`-mobile` variants are UI-design-only — not for plates). Two paths:
+
+- **PREFERRED for alignment — CLI `edit` + `gpt-image-2`** (`scripts/image_gen.py edit --model gpt-image-2 --image <structural-guide.png> --size 1536x1024 --quality high --out <plate>`): the OpenAI `/images/edits` (img2img) endpoint uses the structural guide as a compositional reference, gpt-image-2 always processes image inputs at high fidelity, and 1536×1024 is exact. This is the technically-correct path for SP2's hard alignment+framing bar. **Requires `OPENAI_API_KEY` (bearer)** — NOT set in this environment (codex is chatgpt-authed).
+- **FALLBACK (works now, looser) — built-in `image_gen` tool** via `codex exec` (chatgpt-auth, no key): good LOOK but loose framing/alignment control (a first free-gen sample produced a convincing night look but an oblique, unaligned frame). Acceptable for look exploration / a CCTV-oblique starting point; weaker for exact operator-wide framing + proxy alignment.
+
+**Skill inventory (verified on the Windows host):** the imagegen family has ~5 skills — `.system/imagegen` (general photoreal), `imagegen-frontend-web`, `imagegen-frontend-mobile`, `image-to-code`, `redesign-existing-projects`. Only **`.system/imagegen`** fits photoreal city plates; the other four are frontend/UI-design tools (website/app design references, image→code, UI redesign) and are NOT used here.
+
+**DECISION (locked, user choice 2026-06-27): built-in `image_gen` tool, no API key.** Drive `.system/imagegen` via `codex exec` (chatgpt-auth). For alignment, **attach the structural guide** with `codex exec -i artifacts/plate-guides/<cam>-structural-guide.png` and instruct strict composition preservation (img2img-style) — better than the free-gen first sample. Accept that built-in framing/alignment control is softer than the gpt-image-2 `/images/edits` API (which would need `OPENAI_API_KEY`, declined). Iterate per plate with human review.
 
 For each plate in {night-wide, day-wide, night-cctv, day-cctv}:
 
@@ -110,6 +117,6 @@ For each plate in {night-wide, day-wide, night-cctv, day-cctv}:
 ## Open Questions / Risks
 
 - **imagegen quality + alignment is the hard part** — getting a generated photoreal plate to both look like the real 강남역 AND align with the fixed-camera proxy geometry typically takes several iterations; this is the user-reviewed loop in Phase B.
-- **Literal brand fidelity in practice:** image_gen produces brand-LIKE signage, not pixel-exact trademarked logos; confirm with the user whether "recognizably 강남역" is sufficient or specific real logos are required (higher IP risk).
+- **Brand fidelity (RESOLVED 2026-06-27):** photoreal + **Gangnam-style signage, no insistence on exact logos** (user choice). Reproduce recognizable real landmark FORMS (Samsung Town SW towers, NE giant LED billboards, G-Light media poles, I♡GANGNAM heart, plane/zelkova trees, red median bus lane) so it unmistakably reads as 강남역, but fill signage with Gangnam-style invented marks (성형외과/학원/카페/LED) rather than pixel-exact trademarked logos — IP-/moderation-minimal. imagegen prompts target "recognizably 강남역," NOT exact brand logos.
 - **codex image_gen availability per run:** chatgpt-authed codex with image_gen worked for prior plates; if a run cannot produce an image, Phase B is blocked on the generation tool (escalate).
 - Old plates were PNG(wide)/WebP(cctv); keep formats + payload budget.
