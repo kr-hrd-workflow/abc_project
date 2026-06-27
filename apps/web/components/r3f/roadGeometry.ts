@@ -71,8 +71,8 @@ export const STAGE3_CAMERA = {
 } as const;
 
 export const STAGE5_CAMERA = {
-  position: [24, 78, 108] as Vector3Tuple,
-  target: [0, 0, -36] as Vector3Tuple,
+  position: [26, 82, 116] as Vector3Tuple,
+  target: [0, 0, -34] as Vector3Tuple,
   fov: 50,
   near: 0.1,
   far: 520

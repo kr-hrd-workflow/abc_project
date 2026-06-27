@@ -23,8 +23,8 @@ export const PLATE_CAMERA_ANGLES: PlateCameraAngle[] = [
   // readable (the project's signal-control purpose).
   {
     id: "operator-cctv",
-    position: [34, 18, 40],
-    target: [-4, 1, -12],
+    position: [38, 20, 44],
+    target: [-4, 1, -14],
     fovDegrees: 50
   }
 ];
