@@ -1,20 +1,20 @@
 {
-  "baseline_id": "r3f-dashboard-visual-baseline-2026-06-24-seoul-realism-sumo-pedestrians",
+  "baseline_id": "r3f-dashboard-visual-baseline-2026-06-27-sp1-gangnam-asymmetric",
   "source_artifact": "artifacts/r3f-dashboard-details.json",
   "desktop": {
     "canvas_metrics": {
       "width": 914,
-      "height": 679,
-      "sampled_pixels": 620606,
-      "non_background_ratio": 0.8971763083179989,
-      "bright_ratio": 0.16592491854735533,
-      "dark_ratio": 0.40119496105419544,
-      "warm_light_ratio": 0.00826772541677006,
-      "cool_light_ratio": 0.019414894474110787,
-      "marking_ratio": 0.2778171658024576,
-      "saturated_ratio": 0.4066090240829125,
-      "color_bucket_count": 773,
-      "luminance_stddev": 71.79503547836815
+      "height": 680,
+      "sampled_pixels": 621520,
+      "non_background_ratio": 0.8993612434032694,
+      "bright_ratio": 0.1668425794825589,
+      "dark_ratio": 0.3877123825460162,
+      "warm_light_ratio": 0.013595700862401854,
+      "cool_light_ratio": 0.018601171321920452,
+      "marking_ratio": 0.28188473420002574,
+      "saturated_ratio": 0.4134122795726606,
+      "color_bucket_count": 907,
+      "luminance_stddev": 71.44310086939146
     }
   }
 }
