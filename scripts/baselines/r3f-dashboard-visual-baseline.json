@@ -1,20 +1,20 @@
 {
-  "baseline_id": "r3f-dashboard-visual-baseline-2026-06-27-sp1-gangnam-asymmetric",
+  "baseline_id": "r3f-dashboard-visual-baseline-2026-06-27-sp2-gangnam-real-plates",
   "source_artifact": "artifacts/r3f-dashboard-details.json",
   "desktop": {
     "canvas_metrics": {
       "width": 914,
       "height": 680,
       "sampled_pixels": 621520,
-      "non_background_ratio": 0.8993612434032694,
-      "bright_ratio": 0.1668425794825589,
-      "dark_ratio": 0.3877123825460162,
-      "warm_light_ratio": 0.013595700862401854,
-      "cool_light_ratio": 0.018601171321920452,
-      "marking_ratio": 0.28188473420002574,
-      "saturated_ratio": 0.4134122795726606,
-      "color_bucket_count": 907,
-      "luminance_stddev": 71.44310086939146
+      "non_background_ratio": 0.9290256146222166,
+      "bright_ratio": 0.15241182906422962,
+      "dark_ratio": 0.31053385249066806,
+      "warm_light_ratio": 0.017499034624790834,
+      "cool_light_ratio": 0.05726766636632771,
+      "marking_ratio": 0.27818412923156133,
+      "saturated_ratio": 0.43030151885699575,
+      "color_bucket_count": 1270,
+      "luminance_stddev": 67.02835111503555
     }
   }
 }
