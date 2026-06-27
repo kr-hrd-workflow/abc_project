@@ -26,6 +26,7 @@ import type {
   SimulationVehicleType
 } from "../../lib/simulationSnapshot";
 import type { SceneSnapshot, SceneTrafficDensityMode } from "./buildSceneSnapshot";
+import type { SimulationViewpoint } from "./SimulationScene";
 import type {
   Stage6VehicleLodTier,
   Stage6VehicleMaterialCues
@@ -51,6 +52,7 @@ import {
   decideStage6VehicleLod,
   getStage6VehicleMaterialCues
 } from "./stage6VehicleLod";
+import { applyCalibratedLaneOffset } from "./plateVehicleCalibration";
 
 export type TrafficDensitySourceLabel =
   | "fixture"
@@ -283,15 +285,17 @@ const TRAFFIC_VEHICLE_PROFILES: TrafficVehicleProfile[] = [
 
 export function buildTrafficDensityRenderPlan(
   sceneSnapshot: SceneSnapshot,
-  qualityPreset: Stage6QualityPreset = getStage6QualityPreset("high")
+  qualityPreset: Stage6QualityPreset = getStage6QualityPreset("high"),
+  viewpoint: SimulationViewpoint = "wide"
 ): TrafficDensityRenderPlan {
   const mode = sceneSnapshot.trafficDensityMode;
   const preciseVehicles = buildPreciseVehicles(
     sceneSnapshot.vehicles,
-    qualityPreset
+    qualityPreset,
+    viewpoint
   );
   const farVehicles =
-    preciseVehicles.length > 0 ? [] : buildFarVehicles(sceneSnapshot);
+    preciseVehicles.length > 0 ? [] : buildFarVehicles(sceneSnapshot, viewpoint);
 
   return {
     mode,
@@ -330,12 +334,14 @@ export function buildStage6EDensityRenderPlan(
 
 export function TrafficDensityLayer({
   sceneSnapshot,
-  qualityPreset = getStage6QualityPreset("high")
+  qualityPreset = getStage6QualityPreset("high"),
+  viewpoint = "wide"
 }: {
   sceneSnapshot: SceneSnapshot;
   qualityPreset?: Stage6QualityPreset;
+  viewpoint?: SimulationViewpoint;
 }) {
-  const plan = buildTrafficDensityRenderPlan(sceneSnapshot, qualityPreset);
+  const plan = buildTrafficDensityRenderPlan(sceneSnapshot, qualityPreset, viewpoint);
   const canUseDensityGlbs = canUseRuntimeDensityAssets();
   const densityRenderPlan = buildStage6EDensityRenderPlan(plan.farVehicles);
   const allProceduralFarVehicles =
@@ -1313,7 +1319,8 @@ function countStage6VehicleLodTiers(
 
 function buildPreciseVehicles(
   vehicles: SimulationVehicleSnapshot[],
-  qualityPreset: Stage6QualityPreset
+  qualityPreset: Stage6QualityPreset,
+  viewpoint: SimulationViewpoint = "wide"
 ): TrafficDensityPreciseVehicle[] {
   const drafts = applyPreciseVehicleLongitudinalSpacing(
     vehicles.map((vehicle, originalIndex) => {
@@ -1324,7 +1331,7 @@ function buildPreciseVehicles(
         vehicle,
         originalIndex,
         size,
-        lanePosition: getLaneAlignedPreciseVehiclePosition(vehicle, lanePlacement),
+        lanePosition: getLaneAlignedPreciseVehiclePosition(vehicle, lanePlacement, viewpoint),
         lanePlacement
       };
     })
@@ -1366,7 +1373,8 @@ function buildPreciseVehicles(
 
 function getLaneAlignedPreciseVehiclePosition(
   vehicle: SimulationVehicleSnapshot,
-  lanePlacement = resolvePreciseVehicleLanePlacement(vehicle)
+  lanePlacement = resolvePreciseVehicleLanePlacement(vehicle),
+  viewpoint: SimulationViewpoint = "wide"
 ) {
   if (!lanePlacement) {
     return {
@@ -1375,10 +1383,15 @@ function getLaneAlignedPreciseVehiclePosition(
     };
   }
 
-  const laneOffset = getInboundLaneOffset(
+  const rawLaneOffset = getInboundLaneOffset(
     lanePlacement.direction,
     lanePlacement.laneIndex,
     getApproachInboundLaneCount(lanePlacement.direction)
+  );
+  const laneOffset = applyCalibratedLaneOffset(
+    rawLaneOffset,
+    viewpoint,
+    lanePlacement.direction
   );
 
   if (
@@ -1525,14 +1538,17 @@ function headingMatchesDirection(headingDegrees: number, direction: Direction) {
 }
 
 function buildFarVehicles(
-  sceneSnapshot: SceneSnapshot
+  sceneSnapshot: SceneSnapshot,
+  viewpoint: SimulationViewpoint = "wide"
 ): TrafficDensityFarVehicle[] {
   if (!sceneSnapshot.allowsDensityFill) return [];
   if (sceneSnapshot.trafficDensityMode === "fixture_queues") {
-    return buildFixtureQueueVehicles(sceneSnapshot);
+    return buildFixtureQueueVehicles(sceneSnapshot, viewpoint);
   }
   if (sceneSnapshot.trafficDensityMode === "density_segments") {
-    return sceneSnapshot.densitySegments.flatMap(buildDensitySegmentVehicles);
+    return sceneSnapshot.densitySegments.flatMap((seg) =>
+      buildDensitySegmentVehicles(seg, viewpoint)
+    );
   }
 
   return [];
@@ -1557,7 +1573,8 @@ export function getStage5RearGlassScale(
 }
 
 function buildFixtureQueueVehicles(
-  sceneSnapshot: SceneSnapshot
+  sceneSnapshot: SceneSnapshot,
+  viewpoint: SimulationViewpoint = "wide"
 ): TrafficDensityFarVehicle[] {
   if (!sceneSnapshot.queues) return [];
 
@@ -1598,7 +1615,8 @@ function buildFixtureQueueVehicles(
         laneIndex,
         laneCount,
         height: profile.size[1],
-        lateralJitterMeters: getLaneJitterMeters({ direction, index, laneIndex })
+        lateralJitterMeters: getLaneJitterMeters({ direction, index, laneIndex }),
+        viewpoint
       });
 
       return {
@@ -1617,7 +1635,8 @@ function buildFixtureQueueVehicles(
 }
 
 function buildDensitySegmentVehicles(
-  segment: SimulationDensitySegment
+  segment: SimulationDensitySegment,
+  viewpoint: SimulationViewpoint = "wide"
 ): TrafficDensityFarVehicle[] {
   const vehicleCount = Math.max(0, segment.vehicle_count);
   if (vehicleCount === 0) return [];
@@ -1671,7 +1690,8 @@ function buildDensitySegmentVehicles(
         direction: segment.approach,
         index,
         laneIndex
-      })
+      }),
+      viewpoint
     });
 
     return {
@@ -1850,7 +1870,8 @@ function getApproachTransform({
   laneIndex,
   laneCount,
   height,
-  lateralJitterMeters = 0
+  lateralJitterMeters = 0,
+  viewpoint = "wide"
 }: {
   direction: Direction;
   distanceFromStopLine: number;
@@ -1858,9 +1879,11 @@ function getApproachTransform({
   laneCount: number;
   height: number;
   lateralJitterMeters?: number;
+  viewpoint?: SimulationViewpoint;
 }) {
+  const rawLaneOffset = getInboundLaneOffset(direction, laneIndex, laneCount);
   const laneOffset =
-    getInboundLaneOffset(direction, laneIndex, laneCount) + lateralJitterMeters;
+    applyCalibratedLaneOffset(rawLaneOffset, viewpoint, direction) + lateralJitterMeters;
   const y = height / 2 + 0.045;
   const distance = STOP_LINE_OFFSET_METERS + distanceFromStopLine;
 

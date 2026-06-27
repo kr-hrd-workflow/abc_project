@@ -3,16 +3,19 @@
 import { memo } from "react";
 
 import type { SceneSnapshot } from "./buildSceneSnapshot";
+import type { SimulationViewpoint } from "./SimulationScene";
 import type { Stage6QualityPreset } from "./stage6Quality";
 import { getStage6QualityPreset } from "./stage6Quality";
 import { TrafficDensityLayer } from "./TrafficDensityLayer";
 
 function DynamicVehicleLayerComponent({
   sceneSnapshot,
-  qualityPreset = getStage6QualityPreset("high")
+  qualityPreset = getStage6QualityPreset("high"),
+  viewpoint = "wide"
 }: {
   sceneSnapshot: SceneSnapshot;
   qualityPreset?: Stage6QualityPreset;
+  viewpoint?: SimulationViewpoint;
 }) {
   return (
     <group
@@ -26,6 +29,7 @@ function DynamicVehicleLayerComponent({
       <TrafficDensityLayer
         sceneSnapshot={sceneSnapshot}
         qualityPreset={qualityPreset}
+        viewpoint={viewpoint}
       />
     </group>
   );

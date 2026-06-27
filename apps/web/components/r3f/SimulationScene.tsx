@@ -97,6 +97,7 @@ export function SimulationScene({
         timeOfDay={timeOfDay}
         sceneSnapshot={sceneSnapshot}
         qualityPreset={qualityPreset}
+        viewpoint={activeViewpoint}
       />
       <DynamicPedestrianLayer sceneSnapshot={sceneSnapshot} />
       <SignalLayer signals={sceneSnapshot.signals} />
@@ -191,17 +192,20 @@ function DynamicVehicleLayerWithWeather({
   isNight,
   timeOfDay,
   sceneSnapshot,
-  qualityPreset
+  qualityPreset,
+  viewpoint = "wide"
 }: {
   isNight: boolean;
   timeOfDay: Stage6TimeOfDay;
   sceneSnapshot: SceneSnapshot;
   qualityPreset: Stage6QualityPreset;
+  viewpoint?: SimulationViewpoint;
 }) {
   const vehicles = (
     <DynamicVehicleLayer
       sceneSnapshot={sceneSnapshot}
       qualityPreset={qualityPreset}
+      viewpoint={viewpoint}
     />
   );
 

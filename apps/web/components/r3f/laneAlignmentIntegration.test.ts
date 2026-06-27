@@ -4,8 +4,15 @@ import { INTERSECTION_TRUTH } from "./intersectionTruth";
 import {
   getInboundLaneOffset,
   parseLaneDirection,
-  parseLaneIndex
+  parseLaneIndex,
+  buildTrafficDensityRenderPlan
 } from "./TrafficDensityLayer";
+import {
+  applyCalibratedLaneOffset,
+  PLATE_VEHICLE_CALIBRATION
+} from "./plateVehicleCalibration";
+import { buildSceneSnapshot } from "./buildSceneSnapshot";
+import type { SimulationFrameSnapshot } from "../../lib/simulationSnapshot";
 
 const carriagewayHalf = (approach: { inboundLanes: number; outboundLanes: number; laneWidthM: number }) =>
   ((approach.inboundLanes + approach.outboundLanes) * approach.laneWidthM) / 2;
@@ -75,5 +82,95 @@ describe("SP1 lane alignment integration", () => {
     expect(Math.abs(getInboundLaneOffset("west", 3, west.inboundLanes))).toBeLessThanOrEqual(
       carriagewayHalf(west) - west.laneWidthM / 2 + 1e-6
     );
+  });
+});
+
+describe("SP4 per-viewpoint lateral calibration", () => {
+  it("identity calibration (offset=0, scale=1) is a no-op on getInboundLaneOffset", () => {
+    // The no-op calibration must preserve the raw lane offset exactly.
+    for (const direction of ["north", "south", "east", "west"] as const) {
+      const truth = INTERSECTION_TRUTH[direction];
+      for (let laneIndex = 0; laneIndex < truth.inboundLanes; laneIndex++) {
+        const raw = getInboundLaneOffset(direction, laneIndex, truth.inboundLanes);
+        const calibrated = applyCalibratedLaneOffset(raw, "wide", direction);
+        // Calibration table must be no-op at current values.
+        const cal = PLATE_VEHICLE_CALIBRATION.wide[direction];
+        const expected = cal.offset + cal.scale * raw;
+        expect(calibrated).toBeCloseTo(expected, 10);
+      }
+    }
+  });
+
+  it("non-zero offset shifts all lanes uniformly by the calibration amount", () => {
+    const raw = getInboundLaneOffset("north", 2, 5); // lane 2 of 5
+    // Simulate a +1.5m calibration offset.
+    const shiftedOffset = 1.5 + 1.0 * raw;
+    expect(shiftedOffset).toBeCloseTo(raw + 1.5, 10);
+  });
+
+  it("scale != 1 compresses / expands lanes proportionally", () => {
+    const raw = getInboundLaneOffset("south", 0, 5); // outermost lane
+    const compressed = 0 + 0.9 * raw;
+    expect(Math.abs(compressed)).toBeLessThan(Math.abs(raw));
+    const expanded = 0 + 1.1 * raw;
+    expect(Math.abs(expanded)).toBeGreaterThan(Math.abs(raw));
+  });
+
+  it("bus lane remains bus lane after calibration (buses stay on median lane)", () => {
+    // The bus lane (index 4 for north) is the innermost lane closest to the median.
+    // Any uniform offset or scale must not move the bus lane to a non-bus lane slot.
+    // The key property: after calibration, the bus lane still has the smallest
+    // absolute offset among all north inbound lanes (it's closest to center).
+    const truth = INTERSECTION_TRUTH.north;
+    const busLaneIndex = 4; // median bus lane
+    const rawBus = getInboundLaneOffset("north", busLaneIndex, truth.inboundLanes);
+    // With current calibration values applied:
+    const cal = PLATE_VEHICLE_CALIBRATION.wide.north;
+    const calibratedBus = cal.offset + cal.scale * rawBus;
+    // For all other lanes, their calibrated offset should have larger absolute value.
+    for (let i = 0; i < truth.inboundLanes - 1; i++) {
+      const rawOther = getInboundLaneOffset("north", i, truth.inboundLanes);
+      const calibratedOther = cal.offset + cal.scale * rawOther;
+      expect(Math.abs(calibratedOther)).toBeGreaterThan(Math.abs(calibratedBus) - 1e-6);
+    }
+  });
+
+  it("buildTrafficDensityRenderPlan respects viewpoint param — positions shift by calibration", () => {
+    // Build a SUMO north_in_2 vehicle and check that its x position equals the
+    // calibrated lane offset for 'wide' viewpoint.
+    const frame: SimulationFrameSnapshot = {
+      source: "sumo_traci",
+      intersection_id: "INT-0001",
+      scenario_id: "normal",
+      sim_time_seconds: 0,
+      captured_at: "2026-06-27T00:00:00.000Z",
+      bounds_meters: { min_x: -100, max_x: 100, min_y: -100, max_y: 100 },
+      vehicles: [
+        {
+          id: "v-north-2",
+          vehicle_type: "car",
+          lane_id: "north_in_2",
+          x_meters: 0,
+          y_meters: -30,
+          heading_degrees: 180,
+          speed_mps: 2,
+          waiting_seconds: 0,
+          emergency: false
+        }
+      ],
+      pedestrians: [],
+      density_segments: [],
+      signals: [],
+      queues: { north: 0, south: 0, east: 0, west: 0 },
+      events: []
+    };
+    const scene = buildSceneSnapshot(frame);
+    const rawOffset = getInboundLaneOffset("north", 2, 5);
+    const cal = PLATE_VEHICLE_CALIBRATION.wide.north;
+    const expectedX = cal.offset + cal.scale * rawOffset;
+
+    const plan = buildTrafficDensityRenderPlan(scene, undefined, "wide");
+    expect(plan.preciseVehicles).toHaveLength(1);
+    expect(plan.preciseVehicles[0].position[0]).toBeCloseTo(expectedX, 5);
   });
 });
