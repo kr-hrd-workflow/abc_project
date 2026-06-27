@@ -2,8 +2,8 @@
   "_comment": "Python/SUMO half of the single source of truth. Mirrors apps/web/components/r3f/intersectionTruth.ts INTERSECTION_TRUTH; keep values identical. Consumed by the gangnam.*.xml authoring/validation tests; the .net.xml is built from those inputs via netconvert. Do not duplicate these magic numbers elsewhere.",
   "laneWidthM": 3.6,
   "approaches": {
-    "north": {"approach": "north", "road": "강남대로", "inboundLanes": 5, "outboundLanes": 5, "hasMedianBus": true, "laneWidthM": 3.6, "corridorLengthM": 140, "hasCrosswalk": false},
-    "south": {"approach": "south", "road": "강남대로", "inboundLanes": 5, "outboundLanes": 5, "hasMedianBus": true, "laneWidthM": 3.6, "corridorLengthM": 120, "hasCrosswalk": false},
+    "north": {"approach": "north", "road": "강남대로", "inboundLanes": 5, "outboundLanes": 5, "hasMedianBus": true, "laneWidthM": 3.6, "corridorLengthM": 140, "hasCrosswalk": true},
+    "south": {"approach": "south", "road": "강남대로", "inboundLanes": 5, "outboundLanes": 5, "hasMedianBus": true, "laneWidthM": 3.6, "corridorLengthM": 120, "hasCrosswalk": true},
     "east":  {"approach": "east",  "road": "테헤란로", "inboundLanes": 5, "outboundLanes": 5, "hasMedianBus": false, "laneWidthM": 3.6, "corridorLengthM": 140, "hasCrosswalk": true},
     "west":  {"approach": "west",  "road": "서초대로", "inboundLanes": 4, "outboundLanes": 4, "hasMedianBus": false, "laneWidthM": 3.6, "corridorLengthM": 140, "hasCrosswalk": true}
   }

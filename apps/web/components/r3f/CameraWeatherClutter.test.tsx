@@ -299,7 +299,7 @@ describe("Camera/weather/clutter finishing slice", () => {
       ...CROSSWALK_STRIPES.map((stripe) => Math.max(...stripe.size))
     );
     const halfIntersection = INTERSECTION_BOX_METERS / 2;
-    // N/S surface crosswalk across 강남대로 is intentionally absent — use west instead.
+    // All four approaches have crosswalks (N/S restored in SP3); verify E/W geometry.
     const westStripes = CROSSWALK_STRIPES.filter(
       (stripe) => stripe.direction === "west"
     ).sort((left, right) => left.position[2] - right.position[2]);
@@ -339,7 +339,7 @@ describe("Camera/weather/clutter finishing slice", () => {
       eastStripes.reduce((sum, stripe) => sum + Math.abs(stripe.position[0]), 0) /
       eastStripes.length;
 
-    expect(CROSSWALK_STRIPES).toHaveLength(22);
+    expect(CROSSWALK_STRIPES).toHaveLength(44);
     // Discriminating: crosswalk sits exactly one box-half + 2.75m off the junction.
     const expectedCrosswalkOffset = INTERSECTION_BOX_X_METERS / 2 + 2.75;
     expect(Math.abs(eastStripes[0].position[0])).toBeCloseTo(

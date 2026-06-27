@@ -33,14 +33,14 @@ describe("roadGeometry derives per-corridor carriageway widths from the SSOT", (
     expect(INTERSECTION_BOX_Z_METERS).toBeCloseTo(36, 6);
   });
 
-  it("removes the N/S surface crosswalk and keeps E/W stripe sets", () => {
+  it("has surface crosswalk stripes on all four approaches (N/S restored in SP3)", () => {
     const dirCount = (d: Direction) =>
       CROSSWALK_STRIPES.filter((s) => s.direction === d).length;
-    expect(dirCount("north")).toBe(0);
-    expect(dirCount("south")).toBe(0);
+    expect(dirCount("north")).toBe(11);
+    expect(dirCount("south")).toBe(11);
     expect(dirCount("east")).toBe(11);
     expect(dirCount("west")).toBe(11);
-    expect(CROSSWALK_STRIPES).toHaveLength(22);
+    expect(CROSSWALK_STRIPES).toHaveLength(44);
   });
 
   it("sizes queue zones from each corridor's own width", () => {

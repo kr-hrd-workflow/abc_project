@@ -411,25 +411,39 @@ export function getCorridorLengthDataAttribute() {
 function buildCrosswalkStripes(): PlanePrimitiveSpec[] {
   const stripes: PlanePrimitiveSpec[] = [];
   const stripeCount = 11;
-  const crosswalkOffset = HALF_BOX_X + 2.75;
   const crosswalkDepth = 5.0;
   const centeredIndex = (stripeCount - 1) / 2;
 
-  // No surface crosswalk across 강남대로 (N/S). Keep 테헤란로/서초대로 (E/W).
-  for (const direction of ["east", "west"] as const) {
+  // All four approaches now have pedestrian-responsive crosswalks (SP3 restore).
+  for (const direction of ["north", "south", "east", "west"] as const) {
     if (!getApproachHasCrosswalk(direction)) continue;
     const lateralSpan = getApproachRoadWidthMeters(direction) - 1.4;
     const spacing = lateralSpan / (stripeCount - 1);
-    const offsetX = direction === "east" ? crosswalkOffset : -crosswalkOffset;
 
-    for (let index = 0; index < stripeCount; index += 1) {
-      const offset = (index - centeredIndex) * spacing;
-      stripes.push({
-        id: `${direction}-crosswalk-${index}`,
-        direction,
-        position: [offsetX, MARKING_HEIGHT + 0.008, offset],
-        size: [crosswalkDepth, CROSSWALK_STRIPE_WIDTH]
-      });
+    if (direction === "north" || direction === "south") {
+      // N/S crosswalk: stripes span the x axis (강남대로 width), placed at z edge.
+      const offsetZ = (HALF_BOX_Z + 2.75) * (direction === "north" ? -1 : 1);
+      for (let index = 0; index < stripeCount; index += 1) {
+        const offset = (index - centeredIndex) * spacing;
+        stripes.push({
+          id: `${direction}-crosswalk-${index}`,
+          direction,
+          position: [offset, MARKING_HEIGHT + 0.008, offsetZ],
+          size: [CROSSWALK_STRIPE_WIDTH, crosswalkDepth]
+        });
+      }
+    } else {
+      // E/W crosswalk: stripes span the z axis (road width), placed at x edge.
+      const offsetX = (HALF_BOX_X + 2.75) * (direction === "east" ? 1 : -1);
+      for (let index = 0; index < stripeCount; index += 1) {
+        const offset = (index - centeredIndex) * spacing;
+        stripes.push({
+          id: `${direction}-crosswalk-${index}`,
+          direction,
+          position: [offsetX, MARKING_HEIGHT + 0.008, offset],
+          size: [crosswalkDepth, CROSSWALK_STRIPE_WIDTH]
+        });
+      }
     }
   }
 

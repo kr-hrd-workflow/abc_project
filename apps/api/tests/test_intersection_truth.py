@@ -26,10 +26,11 @@ def test_median_bus_only_on_gangnamdaero() -> None:
     assert a["west"]["hasMedianBus"] is False
 
 
-def test_no_surface_crosswalk_across_gangnamdaero() -> None:
+def test_crosswalk_on_all_four_approaches() -> None:
+    # SP3: N/S crosswalks on 강남대로 restored (pedestrian-responsive signals).
     a = _data()["approaches"]
-    assert a["north"]["hasCrosswalk"] is False
-    assert a["south"]["hasCrosswalk"] is False
+    assert a["north"]["hasCrosswalk"] is True
+    assert a["south"]["hasCrosswalk"] is True
     assert a["east"]["hasCrosswalk"] is True
     assert a["west"]["hasCrosswalk"] is True
 

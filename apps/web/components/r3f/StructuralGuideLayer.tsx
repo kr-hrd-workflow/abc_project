@@ -68,7 +68,7 @@ export function StructuralGuideLayer() {
         </mesh>
       ))}
 
-      {/* E/W crosswalk stripes (NO N/S — 강남대로 has no surface crosswalk) */}
+      {/* Crosswalk stripes — all four approaches (N/S restored in SP3) */}
       {CROSSWALK_STRIPES.map((stripe) => (
         <mesh
           key={`guide-crosswalk-${stripe.id}`}

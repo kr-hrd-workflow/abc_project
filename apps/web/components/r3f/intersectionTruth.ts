@@ -25,7 +25,7 @@ export const INTERSECTION_TRUTH: Record<Direction, ApproachTruth> = {
     hasMedianBus: true,
     laneWidthM: INTERSECTION_LANE_WIDTH_METERS,
     corridorLengthM: 140,
-    hasCrosswalk: false
+    hasCrosswalk: true
   },
   south: {
     approach: "south",
@@ -35,7 +35,7 @@ export const INTERSECTION_TRUTH: Record<Direction, ApproachTruth> = {
     hasMedianBus: true,
     laneWidthM: INTERSECTION_LANE_WIDTH_METERS,
     corridorLengthM: 120,
-    hasCrosswalk: false
+    hasCrosswalk: true
   },
   east: {
     approach: "east",

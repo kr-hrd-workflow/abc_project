@@ -36,9 +36,9 @@ describe("INTERSECTION_TRUTH (Gangnam Station real layout)", () => {
     expect(getApproachMedianBusLaneIndex("west")).toBeNull();
   });
 
-  it("removes the N/S surface crosswalk and keeps E/W (테헤란로/서초대로)", () => {
-    expect(getApproachHasCrosswalk("north")).toBe(false);
-    expect(getApproachHasCrosswalk("south")).toBe(false);
+  it("has crosswalk on all four approaches (강남대로 N/S restored in SP3 + E/W 테헤란로/서초대로)", () => {
+    expect(getApproachHasCrosswalk("north")).toBe(true);
+    expect(getApproachHasCrosswalk("south")).toBe(true);
     expect(getApproachHasCrosswalk("east")).toBe(true);
     expect(getApproachHasCrosswalk("west")).toBe(true);
   });

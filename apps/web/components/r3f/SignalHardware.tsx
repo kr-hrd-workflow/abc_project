@@ -122,50 +122,12 @@ export const SEOUL_SIGNAL_HARDWARE_CUES = {
   foregroundProofSignal: SEOUL_FOREGROUND_PROOF_SIGNAL
 } as const;
 
-export function SignalHardware({
-  signals,
-  lightingPreset = ACTIVE_SIGNAL_HARDWARE_LIGHTING_PRESET
-}: SignalHardwareProps) {
-  const uniqueSignals = getSignalsByDirection(signals);
-  const lensEmissiveScale = SIGNAL_LENS_EMISSIVE_SCALE_BY_PRESET[lightingPreset];
-
-  if (uniqueSignals.length === 0) {
-    return null;
-  }
-
-  return (
-    <group
-      name="stage6b-signal-hardware"
-      userData={{
-        signalStateSource: "SceneSnapshot.signals",
-        realSignalControlClaim: false,
-        lightingPreset,
-        lensEmissiveScale,
-        ...SEOUL_SIGNAL_HARDWARE_CUES
-      }}
-    >
-      {uniqueSignals.map((signal) => {
-        const placement = SIGNAL_PLACEMENTS[signal.direction];
-
-        return (
-          <SeoulSignalHardwareAssembly
-            key={signal.direction}
-            lensEmissiveScale={lensEmissiveScale}
-            placement={placement}
-            signal={signal}
-          />
-        );
-      })}
-      <SeoulSignalHardwareAssembly
-        faceMeters={SEOUL_SIGNAL_HARDWARE_CUES.foregroundProofSignal.faceMeters}
-        key="foreground-proof-seoul-signal"
-        lensEmissiveScale={lensEmissiveScale}
-        placement={SEOUL_SIGNAL_HARDWARE_CUES.foregroundProofSignal}
-        signal={getForegroundProofSignal(uniqueSignals)}
-        variant="proof_foreground"
-      />
-    </group>
-  );
+// SP3: The background plate now bakes the signal hardware (poles, mast arms,
+// signal heads) into the photoreal image. The 3D meshes are suppressed here to
+// avoid doubling up over the baked plate signals. Exported data (SIGNAL_PLACEMENTS,
+// SEOUL_SIGNAL_HARDWARE_CUES) remains intact for downstream consumers.
+export function SignalHardware({}: SignalHardwareProps) {
+  return null;
 }
 
 function SeoulSignalHardwareAssembly({
