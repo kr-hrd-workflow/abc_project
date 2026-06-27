@@ -1,5 +1,9 @@
-from app.services.simulation_snapshot import SNAPSHOT_BOUNDS_METERS
-from app.services.sumo_runtime import build_sumo_simulation_frame
+from app.services.simulation_snapshot import APPROACH_LENGTH_METERS, SNAPSHOT_BOUNDS_METERS
+from app.services.sumo_runtime import (
+    QUEUE_THRESHOLD,
+    STOP_LINE_DISTANCE_METERS,
+    build_sumo_simulation_frame,
+)
 
 
 class FakeSimulation:
@@ -462,3 +466,15 @@ def test_map_signals_reads_per_approach_through_link_index() -> None:
     assert {(s.direction, s.state) for s in frame.signals} == {
         ("north", "green"), ("east", "yellow"), ("south", "red"), ("west", "green"),
     }
+
+
+def test_stop_line_distance_fits_inside_shortest_corridor() -> None:
+    # Stop-line capture must sit strictly inside the shortest approach so queued
+    # vehicles are detected without spilling past the corridor end.
+    assert 0.0 < STOP_LINE_DISTANCE_METERS < min(APPROACH_LENGTH_METERS.values())
+
+
+def test_queue_threshold_unchanged_for_new_geometry() -> None:
+    # Per-approach queue-event threshold is a noise-tuning count, geometry-independent.
+    # Retained at 25 for the asymmetric build; revisit only with live-flow evidence.
+    assert QUEUE_THRESHOLD == 25
