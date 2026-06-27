@@ -5,6 +5,7 @@ import { buildSceneSnapshot } from "./buildSceneSnapshot";
 import { LANE_WIDTH_METERS } from "./roadGeometry";
 import {
   buildTrafficDensityRenderPlan,
+  getInboundLaneOffset,
   getStage5RearGlassScale,
   getStage5RoofHighlightScale,
   getStage5WindshieldScale,
@@ -47,7 +48,7 @@ describe("buildTrafficDensityRenderPlan precise vehicle lane normalization", () 
     expect(plan.farVehicles).toEqual([]);
     expect(plan.preciseVehicles[0].position[0]).toBe(18);
     expect(plan.preciseVehicles[0].position[2]).toBeCloseTo(
-      -LANE_WIDTH_METERS * 0.45
+      -(5 - 1 - 0.5) * LANE_WIDTH_METERS // east_in_1 with 5 inbound lanes → -12.6
     );
   });
 
@@ -153,5 +154,31 @@ describe("buildTrafficDensityRenderPlan precise vehicle lane normalization", () 
     expect(windshieldScale[1]).toBeLessThanOrEqual(sedanSize[2] * 0.13);
     expect(rearGlassScale[0]).toBeLessThanOrEqual(sedanSize[0] * 0.44);
     expect(rearGlassScale[1]).toBeLessThanOrEqual(sedanSize[2] * 0.12);
+  });
+});
+
+describe("getInboundLaneOffset per-approach asymmetric lanes", () => {
+  test("lays inbound lanes outward from the median on the right-hand side", () => {
+    // index 0 = right curb (farthest from median), index laneCount-1 = median-adjacent.
+    expect(getInboundLaneOffset("north", 0, 5)).toBeCloseTo(-16.2, 6);
+    expect(getInboundLaneOffset("north", 4, 5)).toBeCloseTo(-1.8, 6);
+    expect(getInboundLaneOffset("south", 4, 5)).toBeCloseTo(1.8, 6);
+    expect(getInboundLaneOffset("east", 1, 5)).toBeCloseTo(-12.6, 6);
+  });
+
+  test("honors 서초대로's narrower 4-lane inbound group", () => {
+    expect(getInboundLaneOffset("west", 0, 4)).toBeCloseTo(12.6, 6);
+    expect(getInboundLaneOffset("west", 3, 4)).toBeCloseTo(1.8, 6);
+  });
+
+  test("median bus lane (강남대로 innermost inbound) sits half a lane off center", () => {
+    expect(Math.abs(getInboundLaneOffset("north", 4, 5))).toBeCloseTo(
+      LANE_WIDTH_METERS / 2,
+      6
+    );
+    expect(Math.abs(getInboundLaneOffset("south", 4, 5))).toBeCloseTo(
+      LANE_WIDTH_METERS / 2,
+      6
+    );
   });
 });

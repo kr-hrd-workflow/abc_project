@@ -43,6 +43,7 @@ import {
   LANE_WIDTH_METERS
 } from "./roadGeometry";
 import type { Vector3Tuple } from "./roadGeometry";
+import { getApproachInboundLaneCount } from "./intersectionTruth";
 import { getR3FAssetEntry, type R3FAssetId } from "./assetManifest";
 import {
   STAGE6_VEHICLE_LOD_POLICY,
@@ -117,7 +118,6 @@ const MIN_TRAFFIC_VEHICLE_WIDTH_METERS = 2.32;
 const MIN_TRAFFIC_VEHICLE_HEIGHT_METERS = 1.08;
 export const PRECISE_VEHICLE_MIN_LONGITUDINAL_CLEARANCE_METERS = 1.2;
 const QUEUE_START_METERS_FROM_STOP_LINE = 12;
-const INBOUND_LANE_VISUAL_BIAS_METERS = LANE_WIDTH_METERS * 0.45;
 const DIRECTION_INDEX: Record<Direction, number> = {
   north: 0,
   south: 1,
@@ -1378,7 +1378,7 @@ function getLaneAlignedPreciseVehiclePosition(
   const laneOffset = getInboundLaneOffset(
     lanePlacement.direction,
     lanePlacement.laneIndex,
-    INBOUND_LANE_COUNT
+    getApproachInboundLaneCount(lanePlacement.direction)
   );
 
   if (
@@ -1497,7 +1497,7 @@ function resolvePreciseVehicleLanePlacement(
 
   return {
     direction: laneDirection,
-    laneIndex: clamp(laneIndex, 0, INBOUND_LANE_COUNT - 1)
+    laneIndex: clamp(laneIndex, 0, getApproachInboundLaneCount(laneDirection) - 1)
   };
 }
 
@@ -1571,7 +1571,7 @@ function buildFixtureQueueVehicles(
       Math.max(minimumPerDirection, Math.ceil(queueCount / 2))
     );
     const usableLength = Math.max(48, CORRIDOR_LENGTH_METERS[direction] - 34);
-    const laneCount = INBOUND_LANE_COUNT;
+    const laneCount = getApproachInboundLaneCount(direction);
 
     return Array.from({ length: visibleCount }, (_, index) => {
       const laneIndex = getStaggeredLaneIndex({
@@ -1889,18 +1889,20 @@ function getApproachTransform({
   };
 }
 
-function getInboundLaneOffset(
+// Inbound lanes occupy the right-hand half of the carriageway, measured outward
+// from the median. laneIndex follows SUMO numbering (0 = right curb, laneCount-1
+// = median-adjacent), so the median bus lane on 강남대로 lands 0.5 lane off center.
+export function getInboundLaneOffset(
   direction: Direction,
   laneIndex: number,
   laneCount: number
 ) {
-  const centeredIndex = laneIndex - (laneCount - 1) / 2;
-  const rightHandTrafficBias =
-    direction === "north" || direction === "east"
-      ? -INBOUND_LANE_VISUAL_BIAS_METERS
-      : INBOUND_LANE_VISUAL_BIAS_METERS;
+  const inboundSide =
+    direction === "north" || direction === "east" ? -1 : 1;
+  const distanceFromMedian =
+    (laneCount - laneIndex - 0.5) * LANE_WIDTH_METERS;
 
-  return centeredIndex * LANE_WIDTH_METERS + rightHandTrafficBias;
+  return inboundSide * distanceFromMedian;
 }
 
 function resolveSourceLabel(
