@@ -8,6 +8,12 @@
 
 **Tech Stack:** `codex exec` image_gen (codex-cli 0.142.2, chatgpt-authed; outputs land in `~/.codex/generated_images`, copied into the repo); Playwright bundled chromium render harness (`scripts/verify-r3f-dashboard.mjs`); R3F `BackgroundPlateLayer`/`plateManifest`/`seamlessGrade`; `verify-r3f-assets.mjs` + `docs/compliance/r3f-asset-licenses.md`.
 
+## Signal architecture decision (2026-06-27, user) — affects SP2 + reframes SP3
+
+Traffic-signal HARDWARE (poles, mast arms, 가로형 4색등 heads) + street furniture (media poles, billboards, bus-stop islands, trees) are **baked into the imagegen plate** (photoreal, no manual 3D placement). The SP1 3D `SignalHardware` mast/pole/head MESHES are therefore **redundant and must be removed** — they are the cause of the "misplaced signal" look (3D meshes floating at box corners over the plate). Only the **dynamic signal STATE** stays as 3D: a small emissive light overlay (red/yellow/green) per approach, driven by `SceneSnapshot.signals` (SUMO TLS), positioned at each approach's representative baked-signal location (soft alignment is fine). This reframes SP3 from "build 3D signals/furniture" to "(a) ensure SP2 plates bake them + (b) replace SignalHardware meshes with the minimal state-light overlay." (SUMO vehicles remain the other dynamic overlay.)
+
+**Pedestrian-crossing decision (2026-06-27, user) — OVERRIDES the no-강남대로-crosswalk fidelity:** the simulation must model pedestrian-responsive signal phases, which needs crosswalks + pedestrian signals. So, against the real 강남역 (no at-grade junction crosswalk), INCLUDE standard 4-way zebra crosswalks + pedestrian-signal posts at the junction — baked into the plates and re-added to geometry. This reverses SP1's "remove 강남대로 crosswalk" change: SP1 `CROSSWALK_STRIPES` should be restored to all four approaches; SP3 adds the baked pedestrian-signal hardware + dynamic ped-signal state. Functionality over strict 강남역 fidelity (user-accepted).
+
 ## Global Constraints
 
 - **Reuse the existing 4 plate asset IDs** (mount stays unchanged): `plates/gangnam_night_operator_wide` (.png), `plates/gangnam_day_operator_wide` (.png), `plates/gangnam_night_operator_cctv` (.webp), `plates/gangnam_day_operator_cctv` (.webp). SP2 swaps the image CONTENT + updates provenance; it does NOT add new IDs or change `plateManifest.ts` mappings.
