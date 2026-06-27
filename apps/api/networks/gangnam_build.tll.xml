@@ -1,0 +1,55 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  Build-only TLS for netconvert: 19-char state strings (one per connection).
+  netconvert 1.27.0 assigns sequential linkIndex 0-18 (one per connection,
+  ignoring explicit linkIndex in gangnam.con.xml).  This file encodes the same
+  8-phase protected-left logic as gangnam.tll.xml but with 19-char states that
+  match netconvert's actual per-connection ordering:
+
+  [0]  N_right  (north_in→west_out,  lane 0)
+  [1]  N_thru1  (north_in→south_out, lane 1)
+  [2]  N_thru2  (north_in→south_out, lane 2)
+  [3]  N_left   (north_in→east_out,  lane 3)
+  [4]  N_bus    (north_in→south_out, lane 4 – bus)
+  [5]  E_right  (east_in→north_out,  lane 0)
+  [6]  E_thru1  (east_in→west_out,   lane 1)
+  [7]  E_thru2  (east_in→west_out,   lane 2)
+  [8]  E_thru3  (east_in→west_out,   lane 3)
+  [9]  E_left   (east_in→south_out,  lane 4)
+  [10] S_right  (south_in→east_out,  lane 0)
+  [11] S_thru1  (south_in→north_out, lane 1)
+  [12] S_thru2  (south_in→north_out, lane 2)
+  [13] S_left   (south_in→west_out,  lane 3)
+  [14] S_bus    (south_in→north_out, lane 4 – bus)
+  [15] W_right  (west_in→south_out,  lane 0)
+  [16] W_thru1  (west_in→east_out,   lane 1)
+  [17] W_thru2  (west_in→east_out,   lane 2)
+  [18] W_left   (west_in→north_out,  lane 3)
+
+  NOTE: state[0..3] are all north-approach movements; _map_signals in
+  sumo_runtime.py uses zip(TLS_DIRECTION_ORDER, state) which reads state[0]=N,
+  state[1]=E, state[2]=S, state[3]=W.  With this 19-char encoding, positions
+  1-3 are N-approach lanes, not E/S/W — a mismatch that requires updating
+  _map_signals to use a direction-lookup table rather than character position.
+  This is tracked as NEEDS_CONTEXT in task-B4-report.md.
+-->
+<tlLogics>
+  <tlLogic id="gangnam_center" type="static" programID="0" offset="0">
+    <!-- NS through+right (33 s): N[0-4]=GGGrG E[5-9]=rrrrr S[10-14]=GGGrG W[15-18]=rrrr -->
+    <phase duration="33" state="GGGrGrrrrrGGGrGrrrr"/>
+    <!-- NS through yellow (4 s) -->
+    <phase duration="4"  state="yyyryrrrrryyyryrrrr"/>
+    <!-- NS protected left (12 s): N[3]=G S[13]=G -->
+    <phase duration="12" state="rrrGrrrrrrrrrGrrrrr"/>
+    <!-- NS left yellow (4 s) -->
+    <phase duration="4"  state="rrryrrrrrrrrryrrrrr"/>
+    <!-- EW through+right (33 s): E[5-9]=GGGGr W[15-18]=GGGr -->
+    <phase duration="33" state="rrrrrGGGGrrrrrrGGGr"/>
+    <!-- EW through yellow (4 s) -->
+    <phase duration="4"  state="rrrrryyyyrrrrrryyyr"/>
+    <!-- EW protected left (12 s): E[9]=G W[18]=G -->
+    <phase duration="12" state="rrrrrrrrrGrrrrrrrrG"/>
+    <!-- EW left yellow (4 s) -->
+    <phase duration="4"  state="rrrrrrrrryrrrrrrrry"/>
+  </tlLogic>
+</tlLogics>
