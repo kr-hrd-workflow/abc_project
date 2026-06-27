@@ -589,67 +589,49 @@ function getProductionServerCommand(port) {
 
 function buildVehicles(count) {
   const types = ["car", "taxi", "bus", "truck"];
+  const LANE_W = 3.6;
+  // Mirror getInboundLaneOffset + INTERSECTION_TRUTH so fixture vehicles sit in real
+  // lanes: 강남대로 N/S = 5 inbound lanes, innermost (index 4) is the median bus-ONLY
+  // lane (|lateral| 1.8 m); general lanes 0..3 sit at |lateral| 16.2/12.6/9.0/5.4 m.
+  // 테헤란로 east = 5 lanes, 서초대로 west = 4; side streets have no median bus lane.
+  // Only buses ride the median bus lane — every other type stays in the general lanes,
+  // so no car/taxi/truck is ever placed on the bus-only median.
+  const APPROACHES = {
+    0: { name: "north", laneCount: 5, busLane: 4, side: -1, axis: "ns", along: (s) => -18 - s, heading: 0, speed: 2.4, waitMod: 8 },
+    1: { name: "south", laneCount: 5, busLane: 4, side: 1, axis: "ns", along: (s) => 18 + s, heading: 180, speed: 2.8, waitMod: 7 },
+    2: { name: "east", laneCount: 5, busLane: -1, side: -1, axis: "ew", along: (s) => 18 + s, heading: 270, speed: 3.1, waitMod: 6 },
+    3: { name: "west", laneCount: 4, busLane: -1, side: 1, axis: "ew", along: (s) => -18 - s, heading: 90, speed: 2.6, waitMod: 9 }
+  };
 
   return Array.from({ length: count }, (_, index) => {
-    const approachIndex = index % 4;
-    const laneIndex = index % 3;
+    const a = APPROACHES[index % 4];
     const spacing = 7 + Math.floor(index / 4) * 6;
-    const laneOffset = (laneIndex - 1) * 3.6;
     const vehicleType = index === 0 ? "emergency" : types[index % types.length];
-
-    if (approachIndex === 0) {
-      return {
-        id: `fixture-north-${index}`,
-        vehicle_type: vehicleType,
-        lane_id: `north_in_${laneIndex}`,
-        x_meters: laneOffset,
-        y_meters: -18 - spacing,
-        heading_degrees: 0,
-        speed_mps: 2.4,
-        waiting_seconds: index % 8,
-        emergency: vehicleType === "emergency"
-      };
-    }
-
-    if (approachIndex === 1) {
-      return {
-        id: `fixture-south-${index}`,
-        vehicle_type: vehicleType,
-        lane_id: `south_in_${laneIndex}`,
-        x_meters: laneOffset,
-        y_meters: 18 + spacing,
-        heading_degrees: 180,
-        speed_mps: 2.8,
-        waiting_seconds: index % 7,
-        emergency: vehicleType === "emergency"
-      };
-    }
-
-    if (approachIndex === 2) {
-      return {
-        id: `fixture-east-${index}`,
-        vehicle_type: vehicleType,
-        lane_id: `east_in_${laneIndex}`,
-        x_meters: 18 + spacing,
-        y_meters: laneOffset,
-        heading_degrees: 270,
-        speed_mps: 3.1,
-        waiting_seconds: index % 6,
-        emergency: vehicleType === "emergency"
-      };
-    }
-
-    return {
-      id: `fixture-west-${index}`,
+    const isBus = vehicleType === "bus";
+    const generalLanes = Array.from({ length: a.laneCount }, (_, i) => i).filter(
+      (i) => i !== a.busLane
+    );
+    const laneIndex =
+      isBus && a.busLane >= 0 ? a.busLane : generalLanes[index % generalLanes.length];
+    const lateral = a.side * (a.laneCount - laneIndex - 0.5) * LANE_W;
+    const along = a.along(spacing);
+    const vehicle = {
+      id: `fixture-${a.name}-${index}`,
       vehicle_type: vehicleType,
-      lane_id: `west_in_${laneIndex}`,
-      x_meters: -18 - spacing,
-      y_meters: laneOffset,
-      heading_degrees: 90,
-      speed_mps: 2.6,
-      waiting_seconds: index % 9,
+      lane_id: `${a.name}_in_${laneIndex}`,
+      heading_degrees: a.heading,
+      speed_mps: a.speed,
+      waiting_seconds: index % a.waitMod,
       emergency: vehicleType === "emergency"
     };
+    if (a.axis === "ns") {
+      vehicle.x_meters = lateral;
+      vehicle.y_meters = along;
+    } else {
+      vehicle.x_meters = along;
+      vehicle.y_meters = lateral;
+    }
+    return vehicle;
   });
 }
 
