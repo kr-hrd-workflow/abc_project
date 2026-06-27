@@ -25,11 +25,11 @@
 
 These resolve interface conflicts found by the plan's consistency review. Where a task in Sections A–D contradicts a rule here, **this section wins**. Apply each before/while executing the referenced task.
 
-**R1 — TLS link-index (resolves Section B ↔ C contradiction).** The authored TLS (Section B `gangnam.tll.xml`) emits an **8-character** state whose first four characters are the through movements for north, east, south, west (in that order = TLS_DIRECTION_ORDER). In Section C Task C3, set:
+**R1 — TLS link-index (CORRECTED by Task B4 build evidence; overrides the original 8-char assumption).** netconvert 1.27.0 IGNORES explicit `linkIndex` in `gangnam.con.xml` and assigns sequential per-connection indices, so the BUILT `apps/api/networks/intersection.net.xml` carries a **19-character** TLS state (one char per connection), not 8. The through movements for north/east/south/west land at link indices **1 / 6 / 11 / 16** (verified in the built net: phase 0 `GGGrGrrrrrGGGrGrrrr` is green at indices 1 and 11 = N/S-through). The net is built from `gangnam_build.tll.xml` (19-char states); `gangnam.tll.xml` is the 8-char authoring view only. In Section C Task C3, set:
 ```python
-TLS_APPROACH_LINK_INDEX = {"north": 0, "east": 1, "south": 2, "west": 3}
+TLS_APPROACH_LINK_INDEX = {"north": 1, "east": 6, "south": 11, "west": 16}
 ```
-(Do NOT use the 12-char {1,4,7,10} scheme — it drops the west signal against the real 8-char state.) C3's fake TLS API must emit 8-char states. Add **Task X2** (below) as the real B→C integration test instead of the self-referential fake.
+and make `_map_signals` read `state[TLS_APPROACH_LINK_INDEX[direction]]` per direction (a direction→linkIndex lookup with a `>= len(state)` guard, NOT a positional zip over the first 4 chars). C3's fake TLS API must emit a **19-char** state with the chosen colors at indices 1/6/11/16. **Task X2** validates this by decoding the actual built `intersection.net.xml` phase strings through the bridge.
 
 **R2 — axis-aware box extent (resolves Section A ↔ D symbol mismatch).** Section A (`roadGeometry.ts`) must ALSO export the record consumed by Section D:
 ```ts
@@ -1336,33 +1336,34 @@ Steps:
 
 ### Task C3: `_map_signals` — link-index → approach mapping from the gangnam TLS program
 
-The new `gangnam.tll.xml` (Section B) emits an **8-character** state whose first four characters are the
-through movements for north, east, south, west (in that order = `TLS_DIRECTION_ORDER`). Read each approach's
-state via the named constant `TLS_APPROACH_LINK_INDEX` = `{north:0, east:1, south:2, west:3}` (per §0 R1).
-The old `zip(TLS_DIRECTION_ORDER, state)` over the first 4 chars was already correct for this layout; the
-explicit index map makes it robust if Section B later reorders links. Reconcile against the published
-`gangnam.tll.xml` link order at integration (Task X2).
+The BUILT `intersection.net.xml` (Task B4) carries a **19-character** TLS state (one char per connection;
+netconvert assigns sequential link indices and ignores the authored `linkIndex`). The through movements for
+north, east, south, west sit at link indices **1, 6, 11, 16** (verified in the built net). Read each
+approach's state via the named constant `TLS_APPROACH_LINK_INDEX` = `{north:1, east:6, south:11, west:16}`
+(per §0 R1). The old `zip(TLS_DIRECTION_ORDER, state)` over the first 4 chars is WRONG (it reads four
+north-approach connections); replace it with a direction→linkIndex lookup with a `>= len(state)` guard.
+Validate against the published `intersection.net.xml` phase strings at integration (Task X2).
 
 Files:
 - Modify `apps/api/app/services/sumo_runtime.py` (constants block 30-38; `_map_signals` 537-552)
 - Modify `apps/api/tests/test_sumo_snapshot_mapping.py` (`FakeTrafficLightApi` 37-42; signals assertion 121-129; append a dedicated test)
 
 Interfaces:
-- Produces `TLS_APPROACH_LINK_INDEX: dict[Approach, int]` = `{"north": 0, "east": 1, "south": 2, "west": 3}` (per §0 R1, indexing Section B's 8-char state).
+- Produces `TLS_APPROACH_LINK_INDEX: dict[Approach, int]` = `{"north": 1, "east": 6, "south": 11, "west": 16}` (per §0 R1, indexing the BUILT net's 19-char state — netconvert sequential link order).
 - Produces `_map_signals(client) -> list[SimulationSignalSnapshot]` reading `state[TLS_APPROACH_LINK_INDEX[approach]]` for each approach in `TLS_DIRECTION_ORDER`, skipping any index past `len(state)`.
 - Consumes Section B's `gangnam.net.xml`/`gangnam.tll.xml` connection (link) ordering; keeps `TLS_DIRECTION_ORDER = ("north","east","south","west")`.
 
 Steps:
-- [ ] Replace `FakeTrafficLightApi.getRedYellowGreenState` to return an 8-char gangnam-style state that yields north=green, east=red, south=yellow, west=red at indices 0/1/2/3:
+- [ ] Replace `FakeTrafficLightApi.getRedYellowGreenState` to return a 19-char gangnam-style state that yields north=green, east=red, south=yellow, west=red at indices 1/6/11/16:
   ```python
   class FakeTrafficLightApi:
       def getIDList(self) -> list[str]:
           return ["tls-main"]
 
       def getRedYellowGreenState(self, _signal_id: str) -> str:
-          # 8-char state; first 4 = through movements for N, E, S, W (TLS_DIRECTION_ORDER).
-          # north=0 (G), east=1 (r), south=2 (y), west=3 (r); trailing 4 = protected-left links.
-          return "Gryrrrrr"
+          # 19-char built-net state (one char per connection). Through-movement link indices:
+          # north=1 (G), east=6 (r), south=11 (y), west=16 (r); all other links 'r' here.
+          return "rGrrrrrrrrryrrrrrrr"
   ```
 - [ ] Append a dedicated mapping test that builds the fake state from the constant (robust to the exact index values, verifying the per-approach extraction logic and iteration order):
   ```python
@@ -1403,11 +1404,11 @@ Steps:
 - [ ] Run `node scripts/run-api-python.mjs -m pytest tests/test_sumo_snapshot_mapping.py -q -k "map_signals or snapshot_fields"` → expected **FAIL** (`TLS_APPROACH_LINK_INDEX` import error; and the existing zip reads chars 0-3 `"rGrr"` → wrong colors).
 - [ ] Add the constant after `TLS_DIRECTION_ORDER` (line 31):
   ```python
-  # Through-movement link index per approach in the gangnam 8-char TLS state string.
-  # Section B's gangnam.tll.xml puts the N/E/S/W through movements at the first 4 link
-  # indices (= TLS_DIRECTION_ORDER order); trailing chars are protected-left links.
+  # Through-movement link index per approach in the BUILT net's 19-char TLS state.
+  # netconvert assigns sequential per-connection indices; the N/E/S/W through movements
+  # land at 1/6/11/16 (verified in intersection.net.xml). See §0 R1.
   TLS_APPROACH_LINK_INDEX: dict[Approach, int] = {
-      "north": 0, "east": 1, "south": 2, "west": 3,
+      "north": 1, "east": 6, "south": 11, "west": 16,
   }
   ```
 - [ ] Rewrite `_map_signals` (537-552):
@@ -1432,7 +1433,7 @@ Steps:
           break
       return signals
   ```
-- [ ] The signals assertion in `test_fake_sumo_client_maps_to_simulation_frame_snapshot_fields` (121-129) stays `{("north","green"),("east","red"),("south","yellow"),("west","red")}` — it already matches the new 8-char fake `"Gryrrrrr"` (indices 0/1/2/3 = G/r/y/r).
+- [ ] The signals assertion in `test_fake_sumo_client_maps_to_simulation_frame_snapshot_fields` (121-129) stays `{("north","green"),("east","red"),("south","yellow"),("west","red")}` — it already matches the new 19-char fake `"rGrrrrrrrrryrrrrrrr"` (index1=G north, index6=r east, index11=y south, index16=r west).
 - [ ] Run `node scripts/run-api-python.mjs -m pytest tests/test_sumo_snapshot_mapping.py -q` → expected **PASS**.
 - [ ] Commit: `git add apps/api/app/services/sumo_runtime.py apps/api/tests/test_sumo_snapshot_mapping.py && git commit -m "feat(bridge): map gangnam TLS link indices to per-approach signal state"`
 
