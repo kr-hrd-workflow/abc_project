@@ -39,7 +39,9 @@ class FakeTrafficLightApi:
         return ["tls-main"]
 
     def getRedYellowGreenState(self, _signal_id: str) -> str:
-        return "GrYr"
+        # 19-char built-net state (one char per connection). Through-movement link indices:
+        # north=1 (G), east=6 (r), south=11 (y), west=16 (r); all other links 'r' here.
+        return "rGrrrrrrrrryrrrrrrr"
 
 
 class FakeLaneApi:
@@ -430,3 +432,37 @@ def test_approach_from_lane_id_maps_new_inbound_and_outbound_scheme(
 )
 def test_approach_from_lane_id_rejects_retired_grid_lane_ids(lane_id: str) -> None:
     assert _approach_from_lane_id(lane_id) is None
+
+
+from app.services.sumo_runtime import (
+    TLS_APPROACH_LINK_INDEX,
+    TLS_DIRECTION_ORDER,
+)
+
+
+def test_map_signals_reads_per_approach_through_link_index() -> None:
+    colors = {"north": "G", "east": "y", "south": "r", "west": "G"}
+    length = max(TLS_APPROACH_LINK_INDEX.values()) + 1
+    chars = ["r"] * length
+    for approach, index in TLS_APPROACH_LINK_INDEX.items():
+        chars[index] = colors[approach]
+
+    class OneProgramTrafficLightApi:
+        def getIDList(self) -> list[str]:
+            return ["gangnam-center"]
+
+        def getRedYellowGreenState(self, _signal_id: str) -> str:
+            return "".join(chars)
+
+    class OneProgramClient(FakeSumoClient):
+        trafficlight = OneProgramTrafficLightApi()
+
+    frame = build_sumo_simulation_frame(
+        scenario_id="normal", mode="sumo_traci",
+        client=OneProgramClient(), step_index=1,
+    )
+
+    assert [signal.direction for signal in frame.signals] == list(TLS_DIRECTION_ORDER)
+    assert {(s.direction, s.state) for s in frame.signals} == {
+        ("north", "green"), ("east", "yellow"), ("south", "red"), ("west", "green"),
+    }

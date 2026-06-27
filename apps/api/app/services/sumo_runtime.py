@@ -29,6 +29,12 @@ Approach = Literal["north", "south", "east", "west"]
 
 APPROACHES: tuple[Approach, ...] = ("north", "south", "east", "west")
 TLS_DIRECTION_ORDER: tuple[Approach, ...] = ("north", "east", "south", "west")
+# Through-movement link index per approach in the BUILT net's 19-char TLS state.
+# netconvert assigns sequential per-connection indices; the N/E/S/W through movements
+# land at 1/6/11/16 (verified in intersection.net.xml). See §0 R1.
+TLS_APPROACH_LINK_INDEX: dict[Approach, int] = {
+    "north": 1, "east": 6, "south": 11, "west": 16,
+}
 QUEUE_THRESHOLD = 25
 STOP_LINE_DISTANCE_METERS = 30.0
 NEAR_STOPPED_SPEED_MPS = 0.5
@@ -539,8 +545,11 @@ def _map_signals(client: SumoClient) -> list[SimulationSignalSnapshot]:
     signals: list[SimulationSignalSnapshot] = []
     for signal_id in client.trafficlight.getIDList():
         state = client.trafficlight.getRedYellowGreenState(signal_id)
-        for direction, raw_state in zip(TLS_DIRECTION_ORDER, state, strict=False):
-            signal_state = _signal_state(raw_state)
+        for direction in TLS_DIRECTION_ORDER:
+            link_index = TLS_APPROACH_LINK_INDEX[direction]
+            if link_index >= len(state):
+                continue
+            signal_state = _signal_state(state[link_index])
             signals.append(
                 SimulationSignalSnapshot(
                     signal_id=f"{signal_id}-{direction}",
