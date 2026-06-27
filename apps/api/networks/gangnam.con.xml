@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<connections>
+  <!-- NORTH (강남대로, lane 4 = median bus): linkIndex 0 = through+right, 4 = protected left -->
+  <connection from="north_in" to="west_out"  fromLane="0" toLane="0" linkIndex="0"/>
+  <connection from="north_in" to="south_out" fromLane="1" toLane="1" linkIndex="0"/>
+  <connection from="north_in" to="south_out" fromLane="2" toLane="2" linkIndex="0"/>
+  <connection from="north_in" to="south_out" fromLane="4" toLane="4" linkIndex="0"/>
+  <connection from="north_in" to="east_out"  fromLane="3" toLane="3" linkIndex="4"/>
+
+  <!-- EAST (테헤란로): linkIndex 1 = through+right, 5 = protected left -->
+  <connection from="east_in" to="north_out" fromLane="0" toLane="0" linkIndex="1"/>
+  <connection from="east_in" to="west_out"  fromLane="1" toLane="1" linkIndex="1"/>
+  <connection from="east_in" to="west_out"  fromLane="2" toLane="2" linkIndex="1"/>
+  <connection from="east_in" to="west_out"  fromLane="3" toLane="3" linkIndex="1"/>
+  <connection from="east_in" to="south_out" fromLane="4" toLane="3" linkIndex="5"/>
+
+  <!-- SOUTH (강남대로, lane 4 = median bus): linkIndex 2 = through+right, 6 = protected left -->
+  <connection from="south_in" to="east_out"  fromLane="0" toLane="0" linkIndex="2"/>
+  <connection from="south_in" to="north_out" fromLane="1" toLane="1" linkIndex="2"/>
+  <connection from="south_in" to="north_out" fromLane="2" toLane="2" linkIndex="2"/>
+  <connection from="south_in" to="north_out" fromLane="4" toLane="4" linkIndex="2"/>
+  <connection from="south_in" to="west_out"  fromLane="3" toLane="3" linkIndex="6"/>
+
+  <!-- WEST (서초대로, 4 lanes): linkIndex 3 = through+right, 7 = protected left -->
+  <connection from="west_in" to="south_out" fromLane="0" toLane="0" linkIndex="3"/>
+  <connection from="west_in" to="east_out"  fromLane="1" toLane="1" linkIndex="3"/>
+  <connection from="west_in" to="east_out"  fromLane="2" toLane="2" linkIndex="3"/>
+  <connection from="west_in" to="north_out" fromLane="3" toLane="3" linkIndex="7"/>
+</connections>

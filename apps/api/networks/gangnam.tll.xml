@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<tlLogics>
+  <!--
+    State string positions (8 chars):
+      [0]=N_thru  [1]=E_thru  [2]=S_thru  [3]=W_thru
+      [4]=N_left  [5]=E_left  [6]=S_left  [7]=W_left
+    First 4 chars map exactly to TLS_DIRECTION_ORDER=(north,east,south,west)
+    consumed by _map_signals (sumo_runtime.py:541).
+  -->
+  <tlLogic id="gangnam_center" type="static" programID="0" offset="0">
+    <phase duration="33" state="GrGrrrrr"/>  <!-- NS through+right -->
+    <phase duration="4"  state="yryrrrrr"/>  <!-- NS through clearance -->
+    <phase duration="12" state="rrrrGrGr"/>  <!-- NS protected left -->
+    <phase duration="4"  state="rrrryryr"/>  <!-- NS left clearance -->
+    <phase duration="33" state="rGrGrrrr"/>  <!-- EW through+right -->
+    <phase duration="4"  state="ryryrrrr"/>  <!-- EW through clearance -->
+    <phase duration="12" state="rrrrrGrG"/>  <!-- EW protected left -->
+    <phase duration="4"  state="rrrrryry"/>  <!-- EW left clearance -->
+  </tlLogic>
+</tlLogics>
