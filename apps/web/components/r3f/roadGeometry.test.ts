@@ -6,6 +6,8 @@ import {
   INTERSECTION_BOX_EXTENT_METERS,
   INTERSECTION_BOX_X_METERS,
   INTERSECTION_BOX_Z_METERS,
+  LANE_WIDTH_METERS,
+  MEDIAN_BUS_LANE_MARKINGS,
   QUEUE_ZONES
 } from "./roadGeometry";
 import { getApproachRoadWidthMeters } from "./intersectionTruth";
@@ -50,5 +52,20 @@ describe("roadGeometry derives per-corridor carriageway widths from the SSOT", (
   it("exports INTERSECTION_BOX_EXTENT_METERS aliasing the axis scalars", () => {
     expect(INTERSECTION_BOX_EXTENT_METERS.ew).toBe(INTERSECTION_BOX_X_METERS);
     expect(INTERSECTION_BOX_EXTENT_METERS.ns).toBe(INTERSECTION_BOX_Z_METERS);
+  });
+});
+
+describe("MEDIAN_BUS_LANE_MARKINGS (중앙버스전용차로, 강남대로 only)", () => {
+  it("marks only N/S corridors, two median-adjacent lanes each", () => {
+    const dirs = MEDIAN_BUS_LANE_MARKINGS.map((m) => m.direction).sort();
+    expect(dirs).toEqual(["north", "north", "south", "south"]);
+    expect(MEDIAN_BUS_LANE_MARKINGS).toHaveLength(4);
+  });
+
+  it("places each bus lane half a lane-width off the median, one lane wide", () => {
+    for (const m of MEDIAN_BUS_LANE_MARKINGS) {
+      expect(Math.abs(m.position[0])).toBeCloseTo(LANE_WIDTH_METERS / 2, 6);
+      expect(m.size[0]).toBeCloseTo(LANE_WIDTH_METERS, 6);
+    }
   });
 });

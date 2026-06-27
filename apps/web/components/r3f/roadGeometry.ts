@@ -3,6 +3,7 @@ import {
   INTERSECTION_LANE_WIDTH_METERS,
   INTERSECTION_TRUTH,
   getApproachHasCrosswalk,
+  getApproachHasMedianBus,
   getApproachInboundLaneCount,
   getApproachOutboundLaneCount,
   getApproachRoadWidthMeters
@@ -374,6 +375,32 @@ export const TURN_ARROW_MARKINGS: TurnArrowMarking[] = [
   buildHorizontalTurnArrow("east-turn-arrow", "east", 34, LANE_WIDTH_METERS, -1),
   buildHorizontalTurnArrow("west-turn-arrow", "west", -34, -LANE_WIDTH_METERS, 1)
 ];
+
+// 중앙버스전용차로: red median bus-only lane surfaces on 강남대로 (N/S) only.
+// The bus lane is the median-adjacent lane in each travel direction, so each
+// corridor gets two: one inbound side (-x) and one outbound side (+x).
+export const MEDIAN_BUS_LANE_COLOR = "#b0322c";
+
+export const MEDIAN_BUS_LANE_MARKINGS: PlanePrimitiveSpec[] =
+  APPROACH_CORRIDORS.flatMap((corridor) => {
+    if (
+      corridor.orientation !== "north_south" ||
+      !getApproachHasMedianBus(corridor.direction)
+    ) {
+      return [];
+    }
+    const lateral = LANE_WIDTH_METERS / 2;
+    return [-1, 1].map((side) => ({
+      id: `${corridor.direction}-median-bus-lane-${side < 0 ? "inbound" : "outbound"}`,
+      direction: corridor.direction,
+      position: [
+        side * lateral,
+        MARKING_HEIGHT + 0.006,
+        corridor.position[2]
+      ] as Vector3Tuple,
+      size: [LANE_WIDTH_METERS, corridor.lengthMeters] as [number, number]
+    }));
+  });
 
 export function getCorridorLengthDataAttribute() {
   return (Object.keys(CORRIDOR_LENGTH_METERS) as Direction[])
