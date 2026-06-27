@@ -46,3 +46,16 @@ def test_median_bus_lane_on_gangnamdaero_only() -> None:
 def test_traffic_light_exists() -> None:
     tls_ids = {tls.getID() for tls in _net().getTrafficLights()}
     assert "gangnam_center" in tls_ids
+
+
+def test_tls_has_eight_phases_each_nineteen_chars() -> None:
+    # Built net guards phase-logic/width regressions: netconvert assigns one
+    # link per connection (19 connections), so each phase state must be 19 chars
+    # and the 8-phase protected-left program must survive the build.
+    net = sumolib.net.readNet(str(NET), withPrograms=True)
+    programs = net.getTLS("gangnam_center").getPrograms()
+    assert programs, "gangnam_center has no TLS program"
+    phases = next(iter(programs.values())).getPhases()
+    assert len(phases) == 8
+    for phase in phases:
+        assert len(phase.state) == 19

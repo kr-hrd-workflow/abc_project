@@ -1,4 +1,12 @@
 <?xml version="1.0" encoding="UTF-8"?>
+<!--
+  AUTHORING VIEW ONLY (8-char states, one char per N/E/S/W through+left group).
+  This file is NOT fed to netconvert. The build uses gangnam_build.tll.xml,
+  whose 19-char states address netconvert 1.27.0's per-connection link indices
+  (netconvert ignores explicit linkIndex in gangnam.con.xml). Keep both files'
+  phase logic/timing in sync. To rebuild intersection.net.xml, run
+  networks/build_net.sh. See that script's header for the full rationale.
+-->
 <tlLogics>
   <!--
     State string positions (8 chars):
