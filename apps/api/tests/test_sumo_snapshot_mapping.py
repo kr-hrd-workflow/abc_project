@@ -478,3 +478,37 @@ def test_queue_threshold_unchanged_for_new_geometry() -> None:
     # Per-approach queue-event threshold is a noise-tuning count, geometry-independent.
     # Retained at 25 for the asymmetric build; revisit only with live-flow evidence.
     assert QUEUE_THRESHOLD == 25
+
+
+def test_density_segment_end_uses_ssot_per_approach_length() -> None:
+    """Live path must emit APPROACH_LENGTH_METERS[approach], not the retired 160 m flat."""
+
+    class SsotLaneApi(FakeLaneApi):
+        def getIDList(self) -> list[str]:
+            return ["north_in_2", "south_in_1"]
+
+        def getLastStepVehicleNumber(self, lane_id: str) -> int:
+            return {"north_in_2": 3, "south_in_1": 7}[lane_id]
+
+        def getLastStepMeanSpeed(self, lane_id: str) -> float:
+            return {"north_in_2": 5.0, "south_in_1": 2.0}[lane_id]
+
+        def getLastStepHaltingNumber(self, lane_id: str) -> int:
+            return 0
+
+    class SsotClient(FakeSumoClient):
+        lane = SsotLaneApi()
+
+    frame = build_sumo_simulation_frame(
+        scenario_id="normal",
+        mode="sumo_traci",
+        client=SsotClient(),
+        step_index=1,
+    )
+
+    by_approach = {seg.approach: seg for seg in frame.density_segments}
+    assert by_approach["north"].end_meters_from_stop_line == APPROACH_LENGTH_METERS["north"]
+    assert by_approach["south"].end_meters_from_stop_line == APPROACH_LENGTH_METERS["south"]
+    # Confirm neither is the retired flat constant
+    assert by_approach["north"].end_meters_from_stop_line != 160.0
+    assert by_approach["south"].end_meters_from_stop_line != 160.0

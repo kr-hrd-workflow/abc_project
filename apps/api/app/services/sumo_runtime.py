@@ -22,7 +22,7 @@ from app.domain.simulation_snapshot import (
     SimulationSignalSnapshot,
     SimulationVehicleSnapshot,
 )
-from app.services.simulation_snapshot import SNAPSHOT_BOUNDS_METERS
+from app.services.simulation_snapshot import APPROACH_LENGTH_METERS, SNAPSHOT_BOUNDS_METERS
 
 LiveSumoMode = Literal["sumo_traci", "sumo_libsumo"]
 Approach = Literal["north", "south", "east", "west"]
@@ -573,7 +573,7 @@ def _map_density_segments(client: SumoClient) -> list[SimulationDensitySegment]:
                 segment_id=f"{lane_id}-density",
                 approach=approach,
                 start_meters_from_stop_line=0.0,
-                end_meters_from_stop_line=160.0,
+                end_meters_from_stop_line=APPROACH_LENGTH_METERS[approach],
                 lane_count=1,
                 vehicle_count=int(client.lane.getLastStepVehicleNumber(lane_id)),
                 average_speed_mps=float(client.lane.getLastStepMeanSpeed(lane_id)),
