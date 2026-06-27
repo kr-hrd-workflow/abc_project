@@ -1,4 +1,12 @@
 import type { Direction } from "../../lib/types";
+import {
+  INTERSECTION_LANE_WIDTH_METERS,
+  INTERSECTION_TRUTH,
+  getApproachHasCrosswalk,
+  getApproachInboundLaneCount,
+  getApproachOutboundLaneCount,
+  getApproachRoadWidthMeters
+} from "./intersectionTruth";
 
 export type Vector3Tuple = [number, number, number];
 
@@ -85,21 +93,50 @@ export function getStage5CameraForAspect(aspect: number) {
   return aspect < 1.08 ? STAGE5_TALL_VIEWPORT_CAMERA : STAGE5_CAMERA;
 }
 
-export const INTERSECTION_BOX_METERS = 32;
-export const LANE_WIDTH_METERS = 3.6;
-export const INBOUND_LANE_COUNT = 3;
-export const OUTBOUND_LANE_COUNT = 2;
-export const ROAD_WIDTH_METERS =
-  (INBOUND_LANE_COUNT + OUTBOUND_LANE_COUNT) * LANE_WIDTH_METERS;
+export const LANE_WIDTH_METERS = INTERSECTION_LANE_WIDTH_METERS;
+
+// Per-corridor carriageway helper (SSOT-derived).
+function corridorWidth(direction: Direction): number {
+  return getApproachRoadWidthMeters(direction);
+}
+
+// Axis-aware junction box: its E–W extent is the 강남대로 carriageway (the N–S
+// road's width spans x); its N–S extent is the widest E–W road (테헤란로 vs 서초대로).
+export const INTERSECTION_BOX_X_METERS = corridorWidth("north");
+export const INTERSECTION_BOX_Z_METERS = Math.max(
+  corridorWidth("east"),
+  corridorWidth("west")
+);
+// Back-compat square footprint (used by ground-plane / proxy consumers).
+export const INTERSECTION_BOX_METERS = Math.max(
+  INTERSECTION_BOX_X_METERS,
+  INTERSECTION_BOX_Z_METERS
+);
+
+// Axis-aware extent record for Section D consumers (.ew / .ns).
+export const INTERSECTION_BOX_EXTENT_METERS = {
+  ew: INTERSECTION_BOX_X_METERS, // 강남대로 carriageway width, spans x
+  ns: INTERSECTION_BOX_Z_METERS  // max(테헤란로, 서초대로), spans z
+} as const;
+
+// Back-compat single-width scalar (= 강남대로 carriageway) for legacy consumers
+// (LightingRig, WetRoadReflectors, WeatherAndAtmosphere, ProceduralIntersection).
+export const ROAD_WIDTH_METERS = corridorWidth("north");
+
+// Deprecated single-value lane counts kept as 강남대로 arterial defaults; real
+// per-approach counts come from getApproachInboundLaneCount/OutboundLaneCount.
+export const INBOUND_LANE_COUNT = getApproachInboundLaneCount("north");
+export const OUTBOUND_LANE_COUNT = getApproachOutboundLaneCount("north");
 
 export const CORRIDOR_LENGTH_METERS: Record<Direction, number> = {
-  north: 140,
-  south: 120,
-  east: 140,
-  west: 140
+  north: INTERSECTION_TRUTH.north.corridorLengthM,
+  south: INTERSECTION_TRUTH.south.corridorLengthM,
+  east: INTERSECTION_TRUTH.east.corridorLengthM,
+  west: INTERSECTION_TRUTH.west.corridorLengthM
 };
 
-const HALF_INTERSECTION = INTERSECTION_BOX_METERS / 2;
+const HALF_BOX_X = INTERSECTION_BOX_X_METERS / 2;
+const HALF_BOX_Z = INTERSECTION_BOX_Z_METERS / 2;
 const MARKING_HEIGHT = 0.018;
 const LANE_DIVIDER_MARKING_WIDTH = 0.46;
 const LANE_DIVIDER_SEGMENT_LENGTH = 7.8;
@@ -122,51 +159,52 @@ export const APPROACH_CORRIDORS: ApproachCorridorSpec[] = [
   {
     direction: "north",
     lengthMeters: CORRIDOR_LENGTH_METERS.north,
-    inboundLanes: INBOUND_LANE_COUNT,
-    outboundLanes: OUTBOUND_LANE_COUNT,
+    inboundLanes: getApproachInboundLaneCount("north"),
+    outboundLanes: getApproachOutboundLaneCount("north"),
     orientation: "north_south",
-    position: [0, 0, -HALF_INTERSECTION - CORRIDOR_LENGTH_METERS.north / 2],
-    size: [ROAD_WIDTH_METERS, CORRIDOR_LENGTH_METERS.north]
+    position: [0, 0, -HALF_BOX_Z - CORRIDOR_LENGTH_METERS.north / 2],
+    size: [corridorWidth("north"), CORRIDOR_LENGTH_METERS.north]
   },
   {
     direction: "south",
     lengthMeters: CORRIDOR_LENGTH_METERS.south,
-    inboundLanes: INBOUND_LANE_COUNT,
-    outboundLanes: OUTBOUND_LANE_COUNT,
+    inboundLanes: getApproachInboundLaneCount("south"),
+    outboundLanes: getApproachOutboundLaneCount("south"),
     orientation: "north_south",
-    position: [0, 0, HALF_INTERSECTION + CORRIDOR_LENGTH_METERS.south / 2],
-    size: [ROAD_WIDTH_METERS, CORRIDOR_LENGTH_METERS.south]
+    position: [0, 0, HALF_BOX_Z + CORRIDOR_LENGTH_METERS.south / 2],
+    size: [corridorWidth("south"), CORRIDOR_LENGTH_METERS.south]
   },
   {
     direction: "east",
     lengthMeters: CORRIDOR_LENGTH_METERS.east,
-    inboundLanes: INBOUND_LANE_COUNT,
-    outboundLanes: OUTBOUND_LANE_COUNT,
+    inboundLanes: getApproachInboundLaneCount("east"),
+    outboundLanes: getApproachOutboundLaneCount("east"),
     orientation: "east_west",
-    position: [HALF_INTERSECTION + CORRIDOR_LENGTH_METERS.east / 2, 0, 0],
-    size: [CORRIDOR_LENGTH_METERS.east, ROAD_WIDTH_METERS]
+    position: [HALF_BOX_X + CORRIDOR_LENGTH_METERS.east / 2, 0, 0],
+    size: [CORRIDOR_LENGTH_METERS.east, corridorWidth("east")]
   },
   {
     direction: "west",
     lengthMeters: CORRIDOR_LENGTH_METERS.west,
-    inboundLanes: INBOUND_LANE_COUNT,
-    outboundLanes: OUTBOUND_LANE_COUNT,
+    inboundLanes: getApproachInboundLaneCount("west"),
+    outboundLanes: getApproachOutboundLaneCount("west"),
     orientation: "east_west",
-    position: [-HALF_INTERSECTION - CORRIDOR_LENGTH_METERS.west / 2, 0, 0],
-    size: [CORRIDOR_LENGTH_METERS.west, ROAD_WIDTH_METERS]
+    position: [-HALF_BOX_X - CORRIDOR_LENGTH_METERS.west / 2, 0, 0],
+    size: [CORRIDOR_LENGTH_METERS.west, corridorWidth("west")]
   }
 ];
 
 export const LANE_DIVIDER_MARKINGS = APPROACH_CORRIDORS.flatMap((corridor) => {
   const dividers: PlanePrimitiveSpec[] = [];
   const laneCount = corridor.inboundLanes + corridor.outboundLanes;
+  const widthM = corridorWidth(corridor.direction);
   const usableLength = corridor.lengthMeters - 12;
   const segmentPitch = LANE_DIVIDER_SEGMENT_LENGTH + LANE_DIVIDER_SEGMENT_GAP;
   const segmentCount = Math.max(4, Math.floor(usableLength / segmentPitch));
   const firstSegmentOffset = -usableLength / 2 + LANE_DIVIDER_SEGMENT_LENGTH / 2;
 
   for (let laneIndex = 1; laneIndex < laneCount; laneIndex += 1) {
-    const laneOffset = -ROAD_WIDTH_METERS / 2 + laneIndex * LANE_WIDTH_METERS;
+    const laneOffset = -widthM / 2 + laneIndex * LANE_WIDTH_METERS;
 
     for (let segmentIndex = 0; segmentIndex < segmentCount; segmentIndex += 1) {
       const along = firstSegmentOffset + segmentIndex * segmentPitch;
@@ -209,47 +247,49 @@ export const LANE_DIVIDER_MARKINGS = APPROACH_CORRIDORS.flatMap((corridor) => {
 export const QUEUE_ZONES = APPROACH_CORRIDORS.map((corridor) => {
   const length = Math.min(72, corridor.lengthMeters - 22);
   const offsetFromStopLine = 14 + length / 2;
+  const widthM = corridorWidth(corridor.direction);
 
   if (corridor.direction === "north") {
     return {
       id: "north-queue-zone",
       direction: corridor.direction,
-      position: [0, MARKING_HEIGHT + 0.004, -HALF_INTERSECTION - offsetFromStopLine] as Vector3Tuple,
-      size: [ROAD_WIDTH_METERS - 1.6, length] as [number, number]
+      position: [0, MARKING_HEIGHT + 0.004, -HALF_BOX_Z - offsetFromStopLine] as Vector3Tuple,
+      size: [widthM - 1.6, length] as [number, number]
     };
   }
   if (corridor.direction === "south") {
     return {
       id: "south-queue-zone",
       direction: corridor.direction,
-      position: [0, MARKING_HEIGHT + 0.004, HALF_INTERSECTION + offsetFromStopLine] as Vector3Tuple,
-      size: [ROAD_WIDTH_METERS - 1.6, length] as [number, number]
+      position: [0, MARKING_HEIGHT + 0.004, HALF_BOX_Z + offsetFromStopLine] as Vector3Tuple,
+      size: [widthM - 1.6, length] as [number, number]
     };
   }
   if (corridor.direction === "east") {
     return {
       id: "east-queue-zone",
       direction: corridor.direction,
-      position: [HALF_INTERSECTION + offsetFromStopLine, MARKING_HEIGHT + 0.004, 0] as Vector3Tuple,
-      size: [length, ROAD_WIDTH_METERS - 1.6] as [number, number]
+      position: [HALF_BOX_X + offsetFromStopLine, MARKING_HEIGHT + 0.004, 0] as Vector3Tuple,
+      size: [length, widthM - 1.6] as [number, number]
     };
   }
 
   return {
     id: "west-queue-zone",
     direction: corridor.direction,
-    position: [-HALF_INTERSECTION - offsetFromStopLine, MARKING_HEIGHT + 0.004, 0] as Vector3Tuple,
-    size: [length, ROAD_WIDTH_METERS - 1.6] as [number, number]
+    position: [-HALF_BOX_X - offsetFromStopLine, MARKING_HEIGHT + 0.004, 0] as Vector3Tuple,
+    size: [length, widthM - 1.6] as [number, number]
   };
 });
 
 export const CURB_SEGMENTS = APPROACH_CORRIDORS.flatMap((corridor) => {
+  const widthM = corridorWidth(corridor.direction);
   if (corridor.orientation === "north_south") {
     return [-1, 1].map((side) => ({
       id: `${corridor.direction}-curb-${side}`,
       direction: corridor.direction,
       position: [
-        side * (ROAD_WIDTH_METERS / 2 + CURB_WIDTH / 2),
+        side * (widthM / 2 + CURB_WIDTH / 2),
         CURB_HEIGHT / 2,
         corridor.position[2]
       ] as Vector3Tuple,
@@ -263,19 +303,20 @@ export const CURB_SEGMENTS = APPROACH_CORRIDORS.flatMap((corridor) => {
     position: [
       corridor.position[0],
       CURB_HEIGHT / 2,
-      side * (ROAD_WIDTH_METERS / 2 + CURB_WIDTH / 2)
+      side * (widthM / 2 + CURB_WIDTH / 2)
     ] as Vector3Tuple,
     size: [corridor.lengthMeters, CURB_HEIGHT, CURB_WIDTH] as Vector3Tuple
   }));
 });
 
 export const SIDEWALK_SLABS = APPROACH_CORRIDORS.flatMap((corridor) => {
+  const widthM = corridorWidth(corridor.direction);
   if (corridor.orientation === "north_south") {
     return [-1, 1].map((side) => ({
       id: `${corridor.direction}-sidewalk-${side}`,
       direction: corridor.direction,
       position: [
-        side * (ROAD_WIDTH_METERS / 2 + CURB_WIDTH + SIDEWALK_WIDTH / 2),
+        side * (widthM / 2 + CURB_WIDTH + SIDEWALK_WIDTH / 2),
         0.045,
         corridor.position[2]
       ] as Vector3Tuple,
@@ -289,19 +330,20 @@ export const SIDEWALK_SLABS = APPROACH_CORRIDORS.flatMap((corridor) => {
     position: [
       corridor.position[0],
       0.045,
-      side * (ROAD_WIDTH_METERS / 2 + CURB_WIDTH + SIDEWALK_WIDTH / 2)
+      side * (widthM / 2 + CURB_WIDTH + SIDEWALK_WIDTH / 2)
     ] as Vector3Tuple,
     size: [corridor.lengthMeters, 0.09, SIDEWALK_WIDTH] as Vector3Tuple
   }));
 });
 
 export const BUILDING_EDGE_BLOCKS = APPROACH_CORRIDORS.flatMap((corridor) => {
+  const widthM = corridorWidth(corridor.direction);
   if (corridor.orientation === "north_south") {
     return [-1, 1].map((side) => ({
       id: `${corridor.direction}-building-edge-${side}`,
       direction: corridor.direction,
       position: [
-        side * (ROAD_WIDTH_METERS / 2 + CURB_WIDTH + SIDEWALK_WIDTH + BUILDING_EDGE_WIDTH / 2 + 1.4),
+        side * (widthM / 2 + CURB_WIDTH + SIDEWALK_WIDTH + BUILDING_EDGE_WIDTH / 2 + 1.4),
         BUILDING_EDGE_HEIGHT / 2,
         corridor.position[2]
       ] as Vector3Tuple,
@@ -315,7 +357,7 @@ export const BUILDING_EDGE_BLOCKS = APPROACH_CORRIDORS.flatMap((corridor) => {
     position: [
       corridor.position[0],
       BUILDING_EDGE_HEIGHT / 2,
-      side * (ROAD_WIDTH_METERS / 2 + CURB_WIDTH + SIDEWALK_WIDTH + BUILDING_EDGE_WIDTH / 2 + 1.4)
+      side * (widthM / 2 + CURB_WIDTH + SIDEWALK_WIDTH + BUILDING_EDGE_WIDTH / 2 + 1.4)
     ] as Vector3Tuple,
     size: [corridor.lengthMeters * 0.86, BUILDING_EDGE_HEIGHT, BUILDING_EDGE_WIDTH] as Vector3Tuple
   }));
@@ -342,38 +384,26 @@ export function getCorridorLengthDataAttribute() {
 function buildCrosswalkStripes(): PlanePrimitiveSpec[] {
   const stripes: PlanePrimitiveSpec[] = [];
   const stripeCount = 11;
-  const crosswalkLateralSpan = ROAD_WIDTH_METERS - 1.4;
-  const spacing = crosswalkLateralSpan / (stripeCount - 1);
-  const crosswalkOffset = HALF_INTERSECTION + 2.75;
+  const crosswalkOffset = HALF_BOX_X + 2.75;
   const crosswalkDepth = 5.0;
   const centeredIndex = (stripeCount - 1) / 2;
 
-  for (let index = 0; index < stripeCount; index += 1) {
-    const offset = (index - centeredIndex) * spacing;
-    stripes.push({
-      id: `north-crosswalk-${index}`,
-      direction: "north",
-      position: [offset, MARKING_HEIGHT + 0.008, -crosswalkOffset],
-      size: [CROSSWALK_STRIPE_WIDTH, crosswalkDepth]
-    });
-    stripes.push({
-      id: `south-crosswalk-${index}`,
-      direction: "south",
-      position: [offset, MARKING_HEIGHT + 0.008, crosswalkOffset],
-      size: [CROSSWALK_STRIPE_WIDTH, crosswalkDepth]
-    });
-    stripes.push({
-      id: `east-crosswalk-${index}`,
-      direction: "east",
-      position: [crosswalkOffset, MARKING_HEIGHT + 0.008, offset],
-      size: [crosswalkDepth, CROSSWALK_STRIPE_WIDTH]
-    });
-    stripes.push({
-      id: `west-crosswalk-${index}`,
-      direction: "west",
-      position: [-crosswalkOffset, MARKING_HEIGHT + 0.008, offset],
-      size: [crosswalkDepth, CROSSWALK_STRIPE_WIDTH]
-    });
+  // No surface crosswalk across 강남대로 (N/S). Keep 테헤란로/서초대로 (E/W).
+  for (const direction of ["east", "west"] as const) {
+    if (!getApproachHasCrosswalk(direction)) continue;
+    const lateralSpan = getApproachRoadWidthMeters(direction) - 1.4;
+    const spacing = lateralSpan / (stripeCount - 1);
+    const offsetX = direction === "east" ? crosswalkOffset : -crosswalkOffset;
+
+    for (let index = 0; index < stripeCount; index += 1) {
+      const offset = (index - centeredIndex) * spacing;
+      stripes.push({
+        id: `${direction}-crosswalk-${index}`,
+        direction,
+        position: [offsetX, MARKING_HEIGHT + 0.008, offset],
+        size: [crosswalkDepth, CROSSWALK_STRIPE_WIDTH]
+      });
+    }
   }
 
   return stripes;

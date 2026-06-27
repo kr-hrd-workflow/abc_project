@@ -17,6 +17,7 @@ import {
   ROAD_DETAIL_PROP_SPECS,
   type RoadDetailPropKind
 } from "./RoadDetailProps";
+import { getApproachRoadWidthMeters } from "./intersectionTruth";
 import {
   CROSSWALK_STRIPES,
   INTERSECTION_BOX_METERS,
@@ -295,17 +296,18 @@ describe("Camera/weather/clutter finishing slice", () => {
       ...CROSSWALK_STRIPES.map((stripe) => Math.max(...stripe.size))
     );
     const halfIntersection = INTERSECTION_BOX_METERS / 2;
-    const northStripes = CROSSWALK_STRIPES.filter(
-      (stripe) => stripe.direction === "north"
-    ).sort((left, right) => left.position[0] - right.position[0]);
+    // N/S surface crosswalk across 강남대로 is intentionally absent — use west instead.
+    const westStripes = CROSSWALK_STRIPES.filter(
+      (stripe) => stripe.direction === "west"
+    ).sort((left, right) => left.position[2] - right.position[2]);
     const eastStripes = CROSSWALK_STRIPES.filter(
       (stripe) => stripe.direction === "east"
     ).sort((left, right) => left.position[2] - right.position[2]);
-    const northGap = Math.min(
-      ...northStripes.slice(1).map(
+    const westGap = Math.min(
+      ...westStripes.slice(1).map(
         (stripe, index) =>
-          stripe.position[0] -
-          northStripes[index].position[0] -
+          stripe.position[2] -
+          westStripes[index].position[2] -
           Math.min(stripe.size[0], stripe.size[1])
       )
     );
@@ -317,41 +319,43 @@ describe("Camera/weather/clutter finishing slice", () => {
           Math.min(stripe.size[0], stripe.size[1])
       )
     );
-    const northLateralSpan =
-      northStripes[northStripes.length - 1].position[0] -
-      northStripes[0].position[0] +
+    const eastWidth = getApproachRoadWidthMeters("east");
+    const westWidth = getApproachRoadWidthMeters("west");
+    const westLateralSpan =
+      westStripes[westStripes.length - 1].position[2] -
+      westStripes[0].position[2] +
       maxStripeWidth;
     const eastLateralSpan =
       eastStripes[eastStripes.length - 1].position[2] -
       eastStripes[0].position[2] +
       maxStripeWidth;
-    const northCenterDistance =
-      northStripes.reduce((sum, stripe) => sum + Math.abs(stripe.position[2]), 0) /
-      northStripes.length;
+    const westCenterDistance =
+      westStripes.reduce((sum, stripe) => sum + Math.abs(stripe.position[0]), 0) /
+      westStripes.length;
     const eastCenterDistance =
       eastStripes.reduce((sum, stripe) => sum + Math.abs(stripe.position[0]), 0) /
       eastStripes.length;
 
-    expect(CROSSWALK_STRIPES).toHaveLength(44);
+    expect(CROSSWALK_STRIPES).toHaveLength(22);
     expect(maxStripeWidth).toBeGreaterThanOrEqual(0.58);
     expect(maxStripeWidth).toBeLessThanOrEqual(0.72);
     expect(maxStripeLength).toBeGreaterThanOrEqual(4.4);
     expect(maxStripeLength).toBeLessThanOrEqual(5.6);
-    expect(northLateralSpan).toBeGreaterThanOrEqual(ROAD_WIDTH_METERS - 1.2);
-    expect(northLateralSpan).toBeLessThanOrEqual(ROAD_WIDTH_METERS);
-    expect(eastLateralSpan).toBeGreaterThanOrEqual(ROAD_WIDTH_METERS - 1.2);
-    expect(eastLateralSpan).toBeLessThanOrEqual(ROAD_WIDTH_METERS);
-    expect(northCenterDistance).toBeGreaterThanOrEqual(halfIntersection + 2);
-    expect(northCenterDistance).toBeLessThanOrEqual(halfIntersection + 4);
+    expect(eastLateralSpan).toBeGreaterThanOrEqual(eastWidth - 1.2);
+    expect(eastLateralSpan).toBeLessThanOrEqual(eastWidth);
+    expect(westLateralSpan).toBeGreaterThanOrEqual(westWidth - 1.2);
+    expect(westLateralSpan).toBeLessThanOrEqual(westWidth);
+    expect(westCenterDistance).toBeGreaterThanOrEqual(halfIntersection + 2);
+    expect(westCenterDistance).toBeLessThanOrEqual(halfIntersection + 4);
     expect(eastCenterDistance).toBeGreaterThanOrEqual(halfIntersection + 2);
     expect(eastCenterDistance).toBeLessThanOrEqual(halfIntersection + 4);
-    expect(northStripes.every((stripe) => stripe.size[1] > stripe.size[0])).toBe(
+    expect(westStripes.every((stripe) => stripe.size[0] > stripe.size[1])).toBe(
       true
     );
     expect(eastStripes.every((stripe) => stripe.size[0] > stripe.size[1])).toBe(
       true
     );
-    expect(northGap).toBeGreaterThanOrEqual(0.5);
+    expect(westGap).toBeGreaterThanOrEqual(0.5);
     expect(eastGap).toBeGreaterThanOrEqual(0.5);
   });
 
