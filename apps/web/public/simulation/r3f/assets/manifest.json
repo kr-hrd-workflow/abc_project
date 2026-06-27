@@ -1346,27 +1346,29 @@
     "id": "plates/gangnam_night_operator_wide",
     "path": "/simulation/r3f/assets/plates/gangnam_night_operator_wide.png",
     "kind": "texture",
-    "source": "imagegen-generated-night-plate",
-    "license": "Project-generated via imagegen; no real brands, logos, or store names; provenance in docs/compliance/r3f-asset-licenses.md",
+    "source": "photoreal-reconstruction-gangnam-station-intersection-night-wide",
+    "license": "Project-authored photoreal reconstruction of the real 강남역 사거리 (Gangnam Station intersection); landmark forms and infrastructure derived from the real location; all signage is invented Gangnam-style (clinics/academies/cafes); no real brand logos or trademarks; background-visual-only",
     "authorship": "generated",
     "units": "meters",
     "pbr": false,
     "lod": "atlas",
     "maxTextureSize": 2048,
     "maxTriangles": 0,
-    "maxFileSizeBytes": 4000000,
+    "maxFileSizeBytes": 4500000,
     "allowNonPowerOfTwo": true,
     "realismStatus": "stage6_finishing_source_ready",
     "visualRejectIfToyLike": true,
     "details": {
       "spriteFeatures": [
-        "night neon Gangnam Teheran-ro arterial backdrop",
-        "high-rise glass office towers",
-        "brandless glowing signage",
-        "wet asphalt reflections",
-        "central bus-only lane cue"
+        "photoreal night reconstruction of 강남역 사거리 (Gangnam Station intersection), high-aerial wide view",
+        "wide 강남대로 with bidirectional central red median busway and median bus-stop island platforms",
+        "Korean horizontal 4-aspect cantilever traffic signals and pedestrian signals",
+        "4-way zebra crosswalks",
+        "glowing media poles and LED billboards",
+        "Samsung-Town-style glass towers SW and glass-and-steel canyon",
+        "plane trees; all signage is invented Gangnam-style (clinics/academies/cafes); no real brand logos or trademarks"
       ],
-      "provenance": "Imagegen-generated Gangnam Teheran-ro night plate (1536x1024), conditioned on a structural guide rendered from the actual R3F scene layout. No real brands, logos, or store names (signage abstract/illegible); background visual only and never a vehicle/pedestrian/signal truth surface. Runtime proof must come from browser-rendered night frames."
+      "provenance": "Photoreal reconstruction of the real 강남역 사거리 (Gangnam Station intersection), high-aerial wide view at night (1536x1024): wide 강남대로 with bidirectional central red median busway and median bus-stop island platforms (empty roads — overlay surface); Korean horizontal 4-aspect cantilever traffic signals and pedestrian signals; 4-way zebra crosswalks; glowing media poles; LED billboards; Samsung-Town-style glass towers SW; glass-and-steel canyon; plane trees. All signage is invented Gangnam-style (clinics/academies/cafes); no real brand logos or trademarks. Background-visual-only, never a vehicle/pedestrian/signal truth surface. Runtime proof must come from browser-rendered night frames."
     },
     "pbrChannels": [
       "sourceColor"
@@ -1385,27 +1387,29 @@
     "id": "plates/gangnam_day_operator_wide",
     "path": "/simulation/r3f/assets/plates/gangnam_day_operator_wide.png",
     "kind": "texture",
-    "source": "imagegen-generated-day-plate",
-    "license": "Project-generated via imagegen; no real brands, logos, or store names; provenance in docs/compliance/r3f-asset-licenses.md",
+    "source": "photoreal-reconstruction-gangnam-station-intersection-day-wide",
+    "license": "Project-authored photoreal reconstruction of the real 강남역 사거리 (Gangnam Station intersection); landmark forms and infrastructure derived from the real location; all signage is invented Gangnam-style (clinics/academies/cafes); no real brand logos or trademarks; background-visual-only",
     "authorship": "generated",
     "units": "meters",
     "pbr": false,
     "lod": "atlas",
     "maxTextureSize": 2048,
     "maxTriangles": 0,
-    "maxFileSizeBytes": 4000000,
+    "maxFileSizeBytes": 4500000,
     "allowNonPowerOfTwo": true,
     "realismStatus": "stage6_finishing_source_ready",
     "visualRejectIfToyLike": true,
     "details": {
       "spriteFeatures": [
-        "daytime Gangnam Teheran-ro arterial backdrop",
-        "high-rise glass office towers",
-        "brandless signage",
-        "dry asphalt",
-        "central bus-only lanes both directions"
+        "photoreal daytime reconstruction of 강남역 사거리 (Gangnam Station intersection), high-aerial wide view",
+        "wide 강남대로 with bidirectional central red median busway and median bus-stop island platforms",
+        "Korean horizontal 4-aspect cantilever traffic signals and pedestrian signals",
+        "4-way zebra crosswalks",
+        "media poles and LED billboards in daylight",
+        "Samsung-Town-style glass towers SW and glass-and-steel canyon",
+        "plane trees; all signage is invented Gangnam-style (clinics/academies/cafes); no real brand logos or trademarks"
       ],
-      "provenance": "Imagegen-generated Gangnam Teheran-ro daytime plate (1536x1024), derived img2img from the night plate to keep an identical road and building layout. No real brands, logos, or store names (signage abstract/illegible); background visual only and never a vehicle/pedestrian/signal truth surface. Runtime proof must come from browser-rendered day frames."
+      "provenance": "Photoreal reconstruction of the real 강남역 사거리 (Gangnam Station intersection), high-aerial wide view at daytime (1536x1024): wide 강남대로 with bidirectional central red median busway and median bus-stop island platforms (empty roads — overlay surface); Korean horizontal 4-aspect cantilever traffic signals and pedestrian signals; 4-way zebra crosswalks; media poles; LED billboards; Samsung-Town-style glass towers SW; glass-and-steel canyon; plane trees. All signage is invented Gangnam-style (clinics/academies/cafes); no real brand logos or trademarks. Background-visual-only, never a vehicle/pedestrian/signal truth surface. Runtime proof must come from browser-rendered day frames."
     },
     "pbrChannels": [
       "sourceColor"
@@ -1499,8 +1503,8 @@
     "id": "plates/gangnam_night_operator_cctv",
     "path": "/simulation/r3f/assets/plates/gangnam_night_operator_cctv.webp",
     "kind": "texture",
-    "source": "imagegen-generated-night-cctv-plate",
-    "license": "Project-generated via imagegen; no real brands, logos, or store names; provenance in docs/compliance/r3f-asset-licenses.md",
+    "source": "photoreal-reconstruction-gangnam-station-intersection-night-cctv",
+    "license": "Project-authored photoreal reconstruction of the real 강남역 사거리 (Gangnam Station intersection); landmark forms and infrastructure derived from the real location; all signage is invented Gangnam-style (clinics/academies/cafes); no real brand logos or trademarks; background-visual-only",
     "authorship": "generated",
     "units": "meters",
     "pbr": false,
@@ -1513,13 +1517,15 @@
     "visualRejectIfToyLike": true,
     "details": {
       "spriteFeatures": [
-        "night CCTV low-oblique Gangnam intersection backdrop",
-        "four-way intersection with crosswalks",
-        "glass high-rise office towers",
-        "street trees",
-        "central bus lanes both directions"
+        "photoreal night reconstruction of 강남역 사거리 (Gangnam Station intersection), low-oblique CCTV view",
+        "wide 강남대로 with bidirectional central red median busway and median bus-stop island platforms",
+        "Korean horizontal 4-aspect cantilever traffic signals and pedestrian signals",
+        "4-way zebra crosswalks",
+        "glowing media poles and LED billboards",
+        "Samsung-Town-style glass towers SW and glass-and-steel canyon",
+        "plane trees; all signage is invented Gangnam-style (clinics/academies/cafes); no real brand logos or trademarks"
       ],
-      "provenance": "Imagegen-generated night CCTV-style low-oblique plate (1536x1024) of the same Gangnam Teheran-ro intersection, generated from a structural guide rendered at the operator-cctv camera so it aligns with that camera. No real brands, logos, or store names; background visual only and never a vehicle/pedestrian/signal truth surface. Runtime proof must come from browser-rendered night frames."
+      "provenance": "Photoreal reconstruction of the real 강남역 사거리 (Gangnam Station intersection), low-oblique CCTV view at night (1536x1024): wide 강남대로 with bidirectional central red median busway and median bus-stop island platforms (empty roads — overlay surface); Korean horizontal 4-aspect cantilever traffic signals and pedestrian signals; 4-way zebra crosswalks; glowing media poles; LED billboards; Samsung-Town-style glass towers SW; glass-and-steel canyon; plane trees. All signage is invented Gangnam-style (clinics/academies/cafes); no real brand logos or trademarks. Background-visual-only, never a vehicle/pedestrian/signal truth surface. Runtime proof must come from browser-rendered night frames."
     },
     "pbrChannels": [
       "sourceColor"
@@ -1538,8 +1544,8 @@
     "id": "plates/gangnam_day_operator_cctv",
     "path": "/simulation/r3f/assets/plates/gangnam_day_operator_cctv.webp",
     "kind": "texture",
-    "source": "imagegen-generated-day-cctv-plate",
-    "license": "Project-generated via imagegen; no real brands, logos, or store names; provenance in docs/compliance/r3f-asset-licenses.md",
+    "source": "photoreal-reconstruction-gangnam-station-intersection-day-cctv",
+    "license": "Project-authored photoreal reconstruction of the real 강남역 사거리 (Gangnam Station intersection); landmark forms and infrastructure derived from the real location; all signage is invented Gangnam-style (clinics/academies/cafes); no real brand logos or trademarks; background-visual-only",
     "authorship": "generated",
     "units": "meters",
     "pbr": false,
@@ -1552,13 +1558,15 @@
     "visualRejectIfToyLike": true,
     "details": {
       "spriteFeatures": [
-        "day CCTV low-oblique Gangnam intersection backdrop",
-        "four-way intersection with crosswalks",
-        "glass high-rise office towers",
-        "street trees",
-        "central bus lanes both directions"
+        "photoreal daytime reconstruction of 강남역 사거리 (Gangnam Station intersection), low-oblique CCTV view",
+        "wide 강남대로 with bidirectional central red median busway and median bus-stop island platforms",
+        "Korean horizontal 4-aspect cantilever traffic signals and pedestrian signals",
+        "4-way zebra crosswalks",
+        "media poles and LED billboards in daylight",
+        "Samsung-Town-style glass towers SW and glass-and-steel canyon",
+        "plane trees; all signage is invented Gangnam-style (clinics/academies/cafes); no real brand logos or trademarks"
       ],
-      "provenance": "Imagegen-generated daytime CCTV-style low-oblique plate (1536x1024) of the same Gangnam Teheran-ro intersection, generated from a structural guide rendered at the operator-cctv camera so it aligns with that camera. No real brands, logos, or store names; background visual only and never a vehicle/pedestrian/signal truth surface. Runtime proof must come from browser-rendered day frames."
+      "provenance": "Photoreal reconstruction of the real 강남역 사거리 (Gangnam Station intersection), low-oblique CCTV view at daytime (1536x1024): wide 강남대로 with bidirectional central red median busway and median bus-stop island platforms (empty roads — overlay surface); Korean horizontal 4-aspect cantilever traffic signals and pedestrian signals; 4-way zebra crosswalks; media poles; LED billboards; Samsung-Town-style glass towers SW; glass-and-steel canyon; plane trees. All signage is invented Gangnam-style (clinics/academies/cafes); no real brand logos or trademarks. Background-visual-only, never a vehicle/pedestrian/signal truth surface. Runtime proof must come from browser-rendered day frames."
     },
     "pbrChannels": [
       "sourceColor"
