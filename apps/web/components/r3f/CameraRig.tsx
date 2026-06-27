@@ -49,16 +49,26 @@ type CameraRigConfigInput = CameraRigSelectionInput & {
 };
 
 export const CAMERA_RIG_PRESETS = {
+  // Operator wide view. Must MATCH the operator-wide background plate camera
+  // (PLATE_CAMERA_ANGLES "operator-wide" === STAGE5_CAMERA) so the SUMO vehicle
+  // layer projects onto the plate's painted lanes. Previously [18,42,58]/[0,0,-8]
+  // /fov54 — a different framing from the plate, which left DAY wide vehicles
+  // ~2 lanes off the painted lanes. Night wide already used STAGE5 (via
+  // nightAerialProof); this makes the day operator-wide view consistent.
   operatorWide: {
     name: "operatorWide",
-    position: [18, 42, 58],
-    target: [0, 0, -8],
-    fov: 54,
+    position: STAGE5_CAMERA.position,
+    target: STAGE5_CAMERA.target,
+    fov: STAGE5_CAMERA.fov,
     near: STAGE5_CAMERA.near,
     far: STAGE5_CAMERA.far
   },
-  // Low oblique CCTV pole view; matches the operator-cctv plate camera so the
-  // CCTV plate aligns and traffic signals read at a glance.
+  // Low oblique CCTV pole view. These params MUST match the camera the
+  // operator-cctv plate was generated from (render-plate-guides.mjs renders the
+  // structural guide at this rig preset, and the AI plate is derived from that
+  // guide). The plate was generated at [34,18,40]/[-4,1,-12]; an interim change
+  // to the plateCameraCalibration values [38,20,44]/[-4,1,-14] pointed the guide
+  // at building massing (road not visible) and is reverted here.
   operatorCctv: {
     name: "operatorCctv",
     position: [34, 18, 40],

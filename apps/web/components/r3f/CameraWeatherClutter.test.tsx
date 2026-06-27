@@ -182,7 +182,9 @@ describe("Camera/weather/clutter finishing slice", () => {
     expect(operatorWide.position[1]).toBeGreaterThanOrEqual(36);
     expect(operatorWide.position[2]).toBeGreaterThanOrEqual(52);
     expect(operatorWide.target[0]).toBeCloseTo(0);
-    expect(operatorWide.target[2]).toBeGreaterThanOrEqual(-12);
+    // operatorWide now matches the operator-wide plate camera (STAGE5_CAMERA,
+    // target z = -34) so day-wide vehicles project onto the plate's lanes.
+    expect(operatorWide.target[2]).toBeGreaterThanOrEqual(-36);
     expect(operatorWide.fov).toBeGreaterThanOrEqual(50);
 
     expect(photorealProof.name).toBe("photorealProof");

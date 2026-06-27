@@ -17,6 +17,7 @@ import {
 import type { Stage6TimeOfDay } from "./stage6Quality";
 import { buildPlateProxy } from "./plateProxyGeometry";
 import { getPlateEntry } from "./plateManifest";
+import { getPlateCameraAngle } from "./plateCameraCalibration";
 import { getSeamlessGrade } from "./seamlessGrade";
 
 // Preload BOTH plate variants (day + night) so the screen-space plate is ready
@@ -51,6 +52,11 @@ const PLATE_VERTEX_SHADER = /* glsl */ `
 const PLATE_FRAGMENT_SHADER = /* glsl */ `
   uniform sampler2D uPlate;
   uniform vec2 uResolution;
+  // Plate image AR (width/height). All current plates are 1536×1024 → 1.5.
+  uniform float uPlateAspect;
+  // Calibration offset in plate-UV space, applied after the COVER transform.
+  // Corrects AI-plate framing drift vs. the 3D guide camera.
+  uniform vec2 uPlateOffset;
   // Exact sRGB -> linear (matches three's color management) so the projected
   // ground/buildings tone-match scene.background, which decodes the same plate
   // identically. A pow(2.2) approximation made the upper (background) and lower
@@ -63,7 +69,22 @@ const PLATE_FRAGMENT_SHADER = /* glsl */ `
     );
   }
   void main() {
-    vec2 uv = gl_FragCoord.xy / uResolution;
+    vec2 uv_raw = gl_FragCoord.xy / uResolution;
+    // COVER fit: the plate has AR = uPlateAspect (e.g. 1536/1024 = 1.5).
+    // When the canvas AR < plate AR, the canvas is narrower relative to its
+    // height, so we scale the plate to fill by height and center-crop the
+    // excess width. This eliminates the ±53 px edge distortion that the old
+    // stretch-to-fill (uv = fragCoord/resolution) produced.
+    float canvasAR = uResolution.x / uResolution.y;
+    float uv_x = 0.5 + (uv_raw.x - 0.5) * (canvasAR / uPlateAspect);
+    // Y direction: plate AR does not affect the vertical; only the horizontal
+    // needs the COVER rescale. uv_y stays proportional to screen height.
+    float uv_y = uv_raw.y;
+    // Apply calibration offset to correct residual framing drift between the
+    // AI-generated plate and the procedural guide camera. Both components are
+    // in plate-UV space (positive x = sample further right = shift plate left
+    // on screen; positive y = sample further up = shift plate down on screen).
+    vec2 uv = vec2(uv_x + uPlateOffset.x, uv_y + uPlateOffset.y);
     vec3 plate = texture2D(uPlate, uv).rgb;
     // Output linear; the EffectComposer ToneMapping pass tonemaps plate and the
     // lit SUMO vehicles together so both share one exposure.
@@ -123,7 +144,12 @@ function ProjectedBackgroundPlate({
   const uniforms = useMemo(
     () => ({
       uPlate: { value: null as Texture | null },
-      uResolution: { value: new Vector2(1, 1) }
+      uResolution: { value: new Vector2(1, 1) },
+      // COVER fit: plate AR for horizontal-only rescale (all current plates 1536×1024 = 1.5).
+      uPlateAspect: { value: 1.5 },
+      // Calibration offset in plate-UV space (positive x shifts plate left on canvas,
+      // positive y shifts plate down). Per-angle values from plateCameraCalibration.
+      uPlateOffset: { value: new Vector2(0, 0) }
     }),
     []
   );
@@ -161,6 +187,22 @@ function ProjectedBackgroundPlate({
       domeMaterial.dispose();
     };
   }, [uniforms, groundMaterial, domeMaterial, texture]);
+
+  // Apply per-angle calibration: plate AR (for COVER fit) and framing offset.
+  useEffect(() => {
+    try {
+      const cal = getPlateCameraAngle(angleId);
+      uniforms.uPlateAspect.value = cal.plateAspect;
+      (uniforms.uPlateOffset.value as Vector2).set(
+        cal.calibrationOffset[0],
+        cal.calibrationOffset[1]
+      );
+    } catch {
+      // Unknown angleId: use defaults (no COVER correction, no offset).
+      uniforms.uPlateAspect.value = 1.5;
+      (uniforms.uPlateOffset.value as Vector2).set(0, 0);
+    }
+  }, [uniforms, angleId]);
 
   // Keep the screen-space resolution in sync with the actual drawing buffer so
   // the plate samples 1:1 with the rendered frame.
