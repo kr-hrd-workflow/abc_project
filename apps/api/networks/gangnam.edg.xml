@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<edges>
+  <!-- 강남대로 N-S arterial: 5 in / 5 out, innermost lane (index 4) = median bus-only -->
+  <edge id="north_in"  from="north_end" to="center"    numLanes="5" speed="16.67">
+    <lane index="4" allow="bus"/>
+  </edge>
+  <edge id="north_out" from="center"    to="north_end" numLanes="5" speed="16.67">
+    <lane index="4" allow="bus"/>
+  </edge>
+  <edge id="south_in"  from="south_end" to="center"    numLanes="5" speed="16.67">
+    <lane index="4" allow="bus"/>
+  </edge>
+  <edge id="south_out" from="center"    to="south_end" numLanes="5" speed="16.67">
+    <lane index="4" allow="bus"/>
+  </edge>
+
+  <!-- 테헤란로 east leg: 5 in / 5 out, no median bus -->
+  <edge id="east_in"  from="east_end" to="center"   numLanes="5" speed="16.67"/>
+  <edge id="east_out" from="center"   to="east_end" numLanes="5" speed="16.67"/>
+
+  <!-- 서초대로 west leg (only narrow leg): 4 in / 4 out, no median bus -->
+  <edge id="west_in"  from="west_end" to="center"   numLanes="4" speed="16.67"/>
+  <edge id="west_out" from="center"   to="west_end" numLanes="4" speed="16.67"/>
+</edges>
