@@ -385,14 +385,15 @@ def _map_vehicles(client: SumoClient) -> list[SimulationVehicleSnapshot]:
         type_id = client.vehicle.getTypeID(vehicle_id)
         route_id = _optional_vehicle_string(client.vehicle, "getRouteID", vehicle_id)
         vehicle_type, emergency = _vehicle_type(vehicle_id, type_id, route_id)
-        x_meters, y_meters = client.vehicle.getPosition(vehicle_id)
+        sumo_x, sumo_y = client.vehicle.getPosition(vehicle_id)
+        x_meters, y_meters = _to_scene_meters(sumo_x, sumo_y)
         vehicles.append(
             SimulationVehicleSnapshot(
                 id=vehicle_id,
                 vehicle_type=vehicle_type,
                 lane_id=lane_id,
-                x_meters=float(x_meters),
-                y_meters=float(y_meters),
+                x_meters=x_meters,
+                y_meters=y_meters,
                 heading_degrees=float(client.vehicle.getAngle(vehicle_id)),
                 speed_mps=float(client.vehicle.getSpeed(vehicle_id)),
                 waiting_seconds=float(client.vehicle.getWaitingTime(vehicle_id)),
@@ -479,7 +480,7 @@ def _person_position(
         or y_meters == SUMO_INVALID_POSITION_SENTINEL
     ):
         return None
-    return x_meters, y_meters
+    return _to_scene_meters(x_meters, y_meters)
 
 
 def _required_person_float(
@@ -741,6 +742,14 @@ def _signal_seconds_remaining(state: str) -> float:
     if state == "yellow":
         return 0.5
     return 1.0
+
+
+def _to_scene_meters(sumo_x: float, sumo_y: float) -> tuple[float, float]:
+    # Scene contract: scene_x = sumo_x, scene_z = -sumo_y. The snapshot carries scene
+    # coordinates in (x_meters, y_meters); the R3F bridge consumes y_meters directly as
+    # scene z (TrafficDensityLayer.tsx maps `z: vehicle.y_meters`), and the fixtures already
+    # follow this convention, so the live bridge is the only place that must negate y.
+    return float(sumo_x), -float(sumo_y)
 
 
 def _approach_from_lane_id(lane_id: str) -> Approach | None:

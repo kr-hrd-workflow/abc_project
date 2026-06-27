@@ -110,7 +110,7 @@ def test_fake_sumo_client_maps_to_simulation_frame_snapshot_fields() -> None:
         "vehicle_type": "car",
         "lane_id": "north-inbound-1",
         "x_meters": 10.25,
-        "y_meters": -3.5,
+        "y_meters": 3.5,
         "heading_degrees": 91.0,
         "speed_mps": 8.75,
         "waiting_seconds": 0.0,
@@ -158,7 +158,7 @@ def test_fake_sumo_client_maps_person_api_to_pedestrian_snapshots() -> None:
         {
             "id": "person-1",
             "x_meters": 2.5,
-            "y_meters": -12.0,
+            "y_meters": 12.0,
             "heading_degrees": 180.0,
             "speed_mps": 1.35,
             "lane_id": None,
@@ -169,7 +169,7 @@ def test_fake_sumo_client_maps_person_api_to_pedestrian_snapshots() -> None:
         {
             "id": "person-waiting",
             "x_meters": -4.0,
-            "y_meters": 8.25,
+            "y_meters": -8.25,
             "heading_degrees": 90.0,
             "speed_mps": 0.0,
             "lane_id": None,
