@@ -3,7 +3,7 @@ import { Matrix4, PerspectiveCamera, Vector3 } from "three";
 
 import {
   BUILDING_EDGE_BLOCKS,
-  INTERSECTION_BOX_METERS,
+  INTERSECTION_BOX_EXTENT_METERS,
   STAGE6E_CITY_EDGE_BLOCKS,
   type BoxPrimitiveSpec,
   type Vector3Tuple
@@ -23,9 +23,16 @@ export function buildPlateProxy(): PlateProxy {
     ...BUILDING_EDGE_BLOCKS,
     ...STAGE6E_CITY_EDGE_BLOCKS
   ];
+  // Square backdrop plane sized to the larger axis of the asymmetric junction
+  // box (강남대로 E–W carriageway vs 테헤란로/서초대로 N–S), kept generous (×6)
+  // so the procedural fallback reads coherently behind the night plate.
+  const maxBoxExtent = Math.max(
+    INTERSECTION_BOX_EXTENT_METERS.ew,
+    INTERSECTION_BOX_EXTENT_METERS.ns
+  );
   return {
     occluders,
-    groundPlane: { size: INTERSECTION_BOX_METERS * 6, y: 0 }
+    groundPlane: { size: maxBoxExtent * 6, y: 0 }
   };
 }
 
