@@ -21,6 +21,7 @@ import { getApproachRoadWidthMeters } from "./intersectionTruth";
 import {
   CROSSWALK_STRIPES,
   INTERSECTION_BOX_METERS,
+  INTERSECTION_BOX_X_METERS,
   LANE_DIVIDER_MARKINGS,
   ROAD_WIDTH_METERS
 } from "./roadGeometry";
@@ -337,6 +338,16 @@ describe("Camera/weather/clutter finishing slice", () => {
       eastStripes.length;
 
     expect(CROSSWALK_STRIPES).toHaveLength(22);
+    // Discriminating: crosswalk sits exactly one box-half + 2.75m off the junction.
+    const expectedCrosswalkOffset = INTERSECTION_BOX_X_METERS / 2 + 2.75;
+    expect(Math.abs(eastStripes[0].position[0])).toBeCloseTo(
+      expectedCrosswalkOffset,
+      6
+    );
+    expect(Math.abs(westStripes[0].position[0])).toBeCloseTo(
+      expectedCrosswalkOffset,
+      6
+    );
     expect(maxStripeWidth).toBeGreaterThanOrEqual(0.58);
     expect(maxStripeWidth).toBeLessThanOrEqual(0.72);
     expect(maxStripeLength).toBeGreaterThanOrEqual(4.4);
