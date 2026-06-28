@@ -115,7 +115,10 @@ export function Stage6PostFX({
         key="vignette"
         blendFunction={BlendFunction.NORMAL}
         eskil={false}
-        offset={0.18}
+        // Pushed out to the extreme corners (was 0.18) so the high
+        // traffic-monitoring camera shows all four approach ends evenly instead
+        // of fading them to near-black.
+        offset={0.62}
         darkness={preset.vignetteDarkness}
       />
     );

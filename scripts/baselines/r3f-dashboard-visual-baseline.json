@@ -4,19 +4,19 @@
   "desktop": {
     "canvas_metrics": {
       "width": 914,
-      "height": 679,
-      "sampled_pixels": 620606,
-      "non_background_ratio": 0.9535212356954331,
-      "bright_ratio": 0.11417388810291876,
-      "dark_ratio": 0.42446576410798476,
-      "warm_light_ratio": 0.004983838377327967,
-      "cool_light_ratio": 0.1964918160636539,
-      "marking_ratio": 0.13214664376432067,
-      "saturated_ratio": 0.32540291263700316,
-      "color_bucket_count": 619,
-      "luminance_stddev": 67.96983667404709
+      "height": 680,
+      "sampled_pixels": 621520,
+      "non_background_ratio": 0.9945375852748102,
+      "bright_ratio": 0.4621862530570215,
+      "dark_ratio": 0.05943010683485648,
+      "warm_light_ratio": 0.004995816707426953,
+      "cool_light_ratio": 0.19568638177371606,
+      "marking_ratio": 0.4852989445231046,
+      "saturated_ratio": 0.26885216887630325,
+      "color_bucket_count": 576,
+      "luminance_stddev": 64.2962221331839
     }
   },
-  "generated_at": "2026-06-28T17:27:44.304Z",
-  "baseline_reason": "Scene v2: high steep traffic-monitoring camera (whole intersection + 4 approaches unoccluded) + revived 3D signals w/ state beacons + merged road markings + realistic per-lane turn arrows; intentional - rebaselined 2026-06-29"
+  "generated_at": "2026-06-28T17:50:07.528Z",
+  "baseline_reason": "Road v3: faithful \uac15\ub0a8\ub300\ub85c markings (plain-asphalt bus lane + blue \uccad\uc0c9 \ubcf5\uc120 + \ubc84\uc2a4 text, yellow \uc911\uc559\uc120, white \uc815\uc9c0\uc120/\uae38\uac00\uc7a5\uc790\ub9ac/\uc9c4\ub85c\ubcc0\uacbd\uc81c\ud55c\uc120, realistic per-lane arrows) + reduced vignette + far-plane fix (sky fills corners); intentional - rebaselined 2026-06-29"
 }

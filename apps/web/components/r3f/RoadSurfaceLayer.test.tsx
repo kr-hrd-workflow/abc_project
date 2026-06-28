@@ -112,17 +112,28 @@ describe("RoadSurfaceLayer", () => {
     }
   });
 
-  test("renders the merged bus-lane marking with the muted terracotta day colour", () => {
+  test("bus lane is plain asphalt + blue 청색 복선 (NO red pavement) + yellow 중앙선", () => {
     const el = RoadSurfaceLayer({ isNight: false }) as ReactElement<TestProps>;
     const all = collectAllElements(el);
-
-    // Markings are merged into ONE geometry per type (perf), so there is a
-    // single bus-lane material rather than one per stripe.
-    const busMatEls = all
+    const basicColors = all
       .filter((e) => getTypeName(e) === "meshBasicMaterial")
-      .filter((e) => e.props.color === "#8f4034");
+      .map((e) => e.props.color);
 
-    expect(busMatEls).toHaveLength(1);
+    // Korea marks bus lanes with BLUE lines on plain asphalt — never red pavement.
+    expect(basicColors).not.toContain("#8f4034"); // old terracotta bus surface
+    expect(basicColors).not.toContain("#b0322c"); // MEDIAN_BUS_LANE_COLOR (red)
+    // Blue 중앙버스전용차로선 + yellow 중앙선 present.
+    expect(basicColors).toContain("#2f6fd0"); // 청색 복선
+    expect(basicColors).toContain("#e3c64a"); // 황색 중앙선
+  });
+
+  test("renders white solid lines (정지선 + 길가장자리 + 진로변경제한선) as one mesh", () => {
+    const el = RoadSurfaceLayer({ isNight: false }) as ReactElement<TestProps>;
+    const all = collectAllElements(el);
+    const solidWhite = all
+      .filter((e) => getTypeName(e) === "meshBasicMaterial")
+      .filter((e) => e.props.color === "#eceadf");
+    expect(solidWhite).toHaveLength(1);
   });
 
   test("renders one merged lane-divider mesh with muted transparent day colour", () => {
@@ -187,11 +198,14 @@ describe("RoadSurfaceLayer", () => {
       .filter((e) => e.props.color === "#a9a394" && !e.props.transparent);
     expect(nightArrows).toHaveLength(1);
 
-    // Night bus lane uses #5e2c25 (single merged mesh).
-    const nightBus = all
+    // Night Korean lines: dimmed yellow 중앙선, blue 복선, white solids. No red.
+    const nightBasic = all
       .filter((e) => getTypeName(e) === "meshBasicMaterial")
-      .filter((e) => e.props.color === "#5e2c25");
-    expect(nightBus).toHaveLength(1);
+      .map((e) => e.props.color);
+    expect(nightBasic).toContain("#b39a3a"); // night 중앙선
+    expect(nightBasic).toContain("#2b5896"); // night 청색 복선
+    expect(nightBasic).toContain("#c0bbac"); // night white solids
+    expect(nightBasic).not.toContain("#5e2c25"); // no red bus surface
 
     // Road surface uses night asphalt tint in meshStandardMaterial
     const nightAsphalt = all

@@ -4,10 +4,13 @@ import { useMemo } from "react";
 import { useTexture } from "@react-three/drei";
 import {
   BufferGeometry,
+  CanvasTexture,
+  LinearFilter,
   PlaneGeometry,
   RepeatWrapping,
   Shape,
   ShapeGeometry,
+  SRGBColorSpace,
   type Texture
 } from "three";
 import { mergeGeometries } from "three/examples/jsm/utils/BufferGeometryUtils.js";
@@ -16,14 +19,19 @@ import type { Direction } from "../../lib/types";
 import {
   APPROACH_CORRIDORS,
   type ApproachCorridorSpec,
+  BUS_LANE_BORDER_MARKINGS,
+  BUS_LANE_LEGENDS,
+  CENTER_LINE_MARKINGS,
   CROSSWALK_STRIPES,
+  EDGE_LINE_MARKINGS,
   INTERSECTION_BOX_X_METERS,
   INTERSECTION_BOX_Z_METERS,
   LANE_ARROW_DECALS,
   type LaneArrowKind,
   LANE_DIVIDER_MARKINGS,
-  MEDIAN_BUS_LANE_MARKINGS,
-  type PlanePrimitiveSpec
+  LANE_RESTRICT_MARKINGS,
+  type PlanePrimitiveSpec,
+  STOP_LINE_MARKINGS
 } from "./roadGeometry";
 
 // RoadSurfaceLayer — photoreal production road rendered from the geometry model.
@@ -55,11 +63,6 @@ import {
 
 const ASPHALT_PATH = "/simulation/r3f/assets/textures/asphalt.webp";
 const TILE_SCALE_M = 9; // metres per texture repeat
-
-// Muted bus lane colours — local override so the road reads photoreal without
-// touching the exported MEDIAN_BUS_LANE_COLOR (used by other code / tests).
-const BUS_DAY = "#8f4034";
-const BUS_NIGHT = "#5e2c25";
 
 // Shoulder widen (perpendicular to travel, total across both sides) so the
 // rendered textured asphalt reaches the plate's curb line and no flat
@@ -192,6 +195,56 @@ function mergeLaneArrows(): BufferGeometry | null {
     : mergeGeometries(geometries, false);
 }
 
+// Merge the "버스" legend planes (one shared texture) into one geometry so the
+// whole set is a single draw call. Each plane is laid flat + oriented to its
+// lane's travel direction (same transform recipe as the arrows).
+function mergeBusLegends(): BufferGeometry | null {
+  if (BUS_LANE_LEGENDS.length === 0) return null;
+  const geometries = BUS_LANE_LEGENDS.map((legend) => {
+    const geo = new PlaneGeometry(2.4, 4.6);
+    geo.rotateX(-Math.PI / 2);
+    geo.rotateY(legend.rotationY);
+    geo.translate(legend.position[0], legend.position[1], legend.position[2]);
+    return geo;
+  });
+  return geometries.length === 1
+    ? geometries[0]
+    : mergeGeometries(geometries, false);
+}
+
+function isJsdomRuntime(): boolean {
+  return (
+    typeof window !== "undefined" && /jsdom/i.test(window.navigator.userAgent)
+  );
+}
+
+// White "버스" legend on a transparent canvas (browser-only; jsdom has no 2-D ctx).
+function useBusLegendTexture(): Texture | null {
+  return useMemo(() => {
+    if (typeof document === "undefined" || isJsdomRuntime()) return null;
+    const canvas = document.createElement("canvas");
+    canvas.width = 128;
+    canvas.height = 256;
+    const ctx = canvas.getContext("2d");
+    if (!ctx) return null;
+    ctx.clearRect(0, 0, 128, 256);
+    ctx.fillStyle = "#eef0ee";
+    ctx.textAlign = "center";
+    ctx.textBaseline = "middle";
+    ctx.font =
+      "900 92px 'Malgun Gothic', 'Apple SD Gothic Neo', 'Noto Sans KR', system-ui, sans-serif";
+    // Stack the two syllables along the lane (reads from the driver's approach).
+    ctx.fillText("버", 64, 70);
+    ctx.fillText("스", 64, 186);
+    const tex = new CanvasTexture(canvas);
+    tex.colorSpace = SRGBColorSpace;
+    tex.minFilter = LinearFilter;
+    tex.magFilter = LinearFilter;
+    tex.needsUpdate = true;
+    return tex;
+  }, []);
+}
+
 // Widen the asphalt surface perpendicular to travel (width axis only) so it
 // reaches the plate curb line. Length axis (travel direction) is unchanged.
 function widenedCorridorSize(corridor: ApproachCorridorSpec): [number, number] {
@@ -226,11 +279,8 @@ export function RoadSurfaceLayer({ isNight }: RoadSurfaceLayerProps) {
     [asphaltBase]
   );
 
-  // Markings merged into one geometry per type (perf: ~350 stripe meshes → 4).
-  const busGeometry = useMemo(
-    () => mergeFlatMarkings(MEDIAN_BUS_LANE_MARKINGS, 0.012),
-    []
-  );
+  // Markings merged into one geometry per material so the whole high-camera
+  // frame is a handful of draw calls instead of one per stripe.
   const dividerGeometry = useMemo(
     () => mergeFlatMarkings(LANE_DIVIDER_MARKINGS, 0.014),
     []
@@ -240,16 +290,38 @@ export function RoadSurfaceLayer({ isNight }: RoadSurfaceLayerProps) {
     []
   );
   const arrowGeometry = useMemo(() => mergeLaneArrows(), []);
+  // 중앙선 (yellow), 중앙버스전용차로선 (blue), and the white solid line set
+  // (정지선 + 길가장자리구역선 + 진로변경제한선) each merge to one geometry.
+  const centerLineGeometry = useMemo(
+    () => mergeFlatMarkings(CENTER_LINE_MARKINGS, 0.011),
+    []
+  );
+  const busBorderGeometry = useMemo(
+    () => mergeFlatMarkings(BUS_LANE_BORDER_MARKINGS, 0.012),
+    []
+  );
+  const solidWhiteGeometry = useMemo(
+    () =>
+      mergeFlatMarkings(
+        [...STOP_LINE_MARKINGS, ...EDGE_LINE_MARKINGS, ...LANE_RESTRICT_MARKINGS],
+        0.013
+      ),
+    []
+  );
+  const busLegendTexture = useBusLegendTexture();
+  const busLegendGeometry = useMemo(() => mergeBusLegends(), []);
 
   // Asphalt tint: white in day (texture reads true colour ~#3a3a3e),
   // slightly blue-dark tint at night so the grain stays visible.
   const asphaltColor = isNight ? "#5a5a64" : "#ffffff";
-  const busLaneColor = isNight ? BUS_NIGHT : BUS_DAY;
 
-  // Worn-paint marking colours — off-white, not stark.
-  const laneColor = isNight ? "#a9a394" : "#d7d5cc";
+  // Korean lane-line palette (worn-paint, slightly muted at night).
+  const laneColor = isNight ? "#a9a394" : "#d7d5cc"; // white dashed dividers
   const crosswalkColor = isNight ? "#b4af9f" : "#e3e1d8";
   const arrowColor = isNight ? "#a9a394" : "#d7d5cc";
+  const centerLineColor = isNight ? "#b39a3a" : "#e3c64a"; // 황색 중앙선
+  const busBorderColor = isNight ? "#2b5896" : "#2f6fd0"; // 청색 복선
+  const solidWhiteColor = isNight ? "#c0bbac" : "#eceadf"; // 정지선/길가장자리/제한선
 
   return (
     <group name="road-surface-layer">
@@ -281,10 +353,25 @@ export function RoadSurfaceLayer({ isNight }: RoadSurfaceLayerProps) {
         </mesh>
       ))}
 
-      {/* Muted brick/terracotta median bus lane (강남대로 N/S only) — merged */}
-      {busGeometry && (
-        <mesh geometry={busGeometry}>
-          <meshBasicMaterial color={busLaneColor} />
+      {/* 중앙선 — yellow double-solid centre line (merged) */}
+      {centerLineGeometry && (
+        <mesh geometry={centerLineGeometry}>
+          <meshBasicMaterial color={centerLineColor} />
+        </mesh>
+      )}
+
+      {/* 중앙버스전용차로선 — blue double-solid bus-lane border (merged).
+          The bus lane itself is plain asphalt (no red pavement). */}
+      {busBorderGeometry && (
+        <mesh geometry={busBorderGeometry}>
+          <meshBasicMaterial color={busBorderColor} />
+        </mesh>
+      )}
+
+      {/* White SOLID lines: 정지선 + 길가장자리구역선 + 진로변경제한선 (merged) */}
+      {solidWhiteGeometry && (
+        <mesh geometry={solidWhiteGeometry}>
+          <meshBasicMaterial color={solidWhiteColor} />
         </mesh>
       )}
 
@@ -306,6 +393,18 @@ export function RoadSurfaceLayer({ isNight }: RoadSurfaceLayerProps) {
       {arrowGeometry && (
         <mesh geometry={arrowGeometry}>
           <meshBasicMaterial color={arrowColor} />
+        </mesh>
+      )}
+
+      {/* 버스 legend text painted in each median bus lane (browser-only, merged) */}
+      {busLegendTexture && busLegendGeometry && (
+        <mesh geometry={busLegendGeometry}>
+          <meshBasicMaterial
+            map={busLegendTexture}
+            transparent
+            toneMapped={false}
+            depthWrite={false}
+          />
         </mesh>
       )}
     </group>

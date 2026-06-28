@@ -199,6 +199,7 @@ export const LANE_DIVIDER_MARKINGS = APPROACH_CORRIDORS.flatMap((corridor) => {
   const dividers: PlanePrimitiveSpec[] = [];
   const laneCount = corridor.inboundLanes + corridor.outboundLanes;
   const widthM = corridorWidth(corridor.direction);
+  const hasBus = getApproachHasMedianBus(corridor.direction);
   const usableLength = corridor.lengthMeters - 12;
   const segmentPitch = LANE_DIVIDER_SEGMENT_LENGTH + LANE_DIVIDER_SEGMENT_GAP;
   const segmentCount = Math.max(4, Math.floor(usableLength / segmentPitch));
@@ -206,6 +207,14 @@ export const LANE_DIVIDER_MARKINGS = APPROACH_CORRIDORS.flatMap((corridor) => {
 
   for (let laneIndex = 1; laneIndex < laneCount; laneIndex += 1) {
     const laneOffset = -widthM / 2 + laneIndex * LANE_WIDTH_METERS;
+
+    // The road centre carries the yellow 중앙선; the median bus-lane borders
+    // carry the blue 청색 복선. Skip white dashed dividers at those positions so
+    // they don't double-paint over the colour lines.
+    if (Math.abs(laneOffset) < 0.05) continue;
+    if (hasBus && Math.abs(Math.abs(laneOffset) - LANE_WIDTH_METERS) < 0.05) {
+      continue;
+    }
 
     for (let segmentIndex = 0; segmentIndex < segmentCount; segmentIndex += 1) {
       const along = firstSegmentOffset + segmentIndex * segmentPitch;
@@ -460,9 +469,13 @@ function buildLaneArrowDecals(): LaneArrowDecal[] {
 
 export const LANE_ARROW_DECALS: LaneArrowDecal[] = buildLaneArrowDecals();
 
-// 중앙버스전용차로: red median bus-only lane surfaces on 강남대로 (N/S) only.
-// The bus lane is the median-adjacent lane in each travel direction, so each
-// corridor gets two: one inbound side (-x) and one outbound side (+x).
+// 중앙버스전용차로 (강남대로 N/S only). The bus lane is the median-adjacent lane in
+// each travel direction, so each corridor gets two: inbound (-x) + outbound (+x).
+// NOTE (P3): the lane surface is now plain dark asphalt (Korea marks bus lanes
+// with BLUE lines, not red pavement). This export keeps the bus-lane FOOTPRINT
+// (centre/size) used to place the blue border lines + 버스 text. The legacy
+// MEDIAN_BUS_LANE_COLOR is retained for non-rendering consumers but is no longer
+// painted on the running surface.
 export const MEDIAN_BUS_LANE_COLOR = "#b0322c";
 
 export const MEDIAN_BUS_LANE_MARKINGS: PlanePrimitiveSpec[] =
@@ -485,6 +498,241 @@ export const MEDIAN_BUS_LANE_MARKINGS: PlanePrimitiveSpec[] =
       size: [LANE_WIDTH_METERS, corridor.lengthMeters] as [number, number]
     }));
   });
+
+// ── Korean lane-line markings (P3 road realism, per scratchpad/road-spec.json) ──
+// Colours per 도로교통법 [별표6] 노면표시: 황색 중앙선, 청색 중앙버스전용차로선, 백색 기타.
+export const CENTER_LINE_COLOR = "#e3c64a"; // 황색 (yellow) 중앙선
+export const BUS_LANE_BORDER_COLOR = "#2f6fd0"; // 청색 (blue) 복선
+export const SOLID_LANE_LINE_COLOR = "#eceadf"; // 백색 solid lines
+
+const SOLID_LINE_WIDTH = 0.14; // 0.10–0.15 m per line
+const DOUBLE_LINE_GAP = 0.18; // gap between a double (복선) pair
+const STOP_BAR_WIDTH = 0.45; // 정지선 0.30–0.60 m
+const EDGE_LINE_INSET = 0.45; // 길가장자리구역선 inset from the curb
+const GENERAL_STOP_GAP = 6.6; // m beyond the box edge (just before the crosswalk)
+const BUS_STOP_ADVANCE = 0.9; // bus 정지선 advanced ahead of the general one
+const LANE_RESTRICT_LENGTH = 22; // 진로변경제한선 solid run near the junction
+
+// A longitudinal line that runs the corridor's travel axis at lateral offset
+// `lateral`, centred on the corridor, spanning `lengthM` (or a near-box segment).
+function longitudinalLine(
+  id: string,
+  corridor: ApproachCorridorSpec,
+  lateral: number,
+  lengthM: number,
+  alongCenter: number,
+  lineWidth: number
+): PlanePrimitiveSpec {
+  if (corridor.orientation === "north_south") {
+    return {
+      id,
+      direction: corridor.direction,
+      position: [lateral, MARKING_HEIGHT, alongCenter],
+      size: [lineWidth, lengthM]
+    };
+  }
+  return {
+    id,
+    direction: corridor.direction,
+    position: [alongCenter, MARKING_HEIGHT, lateral],
+    size: [lengthM, lineWidth]
+  };
+}
+
+function doubleLine(
+  idBase: string,
+  corridor: ApproachCorridorSpec,
+  centerLateral: number,
+  lengthM: number,
+  alongCenter: number
+): PlanePrimitiveSpec[] {
+  const half = DOUBLE_LINE_GAP / 2 + SOLID_LINE_WIDTH / 2;
+  return [-1, 1].map((s) =>
+    longitudinalLine(
+      `${idBase}-${s < 0 ? "a" : "b"}`,
+      corridor,
+      centerLateral + s * half,
+      lengthM,
+      alongCenter,
+      SOLID_LINE_WIDTH
+    )
+  );
+}
+
+// 중앙선 — yellow double-solid at the road centre of every corridor.
+export const CENTER_LINE_MARKINGS: PlanePrimitiveSpec[] =
+  APPROACH_CORRIDORS.flatMap((corridor) => {
+    const alongCenter =
+      corridor.orientation === "north_south"
+        ? corridor.position[2]
+        : corridor.position[0];
+    return doubleLine(
+      `${corridor.direction}-center-line`,
+      corridor,
+      0,
+      corridor.lengthMeters,
+      alongCenter
+    );
+  });
+
+// 중앙버스전용차로선 — blue double-solid on the OUTER edge of each median bus lane.
+export const BUS_LANE_BORDER_MARKINGS: PlanePrimitiveSpec[] =
+  APPROACH_CORRIDORS.flatMap((corridor) => {
+    if (
+      corridor.orientation !== "north_south" ||
+      !getApproachHasMedianBus(corridor.direction)
+    ) {
+      return [];
+    }
+    return [-1, 1].flatMap((side) =>
+      doubleLine(
+        `${corridor.direction}-bus-border-${side < 0 ? "in" : "out"}`,
+        corridor,
+        side * LANE_WIDTH_METERS,
+        corridor.lengthMeters,
+        corridor.position[2]
+      )
+    );
+  });
+
+// 길가장자리구역선 — white solid edge line just inside the curb, both sides.
+export const EDGE_LINE_MARKINGS: PlanePrimitiveSpec[] =
+  APPROACH_CORRIDORS.flatMap((corridor) => {
+    const widthM = corridorWidth(corridor.direction);
+    const lateral = widthM / 2 - EDGE_LINE_INSET;
+    const alongCenter =
+      corridor.orientation === "north_south"
+        ? corridor.position[2]
+        : corridor.position[0];
+    return [-1, 1].map((side) =>
+      longitudinalLine(
+        `${corridor.direction}-edge-line-${side < 0 ? "a" : "b"}`,
+        corridor,
+        side * lateral,
+        corridor.lengthMeters,
+        alongCenter,
+        SOLID_LINE_WIDTH
+      )
+    );
+  });
+
+// 진로변경제한선 — white SOLID lane lines for the segment nearest the junction
+// (no lane change near the stop line). Same lateral positions as the dashed
+// dividers, excluding the centre (yellow) and bus borders (blue).
+export const LANE_RESTRICT_MARKINGS: PlanePrimitiveSpec[] =
+  APPROACH_CORRIDORS.flatMap((corridor) => {
+    const widthM = corridorWidth(corridor.direction);
+    const laneCount = corridor.inboundLanes + corridor.outboundLanes;
+    const hasBus = getApproachHasMedianBus(corridor.direction);
+    const boxHalf =
+      corridor.orientation === "north_south" ? HALF_BOX_Z : HALF_BOX_X;
+    const sign =
+      corridor.direction === "north" || corridor.direction === "east" ? -1 : 1;
+    const alongCenter = sign * (boxHalf + LANE_RESTRICT_LENGTH / 2);
+
+    const lines: PlanePrimitiveSpec[] = [];
+    for (let laneIndex = 1; laneIndex < laneCount; laneIndex += 1) {
+      const laneOffset = -widthM / 2 + laneIndex * LANE_WIDTH_METERS;
+      if (Math.abs(laneOffset) < 0.05) continue;
+      if (hasBus && Math.abs(Math.abs(laneOffset) - LANE_WIDTH_METERS) < 0.05) {
+        continue;
+      }
+      lines.push(
+        longitudinalLine(
+          `${corridor.direction}-restrict-${laneIndex}`,
+          corridor,
+          laneOffset,
+          LANE_RESTRICT_LENGTH,
+          alongCenter,
+          SOLID_LINE_WIDTH
+        )
+      );
+    }
+    return lines;
+  });
+
+// 정지선 — white transverse stop bar on every approach, just before the crosswalk.
+// On 강남대로 the bus lane gets its own bar advanced ahead of the general one.
+export const STOP_LINE_MARKINGS: PlanePrimitiveSpec[] = (
+  ["north", "south", "east", "west"] as const
+).flatMap((direction) => {
+  const corridor = APPROACH_CORRIDORS.find((c) => c.direction === direction)!;
+  const widthM = corridorWidth(direction);
+  const halfRoad = widthM / 2;
+  const hasBus = getApproachHasMedianBus(direction);
+  const sign = direction === "north" || direction === "east" ? -1 : 1;
+  const isNS = corridor.orientation === "north_south";
+  const boxHalf = isNS ? HALF_BOX_Z : HALF_BOX_X;
+  const generalAlong = sign * (boxHalf + GENERAL_STOP_GAP);
+  const busAlong = sign * (boxHalf + GENERAL_STOP_GAP - BUS_STOP_ADVANCE);
+
+  const bars: PlanePrimitiveSpec[] = [];
+  const innerEdge = hasBus ? LANE_WIDTH_METERS : 0; // general lanes start past the bus lane
+  const generalWidth = halfRoad - innerEdge;
+  const generalCenter = sign * (innerEdge + generalWidth / 2);
+
+  const transverse = (
+    id: string,
+    lateralCenter: number,
+    spanWidth: number,
+    along: number
+  ): PlanePrimitiveSpec =>
+    isNS
+      ? {
+          id,
+          direction,
+          position: [lateralCenter, MARKING_HEIGHT, along],
+          size: [spanWidth, STOP_BAR_WIDTH]
+        }
+      : {
+          id,
+          direction,
+          position: [along, MARKING_HEIGHT, lateralCenter],
+          size: [STOP_BAR_WIDTH, spanWidth]
+        };
+
+  bars.push(
+    transverse(`${direction}-stop-general`, generalCenter, generalWidth, generalAlong)
+  );
+  if (hasBus) {
+    bars.push(
+      transverse(
+        `${direction}-stop-bus`,
+        sign * (LANE_WIDTH_METERS / 2),
+        LANE_WIDTH_METERS,
+        busAlong
+      )
+    );
+  }
+  return bars;
+});
+
+// 버스 legend — white "버스" text painted periodically in each median bus lane.
+export type BusLaneLegend = {
+  id: string;
+  direction: Direction;
+  position: Vector3Tuple;
+  rotationY: number;
+};
+export const BUS_LANE_LEGENDS: BusLaneLegend[] = APPROACH_CORRIDORS.flatMap(
+  (corridor) => {
+    if (
+      corridor.orientation !== "north_south" ||
+      !getApproachHasMedianBus(corridor.direction)
+    ) {
+      return [];
+    }
+    const sign = corridor.direction === "north" ? -1 : 1;
+    const lateral = sign * (LANE_WIDTH_METERS / 2); // inbound bus lane centre
+    // Two legends along the inbound bus lane, set back from the junction.
+    return [28, 64].map((dist, i) => ({
+      id: `${corridor.direction}-bus-legend-${i}`,
+      direction: corridor.direction,
+      position: [lateral, MARKING_HEIGHT + 0.02, sign * (HALF_BOX_Z + dist)] as Vector3Tuple,
+      rotationY: corridor.direction === "north" ? Math.PI : 0
+    }));
+  }
+);
 
 export function getCorridorLengthDataAttribute() {
   return (Object.keys(CORRIDOR_LENGTH_METERS) as Direction[])

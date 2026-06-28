@@ -2,13 +2,17 @@ import { describe, expect, it } from "vitest";
 import type { Direction } from "../../lib/types";
 import {
   APPROACH_CORRIDORS,
+  BUS_LANE_BORDER_MARKINGS,
+  CENTER_LINE_MARKINGS,
   CROSSWALK_STRIPES,
+  EDGE_LINE_MARKINGS,
   INTERSECTION_BOX_EXTENT_METERS,
   INTERSECTION_BOX_X_METERS,
   INTERSECTION_BOX_Z_METERS,
   LANE_WIDTH_METERS,
   MEDIAN_BUS_LANE_MARKINGS,
-  QUEUE_ZONES
+  QUEUE_ZONES,
+  STOP_LINE_MARKINGS
 } from "./roadGeometry";
 import { getApproachRoadWidthMeters } from "./intersectionTruth";
 
@@ -67,5 +71,46 @@ describe("MEDIAN_BUS_LANE_MARKINGS (중앙버스전용차로, 강남대로 only)
       expect(Math.abs(m.position[0])).toBeCloseTo(LANE_WIDTH_METERS / 2, 6);
       expect(m.size[0]).toBeCloseTo(LANE_WIDTH_METERS, 6);
     }
+  });
+});
+
+describe("Korean lane-line markings (P3 road realism)", () => {
+  it("중앙선: yellow double-solid at the road centre of every corridor", () => {
+    // 4 corridors × 2 lines (복선) = 8.
+    expect(CENTER_LINE_MARKINGS).toHaveLength(8);
+    for (const m of CENTER_LINE_MARKINGS) {
+      // Each pair straddles the corridor centre (very small lateral offset).
+      const lateral =
+        Math.abs(m.position[0]) < 0.5 ? m.position[0] : m.position[2];
+      expect(Math.abs(lateral)).toBeLessThan(0.3);
+    }
+  });
+
+  it("중앙버스전용차로선: blue double-solid only on the N/S bus corridors", () => {
+    const dirs = new Set(BUS_LANE_BORDER_MARKINGS.map((m) => m.direction));
+    expect(dirs).toEqual(new Set(["north", "south"]));
+    // 2 corridors × 2 sides × 2 lines = 8, on the OUTER edge (±LANE_WIDTH).
+    expect(BUS_LANE_BORDER_MARKINGS).toHaveLength(8);
+    for (const m of BUS_LANE_BORDER_MARKINGS) {
+      expect(Math.abs(m.position[0])).toBeGreaterThan(LANE_WIDTH_METERS - 0.5);
+      expect(Math.abs(m.position[0])).toBeLessThan(LANE_WIDTH_METERS + 0.5);
+    }
+  });
+
+  it("정지선: a general stop bar on every approach + an advanced bus bar on N/S", () => {
+    const general = STOP_LINE_MARKINGS.filter((m) => m.id.includes("stop-general"));
+    const bus = STOP_LINE_MARKINGS.filter((m) => m.id.includes("stop-bus"));
+    expect(general).toHaveLength(4); // every approach
+    expect(bus).toHaveLength(2); // 강남대로 N/S only
+    // Bus stop line is advanced ahead of (closer to the box than) the general one.
+    const northGen = general.find((m) => m.direction === "north")!;
+    const northBus = bus.find((m) => m.direction === "north")!;
+    expect(Math.abs(northBus.position[2])).toBeLessThan(
+      Math.abs(northGen.position[2])
+    );
+  });
+
+  it("길가장자리구역선: a white solid edge line on both sides of every corridor", () => {
+    expect(EDGE_LINE_MARKINGS).toHaveLength(8); // 4 corridors × 2 sides
   });
 });

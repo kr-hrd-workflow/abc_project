@@ -62,7 +62,10 @@ export const CAMERA_RIG_PRESETS = {
     target: [0, 0, -6],
     fov: 56,
     near: STAGE5_CAMERA.near,
-    far: STAGE5_CAMERA.far
+    // Larger far than STAGE5 (520): from this high pulled-back view the far side
+    // of the sky dome sits >520 m away and was clipped to black at the corners.
+    // 1500 m contains the whole dome + distant skyline.
+    far: 1500
   },
   // Low oblique CCTV pole view. These params MUST match the camera the
   // operator-cctv plate was generated from (render-plate-guides.mjs renders the
@@ -95,7 +98,7 @@ export const CAMERA_RIG_PRESETS = {
     target: [0, 0, -6],
     fov: 56,
     near: STAGE5_CAMERA.near,
-    far: STAGE5_CAMERA.far
+    far: 1500 // same as operatorWide — contain the sky dome from the high view
   },
   mobileWide: {
     name: "mobileWide",
