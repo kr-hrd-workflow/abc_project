@@ -6,17 +6,17 @@
       "width": 914,
       "height": 680,
       "sampled_pixels": 621520,
-      "non_background_ratio": 0.9818654266958424,
-      "bright_ratio": 0.20522267988158063,
-      "dark_ratio": 0.1235422834341614,
-      "warm_light_ratio": 0.0024810142875530956,
-      "cool_light_ratio": 0.2652400566353456,
-      "marking_ratio": 0.22565162826618612,
-      "saturated_ratio": 0.40956204144677566,
-      "color_bucket_count": 514,
-      "luminance_stddev": 59.9204181848544
+      "non_background_ratio": 0.9873857639335822,
+      "bright_ratio": 0.20908096280087526,
+      "dark_ratio": 0.09202439181361823,
+      "warm_light_ratio": 0.0034302999098983137,
+      "cool_light_ratio": 0.2798799716823272,
+      "marking_ratio": 0.23007143776547817,
+      "saturated_ratio": 0.37365330158321536,
+      "color_bucket_count": 551,
+      "luminance_stddev": 56.696237645160515
     }
   },
-  "generated_at": "2026-06-28T14:40:46.150Z",
-  "baseline_reason": "P2c: composed building massing (podium/shaft/setback/crown/antenna) + concrete facade variety + gradient sky; intentional photoreal silhouette change - rebaselined 2026-06-28"
+  "generated_at": "2026-06-28T15:45:06.317Z",
+  "baseline_reason": "P3: faithful \uac15\ub0a8\uc5ed skyline (\uc11c\ucd08 \uc0bc\uc131\ud0c0\uc6b4 SW 203m peak, GT Tower W, Meritz SE, commercial corners w/ LED billboards, Teheran recession E); intentional - rebaselined 2026-06-29"
 }

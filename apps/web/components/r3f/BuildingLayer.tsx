@@ -32,6 +32,9 @@ import {
   BackSide,
   BoxGeometry,
   BufferGeometry,
+  Color,
+  Float32BufferAttribute,
+  MeshBasicMaterial,
   MeshPhysicalMaterial,
   MeshStandardMaterial,
   RepeatWrapping,
@@ -39,6 +42,7 @@ import {
   SphereGeometry,
   SRGBColorSpace,
   type BufferAttribute,
+  type Material,
   type Texture
 } from "three";
 import { mergeGeometries } from "three/examples/jsm/utils/BufferGeometryUtils.js";
@@ -46,7 +50,7 @@ import { mergeGeometries } from "three/examples/jsm/utils/BufferGeometryUtils.js
 import {
   BUILDING_FOOTPRINTS,
   type BuildingFootprint,
-  type BuildingType
+  type BuildingForm
 } from "./buildingFootprints";
 import type { Stage6QualityPreset, Stage6TimeOfDay } from "./stage6Quality";
 
@@ -129,7 +133,8 @@ export type VolumeGroup =
   | "glass2"
   | "concrete"
   | "dark"
-  | "far";
+  | "far"
+  | "billboard";
 
 export type BuildingVolumeSpec = {
   group: VolumeGroup;
@@ -139,32 +144,95 @@ export type BuildingVolumeSpec = {
   center: [number, number, number];
   /** Metres per facade tile for UV baking (glass/concrete groups only). */
   metersPerTile: number;
+  /** LED signage colour (billboard group only). */
+  ledColor?: string;
 };
 
 const GLASS_GROUPS: VolumeGroup[] = ["glass0", "glass1", "glass2"];
 
-function isGlassType(type: BuildingType): boolean {
-  return type === "glass-tower" || type === "glass-high-rise";
+// Bright Korean-LED signage palette for billboard frontages (deterministic pick).
+const LED_COLORS = [
+  "#ff3b5c", // red
+  "#19d3ff", // cyan
+  "#ff7a1a", // amber
+  "#ff36c8", // magenta
+  "#9aff3a", // green
+  "#ffd54a", // warm white-yellow
+  "#ffffff" // white
+] as const;
+
+/**
+ * LED billboard panels on a mid-rise commercial frontage facing the
+ * intersection. Placed flush on the building's intersection-facing face(s)
+ * (the dominant approach axis; both faces for corner blocks). Returned as thin
+ * boxes so they merge into the single emissive billboard group (1 draw call).
+ */
+function buildBillboards(footprint: BuildingFootprint): BuildingVolumeSpec[] {
+  const { id, size, position } = footprint;
+  const [w, h, d] = size;
+  const [px, , pz] = position;
+  const hash = hashId(id);
+
+  const bandH = Math.min(18, Math.max(6, h * 0.34));
+  const bandY = h * 0.46;
+  const isCorner = Math.abs(px) < 58 && Math.abs(pz) < 58;
+  const panels: BuildingVolumeSpec[] = [];
+
+  const ledFor = (salt: number) =>
+    LED_COLORS[(hash + salt) % LED_COLORS.length];
+
+  // X-facing panel (faces ±x toward the intersection).
+  const wantX = isCorner || Math.abs(px) >= Math.abs(pz);
+  if (wantX) {
+    const sign = px >= 0 ? -1 : 1; // toward origin
+    panels.push({
+      group: "billboard",
+      size: [0.5, bandH, d * 0.8],
+      center: [px + sign * (w / 2 + 0.3), bandY, pz],
+      metersPerTile: 1,
+      ledColor: ledFor(0)
+    });
+  }
+  // Z-facing panel (faces ±z toward the intersection).
+  const wantZ = isCorner || Math.abs(pz) > Math.abs(px);
+  if (wantZ) {
+    const sign = pz >= 0 ? -1 : 1; // toward origin
+    panels.push({
+      group: "billboard",
+      size: [w * 0.8, bandH, 0.5],
+      center: [px, bandY, pz + sign * (d / 2 + 0.3)],
+      metersPerTile: 1,
+      ledColor: ledFor(3)
+    });
+  }
+
+  return panels;
 }
 
 /**
- * Compose a building into stacked/inset sub-volumes. Deterministic by id hash —
- * no Math.random. Sub-volumes stay within the footprint's horizontal envelope
- * (podium = full footprint; shaft/setback inset), so the safe-zone guarantee
- * from buildingFootprints holds. Crown/antenna may extend ABOVE the footprint
- * height for silhouette variety (vertical only).
+ * Compose a building into stacked/inset sub-volumes by FORM. Deterministic by id
+ * hash — no Math.random. Sub-volumes stay within the footprint's horizontal
+ * envelope (podium = full footprint; shaft/setback inset), so the safe-zone
+ * guarantee from buildingFootprints holds. Crown/antenna may extend ABOVE the
+ * footprint height for silhouette variety (vertical only).
+ *
+ *   glassTower        → podium + slim inset shaft + optional setback + dark crown
+ *                       + antenna on the tallest/selected towers (glass facade).
+ *   midriseCommercial → podium + broad concrete shaft + dark parapet + LED
+ *                       billboard panels on the intersection frontage.
+ *   distant           → a single cheap far-massing box (horizon silhouette).
  */
 export function composeBuildingVolumes(
   footprint: BuildingFootprint
 ): BuildingVolumeSpec[] {
-  const { id, type, size, position } = footprint;
+  const { id, form, size, position } = footprint;
   const [w, h, d] = size;
   const [px, , pz] = position;
   const hash = hashId(id);
   const glassGroup = GLASS_GROUPS[hash % 3];
 
   // Distant ring: a single simple far-massing box (kept cheap, low detail).
-  if (id.startsWith("bg-")) {
+  if (form === "distant") {
     return [
       {
         group: "far",
@@ -176,7 +244,7 @@ export function composeBuildingVolumes(
   }
 
   const volumes: BuildingVolumeSpec[] = [];
-  const glass = isGlassType(type);
+  const glass = form === "glassTower";
   const facadeGroup: VolumeGroup = glass ? glassGroup : "concrete";
   const tile = glass ? FACADE_METERS_PER_TILE : CONCRETE_METERS_PER_TILE;
 
@@ -189,14 +257,13 @@ export function composeBuildingVolumes(
     metersPerTile: tile
   });
 
-  // Optional setback upper section for taller buildings (varies the silhouette).
-  const wantSetback =
-    (type === "glass-tower" && hash % 2 === 0) ||
-    (type === "glass-high-rise" && h > 60 && hash % 3 === 0);
+  // Optional setback upper section for taller glass towers (varies silhouette).
+  const wantSetback = glass && h > 110 && hash % 2 === 0;
   const setbackH = wantSetback ? h * 0.22 : 0;
 
-  // Main shaft (inset above the podium). Towers are slimmer for a slender read.
-  const shaftInset = type === "glass-tower" ? 0.9 : glass ? 0.95 : 0.99;
+  // Main shaft (inset above the podium). Towers are slimmer for a slender read;
+  // mid-rise commercial blocks stay broad.
+  const shaftInset = glass ? 0.9 : 0.99;
   const shaftW = w * shaftInset;
   const shaftD = d * shaftInset;
   const shaftH = Math.max(2, h - podiumH - setbackH);
@@ -236,8 +303,8 @@ export function composeBuildingVolumes(
       metersPerTile: tile
     });
 
-    // Slender antenna mast on a subset of towers.
-    if (type === "glass-tower" && hash % 3 === 0) {
+    // Slender antenna mast on the tallest towers + a selected subset.
+    if (h > 180 || hash % 3 === 0) {
       const antH = Math.max(6, h * 0.08);
       volumes.push({
         group: "dark",
@@ -247,7 +314,7 @@ export function composeBuildingVolumes(
       });
     }
   } else {
-    // Mid/low-rise: thin dark parapet cap.
+    // Mid-rise commercial: thin dark parapet cap + LED billboard frontage.
     const parapetH = 1.2;
     volumes.push({
       group: "dark",
@@ -255,6 +322,9 @@ export function composeBuildingVolumes(
       center: [px, topY + parapetH / 2, pz],
       metersPerTile: tile
     });
+    if (footprint.billboards) {
+      volumes.push(...buildBillboards(footprint));
+    }
   }
 
   return volumes;
@@ -350,6 +420,31 @@ function buildPlainBox(
   return geo;
 }
 
+/**
+ * Billboard panel box with a flat per-vertex LED colour, so the whole signage
+ * group merges into one vertex-coloured geometry (1 unlit draw call) while still
+ * showing varied colours. UV attribute is kept so all billboard geometries share
+ * the same attribute set for merging.
+ */
+function buildBillboardBox(
+  size: [number, number, number],
+  center: [number, number, number],
+  ledColor: string
+): BufferGeometry {
+  const geo = new BoxGeometry(size[0], size[1], size[2]);
+  geo.translate(center[0], center[1], center[2]);
+  const c = new Color(ledColor);
+  const count = geo.attributes.position.count;
+  const colors = new Float32Array(count * 3);
+  for (let i = 0; i < count; i += 1) {
+    colors[i * 3] = c.r;
+    colors[i * 3 + 1] = c.g;
+    colors[i * 3 + 2] = c.b;
+  }
+  geo.setAttribute("color", new Float32BufferAttribute(colors, 3));
+  return geo;
+}
+
 // ── Public API ────────────────────────────────────────────────────────────────
 
 export type BuildingLayerProps = {
@@ -406,7 +501,12 @@ function BuildingVolumeSet({ isNight }: { isNight: boolean }) {
       const hash = hashId(fp.id);
       const offset: [number, number] = [(hash % 7) / 7, ((hash >> 3) % 5) / 5];
       for (const vol of composeBuildingVolumes(fp)) {
-        if (vol.group === "dark" || vol.group === "far") {
+        if (vol.group === "billboard") {
+          push(
+            vol.group,
+            buildBillboardBox(vol.size, vol.center, vol.ledColor ?? "#ffffff")
+          );
+        } else if (vol.group === "dark" || vol.group === "far") {
           push(vol.group, buildPlainBox(vol.size, vol.center));
         } else {
           push(
@@ -444,15 +544,18 @@ function BuildingVolumeSet({ isNight }: { isNight: boolean }) {
 
   return (
     <group name="gangnam-building-massing">
-      {[...merged.entries()].map(([group, geometry]) => (
-        <mesh
-          key={group}
-          geometry={geometry}
-          material={materials[group]}
-          castShadow={group !== "far"}
-          receiveShadow={group !== "far"}
-        />
-      ))}
+      {[...merged.entries()].map(([group, geometry]) => {
+        const lit = group !== "far" && group !== "billboard";
+        return (
+          <mesh
+            key={group}
+            geometry={geometry}
+            material={materials[group]}
+            castShadow={lit}
+            receiveShadow={lit}
+          />
+        );
+      })}
     </group>
   );
 }
@@ -461,11 +564,12 @@ BuildingVolumeSet.displayName = "BuildingVolumeSet";
 
 // Build one material per merge group. Glass tints share the facade texture with
 // different colour multiplies; concrete is a duller small-window variant; dark
-// is the matte podium/crown/antenna material; far is a flat distant-city tone.
+// is the matte podium/crown/antenna material; far is a flat distant-city tone;
+// billboard is an unlit vertex-coloured LED signage material.
 function buildGroupMaterials(
   facadeTex: Texture,
   isNight: boolean
-): Record<VolumeGroup, MeshStandardMaterial | MeshPhysicalMaterial> {
+): Record<VolumeGroup, Material> {
   const glass = (tintIndex: number): MeshPhysicalMaterial => {
     const t = GLASS_TUNING;
     if (isNight) {
@@ -534,13 +638,22 @@ function buildGroupMaterials(
     far.emissiveIntensity = 0.5;
   }
 
+  // LED billboard signage: unlit, full-brightness vertex colours so panels read
+  // as bright signage (day) and bloom-glowing signage (night). Slightly hotter
+  // at night so the bloom pass catches it.
+  const billboard = new MeshBasicMaterial({
+    vertexColors: true,
+    toneMapped: !isNight
+  });
+
   return {
     glass0: glass(0),
     glass1: glass(1),
     glass2: glass(2),
     concrete: concrete(),
     dark,
-    far
+    far,
+    billboard
   };
 }
 
