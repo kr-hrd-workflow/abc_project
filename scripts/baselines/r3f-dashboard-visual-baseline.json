@@ -6,15 +6,17 @@
       "width": 914,
       "height": 680,
       "sampled_pixels": 621520,
-      "non_background_ratio": 0.9343158707684387,
-      "bright_ratio": 0.10980016733170292,
-      "dark_ratio": 0.22592354228343417,
-      "warm_light_ratio": 0.003396511777577552,
-      "cool_light_ratio": 0.0606030377139915,
-      "marking_ratio": 0.18424024971038744,
-      "saturated_ratio": 0.3800183421289741,
-      "color_bucket_count": 1188,
-      "luminance_stddev": 56.63332954527001
+      "non_background_ratio": 0.9859232204916978,
+      "bright_ratio": 0.20484296563264257,
+      "dark_ratio": 0.022139271463508817,
+      "warm_light_ratio": 0.0025872055605612046,
+      "cool_light_ratio": 0.29660348822242244,
+      "marking_ratio": 0.35812685030248426,
+      "saturated_ratio": 0.4574832668297078,
+      "color_bucket_count": 416,
+      "luminance_stddev": 53.784899035133286
     }
-  }
+  },
+  "generated_at": "2026-06-28T13:57:34.792Z",
+  "baseline_reason": "P2: 3D photoreal buildings + daytime sky replaces AI scene-plate; intentional visual change - rebaselined 2026-06-28"
 }

@@ -3,7 +3,7 @@
 import { Suspense } from "react";
 
 import type { SceneSnapshot } from "./buildSceneSnapshot";
-import { BackgroundPlateLayer } from "./BackgroundPlateLayer";
+import { BuildingLayer } from "./BuildingLayer";
 import { CameraRig } from "./CameraRig";
 import { DynamicPedestrianLayer } from "./DynamicPedestrianLayer";
 import { DynamicVehicleLayer } from "./DynamicVehicleLayer";
@@ -58,12 +58,10 @@ export function SimulationScene({
   // default high operator view.
   const activeViewpoint = resolveViewpoint(viewpoint);
   const cameraPreset = activeViewpoint === "cctv" ? "operatorCctv" : undefined;
-  const plateAngleId =
-    activeViewpoint === "cctv" ? "operator-cctv" : "operator-wide";
 
-  // Guide mode (?guide=1): suppress plate, vehicles, PostFX; render flat
-  // structural guide. Camera stays aligned with the plate camera angles via
-  // the same viewpoint/cameraPreset path so the guide matches the plate frame.
+  // Guide mode (?guide=1): suppress buildings, vehicles, PostFX; render flat
+  // structural guide. Camera stays aligned with the 3D scene camera via the
+  // same viewpoint/cameraPreset path so the guide matches the live scene frame.
   const isGuide = resolveGuideMode();
 
   if (isGuide) {
@@ -89,7 +87,7 @@ export function SimulationScene({
         weather={weather}
         timeOfDay={timeOfDay}
       />
-      <BackgroundPlateBoundary timeOfDay={timeOfDay} angleId={plateAngleId} />
+      <BuildingLayerBoundary timeOfDay={timeOfDay} qualityPreset={qualityPreset} />
       <StaticRoadLayerWithDetails isNight={isNight} qualityPreset={qualityPreset} />
       <DynamicVehicleLayerWithWeather
         isNight={isNight}
@@ -153,24 +151,25 @@ function SceneFinishing({
 
 SceneFinishing.displayName = "ScenePostFX";
 
-// Mounts the night background plate behind a Suspense boundary so a missing or
-// still-loading plate degrades to the procedural background already present in
-// the scene (BackgroundPlateLayer itself is a no-op for the day path).
-function BackgroundPlateBoundary({
+// P2: 3D photoreal building layer replaces the AI scene-plate as the source of
+// buildings, sky, and horizon.  BackgroundPlateLayer is retained in the repo as
+// a reference asset but is no longer mounted.  True 3D geometry means vehicles
+// are occluded by buildings via the depth buffer (no more depth-only proxy boxes).
+function BuildingLayerBoundary({
   timeOfDay,
-  angleId = "operator-wide"
+  qualityPreset
 }: {
   timeOfDay: Stage6TimeOfDay;
-  angleId?: string;
+  qualityPreset: Stage6QualityPreset;
 }) {
   return (
     <Suspense fallback={null}>
-      <BackgroundPlateLayer angleId={angleId} timeOfDay={timeOfDay} />
+      <BuildingLayer timeOfDay={timeOfDay} qualityPreset={qualityPreset} />
     </Suspense>
   );
 }
 
-BackgroundPlateBoundary.displayName = "BackgroundPlateBoundary";
+BuildingLayerBoundary.displayName = "BuildingLayer";
 
 function StaticRoadLayerWithDetails({
   isNight

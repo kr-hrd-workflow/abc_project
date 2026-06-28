@@ -316,7 +316,7 @@ describe("SimulationCanvas Stage 5 telemetry", () => {
     expect(getChildDisplayNames(scene)).toEqual([
       "Stage3CameraRig",
       "SceneEnvironment",   // unified IBL + light rig (day: Sky + LightingRig + WeatherAndAtmosphere; night: neon IBL + lights)
-      "BackgroundPlateBoundary",
+      "BuildingLayer",      // P2: 3D photoreal buildings + sky — replaces AI scene-plate (BackgroundPlateLayer retired)
       "StaticRoadLayer",
       "DynamicVehicleLayer",
       "DynamicPedestrianLayer",
@@ -361,35 +361,37 @@ describe("SimulationCanvas Stage 5 telemetry", () => {
     expect(vehicleChildNames).not.toContain("WheelSprayLayer");
   });
 
-  test("mounts the background plate layer for the night proof view", () => {
+  test("mounts the 3D building layer (P2) for both day and night scenes", () => {
+    // P2: BackgroundPlateLayer is retired; BuildingLayerBoundary (displayName
+    // "BuildingLayer") is now the scene's building + sky provider.
     const sceneSnapshot = buildShadowCountSceneSnapshot({ vehicleCount: 2 });
-    const scene = SimulationScene({ sceneSnapshot, timeOfDay: "night" });
 
-    const boundary = Children.toArray(scene.props.children)
-      .filter((child): child is ReactElement => isValidElement(child))
-      .find((child) => getElementDisplayName(child) === "BackgroundPlateBoundary");
+    for (const tod of ["day", "night"] as const) {
+      const scene = SimulationScene({ sceneSnapshot, timeOfDay: tod });
 
-    expect(boundary).toBeTruthy();
+      const boundary = Children.toArray(scene.props.children)
+        .filter((child): child is ReactElement => isValidElement(child))
+        .find((child) => getElementDisplayName(child) === "BuildingLayer");
 
-    const boundaryElement = boundary as ReactElement<{ timeOfDay?: string }>;
-    const renderBoundary = boundaryElement.type as (
-      props: Record<string, unknown>
-    ) => ReactElement<TestElementProps>;
-    const renderedBoundary = renderBoundary(boundaryElement.props);
+      expect(boundary).toBeTruthy();
 
-    const plate = Children.toArray(renderedBoundary.props.children)
-      .filter((child): child is ReactElement => isValidElement(child))
-      .find((child) => getElementDisplayName(child) === "BackgroundPlateLayer");
+      const boundaryElement = boundary as ReactElement<{ timeOfDay?: string }>;
+      const renderBoundary = boundaryElement.type as (
+        props: Record<string, unknown>
+      ) => ReactElement<TestElementProps>;
+      const renderedBoundary = renderBoundary(boundaryElement.props);
 
-    expect(plate).toBeTruthy();
-    expect(
-      (plate as ReactElement<{ angleId?: string; timeOfDay?: string }>).props
-        .timeOfDay
-    ).toBe("night");
-    expect(
-      (plate as ReactElement<{ angleId?: string; timeOfDay?: string }>).props
-        .angleId
-    ).toBe("operator-wide");
+      // BuildingLayerBoundary wraps BuildingLayer in Suspense; the Suspense
+      // child should be the BuildingLayer component.
+      const buildingLayer = Children.toArray(renderedBoundary.props.children)
+        .filter((child): child is ReactElement => isValidElement(child))
+        .find((child) => getElementDisplayName(child) === "BuildingLayer");
+
+      expect(buildingLayer).toBeTruthy();
+      expect(
+        (buildingLayer as ReactElement<{ timeOfDay?: string }>).props.timeOfDay
+      ).toBe(tod);
+    }
   });
 
   test("marks context loss in the browser-readable proof object", () => {
