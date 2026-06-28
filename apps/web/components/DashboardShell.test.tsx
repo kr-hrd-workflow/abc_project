@@ -78,6 +78,11 @@ vi.mock("./r3f/WeatherAndAtmosphere", () => ({
 vi.mock("./r3f/RoadSurfaceLayer", () => ({
   RoadSurfaceLayer: () => null
 }));
+// BuildingLayer (P2b) loads facade textures via useTexture (drei hook), which
+// also requires a real R3F Canvas context. Stub it for the same reason.
+vi.mock("./r3f/BuildingLayer", () => ({
+  BuildingLayer: () => null
+}));
 vi.mock("../lib/api", () => dashboardRouteApiMock);
 
 import { DashboardRoute } from "./DashboardRoute";

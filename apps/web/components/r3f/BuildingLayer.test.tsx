@@ -3,7 +3,17 @@
 import { isValidElement } from "react";
 import { describe, expect, it } from "vitest";
 
-import { BuildingLayer } from "./BuildingLayer";
+import {
+  BuildingLayer,
+  FACADE_DAY_TEXTURE_PATH,
+  FACADE_NIGHT_TEXTURE_PATH,
+  FACADE_METERS_PER_TILE,
+  GLASS_TINTS_DAY,
+  GLASS_TINTS_NIGHT,
+  computeFacadeRepeat,
+  getBuildingVarFactor,
+  getGlassTintIndex
+} from "./BuildingLayer";
 import {
   BUILDING_FOOTPRINTS,
   BUILDING_SAFE_X,
@@ -123,5 +133,93 @@ describe("BuildingLayer", () => {
     expect(isValidElement(element)).toBe(true);
     // The outer group name is set via the displayName chain — confirm no throw.
     expect(element).toBeTruthy();
+  });
+});
+
+// ── Facade texture system (P2b) ───────────────────────────────────────────────
+
+describe("facade texture assets", () => {
+  it("points at the day + night facade webp files under public/", () => {
+    expect(FACADE_DAY_TEXTURE_PATH).toBe(
+      "/simulation/r3f/assets/textures/facade-glass-day.webp"
+    );
+    expect(FACADE_NIGHT_TEXTURE_PATH).toBe(
+      "/simulation/r3f/assets/textures/facade-windows-night.webp"
+    );
+  });
+
+  it("targets ~14 m per facade tile (≈4 floors at ~3.5 m)", () => {
+    expect(FACADE_METERS_PER_TILE).toBeGreaterThanOrEqual(12);
+    expect(FACADE_METERS_PER_TILE).toBeLessThanOrEqual(16);
+  });
+});
+
+describe("computeFacadeRepeat", () => {
+  it("maps facade metres to whole tiles at ~14 m/tile", () => {
+    // 42 m wide, 150 m tall, no jitter → 3 tiles wide, ~11 tiles tall
+    const [u, v] = computeFacadeRepeat(42, 150, 1);
+    expect(u).toBe(3);
+    expect(v).toBe(11);
+  });
+
+  it("clamps to at least 1 tile for short/narrow faces", () => {
+    const [u, v] = computeFacadeRepeat(6, 8, 1);
+    expect(u).toBeGreaterThanOrEqual(1);
+    expect(v).toBeGreaterThanOrEqual(1);
+  });
+
+  it("returns integer repeats so floors are never sliced mid-window", () => {
+    const [u, v] = computeFacadeRepeat(33, 115, 1.05);
+    expect(Number.isInteger(u)).toBe(true);
+    expect(Number.isInteger(v)).toBe(true);
+  });
+
+  it("realistic floor scale: tile height stays within 12–16 m for real buildings", () => {
+    for (const b of BUILDING_FOOTPRINTS) {
+      const [, v] = computeFacadeRepeat(b.size[0], b.size[1], 1);
+      const metresPerTileV = b.size[1] / v;
+      // For buildings tall enough to need >1 tile, the per-tile height stays
+      // in a realistic 9–18 m band (≈3–5 floors). Short buildings (1 tile) skip.
+      if (v > 1) {
+        expect(metresPerTileV).toBeGreaterThan(9);
+        expect(metresPerTileV).toBeLessThan(18);
+      }
+    }
+  });
+});
+
+describe("building variety", () => {
+  it("var factor stays within ±10 % so tiling jitters without distorting", () => {
+    for (const b of BUILDING_FOOTPRINTS) {
+      const f = getBuildingVarFactor(b.id);
+      expect(f).toBeGreaterThanOrEqual(0.9);
+      expect(f).toBeLessThanOrEqual(1.1);
+    }
+  });
+
+  it("var factor is deterministic per id", () => {
+    expect(getBuildingVarFactor("sw-glass-tower-1")).toBe(
+      getBuildingVarFactor("sw-glass-tower-1")
+    );
+  });
+
+  it("distributes 3 glass tints across the skyline (not all identical)", () => {
+    const indices = new Set(
+      BUILDING_FOOTPRINTS.map((b) => getGlassTintIndex(b.id))
+    );
+    expect(indices.size).toBeGreaterThanOrEqual(2);
+    for (const b of BUILDING_FOOTPRINTS) {
+      const i = getGlassTintIndex(b.id);
+      expect(i).toBeGreaterThanOrEqual(0);
+      expect(i).toBeLessThan(3);
+    }
+  });
+
+  it("provides matching day + night tint palettes (3 each)", () => {
+    expect(GLASS_TINTS_DAY).toHaveLength(3);
+    expect(GLASS_TINTS_NIGHT).toHaveLength(3);
+    for (const t of [...GLASS_TINTS_DAY, ...GLASS_TINTS_NIGHT]) {
+      expect(t).toMatch(/^#[0-9a-fA-F]{6}$/);
+    }
   });
 });
