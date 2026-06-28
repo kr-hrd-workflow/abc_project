@@ -73,6 +73,11 @@ vi.mock("./r3f/TrafficDensityLayer", async (importActual) => {
 vi.mock("./r3f/WeatherAndAtmosphere", () => ({
   WeatherAndAtmosphere: () => null
 }));
+// RoadSurfaceLayer now uses useTexture (drei hook) which requires an R3F Canvas
+// context. Stub it here so SimulationScene renders without a real WebGL Canvas.
+vi.mock("./r3f/RoadSurfaceLayer", () => ({
+  RoadSurfaceLayer: () => null
+}));
 vi.mock("../lib/api", () => dashboardRouteApiMock);
 
 import { DashboardRoute } from "./DashboardRoute";

@@ -185,7 +185,12 @@ function StaticRoadLayerWithDetails({
   // always sit on metrically-accurate lane lines. The plate continues to supply
   // buildings/skyline; the rendered road sits on top and covers the central road
   // region. Far-end overlap with plate buildings is the lead's follow-up.
-  return <RoadSurfaceLayer isNight={isNight} />;
+  // Wrapped in Suspense because RoadSurfaceLayer uses useTexture (asphalt.webp).
+  return (
+    <Suspense fallback={null}>
+      <RoadSurfaceLayer isNight={isNight} />
+    </Suspense>
+  );
 }
 
 StaticRoadLayerWithDetails.displayName = "StaticRoadLayer";

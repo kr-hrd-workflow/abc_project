@@ -369,11 +369,14 @@ export const STAGE6E_CITY_EDGE_BLOCKS: CityEdgeBlockSpec[] =
 
 export const CROSSWALK_STRIPES: PlanePrimitiveSpec[] = buildCrosswalkStripes();
 
+// Arrow lateral offset: moved from ±LANE_WIDTH_METERS (±3.6 m, the busway
+// outer edge) to ±2.5 lanes (≈ ±9 m, a general through lane) so the arrows
+// sit on carriageway pavement rather than on the central median bus lane.
 export const TURN_ARROW_MARKINGS: TurnArrowMarking[] = [
-  buildVerticalTurnArrow("north-turn-arrow", "north", -LANE_WIDTH_METERS, -34, 1),
-  buildVerticalTurnArrow("south-turn-arrow", "south", LANE_WIDTH_METERS, 34, -1),
-  buildHorizontalTurnArrow("east-turn-arrow", "east", 34, LANE_WIDTH_METERS, -1),
-  buildHorizontalTurnArrow("west-turn-arrow", "west", -34, -LANE_WIDTH_METERS, 1)
+  buildVerticalTurnArrow("north-turn-arrow", "north", -(LANE_WIDTH_METERS * 2.5), -34, 1),
+  buildVerticalTurnArrow("south-turn-arrow", "south", LANE_WIDTH_METERS * 2.5, 34, -1),
+  buildHorizontalTurnArrow("east-turn-arrow", "east", 34, LANE_WIDTH_METERS * 2.5, -1),
+  buildHorizontalTurnArrow("west-turn-arrow", "west", -34, -(LANE_WIDTH_METERS * 2.5), 1)
 ];
 
 // 중앙버스전용차로: red median bus-only lane surfaces on 강남대로 (N/S) only.
