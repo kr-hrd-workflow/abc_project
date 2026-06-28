@@ -597,15 +597,18 @@ function buildVehicles(count) {
   // Only buses ride the median bus lane — every other type stays in the general lanes,
   // so no car/taxi/truck is ever placed on the bus-only median.
   const APPROACHES = {
-    0: { name: "north", laneCount: 5, busLane: 4, side: -1, axis: "ns", along: (s) => -18 - s, heading: 180, speed: 2.4, waitMod: 8 },
-    1: { name: "south", laneCount: 5, busLane: 4, side: 1, axis: "ns", along: (s) => 18 + s, heading: 0, speed: 2.8, waitMod: 7 },
-    2: { name: "east", laneCount: 5, busLane: -1, side: -1, axis: "ew", along: (s) => 18 + s, heading: 270, speed: 3.1, waitMod: 6 },
-    3: { name: "west", laneCount: 4, busLane: -1, side: 1, axis: "ew", along: (s) => -18 - s, heading: 90, speed: 2.6, waitMod: 9 }
+    0: { name: "north", laneCount: 5, busLane: 4, side: -1, axis: "ns", along: (s) => -18 - s, heading: 180, speed: 2.4, waitMod: 8, corridorLen: 140 },
+    1: { name: "south", laneCount: 5, busLane: 4, side: 1, axis: "ns", along: (s) => 18 + s, heading: 0, speed: 2.8, waitMod: 7, corridorLen: 140 },
+    2: { name: "east", laneCount: 5, busLane: -1, side: -1, axis: "ew", along: (s) => 18 + s, heading: 270, speed: 3.1, waitMod: 6, corridorLen: 120 },
+    3: { name: "west", laneCount: 4, busLane: -1, side: 1, axis: "ew", along: (s) => -18 - s, heading: 90, speed: 2.6, waitMod: 9, corridorLen: 140 }
   };
 
   return Array.from({ length: count }, (_, index) => {
     const a = APPROACHES[index % 4];
-    const spacing = 7 + Math.floor(index / 4) * 6;
+    // Keep every fixture vehicle WITHIN its approach corridor (along-distance from the
+    // box edge ≤ corridorLen − ~19 m) so none float past the road end over the plate's
+    // buildings. Distribute the ~24 vehicles/approach evenly along the usable length.
+    const spacing = 7 + Math.floor(index / 4) * ((a.corridorLen - 26) / 23);
     const vehicleType = index === 0 ? "emergency" : types[index % types.length];
     const isBus = vehicleType === "bus";
     const generalLanes = Array.from({ length: a.laneCount }, (_, i) => i).filter(
