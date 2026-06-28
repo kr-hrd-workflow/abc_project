@@ -7,12 +7,10 @@ import { BackgroundPlateLayer } from "./BackgroundPlateLayer";
 import { CameraRig } from "./CameraRig";
 import { DynamicPedestrianLayer } from "./DynamicPedestrianLayer";
 import { DynamicVehicleLayer } from "./DynamicVehicleLayer";
-import { EnvironmentLayer } from "./EnvironmentLayer";
-import { NightExposureSync, NightSeamlessPostFX } from "./NightSeamlessPostFX";
-import { NightSeamlessLighting } from "./NightSeamlessLighting";
 import { NightVehicleTreatment } from "./NightVehicleTreatment";
-import { GANGNAM_NIGHT_GRADE } from "./seamlessGrade";
 import { RoadSurfaceLayer } from "./RoadSurfaceLayer";
+import { SceneEnvironment } from "./SceneEnvironment";
+import { ScenePostFX } from "./ScenePostFX";
 import { SignalLayer } from "./SignalLayer";
 import { StructuralGuideLayer } from "./StructuralGuideLayer";
 import { WheelSprayLayer } from "./WheelSprayLayer";
@@ -102,15 +100,15 @@ export function SimulationScene({
       />
       <DynamicPedestrianLayer sceneSnapshot={sceneSnapshot} />
       <SignalLayer signals={sceneSnapshot.signals} />
-      <SceneFinishing isNight={isNight} />
+      <SceneFinishing isNight={isNight} qualityPreset={qualityPreset} />
     </group>
   );
 }
 
-// Fresh night lighting (NightSeamlessLighting) replaces EnvironmentLayer's night
-// preset at night per the reuse policy. The day path keeps EnvironmentLayer.
+// SceneEnvironment unifies day IBL + Sky + LightingRig + WeatherAndAtmosphere
+// (day) and night IBL + neon lights (night) into one timeOfDay-aware component.
+// Replaces the former split: EnvironmentLayer (day) vs NightSeamlessLighting (night).
 function SceneLighting({
-  isNight,
   sceneSnapshot,
   qualityPreset,
   weather,
@@ -122,39 +120,38 @@ function SceneLighting({
   weather: Stage6WeatherPresetName;
   timeOfDay: Stage6TimeOfDay;
 }) {
-  if (isNight) {
-    return <NightSeamlessLighting />;
-  }
-
   return (
-    <EnvironmentLayer
+    <SceneEnvironment
+      timeOfDay={timeOfDay}
       signals={sceneSnapshot.signals}
       qualityPreset={qualityPreset}
       weather={weather}
-      timeOfDay={timeOfDay}
     />
   );
 }
 
-SceneLighting.displayName = "EnvironmentLayer";
+SceneLighting.displayName = "SceneEnvironment";
 
-// Fresh night image formation: ACES tonemap + bloom from the shared grade, plus
-// the renderer-exposure sync. Mounted only at night; the day path runs the
-// legacy Stage6PostFX at the Canvas level instead.
-function SceneFinishing({ isNight }: { isNight: boolean }) {
-  if (!isNight) {
-    return null;
-  }
-
+// ScenePostFX — unified EffectComposer for day AND night. Stage6PostFX (day) has
+// been removed from SimulationCanvas so this is now the only EffectComposer.
+// Night uses Bloom-only (no ACES — plate is display-referred). Day uses the full
+// pipeline (ToneMapping ACES + SSAO + Bloom + Noise + Vignette).
+function SceneFinishing({
+  isNight,
+  qualityPreset
+}: {
+  isNight: boolean;
+  qualityPreset: Stage6QualityPreset;
+}) {
   return (
-    <>
-      <NightExposureSync exposure={GANGNAM_NIGHT_GRADE.toneMappingExposure} />
-      <NightSeamlessPostFX />
-    </>
+    <ScenePostFX
+      timeOfDay={isNight ? "night" : "day"}
+      qualityPreset={qualityPreset}
+    />
   );
 }
 
-SceneFinishing.displayName = "SceneFinishing";
+SceneFinishing.displayName = "ScenePostFX";
 
 // Mounts the night background plate behind a Suspense boundary so a missing or
 // still-loading plate degrades to the procedural background already present in

@@ -315,38 +315,37 @@ describe("SimulationCanvas Stage 5 telemetry", () => {
 
     expect(getChildDisplayNames(scene)).toEqual([
       "Stage3CameraRig",
-      "EnvironmentLayer",
+      "SceneEnvironment",   // unified IBL + light rig (day: Sky + LightingRig + WeatherAndAtmosphere; night: neon IBL + lights)
       "BackgroundPlateBoundary",
       "StaticRoadLayer",
       "DynamicVehicleLayer",
       "DynamicPedestrianLayer",
       "SignalLayer",
-      "SceneFinishing"
+      "ScenePostFX"         // single unified EffectComposer (day: ACES pipeline; night: Bloom-only)
     ]);
   });
 
-  test("mounts the fresh night seamless visual layer at night, not the legacy look", () => {
+  test("mounts the unified SceneEnvironment + ScenePostFX at night", () => {
     const sceneSnapshot = buildShadowCountSceneSnapshot({ vehicleCount: 2 });
     const nightScene = SimulationScene({ sceneSnapshot, timeOfDay: "night" });
 
-    // The fresh night lighting replaces EnvironmentLayer's night preset: the
-    // lighting slot resolves to NightSeamlessLighting (rendered via SceneLighting).
-    const lighting = findChildByDisplayName(nightScene, "EnvironmentLayer");
+    // SceneLighting (displayName "SceneEnvironment") is the unified lighting slot
+    // for day and night; it delegates to SceneEnvironment which then chooses
+    // SceneNightEnvironment or SceneDayEnvironment internally.
+    const lighting = findChildByDisplayName(nightScene, "SceneEnvironment");
     expect(lighting).toBeTruthy();
+    // SceneLighting renders SceneEnvironment (the unified component).
     const renderedLighting = renderElement(lighting as ReactElement);
-    expect(getElementDisplayName(renderedLighting)).toBe("NightSeamlessLighting");
+    expect(getElementDisplayName(renderedLighting)).toBe("SceneEnvironment");
 
-    // Fresh night finishing (ACES tonemap + bloom + exposure sync) mounts.
-    const finishing = findChildByDisplayName(nightScene, "SceneFinishing");
+    // ScenePostFX (via SceneFinishing wrapper, displayName "ScenePostFX") is
+    // the single EffectComposer for day AND night (day: ACES pipeline; night:
+    // Bloom-only + NightExposureSync). In jsdom the component guards against
+    // mounting EffectComposer without a Canvas context — the WebGL pipeline is
+    // validated via the verify harness (headless Chromium).
+    const finishing = findChildByDisplayName(nightScene, "ScenePostFX");
     expect(finishing).toBeTruthy();
-    const renderedFinishing = renderElement(finishing as ReactElement);
-    const finishingNames = Children.toArray(
-      (renderedFinishing as ReactElement<TestElementProps>).props.children
-    )
-      .filter((child): child is ReactElement => isValidElement(child))
-      .map(getElementDisplayName);
-    expect(finishingNames).toContain("NightSeamlessPostFX");
-    expect(finishingNames).toContain("NightExposureSync");
+    expect(getElementDisplayName(finishing as ReactElement)).toBe("ScenePostFX");
 
     // Fresh night vehicle treatment wraps the SUMO-truth vehicle layer.
     const vehicles = findChildByDisplayName(nightScene, "DynamicVehicleLayer");

@@ -20,7 +20,6 @@ import {
   publishR3FTelemetryEvent
 } from "../../lib/r3fTelemetry";
 import { STAGE5_SHADOWS_ENABLED } from "./shadowPolicy";
-import { Stage6PostFX } from "./Stage6PostFX";
 import { SimulationScene } from "./SimulationScene";
 import { STAGE5_CAMERA, getStage5CameraForAspect } from "./roadGeometry";
 import type {
@@ -135,15 +134,14 @@ export function SimulationCanvas({
     >
       {renderScene ? <Stage5CanvasProofBridge /> : null}
       {renderScene ? (
+        // ScenePostFX (mounted inside SimulationScene) is now the single
+        // EffectComposer for both day and night. No additional composer here.
         <SimulationScene
           sceneSnapshot={sceneSnapshot}
           qualityPreset={qualityPreset}
           weather={weather}
           timeOfDay={timeOfDay}
         />
-      ) : null}
-      {renderScene && timeOfDay !== "night" ? (
-        <Stage6PostFX qualityPreset={qualityPreset.name} />
       ) : null}
     </Canvas>
   );

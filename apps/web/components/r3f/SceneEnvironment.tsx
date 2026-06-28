@@ -1,0 +1,274 @@
+"use client";
+
+import { memo, useEffect, useMemo } from "react";
+import { useThree } from "@react-three/fiber";
+import { PMREMGenerator, type Scene, type WebGLRenderer } from "three";
+import { RoomEnvironment } from "three/examples/jsm/environments/RoomEnvironment.js";
+
+import { GANGNAM_NIGHT_GRADE } from "./seamlessGrade";
+import { getStage6EnvironmentPreset } from "./EnvironmentLayer";
+import { LightingRig } from "./LightingRig";
+import { WeatherAndAtmosphere } from "./WeatherAndAtmosphere";
+import type { SceneSnapshot } from "./buildSceneSnapshot";
+import type {
+  Stage6QualityPreset,
+  Stage6TimeOfDay,
+  Stage6WeatherPresetName
+} from "./stage6Quality";
+import { getStage6QualityPreset } from "./stage6Quality";
+
+// Day IBL settings — brighter/sharper than the legacy rain preset for outdoor.
+const DAY_IBL_BLUR = 0.014;
+const DAY_IBL_INTENSITY = 0.82;
+
+// Night IBL settings — dark, neon-warm, same as NightSeamlessLighting.
+const NIGHT_IBL_BLUR = 0.06;
+
+type NightEnvConfig = {
+  environmentIntensity: number;
+  neonColor: string;
+  groundBounceColor: string;
+  ambientIntensity: number;
+  keyIntensity: number;
+};
+
+function resolveNightEnvConfig(): NightEnvConfig {
+  return {
+    environmentIntensity: GANGNAM_NIGHT_GRADE.environmentIntensity,
+    neonColor: GANGNAM_NIGHT_GRADE.neonColor,
+    groundBounceColor: "#3a1f12",
+    ambientIntensity: GANGNAM_NIGHT_GRADE.environmentIntensity * 0.6,
+    keyIntensity: GANGNAM_NIGHT_GRADE.environmentIntensity * 1.4
+  };
+}
+
+// ---------------------------------------------------------------------------
+// Public API
+// ---------------------------------------------------------------------------
+
+export type SceneEnvironmentProps = {
+  timeOfDay?: Stage6TimeOfDay;
+  signals?: SceneSnapshot["signals"];
+  qualityPreset?: Stage6QualityPreset;
+  weather?: Stage6WeatherPresetName;
+};
+
+function SceneEnvironmentComponent({
+  timeOfDay = "day",
+  signals = [],
+  qualityPreset = getStage6QualityPreset("high"),
+  weather = "rain"
+}: SceneEnvironmentProps) {
+  if (timeOfDay === "night") {
+    return <SceneNightEnvironment />;
+  }
+
+  return (
+    <SceneDayEnvironment
+      signals={signals}
+      qualityPreset={qualityPreset}
+      weather={weather}
+    />
+  );
+}
+
+// Not memo-wrapped: parent (SimulationScene/SceneLighting) rebuilds on any
+// scene-state change, so memo would add overhead without rerender savings.
+export function SceneEnvironment(props: SceneEnvironmentProps) {
+  return SceneEnvironmentComponent(props);
+}
+SceneEnvironment.displayName = "SceneEnvironment";
+
+// ---------------------------------------------------------------------------
+// Day path
+// ---------------------------------------------------------------------------
+
+function SceneDayEnvironment({
+  signals,
+  qualityPreset,
+  weather
+}: {
+  signals: SceneSnapshot["signals"];
+  qualityPreset: Stage6QualityPreset;
+  weather: Stage6WeatherPresetName;
+}) {
+  const lightingPreset = getStage6EnvironmentPreset({ weather, timeOfDay: "day" });
+
+  return (
+    <group
+      name="scene-day-environment"
+      userData={{ iblSource: "procedural-room-outdoor", timeOfDay: "day" }}
+    >
+      {/* Brighter outdoor IBL via RoomEnvironment PMREM — headless-safe, no CDN fetch.
+          Uses a lower blur than the cloudy/rain presets for sharper outdoor reflections. */}
+      <DayIBL />
+      {/* LightingRig provides hemisphere + ambient + directional key + streetlights +
+          signal accents + vehicle emissive accents. No extra lights added here to
+          avoid doubling the rig and overexposing the scene. */}
+      <LightingRig preset={lightingPreset} signals={signals} />
+      {/* Fog, haze planes, rain particles, wet-road reflections */}
+      <WeatherAndAtmosphere
+        qualityPreset={qualityPreset}
+        weather={weather}
+        signals={signals}
+      />
+    </group>
+  );
+}
+
+SceneDayEnvironment.displayName = "SceneDayEnvironment";
+
+// ---------------------------------------------------------------------------
+// Night path (mirrors NightSeamlessLighting)
+// ---------------------------------------------------------------------------
+
+function SceneNightEnvironmentComponent() {
+  const config = useMemo(() => resolveNightEnvConfig(), []);
+
+  return (
+    <group
+      name="scene-night-environment"
+      userData={{
+        iblSource: "procedural-room-neon",
+        timeOfDay: "night",
+        neonColor: config.neonColor
+      }}
+    >
+      <NightNeonIBL config={config} />
+      {/* Neon-biased hemisphere: sky takes dominant neon cast,
+          ground takes warm sodium bounce so vehicle undersides read. */}
+      <hemisphereLight
+        name="scene-neon-sky-fill"
+        color={config.neonColor}
+        groundColor={config.groundBounceColor}
+        intensity={config.ambientIntensity}
+      />
+      {/* Soft fill so emissive headlights still read against graded shadows */}
+      <ambientLight
+        name="scene-night-ambient"
+        color={config.neonColor}
+        intensity={config.ambientIntensity * 0.4}
+      />
+      {/* High, cool key approximating spill from the glass towers in the plate */}
+      <directionalLight
+        name="scene-night-key"
+        color={config.neonColor}
+        intensity={config.keyIntensity}
+        position={[18, 42, -8]}
+      />
+    </group>
+  );
+}
+
+const SceneNightEnvironment = memo(SceneNightEnvironmentComponent);
+SceneNightEnvironment.displayName = "SceneNightEnvironment";
+
+// ---------------------------------------------------------------------------
+// IBL helpers (headless-safe: guard against jsdom and non-GL renderers)
+// ---------------------------------------------------------------------------
+
+function DayIBL() {
+  const gl = useThree((state) => state.gl);
+  const scene = useThree((state) => state.scene);
+  const invalidate = useThree((state) => state.invalidate);
+
+  useEffect(() => {
+    if (isJsdomRuntime() || !canUseRenderer(gl)) {
+      return;
+    }
+
+    const pmrem = new PMREMGenerator(gl);
+    const envScene = new RoomEnvironment();
+    const envTexture = pmrem.fromScene(envScene, DAY_IBL_BLUR).texture;
+
+    const previousEnvironment = scene.environment;
+    const previousIntensity = readSceneEnvironmentIntensity(scene);
+
+    scene.environment = envTexture;
+    writeSceneEnvironmentIntensity(scene, DAY_IBL_INTENSITY);
+    invalidate();
+
+    return () => {
+      if (scene.environment === envTexture) {
+        scene.environment = previousEnvironment;
+        writeSceneEnvironmentIntensity(scene, previousIntensity);
+      }
+      envTexture.dispose();
+      pmrem.dispose();
+      invalidate();
+    };
+  }, [gl, invalidate, scene]);
+
+  return null;
+}
+
+DayIBL.displayName = "DayIBL";
+
+function NightNeonIBL({ config }: { config: NightEnvConfig }) {
+  const gl = useThree((state) => state.gl);
+  const scene = useThree((state) => state.scene);
+  const invalidate = useThree((state) => state.invalidate);
+
+  useEffect(() => {
+    if (isJsdomRuntime() || !canUseRenderer(gl)) {
+      return;
+    }
+
+    const pmrem = new PMREMGenerator(gl);
+    const envScene = new RoomEnvironment();
+    const envTexture = pmrem.fromScene(envScene, NIGHT_IBL_BLUR).texture;
+
+    const previousEnvironment = scene.environment;
+    const previousIntensity = readSceneEnvironmentIntensity(scene);
+
+    scene.environment = envTexture;
+    writeSceneEnvironmentIntensity(scene, config.environmentIntensity);
+    // Background is owned by BackgroundPlateLayer (the photoreal night plate).
+    // Never clobber it — IBL only drives reflections, not the visible backdrop.
+    invalidate();
+
+    return () => {
+      if (scene.environment === envTexture) {
+        scene.environment = previousEnvironment;
+        writeSceneEnvironmentIntensity(scene, previousIntensity);
+      }
+      envTexture.dispose();
+      pmrem.dispose();
+      invalidate();
+    };
+  }, [config.environmentIntensity, gl, invalidate, scene]);
+
+  return null;
+}
+
+NightNeonIBL.displayName = "NightNeonIBL";
+
+// ---------------------------------------------------------------------------
+// Utilities
+// ---------------------------------------------------------------------------
+
+function canUseRenderer(renderer: unknown): renderer is WebGLRenderer {
+  return (
+    typeof renderer === "object" &&
+    renderer !== null &&
+    "getRenderTarget" in renderer &&
+    "setRenderTarget" in renderer
+  );
+}
+
+function isJsdomRuntime() {
+  return (
+    typeof window !== "undefined" && /jsdom/i.test(window.navigator.userAgent)
+  );
+}
+
+function readSceneEnvironmentIntensity(scene: Scene) {
+  return (
+    (scene as Scene & { environmentIntensity?: number }).environmentIntensity ?? 1
+  );
+}
+
+function writeSceneEnvironmentIntensity(scene: Scene, intensity: number) {
+  (scene as Scene & { environmentIntensity?: number }).environmentIntensity =
+    intensity;
+}
