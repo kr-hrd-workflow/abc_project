@@ -152,13 +152,13 @@ const GLASS_GROUPS: VolumeGroup[] = ["glass0", "glass1", "glass2"];
 
 // Bright Korean-LED signage palette for billboard frontages (deterministic pick).
 const LED_COLORS = [
-  "#ff3b5c", // red
-  "#19d3ff", // cyan
-  "#ff7a1a", // amber
-  "#ff36c8", // magenta
-  "#9aff3a", // green
-  "#ffd54a", // warm white-yellow
-  "#ffffff" // white
+  "#e8455f", // red
+  "#33c4e6", // cyan
+  "#e8851f", // amber
+  "#d94bb0", // magenta
+  "#8fd94a", // green
+  "#e6c24a", // warm white-yellow
+  "#cdd6de" // soft white (not blown-out, so it reads as signage not a blank panel)
 ] as const;
 
 /**
@@ -551,7 +551,10 @@ function BuildingVolumeSet({ isNight }: { isNight: boolean }) {
             key={group}
             geometry={geometry}
             material={materials[group]}
-            castShadow={lit}
+            // Buildings no longer cast shadows: from the high traffic-monitoring
+            // camera, massing shadows add little but cost a shadow-map pass per
+            // merge group. They still receive vehicle/road shadows.
+            castShadow={false}
             receiveShadow={lit}
           />
         );

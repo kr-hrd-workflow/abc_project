@@ -39,9 +39,7 @@ import { describe, expect, test } from "vitest";
 import {
   APPROACH_CORRIDORS,
   CROSSWALK_STRIPES,
-  LANE_DIVIDER_MARKINGS,
-  MEDIAN_BUS_LANE_MARKINGS,
-  TURN_ARROW_MARKINGS
+  LANE_ARROW_DECALS
 } from "./roadGeometry";
 import { RoadSurfaceLayer } from "./RoadSurfaceLayer";
 
@@ -114,36 +112,32 @@ describe("RoadSurfaceLayer", () => {
     }
   });
 
-  test("renders all bus lane markings with the muted terracotta day colour", () => {
+  test("renders the merged bus-lane marking with the muted terracotta day colour", () => {
     const el = RoadSurfaceLayer({ isNight: false }) as ReactElement<TestProps>;
     const all = collectAllElements(el);
 
+    // Markings are merged into ONE geometry per type (perf), so there is a
+    // single bus-lane material rather than one per stripe.
     const busMatEls = all
       .filter((e) => getTypeName(e) === "meshBasicMaterial")
       .filter((e) => e.props.color === "#8f4034");
 
-    expect(busMatEls).toHaveLength(MEDIAN_BUS_LANE_MARKINGS.length);
-    expect(busMatEls.length).toBeGreaterThan(0);
+    expect(busMatEls).toHaveLength(1);
   });
 
-  test("renders all lane divider markings with muted day colour", () => {
+  test("renders one merged lane-divider mesh with muted transparent day colour", () => {
     const el = RoadSurfaceLayer({ isNight: false }) as ReactElement<TestProps>;
     const all = collectAllElements(el);
 
-    const dividerMats = all
+    // Lane dividers (transparent) vs arrows (opaque) share the same day colour;
+    // both are now single merged meshes.
+    const laneDividerMats = all
       .filter((e) => getTypeName(e) === "meshBasicMaterial")
-      .filter((e) => e.props.color === "#d7d5cc");
-
-    // Lane dividers and arrows share the same day colour; filter by opacity
-    // to isolate dividers (transparent 0.9) from arrows (no transparency prop).
-    const laneDividerMats = dividerMats.filter(
-      (e) => e.props.transparent === true
-    );
-    expect(laneDividerMats).toHaveLength(LANE_DIVIDER_MARKINGS.length);
-    expect(laneDividerMats.length).toBeGreaterThan(0);
+      .filter((e) => e.props.color === "#d7d5cc" && e.props.transparent === true);
+    expect(laneDividerMats).toHaveLength(1);
   });
 
-  test("renders all 44 crosswalk stripes with muted day colour", () => {
+  test("renders one merged crosswalk mesh; the 44-stripe dataset is intact", () => {
     const el = RoadSurfaceLayer({ isNight: false }) as ReactElement<TestProps>;
     const all = collectAllElements(el);
 
@@ -151,52 +145,53 @@ describe("RoadSurfaceLayer", () => {
       .filter((e) => getTypeName(e) === "meshBasicMaterial")
       .filter((e) => e.props.color === "#e3e1d8");
 
-    expect(crosswalkMats).toHaveLength(CROSSWALK_STRIPES.length);
+    expect(crosswalkMats).toHaveLength(1);
     expect(CROSSWALK_STRIPES).toHaveLength(44);
   });
 
-  test("renders all turn arrow parts with muted day colour", () => {
+  test("renders one merged turn-arrow mesh from the per-lane decals", () => {
     const el = RoadSurfaceLayer({ isNight: false }) as ReactElement<TestProps>;
     const all = collectAllElements(el);
 
-    // Arrow materials share the same colour as lane dividers but without transparent.
+    // Arrows share the divider colour but are opaque (no transparent prop).
     const arrowMats = all
       .filter((e) => getTypeName(e) === "meshBasicMaterial")
       .filter((e) => e.props.color === "#d7d5cc" && !e.props.transparent);
 
-    const expectedArrowParts = TURN_ARROW_MARKINGS.flatMap((a) => a.parts).length;
-    expect(arrowMats).toHaveLength(expectedArrowParts);
-    // Sanity: 4 arrows × 3 parts (shaft + head_left + head_right)
-    expect(expectedArrowParts).toBe(12);
+    expect(arrowMats).toHaveLength(1);
+    // Per-lane decals: 3 (left / straight / right) per approach × 4 approaches.
+    expect(LANE_ARROW_DECALS).toHaveLength(12);
+    const kinds = new Set(LANE_ARROW_DECALS.map((d) => d.kind));
+    expect(kinds).toEqual(new Set(["left", "straight", "right"]));
   });
 
   test("switches to night palette at night", () => {
     const nightEl = RoadSurfaceLayer({ isNight: true }) as ReactElement<TestProps>;
     const all = collectAllElements(nightEl);
 
-    // Night lane dividers use #a9a394 (transparent)
+    // Night lane dividers use #a9a394 (transparent), single merged mesh.
     const nightDividers = all
       .filter((e) => getTypeName(e) === "meshBasicMaterial")
       .filter((e) => e.props.color === "#a9a394" && e.props.transparent === true);
-    expect(nightDividers.length).toBeGreaterThan(0);
+    expect(nightDividers).toHaveLength(1);
 
-    // Night crosswalks use #b4af9f
+    // Night crosswalks use #b4af9f (single merged mesh).
     const nightCrosswalks = all
       .filter((e) => getTypeName(e) === "meshBasicMaterial")
       .filter((e) => e.props.color === "#b4af9f");
-    expect(nightCrosswalks).toHaveLength(44);
+    expect(nightCrosswalks).toHaveLength(1);
 
-    // Night arrows use #a9a394 (no transparent prop)
+    // Night arrows use #a9a394 (opaque), single merged mesh.
     const nightArrows = all
       .filter((e) => getTypeName(e) === "meshBasicMaterial")
       .filter((e) => e.props.color === "#a9a394" && !e.props.transparent);
-    expect(nightArrows).toHaveLength(12);
+    expect(nightArrows).toHaveLength(1);
 
-    // Night bus lane uses #5e2c25
+    // Night bus lane uses #5e2c25 (single merged mesh).
     const nightBus = all
       .filter((e) => getTypeName(e) === "meshBasicMaterial")
       .filter((e) => e.props.color === "#5e2c25");
-    expect(nightBus).toHaveLength(MEDIAN_BUS_LANE_MARKINGS.length);
+    expect(nightBus).toHaveLength(1);
 
     // Road surface uses night asphalt tint in meshStandardMaterial
     const nightAsphalt = all

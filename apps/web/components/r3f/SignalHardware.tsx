@@ -15,7 +15,6 @@ import {
   INTERSECTION_BOX_EXTENT_METERS,
   type Vector3Tuple
 } from "./roadGeometry";
-import { STAGE5_SHADOWS_ENABLED } from "./shadowPolicy";
 
 export type SignalHardwareLightingPreset = "day" | "cloudy" | "rain" | "night";
 
@@ -122,12 +121,34 @@ export const SEOUL_SIGNAL_HARDWARE_CUES = {
   foregroundProofSignal: SEOUL_FOREGROUND_PROOF_SIGNAL
 } as const;
 
-// SP3: The background plate now bakes the signal hardware (poles, mast arms,
-// signal heads) into the photoreal image. The 3D meshes are suppressed here to
-// avoid doubling up over the baked plate signals. Exported data (SIGNAL_PLACEMENTS,
-// SEOUL_SIGNAL_HARDWARE_CUES) remains intact for downstream consumers.
-export function SignalHardware({}: SignalHardwareProps) {
-  return null;
+// P3 (scene v2): the AI plate that baked the signal hardware is retired, so the
+// 3D signal hardware is rebuilt here. One 가로형 4-aspect horizontal head on a
+// cantilever mast arm per approach, placed at the stop-line corner and rotated
+// to face oncoming inbound traffic. Lens state (red / yellow / green + the
+// protected-left arrow aspect) is driven entirely by SceneSnapshot.signals.
+export function SignalHardware({
+  signals,
+  lightingPreset = ACTIVE_SIGNAL_HARDWARE_LIGHTING_PRESET
+}: SignalHardwareProps) {
+  const lensEmissiveScale = SIGNAL_LENS_EMISSIVE_SCALE_BY_PRESET[lightingPreset];
+  const perApproach = getSignalsByDirection(signals);
+
+  if (perApproach.length === 0) {
+    return null;
+  }
+
+  return (
+    <group name="seoul-signal-hardware" userData={{ signalCount: perApproach.length }}>
+      {perApproach.map((signal) => (
+        <SeoulSignalHardwareAssembly
+          key={`signal-${signal.direction}`}
+          lensEmissiveScale={lensEmissiveScale}
+          placement={SIGNAL_PLACEMENTS[signal.direction]}
+          signal={signal}
+        />
+      ))}
+    </group>
+  );
 }
 
 function SeoulSignalHardwareAssembly({
@@ -173,7 +194,7 @@ function SeoulSignalHardwareAssembly({
       <mesh
         name={`seoul-signal-pole-${nameSuffix}`}
         position={[0, -2.42, 0]}
-        castShadow={STAGE5_SHADOWS_ENABLED}
+        castShadow={false}
         receiveShadow
       >
         <cylinderGeometry args={[0.09, 0.13, 5.05, 10]} />
@@ -183,7 +204,7 @@ function SeoulSignalHardwareAssembly({
         name={`seoul-signal-mast-arm-${nameSuffix}`}
         position={mastArmPosition}
         scale={mastArmScale}
-        castShadow={STAGE5_SHADOWS_ENABLED}
+        castShadow={false}
       >
         <boxGeometry args={[1, 1, 1]} />
         <meshStandardMaterial {...SIGNAL_MATERIALS.pole} />
@@ -206,6 +227,27 @@ function SeoulSignalHardwareAssembly({
           side={DoubleSide}
           toneMapped={false}
           transparent
+        />
+      </mesh>
+      {/* Upward-facing STATE BEACON over the stop line: the vertical signal
+          face is edge-on (nearly invisible) from the high traffic-monitoring
+          camera, so this bright disc shows each approach's red/yellow/green
+          state read from above. Driven by SceneSnapshot.signals (signal.state). */}
+      <mesh
+        name={`seoul-signal-beacon-${nameSuffix}`}
+        position={[facePosition[0], 0.7, 0]}
+        rotation={[-Math.PI / 2, 0, 0]}
+        userData={{
+          signalStateSource: "SceneSnapshot.signals",
+          signalState: signal.state,
+          realSignalControlClaim: false
+        }}
+      >
+        <circleGeometry args={[1.7, 24]} />
+        <meshBasicMaterial
+          color={LENS_COLORS[signal.state] ?? LENS_OFF}
+          side={DoubleSide}
+          toneMapped={false}
         />
       </mesh>
     </group>

@@ -4,19 +4,19 @@
   "desktop": {
     "canvas_metrics": {
       "width": 914,
-      "height": 680,
-      "sampled_pixels": 621520,
-      "non_background_ratio": 0.9873857639335822,
-      "bright_ratio": 0.20908096280087526,
-      "dark_ratio": 0.09202439181361823,
-      "warm_light_ratio": 0.0034302999098983137,
-      "cool_light_ratio": 0.2798799716823272,
-      "marking_ratio": 0.23007143776547817,
-      "saturated_ratio": 0.37365330158321536,
-      "color_bucket_count": 551,
-      "luminance_stddev": 56.696237645160515
+      "height": 679,
+      "sampled_pixels": 620606,
+      "non_background_ratio": 0.9535212356954331,
+      "bright_ratio": 0.11417388810291876,
+      "dark_ratio": 0.42446576410798476,
+      "warm_light_ratio": 0.004983838377327967,
+      "cool_light_ratio": 0.1964918160636539,
+      "marking_ratio": 0.13214664376432067,
+      "saturated_ratio": 0.32540291263700316,
+      "color_bucket_count": 619,
+      "luminance_stddev": 67.96983667404709
     }
   },
-  "generated_at": "2026-06-28T15:45:06.317Z",
-  "baseline_reason": "P3: faithful \uac15\ub0a8\uc5ed skyline (\uc11c\ucd08 \uc0bc\uc131\ud0c0\uc6b4 SW 203m peak, GT Tower W, Meritz SE, commercial corners w/ LED billboards, Teheran recession E); intentional - rebaselined 2026-06-29"
+  "generated_at": "2026-06-28T17:27:44.304Z",
+  "baseline_reason": "Scene v2: high steep traffic-monitoring camera (whole intersection + 4 approaches unoccluded) + revived 3D signals w/ state beacons + merged road markings + realistic per-lane turn arrows; intentional - rebaselined 2026-06-29"
 }

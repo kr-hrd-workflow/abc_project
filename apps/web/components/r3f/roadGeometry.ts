@@ -372,12 +372,93 @@ export const CROSSWALK_STRIPES: PlanePrimitiveSpec[] = buildCrosswalkStripes();
 // Arrow lateral offset: moved from ±LANE_WIDTH_METERS (±3.6 m, the busway
 // outer edge) to ±2.5 lanes (≈ ±9 m, a general through lane) so the arrows
 // sit on carriageway pavement rather than on the central median bus lane.
+// LEGACY: still consumed by ProceduralIntersection (fallback) + StructuralGuideLayer
+// (guide mode). The live RoadSurfaceLayer now renders LANE_ARROW_DECALS instead.
 export const TURN_ARROW_MARKINGS: TurnArrowMarking[] = [
   buildVerticalTurnArrow("north-turn-arrow", "north", -(LANE_WIDTH_METERS * 2.5), -34, 1),
   buildVerticalTurnArrow("south-turn-arrow", "south", LANE_WIDTH_METERS * 2.5, 34, -1),
   buildHorizontalTurnArrow("east-turn-arrow", "east", 34, LANE_WIDTH_METERS * 2.5, -1),
   buildHorizontalTurnArrow("west-turn-arrow", "west", -34, -(LANE_WIDTH_METERS * 2.5), 1)
 ];
+
+// ── Realistic per-lane turn arrows (left / straight / right) ───────────────────
+// One decal in the left-most general lane (좌회전), a middle lane (직진), and the
+// curb lane (우회전) of each inbound approach, just upstream of the stop line.
+// Lane centres mirror getInboundLaneOffset (TrafficDensityLayer SSOT) so the
+// arrows sit on the same lanes the SUMO vehicles drive in.
+
+export type LaneArrowKind = "left" | "straight" | "right";
+
+export type LaneArrowDecal = {
+  id: string;
+  direction: Direction;
+  kind: LaneArrowKind;
+  position: Vector3Tuple;
+  rotationY: number;
+};
+
+const ARROW_MARKING_HEIGHT = MARKING_HEIGHT + 0.02;
+const ARROW_DIST_FROM_STOP_LINE = 13;
+
+// Mirror of getInboundLaneOffset (TrafficDensityLayer): inbound lanes occupy the
+// right-hand half measured outward from the median; laneIndex 0 = right curb,
+// laneCount-1 = median-adjacent. Replicated here (not imported) to avoid pulling
+// the GLTF-heavy TrafficDensityLayer into the road-surface module + its tests.
+function inboundLaneCenter(
+  direction: Direction,
+  laneIndex: number,
+  laneCount: number
+): number {
+  const inboundSide = direction === "north" || direction === "east" ? -1 : 1;
+  return inboundSide * (laneCount - laneIndex - 0.5) * LANE_WIDTH_METERS;
+}
+
+function buildLaneArrowDecals(): LaneArrowDecal[] {
+  const decals: LaneArrowDecal[] = [];
+
+  for (const direction of ["north", "south", "east", "west"] as const) {
+    const laneCount = getApproachInboundLaneCount(direction);
+    const hasBus = getApproachHasMedianBus(direction);
+    const rightIdx = 0;
+    const leftIdx = laneCount - 1 - (hasBus ? 1 : 0); // skip the median bus lane
+    const straightIdx = Math.min(
+      laneCount - 1,
+      Math.max(0, Math.round((rightIdx + leftIdx) / 2))
+    );
+
+    const lanes: Array<{ kind: LaneArrowKind; index: number }> = [
+      { kind: "right", index: rightIdx },
+      { kind: "straight", index: straightIdx },
+      { kind: "left", index: leftIdx }
+    ];
+
+    for (const { kind, index } of lanes) {
+      const offset = inboundLaneCenter(direction, index, laneCount);
+      let position: Vector3Tuple;
+      let rotationY: number;
+
+      if (direction === "north") {
+        position = [offset, ARROW_MARKING_HEIGHT, -(HALF_BOX_Z + ARROW_DIST_FROM_STOP_LINE)];
+        rotationY = Math.PI;
+      } else if (direction === "south") {
+        position = [offset, ARROW_MARKING_HEIGHT, HALF_BOX_Z + ARROW_DIST_FROM_STOP_LINE];
+        rotationY = 0;
+      } else if (direction === "east") {
+        position = [HALF_BOX_X + ARROW_DIST_FROM_STOP_LINE, ARROW_MARKING_HEIGHT, offset];
+        rotationY = Math.PI / 2;
+      } else {
+        position = [-(HALF_BOX_X + ARROW_DIST_FROM_STOP_LINE), ARROW_MARKING_HEIGHT, offset];
+        rotationY = -Math.PI / 2;
+      }
+
+      decals.push({ id: `${direction}-arrow-${kind}`, direction, kind, position, rotationY });
+    }
+  }
+
+  return decals;
+}
+
+export const LANE_ARROW_DECALS: LaneArrowDecal[] = buildLaneArrowDecals();
 
 // 중앙버스전용차로: red median bus-only lane surfaces on 강남대로 (N/S) only.
 // The bus lane is the median-adjacent lane in each travel direction, so each

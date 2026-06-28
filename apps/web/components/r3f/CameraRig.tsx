@@ -49,17 +49,18 @@ type CameraRigConfigInput = CameraRigSelectionInput & {
 };
 
 export const CAMERA_RIG_PRESETS = {
-  // Operator wide view. Must MATCH the operator-wide background plate camera
-  // (PLATE_CAMERA_ANGLES "operator-wide" === STAGE5_CAMERA) so the SUMO vehicle
-  // layer projects onto the plate's painted lanes. Previously [18,42,58]/[0,0,-8]
-  // /fov54 — a different framing from the plate, which left DAY wide vehicles
-  // ~2 lanes off the painted lanes. Night wide already used STAGE5 (via
-  // nightAerialProof); this makes the day operator-wide view consistent.
+  // Operator wide view = traffic-monitoring framing. High STEEP oblique (~60°
+  // down from horizontal), centred on the intersection origin, elevated and
+  // pulled back so the WHOLE intersection + all four approaches + their vehicle
+  // queues read clearly and the tall towers sit at the frame edges instead of
+  // occluding the carriageway. The retired AI plate no longer constrains this
+  // camera (the scene is now fully 3D), so it is tuned purely for legibility.
+  // Vehicle/road metric positions are unchanged — only the camera moved.
   operatorWide: {
     name: "operatorWide",
-    position: STAGE5_CAMERA.position,
-    target: STAGE5_CAMERA.target,
-    fov: STAGE5_CAMERA.fov,
+    position: [30, 232, 132],
+    target: [0, 0, -6],
+    fov: 56,
     near: STAGE5_CAMERA.near,
     far: STAGE5_CAMERA.far
   },
@@ -85,15 +86,14 @@ export const CAMERA_RIG_PRESETS = {
     near: STAGE5_CAMERA.near,
     far: STAGE5_CAMERA.far
   },
-  // High aerial oblique matching the plate projector camera (PLATE_CAMERA_ANGLES
-  // "operator-wide" === STAGE5_CAMERA) so the projective-textured plate paints
-  // onto the ground + building proxies aligned to screen, and the small SUMO
-  // vehicles sit on the intersection below it (Option A, projector == viewer).
+  // Night wide view shares the traffic-monitoring framing with operatorWide so
+  // the night scene also reads the whole intersection + queues + lit signals
+  // from the high steep oblique (plate retired; no projector constraint).
   nightAerialProof: {
     name: "nightAerialProof",
-    position: STAGE5_CAMERA.position,
-    target: STAGE5_CAMERA.target,
-    fov: STAGE5_CAMERA.fov,
+    position: [30, 232, 132],
+    target: [0, 0, -6],
+    fov: 56,
     near: STAGE5_CAMERA.near,
     far: STAGE5_CAMERA.far
   },
