@@ -6,17 +6,17 @@
       "width": 914,
       "height": 680,
       "sampled_pixels": 621520,
-      "non_background_ratio": 0.9742824044278543,
-      "bright_ratio": 0.3786539451666881,
-      "dark_ratio": 0.038656841292315614,
-      "warm_light_ratio": 0.002593641395288969,
-      "cool_light_ratio": 0.23342933453468914,
-      "marking_ratio": 0.3329048140043764,
-      "saturated_ratio": 0.3829659544342901,
-      "color_bucket_count": 474,
-      "luminance_stddev": 57.41180712188664
+      "non_background_ratio": 0.9818654266958424,
+      "bright_ratio": 0.20522267988158063,
+      "dark_ratio": 0.1235422834341614,
+      "warm_light_ratio": 0.0024810142875530956,
+      "cool_light_ratio": 0.2652400566353456,
+      "marking_ratio": 0.22565162826618612,
+      "saturated_ratio": 0.40956204144677566,
+      "color_bucket_count": 514,
+      "luminance_stddev": 59.9204181848544
     }
   },
-  "generated_at": "2026-06-28T14:21:29.600Z",
-  "baseline_reason": "P2b: photographic glass facade textures (facade-glass-day/windows-night webp) replace flat CG building boxes; intentional photoreal visual change - rebaselined 2026-06-28"
+  "generated_at": "2026-06-28T14:40:46.150Z",
+  "baseline_reason": "P2c: composed building massing (podium/shaft/setback/crown/antenna) + concrete facade variety + gradient sky; intentional photoreal silhouette change - rebaselined 2026-06-28"
 }

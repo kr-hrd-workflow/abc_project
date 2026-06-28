@@ -10,9 +10,11 @@ import {
   FACADE_METERS_PER_TILE,
   GLASS_TINTS_DAY,
   GLASS_TINTS_NIGHT,
+  composeBuildingVolumes,
   computeFacadeRepeat,
   getBuildingVarFactor,
-  getGlassTintIndex
+  getGlassTintIndex,
+  type BuildingVolumeSpec
 } from "./BuildingLayer";
 import {
   BUILDING_FOOTPRINTS,
@@ -223,3 +225,90 @@ describe("building variety", () => {
     }
   });
 });
+
+// ── Building massing composition (P2c) ────────────────────────────────────────
+
+function byId(idFragment: string) {
+  const fp = BUILDING_FOOTPRINTS.find((b) => b.id.includes(idFragment));
+  if (!fp) throw new Error(`no footprint matching ${idFragment}`);
+  return fp;
+}
+
+describe("composeBuildingVolumes", () => {
+  it("composes glass towers from multiple stacked volumes (not one box)", () => {
+    const tower = byId("sw-glass-tower-1");
+    const vols = composeBuildingVolumes(tower);
+    expect(vols.length).toBeGreaterThanOrEqual(3);
+    // Must include a dark podium base and at least one glass shaft volume.
+    expect(vols.some((v) => v.group === "dark")).toBe(true);
+    expect(vols.some((v) => v.group.startsWith("glass"))).toBe(true);
+  });
+
+  it("gives every glass tower a dark podium AND a dark crown (composed top+base)", () => {
+    for (const fp of BUILDING_FOOTPRINTS.filter((b) => b.type === "glass-tower")) {
+      const vols = composeBuildingVolumes(fp);
+      const darks = vols.filter((v) => v.group === "dark");
+      // podium + crown (+ maybe antenna) → at least 2 dark volumes.
+      expect(darks.length).toBeGreaterThanOrEqual(2);
+    }
+  });
+
+  it("routes mid/low-rise facades to the concrete group (facade variety)", () => {
+    const mid = BUILDING_FOOTPRINTS.find((b) => b.type === "mid-rise")!;
+    const vols = composeBuildingVolumes(mid);
+    expect(vols.some((v) => v.group === "concrete")).toBe(true);
+    expect(vols.some((v) => v.group.startsWith("glass"))).toBe(false);
+  });
+
+  it("keeps the distant ring as a single simple far volume (cheap)", () => {
+    const bg = byId("bg-");
+    const vols = composeBuildingVolumes(bg);
+    expect(vols).toHaveLength(1);
+    expect(vols[0].group).toBe("far");
+  });
+
+  it("base of every building sits on the ground (lowest volume bottom ≈ 0)", () => {
+    for (const fp of BUILDING_FOOTPRINTS) {
+      const vols = composeBuildingVolumes(fp);
+      const minBottom = Math.min(
+        ...vols.map((v) => v.center[1] - v.size[1] / 2)
+      );
+      expect(minBottom).toBeGreaterThanOrEqual(-0.01);
+      expect(minBottom).toBeLessThan(0.5);
+    }
+  });
+
+  it("keeps all sub-volumes within the footprint horizontal envelope (safe zone holds)", () => {
+    for (const fp of BUILDING_FOOTPRINTS) {
+      const [fw, , fd] = fp.size;
+      const [fx, , fz] = fp.position;
+      for (const v of composeBuildingVolumes(fp)) {
+        const halfW = v.size[0] / 2;
+        const halfD = v.size[2] / 2;
+        // Each sub-volume is centred on the footprint centre and no wider than it.
+        expect(Math.abs(v.center[0] - fx) + halfW).toBeLessThanOrEqual(fw / 2 + 0.01);
+        expect(Math.abs(v.center[2] - fz) + halfD).toBeLessThanOrEqual(fd / 2 + 0.01);
+      }
+    }
+  });
+
+  it("is deterministic (no Math.random) — same footprint yields identical volumes", () => {
+    const fp = byId("sw-glass-tower-2");
+    const a = composeBuildingVolumes(fp);
+    const b = composeBuildingVolumes(fp);
+    expect(serialize(a)).toBe(serialize(b));
+  });
+
+  it("produces silhouette variety across the skyline (varied volume counts)", () => {
+    const counts = new Set(
+      BUILDING_FOOTPRINTS.map((b) => composeBuildingVolumes(b).length)
+    );
+    expect(counts.size).toBeGreaterThanOrEqual(2);
+  });
+});
+
+function serialize(vols: BuildingVolumeSpec[]): string {
+  return JSON.stringify(
+    vols.map((v) => [v.group, v.size, v.center, v.metersPerTile])
+  );
+}

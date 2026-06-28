@@ -2,33 +2,46 @@
 
 // BuildingLayer — P2 photoreal 3D building system for 강남역 사거리.
 //
-// P2b: building facades use PHOTOGRAPHIC tileable textures instead of flat
-// CG boxes:
-//   DAY   — facade-glass-day.webp as the `map` (blue-green reflective glass
-//           curtain-wall + mullion grid + baked sky reflections) plus HDRI
-//           reflections via envMapIntensity.
-//   NIGHT — facade-windows-night.webp as both `map` and `emissiveMap` (white
-//           emissive) so lit warm/cool windows glow under the scene bloom; day
-//           reflectivity dimmed.
+// P2c: composed massing + facade variety + gradient sky.
+//   • Each building is composed from stacked/inset volumes (PODIUM base, inset
+//     SHAFT, optional SETBACK upper section, dark CROWN/mechanical, optional
+//     ANTENNA) instead of one uniform box — varied deterministically by id hash
+//     so the skyline reads as distinct towers, not a row of boxes.
+//   • Glass towers keep the photographic curtain-wall texture (3 tints); mid-/
+//     low-rise side-street buildings use a duller concrete/small-window look so
+//     the city is not all identical glass. Dark podium bases meet the ground.
+//   • DAY map = facade-glass-day.webp + HDRI reflections; NIGHT map+emissiveMap
+//     = facade-windows-night.webp so lit windows glow under bloom.
+//   • Sky: graded gradient dome (day: blue→hazy horizon + faint clouds; night:
+//     dark zenith→warm city-glow horizon) replacing the flat procedural sky.
 //
-// Per-face UV repeat is computed from each building's real metric size so a
-// texture tile maps to ~14 m of facade (≈4 floors at ~3.5 m), never stretched.
-// Variety: 3 glass tints (blue/green/neutral) + slight per-building repeat and
-// UV-offset jitter so the skyline does not read as one repeated block.
+// PERFORMANCE: every sub-volume across all buildings is merged by material group
+// (3 glass tints + concrete + dark detail + far ring) into ~6 BufferGeometries,
+// so the entire skyline costs ~6 draw calls regardless of massing richness. UV
+// tiling is BAKED per-face into the merged geometry (≈14 m/tile glass, ≈7 m/tile
+// concrete) so a single shared texture+repeat[1,1] tiles correctly without a
+// per-face material array (which rendered each box as 6 draw calls in P2b).
 //
-// Day sky: drei <Sky> procedural atmosphere.  Night sky: dark dome.
-// Safe-zone rule: footprints sit outside the road + sidewalk clearance; the
-// boxes are true 3D depth, so vehicles behind them are occluded correctly.
+// Safe-zone rule: sub-volumes stay within each footprint's horizontal envelope
+// (podium = full footprint, shaft/setback inset), so buildings remain outside
+// the road + sidewalk clearance and occlude vehicles via true 3D depth.
 
 import { useMemo } from "react";
-import { Sky, useTexture } from "@react-three/drei";
+import { useTexture } from "@react-three/drei";
 import {
   BackSide,
+  BoxGeometry,
+  BufferGeometry,
   MeshPhysicalMaterial,
+  MeshStandardMaterial,
   RepeatWrapping,
+  ShaderMaterial,
+  SphereGeometry,
   SRGBColorSpace,
+  type BufferAttribute,
   type Texture
 } from "three";
+import { mergeGeometries } from "three/examples/jsm/utils/BufferGeometryUtils.js";
 
 import {
   BUILDING_FOOTPRINTS,
@@ -44,8 +57,10 @@ export const FACADE_DAY_TEXTURE_PATH =
 export const FACADE_NIGHT_TEXTURE_PATH =
   "/simulation/r3f/assets/textures/facade-windows-night.webp";
 
-// One texture tile covers ~14 m of facade → ≈4 floors at ~3.5 m/floor.
+// One glass tile covers ~14 m of facade → ≈4 floors at ~3.5 m/floor.
 export const FACADE_METERS_PER_TILE = 14;
+// Concrete/small-window buildings tile tighter so windows read smaller.
+export const CONCRETE_METERS_PER_TILE = 7;
 
 // Preload both facade textures in the browser so they are warm on first paint
 // and do not cause a black-frame flicker in the capture harness.
@@ -58,8 +73,6 @@ if (
 }
 
 // ── jsdom guard ───────────────────────────────────────────────────────────────
-// Sky / night-dome are mesh-based with shader materials and must not render
-// in the unit-test jsdom environment (no real WebGL context).
 function isJsdomRuntime(): boolean {
   return (
     typeof window !== "undefined" && /jsdom/i.test(window.navigator.userAgent)
@@ -68,8 +81,8 @@ function isJsdomRuntime(): boolean {
 
 // ── Pure helpers (unit-tested) ────────────────────────────────────────────────
 
-/** Deterministic hash of a building id → unsigned 32-bit. */
-function hashId(id: string): number {
+/** Deterministic FNV-1a hash of a building id → unsigned 32-bit. No Math.random. */
+export function hashId(id: string): number {
   let hash = 2166136261;
   for (let i = 0; i < id.length; i += 1) {
     hash ^= id.charCodeAt(i);
@@ -84,8 +97,8 @@ export function getBuildingVarFactor(id: string): number {
 }
 
 /**
- * Whole-tile UV repeat for one facade face. Rounded to integers so floors are
- * never sliced mid-window at the roofline; clamped to ≥1 for short buildings.
+ * Whole-tile UV repeat for one facade face (kept for reference + tests). Rounded
+ * so floors are never sliced mid-window at the roofline; clamped to ≥1.
  */
 export function computeFacadeRepeat(
   faceWidthM: number,
@@ -107,124 +120,234 @@ export function getGlassTintIndex(id: string): number {
   return hashId(id) % 3;
 }
 
-// ── Per-type material tuning ──────────────────────────────────────────────────
+// ── Building massing composition (pure, unit-tested) ──────────────────────────
 
-type TypeTuning = {
-  /** Day: glass reflectivity (texture supplies mullions/base, envMap adds sky). */
-  dayRoughness: number;
-  dayMetalness: number;
-  dayEnvMapIntensity: number;
-  /** Night: dim reflections, let lit windows carry the look. */
-  nightRoughness: number;
-  nightEnvMapIntensity: number;
-  /** Night emissive window intensity (tuned against scene bloom). */
-  emissiveIntensity: number;
+/** Merge/material group a sub-volume belongs to. */
+export type VolumeGroup =
+  | "glass0"
+  | "glass1"
+  | "glass2"
+  | "concrete"
+  | "dark"
+  | "far";
+
+export type BuildingVolumeSpec = {
+  group: VolumeGroup;
+  /** [width(x), height(y), depth(z)] in metres. */
+  size: [number, number, number];
+  /** Geometric centre [x, y, z]; y = bottom + height/2 so the base sits at y=0. */
+  center: [number, number, number];
+  /** Metres per facade tile for UV baking (glass/concrete groups only). */
+  metersPerTile: number;
 };
 
-const TYPE_TUNING: Record<BuildingType, TypeTuning> = {
-  "glass-tower": {
-    dayRoughness: 0.12,
-    dayMetalness: 0.12,
-    dayEnvMapIntensity: 2.0,
-    nightRoughness: 0.42,
-    nightEnvMapIntensity: 0.3,
-    emissiveIntensity: 1.6
-  },
-  "glass-high-rise": {
-    dayRoughness: 0.16,
-    dayMetalness: 0.1,
-    dayEnvMapIntensity: 1.6,
-    nightRoughness: 0.46,
-    nightEnvMapIntensity: 0.25,
-    emissiveIntensity: 1.35
-  },
-  "mid-rise": {
-    dayRoughness: 0.3,
-    dayMetalness: 0.06,
-    dayEnvMapIntensity: 0.9,
-    nightRoughness: 0.55,
-    nightEnvMapIntensity: 0.18,
-    emissiveIntensity: 1.1
-  },
-  "low-rise": {
-    dayRoughness: 0.5,
-    dayMetalness: 0.03,
-    dayEnvMapIntensity: 0.4,
-    nightRoughness: 0.7,
-    nightEnvMapIntensity: 0.12,
-    emissiveIntensity: 0.9
-  }
-};
+const GLASS_GROUPS: VolumeGroup[] = ["glass0", "glass1", "glass2"];
 
-/** Clone a facade texture with independent wrap/repeat/offset (shares image data). */
-function cloneFacadeTexture(
-  base: Texture,
-  repeat: [number, number],
-  offset: [number, number]
-): Texture {
-  const tex = base.clone();
-  tex.wrapS = RepeatWrapping;
-  tex.wrapT = RepeatWrapping;
-  tex.colorSpace = SRGBColorSpace;
-  tex.repeat.set(repeat[0], repeat[1]);
-  tex.offset.set(offset[0], offset[1]);
-  tex.needsUpdate = true;
-  return tex;
+function isGlassType(type: BuildingType): boolean {
+  return type === "glass-tower" || type === "glass-high-rise";
 }
 
 /**
- * Build ONE glass curtain-wall material for a whole building box.
- *
- * A single material per box keeps each building at 1 draw call (a per-face
- * material array makes a box render as 6 draw calls — 31 buildings would blow
- * the 900 peak-draw-call budget). The UV repeat is derived from the building's
- * AVERAGE horizontal dimension, so the wider and narrower faces stay close in
- * tile density (≈10–15 m/tile) without stretching. Height uses whole-tile rows.
+ * Compose a building into stacked/inset sub-volumes. Deterministic by id hash —
+ * no Math.random. Sub-volumes stay within the footprint's horizontal envelope
+ * (podium = full footprint; shaft/setback inset), so the safe-zone guarantee
+ * from buildingFootprints holds. Crown/antenna may extend ABOVE the footprint
+ * height for silhouette variety (vertical only).
  */
-function buildGlassMaterial(
-  baseTex: Texture,
-  footprint: BuildingFootprint,
-  isNight: boolean
-): MeshPhysicalMaterial {
-  const tuning = TYPE_TUNING[footprint.type];
-  const varFactor = getBuildingVarFactor(footprint.id);
-  const [w, h, d] = footprint.size;
-  const avgFaceWidth = (w + d) / 2;
-  const repeat = computeFacadeRepeat(avgFaceWidth, h, varFactor);
+export function composeBuildingVolumes(
+  footprint: BuildingFootprint
+): BuildingVolumeSpec[] {
+  const { id, type, size, position } = footprint;
+  const [w, h, d] = size;
+  const [px, , pz] = position;
+  const hash = hashId(id);
+  const glassGroup = GLASS_GROUPS[hash % 3];
 
-  // Per-building UV offset jitter so neighbouring towers don't share the exact
-  // same window origin (kills obvious tiling repetition).
-  const hash = hashId(footprint.id);
-  const offset: [number, number] = [(hash % 7) / 7, ((hash >> 3) % 5) / 5];
-
-  const map = cloneFacadeTexture(baseTex, repeat, offset);
-  const tintIndex = getGlassTintIndex(footprint.id);
-
-  if (isNight) {
-    const mat = new MeshPhysicalMaterial({
-      map,
-      roughness: tuning.nightRoughness,
-      metalness: 0.05,
-      envMapIntensity: tuning.nightEnvMapIntensity
-    });
-    mat.color.set(GLASS_TINTS_NIGHT[tintIndex]);
-    // Same texture drives the emissive channel: bright lit windows glow,
-    // dark glass stays dark. emissive white so the texture colour is preserved.
-    mat.emissive.set("#ffffff");
-    mat.emissiveMap = map;
-    mat.emissiveIntensity = tuning.emissiveIntensity;
-    return mat;
+  // Distant ring: a single simple far-massing box (kept cheap, low detail).
+  if (id.startsWith("bg-")) {
+    return [
+      {
+        group: "far",
+        size: [w, h, d],
+        center: [px, h / 2, pz],
+        metersPerTile: FACADE_METERS_PER_TILE
+      }
+    ];
   }
 
-  const mat = new MeshPhysicalMaterial({
-    map,
-    roughness: tuning.dayRoughness,
-    metalness: tuning.dayMetalness,
-    envMapIntensity: tuning.dayEnvMapIntensity
+  const volumes: BuildingVolumeSpec[] = [];
+  const glass = isGlassType(type);
+  const facadeGroup: VolumeGroup = glass ? glassGroup : "concrete";
+  const tile = glass ? FACADE_METERS_PER_TILE : CONCRETE_METERS_PER_TILE;
+
+  // Podium (dark lobby/base band) — full footprint, meets the ground.
+  const podiumH = Math.min(glass ? 12 : 6, Math.max(3.5, h * (glass ? 0.07 : 0.12)));
+  volumes.push({
+    group: "dark",
+    size: [w, podiumH, d],
+    center: [px, podiumH / 2, pz],
+    metersPerTile: tile
   });
-  // Slight tint over the (already blue-green) photo so towers vary blue/green/neutral.
-  mat.color.set(GLASS_TINTS_DAY[tintIndex]);
-  return mat;
+
+  // Optional setback upper section for taller buildings (varies the silhouette).
+  const wantSetback =
+    (type === "glass-tower" && hash % 2 === 0) ||
+    (type === "glass-high-rise" && h > 60 && hash % 3 === 0);
+  const setbackH = wantSetback ? h * 0.22 : 0;
+
+  // Main shaft (inset above the podium). Towers are slimmer for a slender read.
+  const shaftInset = type === "glass-tower" ? 0.9 : glass ? 0.95 : 0.99;
+  const shaftW = w * shaftInset;
+  const shaftD = d * shaftInset;
+  const shaftH = Math.max(2, h - podiumH - setbackH);
+  const shaftBottom = podiumH;
+  volumes.push({
+    group: facadeGroup,
+    size: [shaftW, shaftH, shaftD],
+    center: [px, shaftBottom + shaftH / 2, pz],
+    metersPerTile: tile
+  });
+
+  // Setback section (narrower glass tower top).
+  if (setbackH > 0) {
+    const setW = w * 0.66;
+    const setD = d * 0.66;
+    const setBottom = shaftBottom + shaftH;
+    volumes.push({
+      group: facadeGroup,
+      size: [setW, setbackH, setD],
+      center: [px, setBottom + setbackH / 2, pz],
+      metersPerTile: tile
+    });
+  }
+
+  // Top of the occupied volume (where crown/parapet sits).
+  const topY = podiumH + shaftH + setbackH;
+
+  if (glass) {
+    // Dark mechanical crown so tops are not flat glass.
+    const crownH = Math.min(6, Math.max(2, h * 0.035));
+    const crownW = (setbackH > 0 ? w * 0.66 : w * shaftInset) * 0.6;
+    const crownD = (setbackH > 0 ? d * 0.66 : d * shaftInset) * 0.6;
+    volumes.push({
+      group: "dark",
+      size: [crownW, crownH, crownD],
+      center: [px, topY + crownH / 2, pz],
+      metersPerTile: tile
+    });
+
+    // Slender antenna mast on a subset of towers.
+    if (type === "glass-tower" && hash % 3 === 0) {
+      const antH = Math.max(6, h * 0.08);
+      volumes.push({
+        group: "dark",
+        size: [0.6, antH, 0.6],
+        center: [px, topY + crownH + antH / 2, pz],
+        metersPerTile: tile
+      });
+    }
+  } else {
+    // Mid/low-rise: thin dark parapet cap.
+    const parapetH = 1.2;
+    volumes.push({
+      group: "dark",
+      size: [w * 0.99, parapetH, d * 0.99],
+      center: [px, topY + parapetH / 2, pz],
+      metersPerTile: tile
+    });
+  }
+
+  return volumes;
+}
+
+// ── Material tuning by group ──────────────────────────────────────────────────
+
+type GroupTuning = {
+  dayRoughness: number;
+  dayMetalness: number;
+  dayEnvMapIntensity: number;
+  nightRoughness: number;
+  nightEnvMapIntensity: number;
+  emissiveIntensity: number;
+};
+
+// Glass tints share one tuning (tower-grade reflectivity so SW flagships read as
+// glass); concrete is duller and matte.
+const GLASS_TUNING: GroupTuning = {
+  dayRoughness: 0.13,
+  dayMetalness: 0.11,
+  dayEnvMapIntensity: 1.9,
+  nightRoughness: 0.44,
+  nightEnvMapIntensity: 0.28,
+  emissiveIntensity: 1.5
+};
+
+const CONCRETE_TUNING: GroupTuning = {
+  dayRoughness: 0.82,
+  dayMetalness: 0.02,
+  dayEnvMapIntensity: 0.25,
+  nightRoughness: 0.9,
+  nightEnvMapIntensity: 0.08,
+  emissiveIntensity: 0.7
+};
+
+// ── UV baking ─────────────────────────────────────────────────────────────────
+
+// BoxGeometry face order + per-face (spanU, spanV) in metres, given (w,h,d).
+// Faces: 0 +x, 1 -x, 2 +y, 3 -y, 4 +z, 5 -z. Each face has 4 vertices.
+function faceSpans(w: number, h: number, d: number): [number, number][] {
+  return [
+    [d, h], // +x
+    [d, h], // -x
+    [w, d], // +y
+    [w, d], // -y
+    [w, h], // +z
+    [w, h] // -z
+  ];
+}
+
+/**
+ * Build a box whose per-face UVs are scaled so the facade texture tiles at
+ * ~metersPerTile (with RepeatWrapping), plus a per-building UV offset so
+ * neighbouring buildings don't share the same window origin. Translated to its
+ * world centre so it can be merged into a shared geometry.
+ */
+function buildTiledBox(
+  size: [number, number, number],
+  center: [number, number, number],
+  metersPerTile: number,
+  offset: [number, number]
+): BufferGeometry {
+  const [w, h, d] = size;
+  const geo = new BoxGeometry(w, h, d);
+  const uv = geo.attributes.uv as BufferAttribute;
+  const spans = faceSpans(w, h, d);
+
+  for (let face = 0; face < 6; face += 1) {
+    const [spanU, spanV] = spans[face];
+    const ru = spanU / metersPerTile;
+    const rv = spanV / metersPerTile;
+    for (let v = 0; v < 4; v += 1) {
+      const idx = face * 4 + v;
+      const u0 = uv.getX(idx);
+      const v0 = uv.getY(idx);
+      uv.setXY(idx, u0 * ru + offset[0], v0 * rv + offset[1]);
+    }
+  }
+  uv.needsUpdate = true;
+
+  geo.translate(center[0], center[1], center[2]);
+  return geo;
+}
+
+/** Plain (untextured) box translated to its world centre — for dark/far volumes. */
+function buildPlainBox(
+  size: [number, number, number],
+  center: [number, number, number]
+): BufferGeometry {
+  const geo = new BoxGeometry(size[0], size[1], size[2]);
+  geo.translate(center[0], center[1], center[2]);
+  return geo;
 }
 
 // ── Public API ────────────────────────────────────────────────────────────────
@@ -236,31 +359,27 @@ export type BuildingLayerProps = {
 
 // BuildingLayerComponent is hook-free so it can be called directly in unit
 // tests (same pattern as SceneEnvironment). Hooks live in BuildingVolumeSet.
-function BuildingLayerComponent({
-  timeOfDay = "day"
-  // qualityPreset available for future LOD gating
-}: BuildingLayerProps) {
+function BuildingLayerComponent({ timeOfDay = "day" }: BuildingLayerProps) {
   const isNight = timeOfDay === "night";
 
   return (
     <group
       name="gangnam-building-layer"
-      userData={{ phase: "p2", retires: "background-plate" }}
+      userData={{ phase: "p2c", retires: "background-plate" }}
     >
       {/* Sky / horizon — jsdom-guarded (requires shader compilation) */}
-      {!isJsdomRuntime() && <SceneSkyAndHorizon isNight={isNight} />}
+      {!isJsdomRuntime() && <GradientSky isNight={isNight} />}
 
-      {/* Building volumes live in a child component so useTexture/useMemo hooks
-          only run during real React rendering, not when BuildingLayer is called
-          directly by unit tests. */}
+      {/* Merged building volumes live in a child component so useTexture/useMemo
+          hooks only run during real React rendering, not when BuildingLayer is
+          called directly by unit tests. */}
       <BuildingVolumeSet isNight={isNight} />
     </group>
   );
 }
 
-// Not memo-wrapped: SimulationScene rebuilds on every snapshot frame, so memo
-// would add overhead without meaningful rerender savings. Pattern mirrors
-// SceneEnvironment.
+// Not memo-wrapped (mirrors SceneEnvironment): SimulationScene rebuilds on every
+// snapshot frame, so memo adds overhead without meaningful rerender savings.
 export function BuildingLayer(props: BuildingLayerProps) {
   return BuildingLayerComponent(props);
 }
@@ -268,119 +387,271 @@ BuildingLayer.displayName = "BuildingLayer";
 
 // ── Building volume set (has hooks) ──────────────────────────────────────────
 
-// Isolated so useTexture/useMemo run inside a real React render tree, not when
-// the parent BuildingLayerComponent is called directly by unit tests.
 function BuildingVolumeSet({ isNight }: { isNight: boolean }) {
-  // Both facade textures are loaded (cheap, ~0.2 MB total); the active one is
-  // chosen per time-of-day. useTexture suspends until ready (browser only).
   const [dayTex, nightTex] = useTexture([
     FACADE_DAY_TEXTURE_PATH,
     FACADE_NIGHT_TEXTURE_PATH
   ]) as Texture[];
-  const baseTex = isNight ? nightTex : dayTex;
+
+  // Merge every sub-volume by material group → ~6 geometries for the whole city.
+  const merged = useMemo(() => {
+    const byGroup = new Map<VolumeGroup, BufferGeometry[]>();
+    const push = (g: VolumeGroup, geo: BufferGeometry) => {
+      const list = byGroup.get(g);
+      if (list) list.push(geo);
+      else byGroup.set(g, [geo]);
+    };
+
+    for (const fp of BUILDING_FOOTPRINTS) {
+      const hash = hashId(fp.id);
+      const offset: [number, number] = [(hash % 7) / 7, ((hash >> 3) % 5) / 5];
+      for (const vol of composeBuildingVolumes(fp)) {
+        if (vol.group === "dark" || vol.group === "far") {
+          push(vol.group, buildPlainBox(vol.size, vol.center));
+        } else {
+          push(
+            vol.group,
+            buildTiledBox(vol.size, vol.center, vol.metersPerTile, offset)
+          );
+        }
+      }
+    }
+
+    const result = new Map<VolumeGroup, BufferGeometry>();
+    for (const [group, geos] of byGroup) {
+      const geo = geos.length === 1 ? geos[0] : mergeGeometries(geos, false);
+      if (geo) result.set(group, geo);
+    }
+    return result;
+  }, []);
+
+  // Shared facade texture: tiling is baked into UVs, so repeat stays [1,1] and
+  // wrapping handles the >1 UVs. One texture instance serves every glass group.
+  const facadeTex = useMemo(() => {
+    const t = (isNight ? nightTex : dayTex).clone();
+    t.wrapS = RepeatWrapping;
+    t.wrapT = RepeatWrapping;
+    t.colorSpace = SRGBColorSpace;
+    t.repeat.set(1, 1);
+    t.needsUpdate = true;
+    return t;
+  }, [isNight, dayTex, nightTex]);
+
+  const materials = useMemo(
+    () => buildGroupMaterials(facadeTex, isNight),
+    [facadeTex, isNight]
+  );
 
   return (
-    <>
-      {BUILDING_FOOTPRINTS.map((fp) => (
-        <BuildingVolume
-          key={fp.id}
-          footprint={fp}
-          baseTex={baseTex}
-          isNight={isNight}
+    <group name="gangnam-building-massing">
+      {[...merged.entries()].map(([group, geometry]) => (
+        <mesh
+          key={group}
+          geometry={geometry}
+          material={materials[group]}
+          castShadow={group !== "far"}
+          receiveShadow={group !== "far"}
         />
       ))}
-    </>
+    </group>
   );
 }
 
 BuildingVolumeSet.displayName = "BuildingVolumeSet";
 
-// ── Building volume ───────────────────────────────────────────────────────────
+// Build one material per merge group. Glass tints share the facade texture with
+// different colour multiplies; concrete is a duller small-window variant; dark
+// is the matte podium/crown/antenna material; far is a flat distant-city tone.
+function buildGroupMaterials(
+  facadeTex: Texture,
+  isNight: boolean
+): Record<VolumeGroup, MeshStandardMaterial | MeshPhysicalMaterial> {
+  const glass = (tintIndex: number): MeshPhysicalMaterial => {
+    const t = GLASS_TUNING;
+    if (isNight) {
+      const m = new MeshPhysicalMaterial({
+        map: facadeTex,
+        roughness: t.nightRoughness,
+        metalness: 0.05,
+        envMapIntensity: t.nightEnvMapIntensity
+      });
+      m.color.set(GLASS_TINTS_NIGHT[tintIndex]);
+      m.emissive.set("#ffffff");
+      m.emissiveMap = facadeTex;
+      m.emissiveIntensity = t.emissiveIntensity;
+      return m;
+    }
+    const m = new MeshPhysicalMaterial({
+      map: facadeTex,
+      roughness: t.dayRoughness,
+      metalness: t.dayMetalness,
+      envMapIntensity: t.dayEnvMapIntensity
+    });
+    m.color.set(GLASS_TINTS_DAY[tintIndex]);
+    return m;
+  };
 
-type BuildingVolumeProps = {
-  footprint: BuildingFootprint;
-  baseTex: Texture;
-  isNight: boolean;
-};
+  const concrete = (): MeshStandardMaterial => {
+    const t = CONCRETE_TUNING;
+    if (isNight) {
+      const m = new MeshStandardMaterial({
+        map: facadeTex,
+        roughness: t.nightRoughness,
+        metalness: 0.02,
+        envMapIntensity: t.nightEnvMapIntensity
+      });
+      m.color.set("#3a3c40");
+      m.emissive.set("#ffffff");
+      m.emissiveMap = facadeTex;
+      m.emissiveIntensity = t.emissiveIntensity;
+      return m;
+    }
+    const m = new MeshStandardMaterial({
+      map: facadeTex,
+      roughness: t.dayRoughness,
+      metalness: t.dayMetalness,
+      envMapIntensity: t.dayEnvMapIntensity
+    });
+    // Grey/stone tint + high roughness mutes the glass look into concrete.
+    m.color.set("#9a978f");
+    return m;
+  };
 
-function BuildingVolume({ footprint, baseTex, isNight }: BuildingVolumeProps) {
-  const { id, position, size } = footprint;
-  const [w, h, d] = size;
-  const [px, py, pz] = position;
+  const dark = new MeshStandardMaterial({
+    color: isNight ? "#0b0c11" : "#23252b",
+    roughness: 0.86,
+    metalness: 0.16
+  });
 
-  // One glass material on the whole box (1 draw call). The rooftop cap (below)
-  // covers most of the top face so the glass-roof reads as a glazed parapet.
-  const mat = useMemo(
-    () => buildGlassMaterial(baseTex, footprint, isNight),
-    [baseTex, footprint, isNight]
-  );
+  const far = new MeshStandardMaterial({
+    color: isNight ? "#0a0d16" : "#41506a",
+    roughness: 0.95,
+    metalness: 0.02
+  });
+  if (isNight) {
+    // Faint glow so the distant skyline is not pure black at night.
+    far.emissive.set("#1a2438");
+    far.emissiveIntensity = 0.5;
+  }
 
-  // Rooftop mechanical cap: dark box (≈4 % of tower height, min 1.2 m) covering
-  // most of the roof — breaks the flat-box silhouette, reads as HVAC/plant-room
-  // equipment, and hides the glass top face under a clean dark parapet.
-  const rooftopH = Math.max(1.2, h * 0.04);
-  const rooftopY = py + h / 2 + rooftopH / 2;
-  const rooftopW = w * 0.86;
-  const rooftopD = d * 0.86;
-
-  return (
-    <group name={`building-${id}`}>
-      {/* Main facade body — single glass material across all faces. */}
-      <mesh position={[px, py, pz]} material={mat} castShadow receiveShadow>
-        <boxGeometry args={[w, h, d]} />
-      </mesh>
-      {/* Rooftop equipment cap */}
-      <mesh position={[px, rooftopY, pz]}>
-        <boxGeometry args={[rooftopW, rooftopH, rooftopD]} />
-        <meshStandardMaterial
-          color={isNight ? "#0c0d12" : "#1a1a1e"}
-          roughness={0.82}
-          metalness={0.18}
-        />
-      </mesh>
-    </group>
-  );
+  return {
+    glass0: glass(0),
+    glass1: glass(1),
+    glass2: glass(2),
+    concrete: concrete(),
+    dark,
+    far
+  };
 }
 
-BuildingVolume.displayName = "BuildingVolume";
+// ── Gradient sky ──────────────────────────────────────────────────────────────
 
-// ── Sky and horizon ───────────────────────────────────────────────────────────
+const SKY_VERT = /* glsl */ `
+  varying vec3 vDir;
+  void main() {
+    vDir = normalize(position);
+    gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
+  }
+`;
 
-function SceneSkyAndHorizon({ isNight }: { isNight: boolean }) {
-  return isNight ? <NightSkyDome /> : <DaySky />;
-}
+// Day: blue zenith → hazy horizon, with faint value-noise clouds in the upper
+// band. Night: near-black zenith → warm city-glow horizon, no clouds.
+const SKY_FRAG = /* glsl */ `
+  precision mediump float;
+  varying vec3 vDir;
+  uniform vec3 uZenith;
+  uniform vec3 uHorizon;
+  uniform vec3 uGround;
+  uniform float uClouds;
+  uniform vec3 uCloudColor;
 
-SceneSkyAndHorizon.displayName = "SceneSkyAndHorizon";
+  float hash(vec2 p) {
+    p = fract(p * vec2(123.34, 456.21));
+    p += dot(p, p + 45.32);
+    return fract(p.x * p.y);
+  }
+  float noise(vec2 p) {
+    vec2 i = floor(p);
+    vec2 f = fract(p);
+    float a = hash(i);
+    float b = hash(i + vec2(1.0, 0.0));
+    float c = hash(i + vec2(0.0, 1.0));
+    float d = hash(i + vec2(1.0, 1.0));
+    vec2 u = f * f * (3.0 - 2.0 * f);
+    return mix(a, b, u.x) + (c - a) * u.y * (1.0 - u.x) + (d - b) * u.x * u.y;
+  }
+  float fbm(vec2 p) {
+    float v = 0.0;
+    float amp = 0.5;
+    for (int i = 0; i < 4; i++) {
+      v += amp * noise(p);
+      p *= 2.0;
+      amp *= 0.5;
+    }
+    return v;
+  }
 
-/**
- * Procedural atmosphere sky for day scenes.
- * Sun at ≈17° elevation from the NW (Korean mid-afternoon).
- * Sky provides the visible horizon colour; LightingRig handles actual scene lighting.
- */
-function DaySky() {
+  void main() {
+    float y = clamp(vDir.y, -1.0, 1.0);
+    vec3 col;
+    if (y >= 0.0) {
+      col = mix(uHorizon, uZenith, pow(y, 0.6));
+    } else {
+      col = mix(uHorizon, uGround, pow(-y, 0.5));
+    }
+    if (uClouds > 0.0 && y > 0.02) {
+      // Project onto a plane so clouds streak across the dome.
+      vec2 cp = vDir.xz / (y + 0.25);
+      float c = fbm(cp * 1.5 + vec2(7.0, 3.0));
+      c = smoothstep(0.55, 0.95, c);
+      float band = smoothstep(0.02, 0.45, y) * (1.0 - smoothstep(0.6, 1.0, y));
+      col = mix(col, uCloudColor, c * band * uClouds);
+    }
+    gl_FragColor = vec4(col, 1.0);
+  }
+`;
+
+function GradientSky({ isNight }: { isNight: boolean }) {
+  const material = useMemo(() => {
+    const day = {
+      uZenith: { value: hexToRgb("#3f74c4") },
+      uHorizon: { value: hexToRgb("#cdd9e8") },
+      uGround: { value: hexToRgb("#9aa6b4") },
+      uClouds: { value: 0.55 },
+      uCloudColor: { value: hexToRgb("#f2f5fa") }
+    };
+    const night = {
+      uZenith: { value: hexToRgb("#05060c") },
+      uHorizon: { value: hexToRgb("#1d2236") },
+      uGround: { value: hexToRgb("#0a0b12") },
+      uClouds: { value: 0.0 },
+      uCloudColor: { value: hexToRgb("#222a3a") }
+    };
+    return new ShaderMaterial({
+      vertexShader: SKY_VERT,
+      fragmentShader: SKY_FRAG,
+      uniforms: isNight ? night : day,
+      side: BackSide,
+      depthWrite: false,
+      fog: false
+    });
+  }, [isNight]);
+
+  const geometry = useMemo(() => new SphereGeometry(480, 32, 16), []);
+
   return (
-    <Sky
-      distance={450000}
-      sunPosition={[1, 0.3, -1]}
-      turbidity={9}
-      rayleigh={1.2}
-      mieCoefficient={0.005}
-      mieDirectionalG={0.8}
+    <mesh
+      geometry={geometry}
+      material={material}
+      renderOrder={-10}
+      frustumCulled={false}
     />
   );
 }
 
-DaySky.displayName = "DaySky";
+GradientSky.displayName = "GradientSky";
 
-/** Dark night-sky dome: BackSide sphere so it fills the horizon without competing
- *  with the emissive building windows and neon-lit vehicles. */
-function NightSkyDome() {
-  return (
-    <mesh renderOrder={-10} frustumCulled={false}>
-      <sphereGeometry args={[400, 32, 16]} />
-      <meshBasicMaterial color="#07080f" side={BackSide} depthWrite={false} />
-    </mesh>
-  );
+function hexToRgb(hex: string): [number, number, number] {
+  const n = parseInt(hex.slice(1), 16);
+  return [((n >> 16) & 255) / 255, ((n >> 8) & 255) / 255, (n & 255) / 255];
 }
-
-NightSkyDome.displayName = "NightSkyDome";
