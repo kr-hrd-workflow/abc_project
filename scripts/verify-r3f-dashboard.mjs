@@ -597,8 +597,8 @@ function buildVehicles(count) {
   // Only buses ride the median bus lane — every other type stays in the general lanes,
   // so no car/taxi/truck is ever placed on the bus-only median.
   const APPROACHES = {
-    0: { name: "north", laneCount: 5, busLane: 4, side: -1, axis: "ns", along: (s) => -18 - s, heading: 0, speed: 2.4, waitMod: 8 },
-    1: { name: "south", laneCount: 5, busLane: 4, side: 1, axis: "ns", along: (s) => 18 + s, heading: 180, speed: 2.8, waitMod: 7 },
+    0: { name: "north", laneCount: 5, busLane: 4, side: -1, axis: "ns", along: (s) => -18 - s, heading: 180, speed: 2.4, waitMod: 8 },
+    1: { name: "south", laneCount: 5, busLane: 4, side: 1, axis: "ns", along: (s) => 18 + s, heading: 0, speed: 2.8, waitMod: 7 },
     2: { name: "east", laneCount: 5, busLane: -1, side: -1, axis: "ew", along: (s) => 18 + s, heading: 270, speed: 3.1, waitMod: 6 },
     3: { name: "west", laneCount: 4, busLane: -1, side: 1, axis: "ew", along: (s) => -18 - s, heading: 90, speed: 2.6, waitMod: 9 }
   };
