@@ -4,8 +4,10 @@ import { useMemo } from "react";
 import { useTexture } from "@react-three/drei";
 import { RepeatWrapping, type Texture } from "three";
 
+import type { Direction } from "../../lib/types";
 import {
   APPROACH_CORRIDORS,
+  type ApproachCorridorSpec,
   CROSSWALK_STRIPES,
   INTERSECTION_BOX_X_METERS,
   INTERSECTION_BOX_Z_METERS,
@@ -49,6 +51,26 @@ const TILE_SCALE_M = 9; // metres per texture repeat
 const BUS_DAY = "#8f4034";
 const BUS_NIGHT = "#5e2c25";
 
+// Shoulder widen (perpendicular to travel, total across both sides) so the
+// rendered textured asphalt reaches the plate's curb line and no flat
+// plate-asphalt shows through between the road and the sidewalk. Markings stay
+// at their exact geometry positions — only the surface grows, so the extra
+// width reads as realistic unmarked shoulder asphalt. Per-corridor because the
+// avenue widths are asymmetric (강남대로/테헤란로 = 36 m, 서초대로 = 28.8 m) and the
+// plate frames each arm slightly differently.
+const CORRIDOR_WIDEN_M: Record<Direction, number> = {
+  north: 22,
+  south: 22,
+  east: 18,
+  west: 22
+};
+
+// Junction box widen (total, per axis). Kept smaller than the arm widen so the
+// box seals each arm junction without paving the diagonal sidewalk/plaza
+// corners (those are pedestrian space in the plate, never carriageway).
+const BOX_WIDEN_X_M = 8;
+const BOX_WIDEN_Z_M = 8;
+
 // Preload the asphalt texture in browser environments so it is warm on first
 // paint and does not cause a black-frame flicker in the capture harness.
 if (
@@ -67,6 +89,18 @@ function tileTexture(base: Texture, w: number, h: number): Texture {
   return tex;
 }
 
+// Widen the asphalt surface perpendicular to travel (width axis only) so it
+// reaches the plate curb line. Length axis (travel direction) is unchanged.
+function widenedCorridorSize(corridor: ApproachCorridorSpec): [number, number] {
+  const widen = CORRIDOR_WIDEN_M[corridor.direction];
+  return corridor.orientation === "north_south"
+    ? [corridor.size[0] + widen, corridor.size[1]]
+    : [corridor.size[0], corridor.size[1] + widen];
+}
+
+const BOX_SURFACE_X = INTERSECTION_BOX_X_METERS + BOX_WIDEN_X_M;
+const BOX_SURFACE_Z = INTERSECTION_BOX_Z_METERS + BOX_WIDEN_Z_M;
+
 export type RoadSurfaceLayerProps = {
   isNight: boolean;
 };
@@ -74,13 +108,18 @@ export type RoadSurfaceLayerProps = {
 export function RoadSurfaceLayer({ isNight }: RoadSurfaceLayerProps) {
   const asphaltBase = useTexture(ASPHALT_PATH) as Texture;
 
-  // Clone one texture per plane so each gets its own UV repeat.
+  // Clone one texture per plane so each gets its own UV repeat (world-consistent
+  // tiling against the widened surface sizes).
   const junctionTex = useMemo(
-    () => tileTexture(asphaltBase, INTERSECTION_BOX_X_METERS, INTERSECTION_BOX_Z_METERS),
+    () => tileTexture(asphaltBase, BOX_SURFACE_X, BOX_SURFACE_Z),
     [asphaltBase]
   );
   const corridorTextures = useMemo(
-    () => APPROACH_CORRIDORS.map((c) => tileTexture(asphaltBase, c.size[0], c.size[1])),
+    () =>
+      APPROACH_CORRIDORS.map((c) => {
+        const [w, h] = widenedCorridorSize(c);
+        return tileTexture(asphaltBase, w, h);
+      }),
     [asphaltBase]
   );
 
@@ -96,9 +135,9 @@ export function RoadSurfaceLayer({ isNight }: RoadSurfaceLayerProps) {
 
   return (
     <group name="road-surface-layer">
-      {/* Junction box — centre of the intersection */}
+      {/* Junction box — centre of the intersection (widened to seal arms) */}
       <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, 0.002, 0]}>
-        <planeGeometry args={[INTERSECTION_BOX_X_METERS, INTERSECTION_BOX_Z_METERS]} />
+        <planeGeometry args={[BOX_SURFACE_X, BOX_SURFACE_Z]} />
         <meshStandardMaterial
           map={junctionTex}
           color={asphaltColor}
@@ -107,14 +146,14 @@ export function RoadSurfaceLayer({ isNight }: RoadSurfaceLayerProps) {
         />
       </mesh>
 
-      {/* Approach corridor road surfaces */}
+      {/* Approach corridor road surfaces (widened to the plate curb line) */}
       {APPROACH_CORRIDORS.map((corridor, idx) => (
         <mesh
           key={`road-corridor-${corridor.direction}`}
           rotation={[-Math.PI / 2, 0, 0]}
           position={[corridor.position[0], 0.002, corridor.position[2]]}
         >
-          <planeGeometry args={corridor.size} />
+          <planeGeometry args={widenedCorridorSize(corridor)} />
           <meshStandardMaterial
             map={corridorTextures[idx]}
             color={asphaltColor}
