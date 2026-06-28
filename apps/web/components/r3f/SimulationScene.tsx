@@ -12,6 +12,7 @@ import { NightExposureSync, NightSeamlessPostFX } from "./NightSeamlessPostFX";
 import { NightSeamlessLighting } from "./NightSeamlessLighting";
 import { NightVehicleTreatment } from "./NightVehicleTreatment";
 import { GANGNAM_NIGHT_GRADE } from "./seamlessGrade";
+import { RoadSurfaceLayer } from "./RoadSurfaceLayer";
 import { SignalLayer } from "./SignalLayer";
 import { StructuralGuideLayer } from "./StructuralGuideLayer";
 import { WheelSprayLayer } from "./WheelSprayLayer";
@@ -174,16 +175,17 @@ function BackgroundPlateBoundary({
 
 BackgroundPlateBoundary.displayName = "BackgroundPlateBoundary";
 
-function StaticRoadLayerWithDetails(_props: {
+function StaticRoadLayerWithDetails({
+  isNight
+}: {
   isNight: boolean;
   qualityPreset: Stage6QualityPreset;
 }) {
-  // Both day and night now project a photoreal plate (BackgroundPlateLayer) that
-  // IS the road + city, so the entire procedural road/markings/curbs/clutter is
-  // suppressed for both to avoid a second road overlapping the plate. Dynamic
-  // vehicles carry their own contact shadows; the procedural surface is not
-  // needed.
-  return null;
+  // R1: Render the polished production road from geometry so SUMO vehicles
+  // always sit on metrically-accurate lane lines. The plate continues to supply
+  // buildings/skyline; the rendered road sits on top and covers the central road
+  // region. Far-end overlap with plate buildings is the lead's follow-up.
+  return <RoadSurfaceLayer isNight={isNight} />;
 }
 
 StaticRoadLayerWithDetails.displayName = "StaticRoadLayer";
