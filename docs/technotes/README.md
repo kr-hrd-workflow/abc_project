@@ -11,6 +11,7 @@ This folder is the evidence shelf for SmartIntersection renderer and simulator w
 - [Unreal Cinematic Final Pass Evidence](unreal-cinematic-final-pass.md)
 - [SUMO-Ready Operator Map Stage 1-3 Evidence Seed](sumo-ready-operator-map-stage1-3-evidence.md)
 - [Generated Screenshot Archive](generated-screenshot-archive.md)
+- [Gangnam AI-Plate → Photoreal 3D Pivot](gangnam-plate-to-photoreal-3d-pivot.md)
 
 ## Asset Folders
 
