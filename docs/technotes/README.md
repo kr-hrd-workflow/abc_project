@@ -12,6 +12,7 @@ This folder is the evidence shelf for SmartIntersection renderer and simulator w
 - [SUMO-Ready Operator Map Stage 1-3 Evidence Seed](sumo-ready-operator-map-stage1-3-evidence.md)
 - [Generated Screenshot Archive](generated-screenshot-archive.md)
 - [Gangnam AI-Plate → Photoreal 3D Pivot](gangnam-plate-to-photoreal-3d-pivot.md)
+- [Gangnam Photoreal Structure-Preserving Generation Pipeline](gangnam-photoreal-generation-pipeline.md)
 
 ## Asset Folders
 
