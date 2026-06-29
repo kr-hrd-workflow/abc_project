@@ -7,6 +7,7 @@ import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { deflateSync, inflateSync } from "node:zlib";
 import { buildVehicles } from "./lib/traffic-fixture.mjs";
+import { formatBytes, isRecord } from "./lib/util.mjs";
 
 const scriptDir = path.dirname(fileURLToPath(import.meta.url));
 const repoRoot = path.resolve(scriptDir, "..");
@@ -165,14 +166,6 @@ function normalizeArtifactPath(absolutePath) {
   return path.relative(repoRoot, absolutePath).replace(/\\/g, "/");
 }
 
-function formatBytes(bytes) {
-  return `${(bytes / (1024 * 1024)).toFixed(2)} MB`;
-}
-
-function isRecord(value) {
-  return Boolean(value) && typeof value === "object" && !Array.isArray(value);
-}
-
 function sleep(ms) {
   return new Promise((resolve) => {
     setTimeout(resolve, ms);
@@ -316,8 +309,23 @@ async function prepareServer() {
   const baseUrl = `http://127.0.0.1:${port}`;
   const serverMode =
     process.env.R3F_DASHBOARD_SERVER_MODE === "dev" ? "dev" : "production";
-  const serverCommand =
-    serverMode === "dev" ? getDevServerCommand(port) : getProductionServerCommand(port);
+  // npm-or-cmd command builder (replaces the former getDev/Build/Server helpers).
+  const npmWorkspaceCommand = (scriptParts) =>
+    process.platform === "win32"
+      ? {
+          command: process.env.ComSpec ?? "cmd.exe",
+          args: ["/d", "/s", "/c", `npm --workspace apps/web ${scriptParts.join(" ")}`]
+        }
+      : { command: "npm", args: ["--workspace", "apps/web", ...scriptParts] };
+  const serverCommand = npmWorkspaceCommand([
+    "run",
+    serverMode === "dev" ? "dev" : "start",
+    "--",
+    "--hostname",
+    "127.0.0.1",
+    "--port",
+    String(port)
+  ]);
   const logs = [];
   const stage5Env = {
     FORCE_COLOR: "0",
@@ -331,7 +339,7 @@ async function prepareServer() {
     // Avoid stale Next trace artifacts when this verifier follows a prior build.
     await rm(webBuildDir, { recursive: true, force: true });
     await runCommand({
-      commandSpec: getProductionBuildCommand(),
+      commandSpec: npmWorkspaceCommand(["run", "build"]),
       env: stage5Env,
       label: "production build",
       timeoutMs: 180000
@@ -514,78 +522,6 @@ async function stopProcessTree(child) {
     child.kill("SIGKILL");
   }
   await waitForExit(5000);
-}
-
-function getDevServerCommand(port) {
-  if (process.platform === "win32") {
-    return {
-      command: process.env.ComSpec ?? "cmd.exe",
-      args: [
-        "/d",
-        "/s",
-        "/c",
-        `npm --workspace apps/web run dev -- --hostname 127.0.0.1 --port ${port}`
-      ]
-    };
-  }
-
-  return {
-    command: "npm",
-    args: [
-      "--workspace",
-      "apps/web",
-      "run",
-      "dev",
-      "--",
-      "--hostname",
-      "127.0.0.1",
-      "--port",
-      String(port)
-    ]
-  };
-}
-
-function getProductionBuildCommand() {
-  if (process.platform === "win32") {
-    return {
-      command: process.env.ComSpec ?? "cmd.exe",
-      args: ["/d", "/s", "/c", "npm --workspace apps/web run build"]
-    };
-  }
-
-  return {
-    command: "npm",
-    args: ["--workspace", "apps/web", "run", "build"]
-  };
-}
-
-function getProductionServerCommand(port) {
-  if (process.platform === "win32") {
-    return {
-      command: process.env.ComSpec ?? "cmd.exe",
-      args: [
-        "/d",
-        "/s",
-        "/c",
-        `npm --workspace apps/web run start -- --hostname 127.0.0.1 --port ${port}`
-      ]
-    };
-  }
-
-  return {
-    command: "npm",
-    args: [
-      "--workspace",
-      "apps/web",
-      "run",
-      "start",
-      "--",
-      "--hostname",
-      "127.0.0.1",
-      "--port",
-      String(port)
-    ]
-  };
 }
 
 // buildVehicles + fixtureNoise live in scripts/lib/traffic-fixture.mjs so the

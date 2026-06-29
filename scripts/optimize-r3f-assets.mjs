@@ -4,13 +4,14 @@ import { stat, readFile } from "node:fs/promises";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 
+import { formatBytes, isRecord } from "./lib/util.mjs";
+
 const scriptDir = path.dirname(fileURLToPath(import.meta.url));
 const repoRoot = path.resolve(scriptDir, "..");
 const publicRoot = path.join(repoRoot, "apps", "web", "public");
 const assetsRoot = path.join(publicRoot, "simulation", "r3f", "assets");
 const manifestPath = path.join(assetsRoot, "manifest.json");
 const firstPassPayloadLimitBytes = 25 * 1024 * 1024;
-const checkMode = process.argv.includes("--check");
 const stage6EFirstPassRuntimeAssetIds = new Set([
   "vehicles/bus_near",
   "vehicles/emergency_ambulance_medium",
@@ -48,16 +49,8 @@ function addFailure(message) {
   failures.push(message);
 }
 
-function isRecord(value) {
-  return Boolean(value) && typeof value === "object" && !Array.isArray(value);
-}
-
 function hasText(value) {
   return typeof value === "string" && value.trim().length > 0;
-}
-
-function formatBytes(bytes) {
-  return `${(bytes / (1024 * 1024)).toFixed(2)} MB`;
 }
 
 function toRepoRelative(localPath) {
@@ -235,9 +228,7 @@ try {
 }
 
 console.log(
-  checkMode
-    ? "R3F asset optimization check mode: no files rewritten."
-    : "R3F asset optimization audit: no files rewritten by this script."
+  "R3F asset optimization audit: no files rewritten by this script."
 );
 
 for (const report of reports) {

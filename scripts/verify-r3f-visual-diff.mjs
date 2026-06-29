@@ -4,6 +4,8 @@ import { stat, readFile } from "node:fs/promises";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 
+import { isRecord } from "./lib/util.mjs";
+
 const scriptDir = path.dirname(fileURLToPath(import.meta.url));
 const repoRoot = path.resolve(scriptDir, "..");
 const detailsPath = path.join(repoRoot, "artifacts", "r3f-dashboard-details.json");
@@ -37,10 +39,6 @@ const metricThresholds = {
 
 const failures = [];
 const checks = [];
-
-function isRecord(value) {
-  return Boolean(value) && typeof value === "object" && !Array.isArray(value);
-}
 
 function addCheck(name, passed, evidence) {
   checks.push({ name, passed, evidence });

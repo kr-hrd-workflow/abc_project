@@ -4,6 +4,8 @@ import { readFile, stat } from "node:fs/promises";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 
+import { formatBytes, isRecord } from "./lib/util.mjs";
+
 const scriptDir = path.dirname(fileURLToPath(import.meta.url));
 const repoRoot = path.resolve(scriptDir, "..");
 const publicRoot = path.join(repoRoot, "apps", "web", "public");
@@ -116,10 +118,6 @@ function addFailure(message) {
   failures.push(message);
 }
 
-function isRecord(value) {
-  return Boolean(value) && typeof value === "object" && !Array.isArray(value);
-}
-
 function isPositiveInteger(value) {
   return Number.isInteger(value) && value > 0;
 }
@@ -211,10 +209,6 @@ function findBannedNameTerm(value) {
   const normalizedValue = normalizeNameText(value);
 
   return bannedNameTerms.find((term) => normalizedValue.includes(term));
-}
-
-function formatBytes(bytes) {
-  return `${(bytes / (1024 * 1024)).toFixed(2)} MB`;
 }
 
 function validateProvenanceFields(assetId, entry) {
