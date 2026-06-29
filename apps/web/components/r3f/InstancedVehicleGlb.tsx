@@ -3,8 +3,10 @@
 import { useEffect, useRef } from "react";
 import {
   BufferGeometry,
+  CanvasTexture,
   Color,
   Float32BufferAttribute,
+  MeshPhysicalMaterial,
   MeshStandardMaterial,
   Object3D,
   RepeatWrapping,
@@ -50,6 +52,45 @@ function getVehiclePaintTextures(): { map: Texture; normalMap: Texture } | null 
   normalMap.repeat.set(PAINT_TILE_REPEAT, PAINT_TILE_REPEAT);
   cachedPaintTextures = { map, normalMap };
   return cachedPaintTextures;
+}
+
+// Soft radial falloff for the grounding disc so the contact shadow reads as a
+// real ambient-occlusion smudge under the car (dense, dark center fading to
+// nothing at the rim) instead of a hard uniform decal that looks pasted on.
+// Grayscale so the green channel drives the alphaMap; one shared texture built
+// lazily in a real browser only (jsdom/SSR have no 2D canvas -> flat-disc
+// fallback). Cached so every vehicle stream reuses the same upload.
+let cachedContactShadowAlpha: Texture | null = null;
+let contactShadowAlphaResolved = false;
+function getContactShadowAlphaTexture(): Texture | null {
+  if (contactShadowAlphaResolved) {
+    return cachedContactShadowAlpha;
+  }
+  contactShadowAlphaResolved = true;
+  if (
+    typeof window === "undefined" ||
+    typeof document === "undefined" ||
+    /jsdom/i.test(window.navigator?.userAgent ?? "")
+  ) {
+    return null;
+  }
+  const size = 64;
+  const canvas = document.createElement("canvas");
+  canvas.width = size;
+  canvas.height = size;
+  const context = canvas.getContext("2d");
+  if (!context) {
+    return null;
+  }
+  const half = size / 2;
+  const gradient = context.createRadialGradient(half, half, 0, half, half, half);
+  gradient.addColorStop(0, "#ffffff");
+  gradient.addColorStop(0.45, "#b4b4b4");
+  gradient.addColorStop(1, "#000000");
+  context.fillStyle = gradient;
+  context.fillRect(0, 0, size, size);
+  cachedContactShadowAlpha = new CanvasTexture(canvas);
+  return cachedContactShadowAlpha;
 }
 
 // Ground clearance so wheels sit just above the road plate instead of z-fighting
@@ -179,16 +220,25 @@ function buildManagedMaterial(
 ): Material {
   if (role === "body") {
     // White base so instanceColor (the livery tint) multiplies faithfully.
-    // Tuned to sit in the muted photoreal plate instead of reading as a clean
-    // bright CG toy: rougher paint + low env reflection so vehicles don't pop /
-    // over-contrast against the dark plate. A tiling paint-detail map + derived
-    // normal add micro surface variation so the paint reads as real, not flat.
+    // Automotive clearcoat paint: a satin colour base under a glossy clear coat
+    // so the body picks up a believable specular sheen from the scene IBL (sharp
+    // at day, subtle neon at night) instead of reading as flat matte CG. Kept
+    // restrained — modest env reflection + a soft (not mirror) clearcoat — so the
+    // vehicles still sit in the muted photoreal plate rather than popping as
+    // bright CG. A tiny emissive floor keeps the dark Korean liveries
+    // (charcoal / near-black) from crushing to pure black under the dark night
+    // IBL. A tiling paint-detail map + derived normal add micro surface variation
+    // so the paint reads as real, not flat.
     const paint = getVehiclePaintTextures();
-    return new MeshStandardMaterial({
+    return new MeshPhysicalMaterial({
       color: "#ffffff",
       metalness: 0.0,
-      roughness: 0.78,
-      envMapIntensity: 0.42,
+      roughness: 0.62,
+      clearcoat: 0.85,
+      clearcoatRoughness: 0.3,
+      envMapIntensity: 0.55,
+      emissive: "#10171a",
+      emissiveIntensity: 0.05,
       ...(paint
         ? {
             map: paint.map,
@@ -219,9 +269,12 @@ function buildManagedMaterial(
   if (cloned instanceof MeshStandardMaterial) {
     // Keep glass reflective, but mute trim/other surfaces so they sit in the
     // muted plate rather than reading as shiny CG plastic.
-    cloned.envMapIntensity = role === "glass" ? 0.9 : 0.42;
+    cloned.envMapIntensity = role === "glass" ? 0.95 : 0.42;
     if (role === "glass") {
       cloned.transparent = true;
+      // Automotive glass is glossy + dark: clamp roughness low so windows give a
+      // crisp environment reflection instead of a flat tinted panel.
+      cloned.roughness = Math.min(cloned.roughness ?? 0.1, 0.12);
     } else {
       cloned.roughness = Math.max(cloned.roughness ?? 0.5, 0.7);
     }
@@ -359,6 +412,8 @@ export function VehicleGlbContactShadows({
     mesh.instanceMatrix.needsUpdate = true;
   }, [instances]);
 
+  const alphaMap = getContactShadowAlphaTexture();
+
   if (instances.length === 0) return null;
 
   return (
@@ -376,6 +431,7 @@ export function VehicleGlbContactShadows({
         transparent
         opacity={opacity}
         depthWrite={false}
+        {...(alphaMap ? { alphaMap } : {})}
       />
     </instancedMesh>
   );

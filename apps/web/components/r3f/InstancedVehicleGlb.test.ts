@@ -3,6 +3,7 @@ import {
   BoxGeometry,
   Group,
   Mesh,
+  MeshPhysicalMaterial,
   MeshStandardMaterial
 } from "three";
 
@@ -73,15 +74,22 @@ describe("buildVehicleGlbGeometryGroups", () => {
 
     expect(groups).toHaveLength(2);
 
-    const bodyMat = body?.material as MeshStandardMaterial;
+    const bodyMat = body?.material as MeshPhysicalMaterial;
     expect(body?.tintable).toBe(true);
+    // Automotive clearcoat paint: a glossy clear coat over a satin colour base.
+    expect(bodyMat).toBeInstanceOf(MeshPhysicalMaterial);
     // White base so the per-instance livery color multiplies faithfully.
     expect(bodyMat.color.getHexString()).toBe("ffffff");
-    // Body paint is tuned matte + low env reflection so vehicles sit in the
-    // muted photoreal plate instead of reading as bright CG.
+    // Dielectric paint (no chrome look); the sheen comes from the clear coat.
     expect(bodyMat.metalness).toBeCloseTo(0);
-    expect(bodyMat.roughness).toBeCloseTo(0.78);
-    expect(bodyMat.envMapIntensity).toBeCloseTo(0.42);
+    expect(bodyMat.roughness).toBeCloseTo(0.62);
+    // Restrained env reflection so vehicles sit in the muted photoreal plate
+    // instead of reading as bright CG.
+    expect(bodyMat.envMapIntensity).toBeCloseTo(0.55);
+    // Clearcoat gives the paint a believable specular sheen under the scene IBL.
+    expect(bodyMat.clearcoat).toBeGreaterThan(0.5);
+    // A tiny emissive floor keeps dark liveries from crushing to black at night.
+    expect(bodyMat.emissiveIntensity).toBeGreaterThan(0);
 
     const emitterMat = emitter?.material as MeshStandardMaterial;
     expect(emitter?.tintable).toBe(false);
