@@ -506,6 +506,13 @@ export const BUS_LANE_BORDER_COLOR = "#2f6fd0"; // 청색 (blue) 복선
 export const SOLID_LANE_LINE_COLOR = "#eceadf"; // 백색 solid lines
 
 const SOLID_LINE_WIDTH = 0.14; // 0.10–0.15 m per line
+// 중앙선 (yellow 복선) is rendered wider than the generic 0.14 m lines. At the high
+// operator-wide camera a 0.14 m line is sub-pixel at a grazing angle and aliases
+// into a dash-like, broken appearance (the blue 복선 does the same). The 중앙선
+// must read as a continuous SOLID double-yellow line (Korean 중앙선 = solid), and
+// it is the primary structure cue for photoreal plate regen, so it is widened to
+// stay solid across the whole corridor at this distance.
+const CENTER_LINE_WIDTH = 0.34;
 const DOUBLE_LINE_GAP = 0.18; // gap between a double (복선) pair
 const STOP_BAR_WIDTH = 0.45; // 정지선 0.30–0.60 m
 const EDGE_LINE_INSET = 0.45; // 길가장자리구역선 inset from the curb
@@ -544,9 +551,10 @@ function doubleLine(
   corridor: ApproachCorridorSpec,
   centerLateral: number,
   lengthM: number,
-  alongCenter: number
+  alongCenter: number,
+  lineWidth: number = SOLID_LINE_WIDTH
 ): PlanePrimitiveSpec[] {
-  const half = DOUBLE_LINE_GAP / 2 + SOLID_LINE_WIDTH / 2;
+  const half = DOUBLE_LINE_GAP / 2 + lineWidth / 2;
   return [-1, 1].map((s) =>
     longitudinalLine(
       `${idBase}-${s < 0 ? "a" : "b"}`,
@@ -554,7 +562,7 @@ function doubleLine(
       centerLateral + s * half,
       lengthM,
       alongCenter,
-      SOLID_LINE_WIDTH
+      lineWidth
     )
   );
 }
@@ -571,7 +579,8 @@ export const CENTER_LINE_MARKINGS: PlanePrimitiveSpec[] =
       corridor,
       0,
       corridor.lengthMeters,
-      alongCenter
+      alongCenter,
+      CENTER_LINE_WIDTH
     );
   });
 
