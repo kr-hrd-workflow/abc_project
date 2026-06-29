@@ -82,3 +82,6 @@ archive/unreal/original/artifacts/unreal-operator-map-stage7-*.png
 
 # Local asset pipeline virtualenv
 tools/asset-pipeline/.venv/
+
+# Technotes kept local-only (per user) — drafts + large screenshot assets not pushed to shared remote
+docs/technotes/
