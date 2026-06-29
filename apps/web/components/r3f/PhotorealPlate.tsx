@@ -36,10 +36,24 @@ const PHOTOREAL_PLATES = {
   night: {
     path: "/simulation/r3f/assets/plates/gangnam_photoreal_roadlock_night.webp",
     aspect: 1451 / 1084
+  },
+  // DIAGNOSTIC (?cmp=A): bare-asphalt day plate with NO painted lanes, so the
+  // R3F markings overlay reads as the single (non-doubled) lane set.
+  plainDay: {
+    path: "/simulation/r3f/assets/plates/gangnam_photoreal_plain_day.webp",
+    aspect: 1450 / 1085
   }
 } as const;
 
-export function resolvePhotorealPlate(timeOfDay: Stage6TimeOfDay) {
+// PlateVariant "plain" is a diagnostic-only override (?cmp=A). Default
+// "roadlock" preserves the committed photoreal behaviour exactly.
+export type PhotorealPlateVariant = "roadlock" | "plain";
+
+export function resolvePhotorealPlate(
+  timeOfDay: Stage6TimeOfDay,
+  variant: PhotorealPlateVariant = "roadlock"
+) {
+  if (variant === "plain") return PHOTOREAL_PLATES.plainDay;
   return timeOfDay === "night" ? PHOTOREAL_PLATES.night : PHOTOREAL_PLATES.day;
 }
 
@@ -49,6 +63,7 @@ if (
 ) {
   useTexture.preload(PHOTOREAL_PLATES.day.path);
   useTexture.preload(PHOTOREAL_PLATES.night.path);
+  useTexture.preload(PHOTOREAL_PLATES.plainDay.path);
 }
 
 const PHOTOREAL_VERTEX_SHADER = /* glsl */ `
@@ -80,7 +95,13 @@ const PHOTOREAL_FRAGMENT_SHADER = /* glsl */ `
   }
 `;
 
-export function PhotorealPlate({ timeOfDay }: { timeOfDay: Stage6TimeOfDay }) {
+export function PhotorealPlate({
+  timeOfDay,
+  variant = "roadlock"
+}: {
+  timeOfDay: Stage6TimeOfDay;
+  variant?: PhotorealPlateVariant;
+}) {
   if (
     typeof window === "undefined" ||
     /jsdom/i.test(window.navigator.userAgent)
@@ -90,15 +111,21 @@ export function PhotorealPlate({ timeOfDay }: { timeOfDay: Stage6TimeOfDay }) {
 
   return (
     <Suspense fallback={null}>
-      <PhotorealPlateMesh timeOfDay={timeOfDay} />
+      <PhotorealPlateMesh timeOfDay={timeOfDay} variant={variant} />
     </Suspense>
   );
 }
 
 PhotorealPlate.displayName = "PhotorealPlate";
 
-function PhotorealPlateMesh({ timeOfDay }: { timeOfDay: Stage6TimeOfDay }) {
-  const plate = resolvePhotorealPlate(timeOfDay);
+function PhotorealPlateMesh({
+  timeOfDay,
+  variant
+}: {
+  timeOfDay: Stage6TimeOfDay;
+  variant: PhotorealPlateVariant;
+}) {
+  const plate = resolvePhotorealPlate(timeOfDay, variant);
   const texture = useTexture(plate.path) as Texture;
   const gl = useThree((state) => state.gl);
 

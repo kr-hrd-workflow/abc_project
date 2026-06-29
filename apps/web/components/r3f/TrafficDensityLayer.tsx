@@ -52,7 +52,10 @@ import {
   decideStage6VehicleLod,
   getStage6VehicleMaterialCues
 } from "./stage6VehicleLod";
-import { applyCalibratedLaneOffset } from "./plateVehicleCalibration";
+import {
+  applyCalibratedLaneOffset,
+  applyCmpAWestVehicleTransform
+} from "./plateVehicleCalibration";
 
 export type TrafficDensitySourceLabel =
   | "fixture"
@@ -1337,11 +1340,18 @@ function buildPreciseVehicles(
     })
   );
 
-  return drafts.map(({ vehicle, size, lanePosition }) => {
+  return drafts.map(({ vehicle, size, lanePosition, lanePlacement }) => {
+    // cmp=A WEST-only: rotate the final world (x, z) + heading about the
+    // intersection centre by the shared west yaw so west vehicles ride the same
+    // rotated lanes the west markings paint. No-op for non-west / non-cmp=A.
+    const west = applyCmpAWestVehicleTransform(
+      lanePosition.x,
+      lanePosition.z,
+      degreesToRadians(vehicle.heading_degrees),
+      lanePlacement?.direction
+    );
     const lodDecision = decideStage6VehicleLod({
-      distanceMeters: Math.sqrt(
-        lanePosition.x * lanePosition.x + lanePosition.z * lanePosition.z
-      ),
+      distanceMeters: Math.sqrt(west.x * west.x + west.z * west.z),
       sourceLabel: "snapshot",
       vehicleType: vehicle.vehicle_type,
       emergency: vehicle.emergency,
@@ -1355,11 +1365,11 @@ function buildPreciseVehicles(
       sourceLabel: "snapshot",
       vehicleType: vehicle.vehicle_type,
       position: [
-        lanePosition.x,
+        west.x,
         size[1] / 2 + 0.04,
-        lanePosition.z
+        west.z
       ],
-      rotationY: degreesToRadians(vehicle.heading_degrees),
+      rotationY: west.rotationY,
       size,
       color: getPreciseVehicleColor(vehicle),
       emergency: vehicle.emergency,

@@ -29,10 +29,24 @@ import {
   LANE_ARROW_DECALS,
   type LaneArrowKind,
   LANE_DIVIDER_MARKINGS,
+  LANE_DIVIDER_MARKING_WIDTH,
+  LANE_DIVIDER_SEGMENT_GAP,
+  LANE_DIVIDER_SEGMENT_LENGTH,
   LANE_RESTRICT_MARKINGS,
+  LANE_WIDTH_METERS,
+  MARKING_HEIGHT,
   type PlanePrimitiveSpec,
-  STOP_LINE_MARKINGS
+  STOP_LINE_MARKINGS,
+  type Vector3Tuple
 } from "./roadGeometry";
+import {
+  getApproachHasMedianBus,
+  getApproachRoadWidthMeters
+} from "./intersectionTruth";
+import {
+  getCmpAWestRotationRad,
+  rotateAboutIntersectionCenter
+} from "./plateVehicleCalibration";
 
 // RoadSurfaceLayer — photoreal production road rendered from the geometry model.
 //
@@ -83,6 +97,114 @@ const CORRIDOR_WIDEN_M: Record<Direction, number> = {
 // corners (those are pedestrian space in the plate, never carriageway).
 const BOX_WIDEN_X_M = 8;
 const BOX_WIDEN_Z_M = 8;
+
+// ── cmp=A (?photoreal=1&cmp=A) markings registration ───────────────────────────
+// dx8.5 revert: the markings overlay renders at its NORMAL metric positions and a
+// single GLOBAL +X group translate in SimulationScene (default 8.5 m, ?cmpAdx=)
+// registers the markings + vehicles onto the plain plate TOGETHER. The former
+// per-corridor lateral offset is removed; the far-end extension + west rotation are
+// set to 0 (scaffolding retained but neutral), so the painted lane structure is
+// back to normal corridor length with no west skew.
+
+// Far-end (away-from-junction) marking extension per arm, metres. Disabled (all 0)
+// for the dx8.5 revert: markings render at their normal metric corridor length and
+// the cmp=A group translate registers them onto the plate (no far-extension).
+const CMP_A_FAR_EXTEND_M: Record<Direction, number> = {
+  north: 0,
+  south: 0,
+  east: 0,
+  west: 0
+};
+
+// Outward (away-from-junction) sign along each corridor's travel axis.
+function corridorOutwardSign(direction: Direction): 1 | -1 {
+  return direction === "north" || direction === "west" ? -1 : 1;
+}
+
+// cmp=A WEST-only: rotate a west marking spec about the intersection centre
+// (origin) by the shared west yaw (getCmpAWestRotationRad) so the west markings
+// follow the plate's painted 서초대로 bearing. Applied AFTER the lateral shift /
+// far-extend, so the already-placed west marking pivots about the centre (the
+// near/junction end stays ~put, the far end swings). N/S/E specs pass through
+// untouched. Uses the SAME yaw + origin as the vehicle transform so west markings
+// and west vehicles stay co-aligned on the rotated lanes.
+function rotateWestSpecAboutCenter<
+  T extends { direction: Direction; position: Vector3Tuple; rotationY?: number }
+>(spec: T): T {
+  if (spec.direction !== "west") return spec;
+  const yaw = getCmpAWestRotationRad();
+  if (!yaw) return spec;
+  const [x, y, z] = spec.position;
+  const [rx, rz] = rotateAboutIntersectionCenter(x, z, yaw);
+  return { ...spec, position: [rx, y, rz], rotationY: (spec.rotationY ?? 0) + yaw };
+}
+
+// Lengthen a full-corridor longitudinal solid line (중앙선 / 길가장자리 / bus
+// border) at the far end only: grow the length and slide the centre outward so
+// the near (junction) end stays put.
+function extendSolidLongitudinal(spec: PlanePrimitiveSpec): PlanePrimitiveSpec {
+  const extend = CMP_A_FAR_EXTEND_M[spec.direction];
+  if (!extend) return spec;
+  const isNS = spec.direction === "north" || spec.direction === "south";
+  const out = corridorOutwardSign(spec.direction);
+  const [x, y, z] = spec.position;
+  const [w, h] = spec.size;
+  const size: [number, number] = isNS ? [w, h + extend] : [w + extend, h];
+  const position: Vector3Tuple = isNS
+    ? [x, y, z + (out * extend) / 2]
+    : [x + (out * extend) / 2, y, z];
+  return { ...spec, size, position };
+}
+
+// Far-end dashed-divider continuation so the lane lines do not stop short of the
+// extended solids. Mirrors roadGeometry's LANE_DIVIDER_MARKINGS lane-offset +
+// pitch (constants imported from roadGeometry to stay in sync).
+function buildCmpADividerExtensionDashes(): PlanePrimitiveSpec[] {
+  const pitch = LANE_DIVIDER_SEGMENT_LENGTH + LANE_DIVIDER_SEGMENT_GAP;
+  const dashLength = LANE_DIVIDER_SEGMENT_LENGTH * 0.92;
+  const dashes: PlanePrimitiveSpec[] = [];
+
+  for (const corridor of APPROACH_CORRIDORS) {
+    const extend = CMP_A_FAR_EXTEND_M[corridor.direction];
+    if (!extend) continue;
+    const laneCount = corridor.inboundLanes + corridor.outboundLanes;
+    const widthM = getApproachRoadWidthMeters(corridor.direction);
+    const hasBus = getApproachHasMedianBus(corridor.direction);
+    const isNS = corridor.orientation === "north_south";
+    const out = corridorOutwardSign(corridor.direction);
+    const along0 = isNS ? corridor.position[2] : corridor.position[0];
+    const farEnd = along0 + out * (corridor.lengthMeters / 2);
+    const count = Math.ceil(extend / pitch);
+
+    for (let laneIndex = 1; laneIndex < laneCount; laneIndex += 1) {
+      const laneOffset = -widthM / 2 + laneIndex * LANE_WIDTH_METERS;
+      if (Math.abs(laneOffset) < 0.05) continue;
+      if (hasBus && Math.abs(Math.abs(laneOffset) - LANE_WIDTH_METERS) < 0.05) {
+        continue;
+      }
+      for (let k = 0; k < count; k += 1) {
+        const along = farEnd + out * pitch * (k + 0.5);
+        dashes.push(
+          isNS
+            ? {
+                id: `${corridor.direction}-divider-ext-${laneIndex}-${k}`,
+                direction: corridor.direction,
+                position: [laneOffset, MARKING_HEIGHT, along],
+                size: [LANE_DIVIDER_MARKING_WIDTH, dashLength]
+              }
+            : {
+                id: `${corridor.direction}-divider-ext-${laneIndex}-${k}`,
+                direction: corridor.direction,
+                position: [along, MARKING_HEIGHT, laneOffset],
+                size: [dashLength, LANE_DIVIDER_MARKING_WIDTH]
+              }
+        );
+      }
+    }
+  }
+
+  return dashes;
+}
 
 // Preload the asphalt texture in browser environments so it is warm on first
 // paint and does not cause a black-frame flicker in the capture harness.
@@ -185,8 +307,10 @@ function buildArrowGeometry(
   return geo;
 }
 
-function mergeLaneArrows(): BufferGeometry | null {
-  const geometries = LANE_ARROW_DECALS.map((decal) =>
+function mergeLaneArrows(
+  decals: typeof LANE_ARROW_DECALS = LANE_ARROW_DECALS
+): BufferGeometry | null {
+  const geometries = decals.map((decal) =>
     buildArrowGeometry(decal.kind, decal.position, decal.rotationY)
   );
   if (geometries.length === 0) return null;
@@ -198,9 +322,11 @@ function mergeLaneArrows(): BufferGeometry | null {
 // Merge the "버스" legend planes (one shared texture) into one geometry so the
 // whole set is a single draw call. Each plane is laid flat + oriented to its
 // lane's travel direction (same transform recipe as the arrows).
-function mergeBusLegends(): BufferGeometry | null {
-  if (BUS_LANE_LEGENDS.length === 0) return null;
-  const geometries = BUS_LANE_LEGENDS.map((legend) => {
+function mergeBusLegends(
+  legends: typeof BUS_LANE_LEGENDS = BUS_LANE_LEGENDS
+): BufferGeometry | null {
+  if (legends.length === 0) return null;
+  const geometries = legends.map((legend) => {
     const geo = new PlaneGeometry(2.4, 4.6);
     geo.rotateX(-Math.PI / 2);
     geo.rotateY(legend.rotationY);
@@ -266,11 +392,16 @@ export type RoadSurfaceLayerProps = {
   // vehicles (placed at the same metric lane centres) sit centred in visible,
   // metrically-correct lanes regardless of the plate's painted-lane drift.
   markingsOnly?: boolean;
+  // cmpA (?photoreal=1&cmp=A): shift each corridor's markings laterally onto the
+  // plain plate's carriageway (same SSOT the vehicles use) and extend the far end
+  // to the visible plate-road extent. No effect on the committed road / photoreal.
+  cmpA?: boolean;
 };
 
 export function RoadSurfaceLayer({
   isNight,
-  markingsOnly = false
+  markingsOnly = false,
+  cmpA = false
 }: RoadSurfaceLayerProps) {
   const asphaltBase = useTexture(ASPHALT_PATH) as Texture;
 
@@ -290,36 +421,83 @@ export function RoadSurfaceLayer({
   );
 
   // Markings merged into one geometry per material so the whole high-camera
-  // frame is a handful of draw calls instead of one per stripe.
+  // frame is a handful of draw calls instead of one per stripe. In cmp=A each
+  // corridor's specs are shifted laterally onto the plate road; the full-corridor
+  // longitudinal solids (중앙선 / 길가장자리 / bus border) plus extra dashed-divider
+  // segments are also extended at the far end.
   const dividerGeometry = useMemo(
-    () => mergeFlatMarkings(LANE_DIVIDER_MARKINGS, 0.014),
-    []
+    () =>
+      mergeFlatMarkings(
+        cmpA
+          ? [...LANE_DIVIDER_MARKINGS, ...buildCmpADividerExtensionDashes()]
+              .map(rotateWestSpecAboutCenter)
+          : LANE_DIVIDER_MARKINGS,
+        0.014
+      ),
+    [cmpA]
   );
   const crosswalkGeometry = useMemo(
-    () => mergeFlatMarkings(CROSSWALK_STRIPES, 0.016),
-    []
+    () =>
+      mergeFlatMarkings(
+        cmpA
+          ? CROSSWALK_STRIPES.map(rotateWestSpecAboutCenter)
+          : CROSSWALK_STRIPES,
+        0.016
+      ),
+    [cmpA]
   );
-  const arrowGeometry = useMemo(() => mergeLaneArrows(), []);
+  const arrowGeometry = useMemo(
+    () =>
+      mergeLaneArrows(
+        cmpA
+          ? LANE_ARROW_DECALS.map(rotateWestSpecAboutCenter)
+          : undefined
+      ),
+    [cmpA]
+  );
   // 중앙선 (yellow), 중앙버스전용차로선 (blue), and the white solid line set
   // (정지선 + 길가장자리구역선 + 진로변경제한선) each merge to one geometry.
   const centerLineGeometry = useMemo(
-    () => mergeFlatMarkings(CENTER_LINE_MARKINGS, 0.011),
-    []
+    () =>
+      mergeFlatMarkings(
+        cmpA
+          ? CENTER_LINE_MARKINGS.map((s) =>
+              rotateWestSpecAboutCenter(extendSolidLongitudinal(s))
+            )
+          : CENTER_LINE_MARKINGS,
+        0.011
+      ),
+    [cmpA]
   );
   const busBorderGeometry = useMemo(
-    () => mergeFlatMarkings(BUS_LANE_BORDER_MARKINGS, 0.012),
-    []
+    () =>
+      mergeFlatMarkings(
+        cmpA
+          ? BUS_LANE_BORDER_MARKINGS.map((s) => extendSolidLongitudinal(s))
+          : BUS_LANE_BORDER_MARKINGS,
+        0.012
+      ),
+    [cmpA]
   );
   const solidWhiteGeometry = useMemo(
     () =>
       mergeFlatMarkings(
-        [...STOP_LINE_MARKINGS, ...EDGE_LINE_MARKINGS, ...LANE_RESTRICT_MARKINGS],
+        cmpA
+          ? [
+              ...STOP_LINE_MARKINGS,
+              ...EDGE_LINE_MARKINGS.map((s) => extendSolidLongitudinal(s)),
+              ...LANE_RESTRICT_MARKINGS
+            ].map(rotateWestSpecAboutCenter)
+          : [...STOP_LINE_MARKINGS, ...EDGE_LINE_MARKINGS, ...LANE_RESTRICT_MARKINGS],
         0.013
       ),
-    []
+    [cmpA]
   );
   const busLegendTexture = useBusLegendTexture();
-  const busLegendGeometry = useMemo(() => mergeBusLegends(), []);
+  const busLegendGeometry = useMemo(
+    () => mergeBusLegends(cmpA ? BUS_LANE_LEGENDS : undefined),
+    [cmpA]
+  );
 
   // Asphalt tint: white in day (texture reads true colour ~#3a3a3e),
   // slightly blue-dark tint at night so the grain stays visible.

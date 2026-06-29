@@ -138,10 +138,13 @@ export const CORRIDOR_LENGTH_METERS: Record<Direction, number> = {
 
 const HALF_BOX_X = INTERSECTION_BOX_X_METERS / 2;
 const HALF_BOX_Z = INTERSECTION_BOX_Z_METERS / 2;
-const MARKING_HEIGHT = 0.018;
-const LANE_DIVIDER_MARKING_WIDTH = 0.46;
-const LANE_DIVIDER_SEGMENT_LENGTH = 7.8;
-const LANE_DIVIDER_SEGMENT_GAP = 5.2;
+// Exported so the photoreal markings overlay (RoadSurfaceLayer, cmp=A) can build
+// far-end lane-divider extension dashes with the exact same pitch/size/height as
+// the committed dividers, without duplicating the magic numbers.
+export const MARKING_HEIGHT = 0.018;
+export const LANE_DIVIDER_MARKING_WIDTH = 0.46;
+export const LANE_DIVIDER_SEGMENT_LENGTH = 7.8;
+export const LANE_DIVIDER_SEGMENT_GAP = 5.2;
 const CROSSWALK_STRIPE_WIDTH = 0.62;
 const CURB_WIDTH = 0.45;
 const CURB_HEIGHT = 0.22;

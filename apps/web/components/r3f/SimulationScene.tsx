@@ -9,6 +9,7 @@ import { DynamicPedestrianLayer } from "./DynamicPedestrianLayer";
 import { DynamicVehicleLayer } from "./DynamicVehicleLayer";
 import { NightVehicleTreatment } from "./NightVehicleTreatment";
 import { PhotorealPlate } from "./PhotorealPlate";
+import { getCmpAGlobalXShiftMeters } from "./plateVehicleCalibration";
 import { RoadSurfaceLayer } from "./RoadSurfaceLayer";
 import { SceneEnvironment } from "./SceneEnvironment";
 import { ScenePostFX } from "./ScenePostFX";
@@ -51,6 +52,27 @@ function resolvePhotorealMode(): boolean {
   return new URLSearchParams(window.location.search).get("photoreal") === "1";
 }
 
+// DIAGNOSTIC COMPARISON (?cmp=A|B) — experimental, only meaningful with
+// ?photoreal=1, and intentionally NOT committed-default behaviour. Absent ?cmp
+// keeps the committed photoreal mode (roadlock plate + R3F markings) unchanged.
+//   A = plain-asphalt plate (no painted lanes) + R3F markings overlay ON  → a
+//       single, non-doubled lane set with vehicles centred in it.
+//   B = roadlock plate's painted lanes + R3F markings overlay OFF + URL-driven
+//       per-approach vehicle lateral calibration (?calB=, see
+//       plateVehicleCalibration) so live vehicles seat on the plate's lanes.
+function resolveCmpMode(): "A" | "B" | null {
+  if (typeof window === "undefined") return null;
+  const v = new URLSearchParams(window.location.search).get("cmp");
+  return v === "A" || v === "B" ? v : null;
+}
+
+// DIAGNOSTIC (?cmp=A): the markings overlay + vehicles are registered onto the
+// plain plate via a SINGLE GLOBAL +X group translate (the dx8.5 mechanism) — one
+// <group> wraps the R3F markings and the live vehicles so they move TOGETHER by
+// getCmpAGlobalXShiftMeters() metres in world X (default 8.5, tunable via
+// ?cmpAdx= without a rebuild). N/S arms shift laterally; E/W arms shift along
+// their travel axis. No per-corridor offset, no west rotation, no far-extension.
+
 export function SimulationScene({
   sceneSnapshot,
   qualityPreset = getStage6QualityPreset("high"),
@@ -84,8 +106,21 @@ export function SimulationScene({
   // real timeOfDay so day and night both read correctly. Post-FX mirrors the
   // normal scene (day: ACES pipeline; night: Bloom-only).
   const isPhotoreal = resolvePhotorealMode();
+  const cmpMode = resolveCmpMode();
 
   if (isPhotoreal) {
+    // cmp=A → plain-asphalt plate; otherwise the committed roadlock plate.
+    const plateVariant = cmpMode === "A" ? "plain" : "roadlock";
+    // cmp=B drops the R3F markings overlay so only the plate's painted lanes
+    // show (vehicles are seated on them via ?calB= calibration). A and the
+    // committed default keep the markings overlay ON.
+    const showR3fMarkings = cmpMode !== "B";
+    // cmp=A is a clean road-registration diagnostic: hide the heavy 3D scene
+    // except the plate + R3F markings + live vehicles + signals (+ depth
+    // occluders). Pedestrians and the distant atmospheric scenery are suppressed
+    // (the scenery caused a light-leak); signals stay ON so live signal state
+    // reads against the plate. Committed photoreal + cmp=B keep everything.
+    const isCmpA = cmpMode === "A";
     return (
       <group name="photoreal-production-scene">
         <CameraRig preset="operatorWide" weather="clear" timeOfDay="day" />
@@ -95,26 +130,57 @@ export function SimulationScene({
           qualityPreset={qualityPreset}
           weather="clear"
           timeOfDay={timeOfDay}
+          suppressAtmosphericScenery={isCmpA}
         />
-        <PhotorealPlate timeOfDay={timeOfDay} />
+        <PhotorealPlate timeOfDay={timeOfDay} variant={plateVariant} />
         {/* Metric-exact road MARKINGS composited on the plate. The plate's
             imagegen road grid is rotated/offset from the metric projection and
             its lane spacing ≠ 3.6 m, so a screen-space plate offset/scale cannot
             seat all four approaches. Drawing the geometry-derived lane lines,
             중앙선, 정지선 and crosswalks on top makes the visible lanes metric-exact,
             so the live vehicles (same getInboundLaneOffset SSOT) sit centred in
-            them. Asphalt stays from the plate (markingsOnly). */}
-        <Suspense fallback={null}>
-          <RoadSurfaceLayer isNight={isNight} markingsOnly />
-        </Suspense>
-        <DynamicVehicleLayerWithWeather
-          isNight={isNight}
-          timeOfDay={timeOfDay}
-          sceneSnapshot={sceneSnapshot}
-          qualityPreset={qualityPreset}
-          viewpoint="wide"
-        />
-        <DynamicPedestrianLayer sceneSnapshot={sceneSnapshot} />
+            them. Asphalt stays from the plate (markingsOnly).
+            cmp=A (dx8.5): the markings + vehicles are wrapped in ONE group and
+            translated together by a single GLOBAL +X shift
+            (getCmpAGlobalXShiftMeters, default 8.5, ?cmpAdx=). Committed photoreal
+            + cmp=B render them flat (no shift). */}
+        {isCmpA && (
+          <group
+            name="cmp-a-dx85-shift"
+            position={[getCmpAGlobalXShiftMeters(), 0, 0]}
+          >
+            {showR3fMarkings && (
+              <Suspense fallback={null}>
+                <RoadSurfaceLayer isNight={isNight} markingsOnly cmpA />
+              </Suspense>
+            )}
+            <DynamicVehicleLayerWithWeather
+              isNight={isNight}
+              timeOfDay={timeOfDay}
+              sceneSnapshot={sceneSnapshot}
+              qualityPreset={qualityPreset}
+              viewpoint="wide"
+            />
+          </group>
+        )}
+        {!isCmpA && showR3fMarkings && (
+          <Suspense fallback={null}>
+            <RoadSurfaceLayer isNight={isNight} markingsOnly />
+          </Suspense>
+        )}
+        {!isCmpA && (
+          <DynamicVehicleLayerWithWeather
+            isNight={isNight}
+            timeOfDay={timeOfDay}
+            sceneSnapshot={sceneSnapshot}
+            qualityPreset={qualityPreset}
+            viewpoint="wide"
+          />
+        )}
+        {!isCmpA && <DynamicPedestrianLayer sceneSnapshot={sceneSnapshot} />}
+        {/* cmp=A keeps SIGNALS ON (live signal state is wanted back). The earlier
+            light-leak came from the distant backdrop (suppressAtmosphericScenery),
+            not the signal hardware, so signals render in cmp=A too. */}
         <SignalLayer
           signals={sceneSnapshot.signals}
           lightingPreset={isNight ? "night" : "day"}
@@ -170,13 +236,15 @@ function SceneLighting({
   sceneSnapshot,
   qualityPreset,
   weather,
-  timeOfDay
+  timeOfDay,
+  suppressAtmosphericScenery = false
 }: {
   isNight: boolean;
   sceneSnapshot: SceneSnapshot;
   qualityPreset: Stage6QualityPreset;
   weather: Stage6WeatherPresetName;
   timeOfDay: Stage6TimeOfDay;
+  suppressAtmosphericScenery?: boolean;
 }) {
   return (
     <SceneEnvironment
@@ -184,6 +252,7 @@ function SceneLighting({
       signals={sceneSnapshot.signals}
       qualityPreset={qualityPreset}
       weather={weather}
+      suppressAtmosphericScenery={suppressAtmosphericScenery}
     />
   );
 }

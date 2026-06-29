@@ -51,13 +51,20 @@ export type SceneEnvironmentProps = {
   signals?: SceneSnapshot["signals"];
   qualityPreset?: Stage6QualityPreset;
   weather?: Stage6WeatherPresetName;
+  // suppressAtmosphericScenery (?photoreal=1&cmp=A): keep the IBL + LightingRig
+  // (so the GLB vehicles stay lit) but drop WeatherAndAtmosphere entirely — its
+  // distant-city backdrop plane, depth-haze planes, scene background colour and
+  // fog were leaking "old background lights" behind the plate. With it gone the
+  // only visible 3D is the plate + markings + vehicles (+ occluders).
+  suppressAtmosphericScenery?: boolean;
 };
 
 function SceneEnvironmentComponent({
   timeOfDay = "day",
   signals = [],
   qualityPreset = getStage6QualityPreset("high"),
-  weather = "rain"
+  weather = "rain",
+  suppressAtmosphericScenery = false
 }: SceneEnvironmentProps) {
   if (timeOfDay === "night") {
     return <SceneNightEnvironment />;
@@ -68,6 +75,7 @@ function SceneEnvironmentComponent({
       signals={signals}
       qualityPreset={qualityPreset}
       weather={weather}
+      suppressAtmosphericScenery={suppressAtmosphericScenery}
     />
   );
 }
@@ -86,11 +94,13 @@ SceneEnvironment.displayName = "SceneEnvironment";
 function SceneDayEnvironment({
   signals,
   qualityPreset,
-  weather
+  weather,
+  suppressAtmosphericScenery = false
 }: {
   signals: SceneSnapshot["signals"];
   qualityPreset: Stage6QualityPreset;
   weather: Stage6WeatherPresetName;
+  suppressAtmosphericScenery?: boolean;
 }) {
   const lightingPreset = getStage6EnvironmentPreset({ weather, timeOfDay: "day" });
 
@@ -106,12 +116,16 @@ function SceneDayEnvironment({
           signal accents + vehicle emissive accents. No extra lights added here to
           avoid doubling the rig and overexposing the scene. */}
       <LightingRig preset={lightingPreset} signals={signals} />
-      {/* Fog, haze planes, rain particles, wet-road reflections */}
-      <WeatherAndAtmosphere
-        qualityPreset={qualityPreset}
-        weather={weather}
-        signals={signals}
-      />
+      {/* Fog, haze planes, rain particles, wet-road reflections. Dropped in
+          cmp=A so the distant-city backdrop / haze / fog stop leaking behind the
+          plate (the plate already supplies the photoreal backdrop). */}
+      {!suppressAtmosphericScenery && (
+        <WeatherAndAtmosphere
+          qualityPreset={qualityPreset}
+          weather={weather}
+          signals={signals}
+        />
+      )}
     </group>
   );
 }
