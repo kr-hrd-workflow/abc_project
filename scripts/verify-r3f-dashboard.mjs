@@ -6,6 +6,7 @@ import { mkdir, readFile, rm, stat, writeFile } from "node:fs/promises";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { deflateSync, inflateSync } from "node:zlib";
+import { buildVehicles } from "./lib/traffic-fixture.mjs";
 
 const scriptDir = path.dirname(fileURLToPath(import.meta.url));
 const repoRoot = path.resolve(scriptDir, "..");
@@ -587,152 +588,8 @@ function getProductionServerCommand(port) {
   };
 }
 
-// Deterministic pseudo-random in [0, 1) so the fabricated fleet reads as varied
-// (mixed types / speeds / waits) while staying byte-stable across runs — the
-// visual-diff baseline depends on reproducible fixture traffic.
-function fixtureNoise(seed) {
-  const x = Math.sin(seed * 127.1 + 311.7) * 43758.5453;
-  return x - Math.floor(x);
-}
-
-// Fabricate a dense, believable 강남역 arterial SceneSnapshot vehicle set.
-//
-// PLACEMENT CONTRACT (must stay intact — TrafficDensityLayer snaps the lateral
-// offset from lane_id via getInboundLaneOffset and DROPS any vehicle whose
-// heading is >35° off its lane direction):
-//   - lane_id  = `${approach}_in_${laneIndex}`  (laneIndex 0 = curb/right lane,
-//     highest index = median; 강남대로 N/S index 4 = the bus-ONLY median lane).
-//   - heading  = north 180 / south 0 / east 270 / west 90 (canonical per leg).
-//   - along    = y_meters for N/S, x_meters for E/W; |along| stays inside the
-//     approach corridor so no vehicle floats past the road end over the plate.
-//   - lateral  = side * (laneCount - laneIndex - 0.5) * 3.6  (mirrors
-//     getInboundLaneOffset; only the renderer fallback, but kept coherent).
-//
-// REALISM MODEL:
-//   - Every general lane is populated (not one lane per approach as before).
-//   - Turning-movement weighting from the connection topology: the middle
-//     THROUGH lanes carry the most vehicles; the curb right-turn lane and the
-//     inner left-turn lane carry fewer.
-//   - Buses ONLY ride the median bus-only lane (강남대로 N/S, index 4).
-//   - 강남대로 N/S are the busiest legs; 서초대로 W (4 lanes) the lightest.
-//   - One emergency vehicle approaches from the east (matches the fixture event
-//     + east-priority recommendation/signal).
-//   - densityScale scales queue depth per scenario (rush vs. light) while the
-//     in-corridor guard keeps every vehicle on the road.
-function buildVehicles({ densityScale = 1 } = {}) {
-  const LANE_W = 3.6;
-  const BOX_HALF = 18; // intersection box half-width ≈ stop-line distance
-
-  const APPROACHES = [
-    {
-      name: "north", side: -1, axis: "ns", dir: -1, heading: 180,
-      laneCount: 5, busLane: 4, maxAlong: 108, baseSpeed: 2.4, weight: 1.0,
-      laneRole: { 0: "right", 1: "through", 2: "through", 3: "left" }
-    },
-    {
-      name: "south", side: 1, axis: "ns", dir: 1, heading: 0,
-      laneCount: 5, busLane: 4, maxAlong: 104, baseSpeed: 2.8, weight: 1.0,
-      laneRole: { 0: "right", 1: "through", 2: "through", 3: "left" }
-    },
-    {
-      name: "east", side: -1, axis: "ew", dir: 1, heading: 270,
-      laneCount: 5, busLane: -1, maxAlong: 80, baseSpeed: 3.1, weight: 0.86,
-      laneRole: { 0: "right", 1: "through", 2: "through", 3: "through", 4: "left" }
-    },
-    {
-      name: "west", side: 1, axis: "ew", dir: -1, heading: 90,
-      laneCount: 4, busLane: -1, maxAlong: 108, baseSpeed: 2.6, weight: 0.72,
-      laneRole: { 0: "right", 1: "through", 2: "through", 3: "left" }
-    }
-  ];
-
-  // Queue depth (rows) by lane role — through lanes read as the busiest.
-  const ROLE_ROWS = { through: 10, right: 7, left: 6 };
-  const NEAR_GAP = 6; // first vehicle distance past the stop line
-  const CAR_ROW_GAP = 6.6; // along spacing between general-lane vehicles
-  const BUS_ROW_GAP = 21; // buses are long + sparse
-  const BUS_ROWS = 3;
-
-  const vehicles = [];
-  let emergencyPlaced = false;
-
-  for (let ai = 0; ai < APPROACHES.length; ai += 1) {
-    const a = APPROACHES[ai];
-    const along = (s) => BOX_HALF + a.dir * s; // signed corridor coordinate
-    const setPos = (vehicle, lateral, alongVal) => {
-      if (a.axis === "ns") {
-        vehicle.x_meters = lateral;
-        vehicle.y_meters = alongVal;
-      } else {
-        vehicle.x_meters = alongVal;
-        vehicle.y_meters = lateral;
-      }
-    };
-
-    for (let laneIndex = 0; laneIndex < a.laneCount; laneIndex += 1) {
-      const lateral = a.side * (a.laneCount - laneIndex - 0.5) * LANE_W;
-
-      if (laneIndex === a.busLane) {
-        // Median bus-ONLY lane (강남대로 N/S): a few buses, widely spaced.
-        const busRows = Math.max(1, Math.round(BUS_ROWS * densityScale));
-        for (let row = 0; row < busRows; row += 1) {
-          const s = NEAR_GAP + 6 + row * BUS_ROW_GAP;
-          if (BOX_HALF + s > a.maxAlong) break;
-          const vehicle = {
-            id: `fixture-${a.name}-bus-${row}`,
-            vehicle_type: "bus",
-            lane_id: `${a.name}_in_${laneIndex}`,
-            heading_degrees: a.heading,
-            speed_mps: Number((a.baseSpeed * 0.8).toFixed(2)),
-            waiting_seconds: row === 0 ? 4 : 0,
-            emergency: false
-          };
-          setPos(vehicle, lateral, along(s));
-          vehicles.push(vehicle);
-        }
-        continue;
-      }
-
-      const role = a.laneRole[laneIndex] ?? "through";
-      const rows = Math.max(1, Math.round(ROLE_ROWS[role] * a.weight * densityScale));
-      for (let row = 0; row < rows; row += 1) {
-        const s = NEAR_GAP + row * CAR_ROW_GAP;
-        if (BOX_HALF + s > a.maxAlong) break;
-        const seed = ai * 97 + laneIndex * 13 + row;
-
-        let vehicleType;
-        if (
-          !emergencyPlaced &&
-          a.name === "east" &&
-          role === "through" &&
-          row === 0
-        ) {
-          vehicleType = "emergency";
-          emergencyPlaced = true;
-        } else {
-          const roll = fixtureNoise(seed);
-          vehicleType = roll < 0.62 ? "car" : roll < 0.84 ? "taxi" : "truck";
-        }
-
-        const vehicle = {
-          id: `fixture-${a.name}-l${laneIndex}-r${row}`,
-          vehicle_type: vehicleType,
-          lane_id: `${a.name}_in_${laneIndex}`,
-          heading_degrees: a.heading,
-          speed_mps: Number(
-            (a.baseSpeed * (0.7 + fixtureNoise(seed + 1) * 0.6)).toFixed(2)
-          ),
-          waiting_seconds: Math.round(fixtureNoise(seed + 2) * 9),
-          emergency: vehicleType === "emergency"
-        };
-        setPos(vehicle, lateral, along(s));
-        vehicles.push(vehicle);
-      }
-    }
-  }
-
-  return vehicles;
-}
+// buildVehicles + fixtureNoise live in scripts/lib/traffic-fixture.mjs so the
+// photoreal-plate render script composites the EXACT same SUMO-truth fleet.
 
 function buildFixturePayloads() {
   const now = "2026-06-17T00:00:00.000Z";
