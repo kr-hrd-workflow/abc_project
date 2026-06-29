@@ -31,11 +31,11 @@ import type { Stage6TimeOfDay } from "./stage6Quality";
 const PHOTOREAL_PLATES = {
   day: {
     path: "/simulation/r3f/assets/plates/gangnam_photoreal_roadlock_day.webp",
-    aspect: 1454 / 1082
+    aspect: 1451 / 1084
   },
   night: {
     path: "/simulation/r3f/assets/plates/gangnam_photoreal_roadlock_night.webp",
-    aspect: 1454 / 1082
+    aspect: 1451 / 1084
   }
 } as const;
 

@@ -1604,7 +1604,7 @@
         "photoreal sidewalks, crosswalks, and Samsung-Town-style glass towers SW",
         "fixed screen-space backdrop for the ?photoreal=1 production view; all signage is invented Gangnam-style (clinics/academies/cafes); no real brand logos or trademarks"
       ],
-      "provenance": "Photoreal road-lock reconstruction of the real 강남역 사거리 (Gangnam Station intersection), operator-wide view at daytime (1454x1082): empty carriageway with a solid yellow centre line and all four approach corridors open, plus photoreal sidewalks and buildings; used only as a fixed screen-space backdrop for the ?photoreal=1 production view, never a vehicle/pedestrian/signal truth surface. All signage is invented Gangnam-style (clinics/academies/cafes); no real brand logos or trademarks. Background-visual-only. Runtime proof must come from browser-rendered day frames."
+      "provenance": "Photoreal road-lock reconstruction of the real 강남역 사거리 (Gangnam Station intersection), operator-wide view at daytime (1451x1084): empty carriageway with a solid yellow centre line and all four approach corridors open, plus photoreal sidewalks and buildings; used only as a fixed screen-space backdrop for the ?photoreal=1 production view, never a vehicle/pedestrian/signal truth surface. All signage is invented Gangnam-style (clinics/academies/cafes); no real brand logos or trademarks. Background-visual-only. Runtime proof must come from browser-rendered day frames."
     },
     "pbrChannels": [
       "sourceColor"
@@ -1617,7 +1617,7 @@
     },
     "provenanceEvidencePath": "docs/compliance/r3f-asset-licenses.md",
     "runtimeUsage": "background-plate",
-    "nonPowerOfTwoReason": "Full-frame screen-space photoreal backdrop sampled on a dome (no mipmapping/tiling); 1454x1082 generated plate kept as-is."
+    "nonPowerOfTwoReason": "Full-frame screen-space photoreal backdrop sampled on a dome (no mipmapping/tiling); 1451x1084 generated plate kept as-is."
   },
   "plates/gangnam_photoreal_roadlock_night": {
     "id": "plates/gangnam_photoreal_roadlock_night",
@@ -1642,7 +1642,7 @@
         "glowing media poles, LED billboards, and Samsung-Town-style glass towers SW",
         "fixed screen-space backdrop for the ?photoreal=1 production view; all signage is invented Gangnam-style (clinics/academies/cafes); no real brand logos or trademarks"
       ],
-      "provenance": "Photoreal road-lock reconstruction of the real 강남역 사거리 (Gangnam Station intersection), operator-wide view at night (1454x1082): empty carriageway with a solid yellow centre line and all four approach corridors open, plus photoreal sidewalks and buildings; used only as a fixed screen-space backdrop for the ?photoreal=1 production view, never a vehicle/pedestrian/signal truth surface. All signage is invented Gangnam-style (clinics/academies/cafes); no real brand logos or trademarks. Background-visual-only. Runtime proof must come from browser-rendered night frames."
+      "provenance": "Photoreal road-lock reconstruction of the real 강남역 사거리 (Gangnam Station intersection), operator-wide view at night (1451x1084): empty carriageway with a solid yellow centre line and all four approach corridors open, plus photoreal sidewalks and buildings; used only as a fixed screen-space backdrop for the ?photoreal=1 production view, never a vehicle/pedestrian/signal truth surface. All signage is invented Gangnam-style (clinics/academies/cafes); no real brand logos or trademarks. Background-visual-only. Runtime proof must come from browser-rendered night frames."
     },
     "pbrChannels": [
       "sourceColor"
@@ -1655,6 +1655,6 @@
     },
     "provenanceEvidencePath": "docs/compliance/r3f-asset-licenses.md",
     "runtimeUsage": "background-plate",
-    "nonPowerOfTwoReason": "Full-frame screen-space photoreal backdrop sampled on a dome (no mipmapping/tiling); 1454x1082 generated plate kept as-is."
+    "nonPowerOfTwoReason": "Full-frame screen-space photoreal backdrop sampled on a dome (no mipmapping/tiling); 1451x1084 generated plate kept as-is."
   }
 }
