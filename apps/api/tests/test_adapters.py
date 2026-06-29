@@ -1,9 +1,8 @@
 from datetime import datetime
 from zoneinfo import ZoneInfo
 
-from app.adapters import simulation as simulation_module
+from app.core import binaries as binaries_module
 from app.adapters.simulation import (
-    ScenarioTrafficSimulationAdapter,
     SumoSimulationMetrics,
     SumoSimulationResult,
     SumoTraciTrafficSimulationAdapter,
@@ -165,17 +164,6 @@ def test_vision_adapter_defaults_unknown_scenario_to_emergency() -> None:
     assert observation.emergency_vehicle.direction == Direction.EAST
 
 
-def test_simulation_adapter_returns_sumo_shaped_comparison() -> None:
-    adapter = ScenarioTrafficSimulationAdapter()
-
-    comparison = adapter.compare_signal_plan("emergency")
-
-    assert comparison.source == "scenario_mock"
-    assert comparison.baseline.total_delay_seconds == 128.4
-    assert comparison.recommended.total_delay_seconds == 105.3
-    assert comparison.improvement["total_delay_percent"] == 18.0
-
-
 def test_sumo_traci_adapter_returns_simulation_comparison_contract() -> None:
     class StubSumoRunner:
         def compare_plans(self, scenario_id: str) -> SumoSimulationResult:
@@ -289,7 +277,7 @@ def test_traci_sumo_runner_collects_baseline_and_recommended_metrics(
     sumo_executable.chmod(0o755)
     monkeypatch.setenv("PATH", "")
     monkeypatch.setattr(
-        simulation_module.sys,
+        binaries_module.sys,
         "executable",
         str(python_executable),
     )

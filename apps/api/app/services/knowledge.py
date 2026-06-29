@@ -4,6 +4,7 @@ from dataclasses import dataclass
 from typing import Protocol, Sequence
 
 from sqlalchemy import text
+from sqlalchemy.orm import Session
 
 
 @dataclass(frozen=True)
@@ -27,28 +28,6 @@ class EmbeddingGateway(Protocol):
     model: str
 
     def embed_text(self, text: str) -> list[float]:
-        pass
-
-
-class MappingRows(Protocol):
-    def all(self) -> Sequence[Mapping[str, str]]:
-        pass
-
-
-class SqlResult(Protocol):
-    def mappings(self) -> MappingRows:
-        pass
-
-
-class SqlSession(Protocol):
-    def execute(
-        self,
-        statement: object,
-        params: Mapping[str, object] | None = None,
-    ) -> SqlResult:
-        pass
-
-    def commit(self) -> None:
         pass
 
 
@@ -165,7 +144,7 @@ def search_policy_evidence(
 
 def sync_policy_embeddings(
     *,
-    session: SqlSession,
+    session: Session,
     embedding_gateway: EmbeddingGateway,
     documents: Sequence[PolicyDocument] = DEFAULT_POLICY_DOCUMENTS,
 ) -> None:
@@ -188,7 +167,7 @@ def sync_policy_embeddings(
 def search_policy_evidence_pgvector(
     *,
     query: str,
-    session: SqlSession,
+    session: Session,
     embedding_gateway: EmbeddingGateway,
     limit: int = 2,
 ) -> list[KnowledgeChunk]:

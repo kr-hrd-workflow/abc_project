@@ -174,7 +174,6 @@ def test_sumo_runtime_settings_support_live_modes_and_bounds() -> None:
     assert default_settings.sumo_runtime_ttl_seconds == 300
     assert default_settings.sumo_authoritative_hz == 10
     assert default_settings.sumo_frame_cache_ttl_ms == 1000
-    assert default_settings.sumo_interpolation_delay_ms == 150
 
     libsumo_settings = Settings(
         sumo_simulation_mode="sumo_libsumo",

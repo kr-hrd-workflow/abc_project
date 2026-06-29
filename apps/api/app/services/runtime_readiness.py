@@ -2,13 +2,12 @@ from collections.abc import Callable, Mapping, Sequence
 from importlib.util import find_spec
 import os
 from pathlib import Path
-from shutil import which
-import sys
 from typing import Literal, TypedDict
 
 from sqlalchemy import text
 from sqlalchemy.exc import SQLAlchemyError
 
+from app.core.binaries import resolve_binary_path
 from app.core.config import Settings
 
 
@@ -256,13 +255,7 @@ def _module_available(module_name: str) -> bool:
 
 
 def _binary_available(binary_name: str) -> bool:
-    if which(binary_name) is not None:
-        return True
-    python_bin_candidate = Path(sys.executable).parent / binary_name
-    return python_bin_candidate.exists() and os.access(
-        python_bin_candidate,
-        os.X_OK,
-    )
+    return resolve_binary_path(binary_name) is not None
 
 
 def _path_exists(path: str) -> bool:

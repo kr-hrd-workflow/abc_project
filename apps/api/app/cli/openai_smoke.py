@@ -2,12 +2,12 @@ import argparse
 import os
 import sys
 from collections.abc import Callable, Mapping, Sequence
+from typing import Any
 
 from app.core.config import Settings, settings as default_settings
 from app.services.knowledge import ingest_policy_documents
 from app.services.openai_clients import (
     MissingOpenAIAPIKeyError,
-    OpenAIClientProtocol,
     OpenAIEmbeddingGateway,
     OpenAITextGateway,
     build_openai_client,
@@ -23,7 +23,7 @@ def run_openai_smoke(
     *,
     settings: Settings = default_settings,
     env: Mapping[str, str] | None = None,
-    client_factory: Callable[[str], OpenAIClientProtocol] = build_openai_client,
+    client_factory: Callable[[str], Any] = build_openai_client,
 ) -> str:
     env = os.environ if env is None else env
     missing_requirements = _missing_openai_smoke_requirements(settings, env)

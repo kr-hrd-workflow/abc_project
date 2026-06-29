@@ -29,7 +29,6 @@ class Settings(BaseSettings):
     sumo_runtime_ttl_seconds: int = Field(default=300, ge=1)
     sumo_authoritative_hz: int = Field(default=10, ge=5, le=10)
     sumo_frame_cache_ttl_ms: int = Field(default=1000, ge=1)
-    sumo_interpolation_delay_ms: int = Field(default=150, ge=0)
     openai_model: str = "gpt-5.5"
     openai_api_key: str | None = Field(default=None, repr=False)
     openai_embedding_model: str = "text-embedding-3-small"

@@ -1,8 +1,6 @@
 from __future__ import annotations
 
-import os
 import re
-import sys
 import threading
 from collections.abc import Callable
 from dataclasses import dataclass
@@ -10,9 +8,10 @@ from datetime import UTC, datetime
 from importlib import import_module
 from math import isfinite
 from pathlib import Path
-from shutil import which
+from time import monotonic
 from typing import Literal, Protocol, cast
 
+from app.core.binaries import resolve_binary_path
 from app.core.config import Settings
 from app.domain.schemas import QueueMetrics, TrafficEventRead
 from app.domain.simulation_snapshot import (
@@ -142,11 +141,11 @@ class SumoRuntimeService:
         path_exists: Callable[[str], bool] | None = None,
     ) -> None:
         self.settings = settings
-        self._clock = clock or __import__("time").monotonic
+        self._clock = clock or monotonic
         self._client_factory = client_factory
         self._module_loader = module_loader or import_module
         self._binary_available = binary_available or _binary_available
-        self._binary_resolver = _resolve_binary_path if binary_available is None else None
+        self._binary_resolver = resolve_binary_path if binary_available is None else None
         self._path_exists = path_exists or _path_exists
         self._sessions: dict[str, SumoRuntimeSession] = {}
         self._lock = threading.RLock()
@@ -791,17 +790,7 @@ def _live_mode(mode: str) -> LiveSumoMode:
 
 
 def _binary_available(binary_name: str) -> bool:
-    return _resolve_binary_path(binary_name) is not None
-
-
-def _resolve_binary_path(binary_name: str) -> str | None:
-    path_binary = which(binary_name)
-    if path_binary is not None:
-        return path_binary
-    python_bin_candidate = Path(sys.executable).parent / binary_name
-    if python_bin_candidate.exists() and os.access(python_bin_candidate, os.X_OK):
-        return str(python_bin_candidate)
-    return None
+    return resolve_binary_path(binary_name) is not None
 
 
 def _path_exists(path: str) -> bool:

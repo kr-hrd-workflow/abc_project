@@ -121,7 +121,6 @@ def _provider_cache_key(settings: Settings) -> tuple[object, ...]:
         settings.sumo_runtime_ttl_seconds,
         settings.sumo_authoritative_hz,
         settings.sumo_frame_cache_ttl_ms,
-        settings.sumo_interpolation_delay_ms,
     )
 
 

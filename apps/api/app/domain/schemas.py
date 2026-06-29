@@ -1,9 +1,9 @@
 from datetime import datetime
-from typing import Annotated, Any
+from typing import Annotated
 
 from pydantic import BaseModel, Field
 
-from app.domain.enums import Direction, EventType, RecommendationAction, Severity
+from app.domain.enums import Direction, EventType, Severity
 
 NonNegativeFloat = Annotated[float, Field(ge=0)]
 NonNegativeInt = Annotated[int, Field(ge=0)]
@@ -48,29 +48,6 @@ class TrafficEventRead(BaseModel):
     source: str
 
 
-class IntersectionStatusRead(BaseModel):
-    intersection_id: str
-    captured_at: datetime
-    signal_phase: str
-    cycle_second: int
-    queues: QueueMetrics
-    pedestrian_request: bool
-    emergency_priority: bool
-    congestion_level: str
-    source: str
-
-
-class RecommendationRead(BaseModel):
-    id: int
-    intersection_id: str
-    created_at: datetime
-    action: RecommendationAction
-    recommended_plan: dict[str, Any]
-    evidence: dict[str, Any]
-    safety_boundary: str
-    status: str
-
-
 class SimulationMetrics(BaseModel):
     average_wait_seconds: NonNegativeFloat
     total_delay_seconds: NonNegativeFloat
@@ -101,12 +78,3 @@ class ChatResponse(BaseModel):
     answer: str
     referenced_event_ids: list[int]
     sections: AgentResponseSections | None = None
-
-
-class ReportRead(BaseModel):
-    id: int
-    intersection_id: str
-    period_start: datetime
-    period_end: datetime
-    summary: str
-    generated_at: datetime

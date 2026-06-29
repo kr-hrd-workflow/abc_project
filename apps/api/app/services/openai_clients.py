@@ -1,7 +1,7 @@
 from collections.abc import Mapping, Sequence
 from dataclasses import dataclass
 import os
-from typing import Protocol, cast
+from typing import Any, cast
 
 from app.services.knowledge import KnowledgeChunk
 
@@ -23,24 +23,9 @@ class MissingOpenAIMonthlyBudgetError(RuntimeError):
     pass
 
 
-class ResponsesResource(Protocol):
-    def create(self, **kwargs: object) -> object:
-        pass
-
-
-class EmbeddingsResource(Protocol):
-    def create(self, **kwargs: object) -> object:
-        pass
-
-
-class OpenAIClientProtocol(Protocol):
-    responses: ResponsesResource
-    embeddings: EmbeddingsResource
-
-
 @dataclass(frozen=True)
 class OpenAITextGateway:
-    client: OpenAIClientProtocol
+    client: Any
     model: str
 
     def generate_grounded_answer(
@@ -64,7 +49,7 @@ class OpenAITextGateway:
 
 @dataclass(frozen=True)
 class OpenAIEmbeddingGateway:
-    client: OpenAIClientProtocol
+    client: Any
     model: str
     dimensions: int
 
@@ -94,10 +79,10 @@ def require_openai_monthly_budget(monthly_budget_usd: float | None) -> float:
     return monthly_budget_usd
 
 
-def build_openai_client(api_key: str) -> OpenAIClientProtocol:
+def build_openai_client(api_key: str) -> Any:
     from openai import OpenAI
 
-    return cast(OpenAIClientProtocol, OpenAI(api_key=api_key))
+    return OpenAI(api_key=api_key)
 
 
 def _grounded_answer_input(

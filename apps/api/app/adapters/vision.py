@@ -28,11 +28,6 @@ DEFAULT_EMERGENCY_LABELS = {
 VIDEO_SUFFIXES = {".mov", ".mp4", ".mpeg", ".mpg", ".quicktime"}
 
 
-class VisionAnalysisAdapter(Protocol):
-    def analyze(self, scenario_id: str) -> VisionObservation:
-        """Return normalized traffic observation data for one scenario."""
-
-
 @dataclass(frozen=True)
 class YoloDetection:
     label: str

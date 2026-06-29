@@ -1,5 +1,6 @@
 from pathlib import Path
 
+from app.core import binaries
 from app.core.config import Settings
 from app.services import runtime_readiness
 from app.services.runtime_readiness import (
@@ -154,7 +155,7 @@ def test_binary_available_finds_python_environment_scripts(
     sumo_binary.write_text("")
     sumo_binary.chmod(0o755)
     monkeypatch.setattr(
-        runtime_readiness.sys,
+        binaries.sys,
         "executable",
         str(python_executable),
     )
