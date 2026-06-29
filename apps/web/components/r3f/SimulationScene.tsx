@@ -53,8 +53,8 @@ function resolvePhotorealMode(): boolean {
 }
 
 // DIAGNOSTIC COMPARISON (?cmp=A|B) — experimental, only meaningful with
-// ?photoreal=1, and intentionally NOT committed-default behaviour. Absent ?cmp
-// keeps the committed photoreal mode (roadlock plate + R3F markings) unchanged.
+// ?photoreal=1. Absent ?cmp the default is the v5 plate (overlay OFF); these are
+// roadlock-plate diagnostics layered on top of resolvePlateChoice.
 //   A = plain-asphalt plate (no painted lanes) + R3F markings overlay ON  → a
 //       single, non-doubled lane set with vehicles centred in it.
 //   B = roadlock plate's painted lanes + R3F markings overlay OFF + URL-driven
@@ -66,15 +66,21 @@ function resolveCmpMode(): "A" | "B" | null {
   return v === "A" || v === "B" ? v : null;
 }
 
-// EXPERIMENTAL ROAD-LOCK PLATE (?photoreal=1&plate=v5) — uncommitted. Selects the
-// dense-canyon cover-v5 day plate as the road-lock backdrop. Because the v5 plate
-// already carries metric-aligned painted lanes + 4-way crosswalks, the R3F lane
-// markings overlay is dropped (the plate supplies the road); the depth-only
-// occluders, live vehicles, pedestrians and signals all stay on. This is the
-// road-lock architecture, NOT the cmp=A plain-plate+markings diagnostic path.
-function resolveV5Plate(): boolean {
-  if (typeof window === "undefined") return false;
-  return new URLSearchParams(window.location.search).get("plate") === "v5";
+// PLATE CHOICE (?photoreal=1) — the dense-canyon cover-v5 road-lock plate is the
+// PRODUCTION DEFAULT. The v5 plate already carries its own painted lanes + 4-way
+// crosswalks, so the R3F lane-markings overlay is OFF for it (the plate supplies
+// the road). ?plate=roadlock is the escape hatch back to the legacy geometry-locked
+// plate (which DOES get the R3F overlay).
+//
+// ⚠️ LOCKED DECISION — do NOT turn the R3F overlay ON for v5. v5's baked lanes are
+// offset from the metric projection, so overlaying the metric R3F lanes DOUBLES
+// them (render-verified 2026-06-30; see the SimulationScenePhotoreal guardrail test
+// and apps/web/AGENTS.md). roadlock is geometry-locked so its overlay lands clean.
+function resolvePlateChoice(): "v5" | "roadlock" {
+  if (typeof window === "undefined") return "v5";
+  return new URLSearchParams(window.location.search).get("plate") === "roadlock"
+    ? "roadlock"
+    : "v5";
 }
 
 // DIAGNOSTIC (?cmp=A): the markings overlay + vehicles are registered onto the
@@ -118,20 +124,22 @@ export function SimulationScene({
   // normal scene (day: ACES pipeline; night: Bloom-only).
   const isPhotoreal = resolvePhotorealMode();
   const cmpMode = resolveCmpMode();
-  const isV5Plate = resolveV5Plate();
+  const plateChoice = resolvePlateChoice();
 
   if (isPhotoreal) {
-    // plate=v5 → experimental cover-v5 road-lock plate; cmp=A → plain-asphalt
-    // plate; otherwise the committed roadlock plate.
-    const plateVariant = isV5Plate
-      ? "v5"
-      : cmpMode === "A"
-        ? "plain"
-        : "roadlock";
-    // cmp=B and plate=v5 drop the R3F markings overlay so only the plate's
-    // painted lanes show (v5: the plate is metric-aligned; cmp=B: vehicles are
-    // seated via ?calB= calibration). A and the committed default keep markings ON.
-    const showR3fMarkings = !isV5Plate && cmpMode !== "B";
+    // Plate precedence: cmp=A → plain diagnostic plate; cmp=B → roadlock (its
+    // calibration diagnostic); ?plate=roadlock → roadlock escape hatch; otherwise
+    // the v5 production default.
+    const useRoadlock = plateChoice === "roadlock" || cmpMode === "B";
+    const plateVariant =
+      cmpMode === "A" ? "plain" : useRoadlock ? "roadlock" : "v5";
+    // R3F lane-markings overlay is ON only for the geometry-locked plates: the
+    // plain cmp=A plate and the roadlock plate (when not the cmp=B calibration
+    // diagnostic). The v5 default keeps it OFF — overlaying its baked lanes with
+    // the metric R3F lanes DOUBLES them (render-verified). ⚠️ DO NOT flip v5 ON;
+    // the SimulationScenePhotoreal guardrail test pins this.
+    const showR3fMarkings =
+      cmpMode === "A" || (plateVariant === "roadlock" && cmpMode !== "B");
     // cmp=A is a clean road-registration diagnostic: hide the heavy 3D scene
     // except the plate + R3F markings + live vehicles + signals (+ depth
     // occluders). Pedestrians and the distant atmospheric scenery are suppressed

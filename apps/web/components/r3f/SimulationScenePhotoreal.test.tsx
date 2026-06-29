@@ -60,6 +60,21 @@ function findChildByDisplayName(
     .find((child) => getElementDisplayName(child) === displayName);
 }
 
+// Walk the whole subtree (through Suspense, fragments, arrays) collecting every
+// element display name — used to assert a layer is or is not mounted anywhere.
+function collectDeepDisplayNames(node: ReactNode): string[] {
+  const names: string[] = [];
+  Children.toArray(node).forEach((child) => {
+    if (!isValidElement(child)) return;
+    names.push(getElementDisplayName(child));
+    const childProps = child.props as { children?: ReactNode };
+    if (childProps?.children) {
+      names.push(...collectDeepDisplayNames(childProps.children));
+    }
+  });
+  return names;
+}
+
 describe("photoreal production mode (?photoreal=1)", () => {
   test("default scene is unchanged when ?photoreal=1 is absent", () => {
     setSearch("");
@@ -101,6 +116,31 @@ describe("photoreal production mode (?photoreal=1)", () => {
 
     expect(dayPlate.props.timeOfDay).toBe("day");
     expect(nightPlate.props.timeOfDay).toBe("night");
+  });
+
+  // ⚠️ LOCKED DECISION GUARDRAIL — v5 is the production default plate and its R3F
+  // lane-markings overlay MUST stay OFF: overlaying the metric R3F lanes on v5's
+  // baked lanes DOUBLES them (render-verified 2026-06-30). If you arrived here
+  // wanting v5 to draw the R3F lanes, DON'T — see apps/web/AGENTS.md. roadlock is
+  // the geometry-locked escape hatch (?plate=roadlock) that DOES get the overlay.
+  test("default ?photoreal=1 uses the v5 plate with the R3F markings overlay OFF", () => {
+    setSearch("?photoreal=1");
+    const scene = SimulationScene({ sceneSnapshot: snapshot(), timeOfDay: "day" });
+    const plate = findChildByDisplayName(scene, "PhotorealPlate") as ReactElement<{
+      variant?: string;
+    }>;
+    expect(plate.props.variant).toBe("v5");
+    expect(collectDeepDisplayNames(scene)).not.toContain("RoadSurfaceLayer");
+  });
+
+  test("?photoreal=1&plate=roadlock escape hatch restores roadlock + R3F overlay", () => {
+    setSearch("?photoreal=1&plate=roadlock");
+    const scene = SimulationScene({ sceneSnapshot: snapshot(), timeOfDay: "day" });
+    const plate = findChildByDisplayName(scene, "PhotorealPlate") as ReactElement<{
+      variant?: string;
+    }>;
+    expect(plate.props.variant).toBe("roadlock");
+    expect(collectDeepDisplayNames(scene)).toContain("RoadSurfaceLayer");
   });
 
   test("resolvePhotorealPlate maps timeOfDay to the roadlock day/night webp", () => {
