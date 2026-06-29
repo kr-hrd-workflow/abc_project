@@ -51,6 +51,13 @@ const PHOTOREAL_PLATES = {
   v5Day: {
     path: "/simulation/r3f/assets/plates/gangnam_photoreal_v5_day.webp",
     aspect: 1454 / 1082
+  },
+  // Night relight of the v5 day plate — same geometry/buildings/road/markings,
+  // night lighting (lit windows, LED, street lights). Keeps the v5 mode day/night
+  // consistent (mirrors how roadlock has day + night).
+  v5Night: {
+    path: "/simulation/r3f/assets/plates/gangnam_photoreal_v5_night.webp",
+    aspect: 1454 / 1082
   }
 } as const;
 
@@ -64,7 +71,11 @@ export function resolvePhotorealPlate(
   variant: PhotorealPlateVariant = "roadlock"
 ) {
   if (variant === "plain") return PHOTOREAL_PLATES.plainDay;
-  if (variant === "v5") return PHOTOREAL_PLATES.v5Day;
+  if (variant === "v5") {
+    return timeOfDay === "night"
+      ? PHOTOREAL_PLATES.v5Night
+      : PHOTOREAL_PLATES.v5Day;
+  }
   return timeOfDay === "night" ? PHOTOREAL_PLATES.night : PHOTOREAL_PLATES.day;
 }
 
@@ -76,6 +87,7 @@ if (
   useTexture.preload(PHOTOREAL_PLATES.night.path);
   useTexture.preload(PHOTOREAL_PLATES.plainDay.path);
   useTexture.preload(PHOTOREAL_PLATES.v5Day.path);
+  useTexture.preload(PHOTOREAL_PLATES.v5Night.path);
 }
 
 const PHOTOREAL_VERTEX_SHADER = /* glsl */ `
