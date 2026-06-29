@@ -245,7 +245,8 @@ export function WeatherAndAtmosphere({
 
       <RainParticleLayer qualityPreset={qualityPreset} weather={weather} />
 
-      {wetRoadReflectionHighlights.map((highlight) => (
+      {weather === "rain" &&
+        wetRoadReflectionHighlights.map((highlight) => (
         <mesh
           key={highlight.id}
           name={highlight.id}
