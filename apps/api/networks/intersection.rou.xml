@@ -2,25 +2,51 @@
 <routes xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://sumo.dlr.de/xsd/routes_file.xsd">
     <vType id="passenger" vClass="passenger" accel="2.6" decel="4.5" sigma="0.5" length="5.0" maxSpeed="13.89"/>
     <vType id="bus" vClass="bus" accel="1.2" decel="4.0" sigma="0.5" length="12.0" maxSpeed="13.89"/>
+    <vType id="truck" vClass="truck" accel="1.3" decel="4.0" sigma="0.5" length="9.0" maxSpeed="11.11"/>
     <vType id="emergency" vClass="emergency" accel="3.0" decel="5.0" sigma="0.2" length="6.0" maxSpeed="16.67"/>
 
+    <!-- Movements mirror gangnam.con.xml exactly: through, protected left, curb
+         right. Each turn flow departs on the lane that actually carries that
+         connection (no illegal lane assumption). -->
     <route id="north_through" edges="north_in south_out"/>
     <route id="south_through" edges="south_in north_out"/>
     <route id="east_through"  edges="east_in west_out"/>
     <route id="west_through"  edges="west_in east_out"/>
     <route id="north_left"    edges="north_in east_out"/>
     <route id="north_right"   edges="north_in west_out"/>
+    <route id="south_left"    edges="south_in west_out"/>
+    <route id="south_right"   edges="south_in east_out"/>
     <route id="east_left"     edges="east_in south_out"/>
+    <route id="east_right"    edges="east_in north_out"/>
+    <route id="west_left"     edges="west_in north_out"/>
     <route id="west_right"    edges="west_in south_out"/>
 
-    <flow id="flow_north_through" type="passenger" route="north_through" begin="0" end="300" period="6"/>
-    <flow id="flow_south_through" type="passenger" route="south_through" begin="0" end="300" period="6"/>
-    <flow id="flow_east_through"  type="passenger" route="east_through"  begin="0" end="300" period="7"/>
-    <flow id="flow_west_through"  type="passenger" route="west_through"  begin="0" end="300" period="8"/>
-    <flow id="flow_bus_gangnam"   type="bus"       route="north_through" begin="0" end="300" period="40" departLane="4"/>
+    <!-- Busy 강남역 arterial demand. 강남대로 N/S are the heaviest legs,
+         테헤란로 E next, 서초대로 W the lightest. departLane="free" spreads the
+         through cars across the general lanes (the bus-only median lane 4 is
+         vClass-excluded for cars); turn flows use realistic left/right shares
+         (~12-18% each against the through majority). -->
+    <flow id="flow_north_through" type="passenger" route="north_through" begin="0" end="3600" period="4"  departLane="free"/>
+    <flow id="flow_south_through" type="passenger" route="south_through" begin="0" end="3600" period="4"  departLane="free"/>
+    <flow id="flow_east_through"  type="passenger" route="east_through"  begin="0" end="3600" period="5"  departLane="free"/>
+    <flow id="flow_west_through"  type="passenger" route="west_through"  begin="0" end="3600" period="6"  departLane="free"/>
 
-    <vehicle id="emergency-east-1" type="emergency" route="east_through" depart="0"/>
-    <vehicle id="car-north-left-1" type="passenger" route="north_left"  depart="3"/>
-    <vehicle id="car-north-right-1" type="passenger" route="north_right" depart="5"/>
-    <vehicle id="car-west-right-1" type="passenger" route="west_right"   depart="7"/>
+    <flow id="flow_north_left"    type="passenger" route="north_left"    begin="0" end="3600" period="12" departLane="3"/>
+    <flow id="flow_north_right"   type="passenger" route="north_right"   begin="0" end="3600" period="14" departLane="0"/>
+    <flow id="flow_south_left"    type="passenger" route="south_left"    begin="0" end="3600" period="12" departLane="3"/>
+    <flow id="flow_south_right"   type="passenger" route="south_right"   begin="0" end="3600" period="14" departLane="0"/>
+    <flow id="flow_east_left"     type="passenger" route="east_left"     begin="0" end="3600" period="12" departLane="4"/>
+    <flow id="flow_east_right"    type="passenger" route="east_right"    begin="0" end="3600" period="14" departLane="0"/>
+    <flow id="flow_west_left"     type="passenger" route="west_left"     begin="0" end="3600" period="16" departLane="3"/>
+    <flow id="flow_west_right"    type="passenger" route="west_right"    begin="0" end="3600" period="16" departLane="0"/>
+
+    <!-- Freight variety on the arterials (general lanes only). -->
+    <flow id="flow_truck_north"   type="truck"     route="north_through" begin="0" end="3600" period="24" departLane="free"/>
+    <flow id="flow_truck_east"    type="truck"     route="east_through"  begin="0" end="3600" period="28" departLane="free"/>
+
+    <!-- 강남대로 buses on the median bus-only lane (index 4), both directions. -->
+    <flow id="flow_bus_north"     type="bus"       route="north_through" begin="0" end="3600" period="30" departLane="4"/>
+    <flow id="flow_bus_south"     type="bus"       route="south_through" begin="0" end="3600" period="30" departLane="4"/>
+
+    <vehicle id="emergency-east-1" type="emergency" route="east_through" depart="0" departLane="2"/>
 </routes>
