@@ -97,6 +97,16 @@ export function SimulationScene({
           timeOfDay={timeOfDay}
         />
         <PhotorealPlate timeOfDay={timeOfDay} />
+        {/* Metric-exact road MARKINGS composited on the plate. The plate's
+            imagegen road grid is rotated/offset from the metric projection and
+            its lane spacing ≠ 3.6 m, so a screen-space plate offset/scale cannot
+            seat all four approaches. Drawing the geometry-derived lane lines,
+            중앙선, 정지선 and crosswalks on top makes the visible lanes metric-exact,
+            so the live vehicles (same getInboundLaneOffset SSOT) sit centred in
+            them. Asphalt stays from the plate (markingsOnly). */}
+        <Suspense fallback={null}>
+          <RoadSurfaceLayer isNight={isNight} markingsOnly />
+        </Suspense>
         <DynamicVehicleLayerWithWeather
           isNight={isNight}
           timeOfDay={timeOfDay}

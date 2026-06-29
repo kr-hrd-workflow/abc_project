@@ -259,9 +259,19 @@ const BOX_SURFACE_Z = INTERSECTION_BOX_Z_METERS + BOX_WIDEN_Z_M;
 
 export type RoadSurfaceLayerProps = {
   isNight: boolean;
+  // markingsOnly (?photoreal=1): suppress the textured asphalt surfaces and
+  // render ONLY the painted markings (lane lines, 중앙선, 정지선, crosswalks,
+  // arrows, bus legends). The photoreal plate supplies the photoreal asphalt +
+  // buildings; the metric-exact markings are composited on top so the live
+  // vehicles (placed at the same metric lane centres) sit centred in visible,
+  // metrically-correct lanes regardless of the plate's painted-lane drift.
+  markingsOnly?: boolean;
 };
 
-export function RoadSurfaceLayer({ isNight }: RoadSurfaceLayerProps) {
+export function RoadSurfaceLayer({
+  isNight,
+  markingsOnly = false
+}: RoadSurfaceLayerProps) {
   const asphaltBase = useTexture(ASPHALT_PATH) as Texture;
 
   // Clone one texture per plane so each gets its own UV repeat (world-consistent
@@ -325,33 +335,39 @@ export function RoadSurfaceLayer({ isNight }: RoadSurfaceLayerProps) {
 
   return (
     <group name="road-surface-layer">
-      {/* Junction box — centre of the intersection (widened to seal arms) */}
-      <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, 0.002, 0]}>
-        <planeGeometry args={[BOX_SURFACE_X, BOX_SURFACE_Z]} />
-        <meshStandardMaterial
-          map={junctionTex}
-          color={asphaltColor}
-          roughness={0.95}
-          metalness={0}
-        />
-      </mesh>
+      {/* Textured asphalt surfaces — suppressed in markingsOnly (?photoreal=1),
+          where the plate already supplies photoreal asphalt. */}
+      {!markingsOnly && (
+        <>
+          {/* Junction box — centre of the intersection (widened to seal arms) */}
+          <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, 0.002, 0]}>
+            <planeGeometry args={[BOX_SURFACE_X, BOX_SURFACE_Z]} />
+            <meshStandardMaterial
+              map={junctionTex}
+              color={asphaltColor}
+              roughness={0.95}
+              metalness={0}
+            />
+          </mesh>
 
-      {/* Approach corridor road surfaces (widened to the plate curb line) */}
-      {APPROACH_CORRIDORS.map((corridor, idx) => (
-        <mesh
-          key={`road-corridor-${corridor.direction}`}
-          rotation={[-Math.PI / 2, 0, 0]}
-          position={[corridor.position[0], 0.002, corridor.position[2]]}
-        >
-          <planeGeometry args={widenedCorridorSize(corridor)} />
-          <meshStandardMaterial
-            map={corridorTextures[idx]}
-            color={asphaltColor}
-            roughness={0.95}
-            metalness={0}
-          />
-        </mesh>
-      ))}
+          {/* Approach corridor road surfaces (widened to the plate curb line) */}
+          {APPROACH_CORRIDORS.map((corridor, idx) => (
+            <mesh
+              key={`road-corridor-${corridor.direction}`}
+              rotation={[-Math.PI / 2, 0, 0]}
+              position={[corridor.position[0], 0.002, corridor.position[2]]}
+            >
+              <planeGeometry args={widenedCorridorSize(corridor)} />
+              <meshStandardMaterial
+                map={corridorTextures[idx]}
+                color={asphaltColor}
+                roughness={0.95}
+                metalness={0}
+              />
+            </mesh>
+          ))}
+        </>
+      )}
 
       {/* 중앙선 — yellow double-solid centre line (merged) */}
       {centerLineGeometry && (
