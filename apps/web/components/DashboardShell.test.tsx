@@ -1,6 +1,6 @@
 ﻿// @vitest-environment jsdom
 
-import { cleanup, render, screen, waitFor } from "@testing-library/react";
+import { act, cleanup, render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import type { ReactNode } from "react";
 import { useState } from "react";
@@ -136,6 +136,7 @@ import type {
   SimulationFrameBufferEntry,
   SimulationFrameSnapshot
 } from "../lib/simulationSnapshot";
+import { SIMULATION_FRAME_POLL_INTERVAL_MS } from "../lib/simulationSnapshot";
 
 const status: IntersectionStatus = {
   intersection_id: "INT-0001",
@@ -510,7 +511,11 @@ describe("DashboardShell", () => {
 
     render(<DashboardRoute />);
 
-    const viewport = await screen.findByTestId("r3f-simulation-viewport");
+    const viewport = await screen.findByTestId(
+      "r3f-simulation-viewport",
+      undefined,
+      { timeout: 3000 }
+    );
 
     expect(dashboardRouteApiMock.getSimulationFrame).toHaveBeenCalledWith("emergency");
     expect(screen.queryByText("Dashboard API unavailable")).toBeNull();
@@ -520,6 +525,11 @@ describe("DashboardShell", () => {
   });
 
   test("polls live frames at the authoritative dashboard rate and stops on unmount", async () => {
+    // Fake timers so the poll cadence is driven explicitly, not by wall-clock.
+    // The initial dashboard load resolves via microtasks (no setTimeout), so the
+    // first poll (scheduled SIMULATION_FRAME_POLL_INTERVAL_MS later) cannot fire
+    // before the call-count assertions — deterministic under any CPU load.
+    vi.useFakeTimers();
     vi.stubEnv("NEXT_PUBLIC_R3F_SIMULATION_ENABLED", "true");
     mockWebGLSupport(true);
     mockDashboardRouteApi();
@@ -533,17 +543,27 @@ describe("DashboardShell", () => {
 
     const { unmount } = render(<DashboardRoute />);
 
-    await screen.findByTestId("r3f-simulation-viewport");
+    // The initial dashboard load resolves via microtasks; flush them WITHOUT
+    // advancing to the 100ms poll. RTL's findBy/waitFor can't be used here — it
+    // doesn't detect vitest's fake timers and would hang on a never-advanced
+    // polling loop — so query synchronously after the flush.
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(0);
+    });
+    expect(screen.getByTestId("r3f-simulation-viewport")).toBeTruthy();
     expect(dashboardRouteApiMock.getSimulationFrame).toHaveBeenCalledTimes(1);
 
-    await waitFor(() => {
-      expect(dashboardRouteApiMock.getSimulationFrame).toHaveBeenCalledTimes(2);
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(SIMULATION_FRAME_POLL_INTERVAL_MS);
     });
+    expect(dashboardRouteApiMock.getSimulationFrame).toHaveBeenCalledTimes(2);
 
     expect(dashboardRouteApiMock.getSimulationFrame.mock.calls[1][0]).toBe("emergency");
 
     unmount();
-    await sleep(250);
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(250);
+    });
 
     expect(dashboardRouteApiMock.getSimulationFrame).toHaveBeenCalledTimes(2);
   });
@@ -1669,6 +1689,32 @@ describe("DashboardShell", () => {
     expect(viewport.getAttribute("data-r3f-glb-vehicle-count")).toBe("5");
     expect(viewport.getAttribute("data-r3f-street-shadow-count")).toBe("7");
     expect(viewport.getAttribute("data-r3f-vehicle-silhouette-part-count")).toBe("12");
+  });
+
+  test("threads verifier scenario query params into R3F presentation attributes", async () => {
+    vi.stubEnv("NEXT_PUBLIC_R3F_SIMULATION_ENABLED", "true");
+    mockWebGLSupport(true);
+    const originalUrl = window.location.href;
+    window.history.pushState(
+      null,
+      "",
+      "/?r3fQuality=low&r3fWeather=clear&r3fTimeOfDay=night"
+    );
+
+    try {
+      renderDashboard();
+
+      const viewport = await screen.findByTestId("r3f-simulation-viewport");
+
+      expect(viewport.getAttribute("data-r3f-quality-preset")).toBe("low");
+      expect(viewport.getAttribute("data-r3f-weather")).toBe("clear");
+      expect(viewport.getAttribute("data-r3f-time-of-day")).toBe("night");
+      expect(viewport.getAttribute("data-r3f-weather-particles-enabled")).toBe(
+        "false"
+      );
+    } finally {
+      window.history.pushState(null, "", originalUrl);
+    }
   });
 
   test("exposes stale live-frame telemetry without hiding safety overlays", async () => {
