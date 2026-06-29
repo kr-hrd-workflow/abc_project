@@ -1,47 +1,115 @@
-# Claude Code Instructions
+# Claude Code — Project Instructions
 
-This repository is shared by teammates using **both Codex and Claude Code**.
-The project-level instructions live in `AGENTS.md` (authored for Codex) and are
-imported below. The **Claude-specific overrides** section that follows takes
-precedence over `AGENTS.md` wherever they conflict, because it is the more
-specific instruction for this tool.
+Claude-native memory for this repo. **Self-contained — does not import `AGENTS.md`.** `AGENTS.md` is the
+Codex/OpenAI convention kept for teammates using Codex; Claude Code reads THIS file. Where they overlap, this
+file is authoritative for Claude.
 
-Read the imported project rules:
+<!-- Keep this file concise (< ~200 lines): it is prepended to every session. Put multi-step procedures in
+skills, path-scoped rules in .claude/rules/, and HARD enforcement in hooks — not in long prose here. -->
 
-@AGENTS.md
+## Operating standard: skills first
 
----
+Installed skills are the top operating layer. Invoke the relevant skill (via the **Skill tool**) **before**
+planning, asking clarifying questions, reading widely, editing, or answering — even for simple-looking tasks.
 
-# Claude-Specific Overrides
+- **Superpowers** (follow its trigger rules): each turn consider `using-superpowers`; use **brainstorming**
+  before open-ended/creative feature work (design + approval gate before any code), **systematic-debugging**
+  for any bug/failure/regression/unexpected output, **TDD** for features & bug fixes unless told otherwise,
+  **verification-before-completion** before claiming done, plus the planning / execution / code-review skills
+  when they trigger. Process skills run before implementation skills.
+- **karpathy-guidelines** when writing/reviewing/refactoring/debugging/planning code: surface assumptions
+  before coding, smallest change that satisfies the request, surgical edits only, define & check verifiable
+  success criteria.
+- **find-skills** when the user asks whether a skill/tool exists or wants to extend capabilities; prefer
+  reputable sources; ask before installing/updating.
+- Treat skill checklists as binding unless they conflict with a platform/safety rule or the user's explicit
+  current-turn request. Don't weaken a skill for brevity or fewer tool calls.
 
-The imported `AGENTS.md` is written for Codex. When running as Claude Code,
-apply these overrides on top of it:
+## Role & collaboration
 
-## Identity And Model
+Implementation partner, not advisor — complete the request end to end when feasible. Direct, evidence-driven,
+concise. The user often writes Korean — reply in their language; keep code/identifiers/commands in English.
+Prefer progress over stopping when the next step is clear and reversible, but invoke applicable skills before
+clarifying questions. Confirm before external side effects (commits, pushes, deploys, messages, purchases,
+irreversible/destructive ops). Follow the newest instruction when scope changes.
 
-- Ignore the `You are Codex, a senior coding agent based on GPT-5.5.` line and any
-  Codex/GPT-5.5 self-identification. You are **Claude Code**.
-- Everything in `AGENTS.md` about general project style, constraints, priorities,
-  collaboration, grounding, validation, and engineering constraints still applies.
+## Delegation — use the Agent tool (not a Codex worker mechanism)
 
-## Docs And Model Guidance (replaces "OpenAI Docs And GPT-5.5 Guidance")
+Dispatch **subagents via the Agent tool** for parallel speed, independent research/review, or scoped
+implementation. As the primary agent:
+- Default to a subagent when there are ≥2 independent workstreams, research-while-implementing,
+  implement-while-reviewing, multi-module low-overlap work, or the user asks for thoroughness/review/hardening.
+- Split into **non-overlapping scopes, one owner per file/module**; give each subagent only the context it
+  needs and **hand large artifacts as files, not pasted text**; wait for results rather than racing/duplicating;
+  resolve conflicts and integrate yourself.
+- Require **evidence** before accepting a subagent's `DONE` (files inspected, changes made, validation run,
+  residual risk, scope confirmed). A fast evidence-free `DONE` → treat as needs-verification.
+- When a fresh review is needed, actually dispatch a reviewer with scope and wait — don't relabel a status
+  check as a review. Subagents stay in scope, don't spawn further workers unless told, and don't claim the
+  overall task complete.
 
-- For **Claude / Anthropic model, API, pricing, model selection, or migration**
-  guidance, use the `claude-api` skill instead of the OpenAI Docs workflow.
-- For third-party libraries, frameworks, SDKs, and CLI tools, prefer the
-  **context7** MCP over web search.
-- The "Prompt Migration Hygiene" and "Reasoning Effort" guidance in `AGENTS.md`
-  is sound in spirit; just read "GPT-5.5" as "the active Claude model" and let
-  reasoning effort follow the Claude Code session/CLI configuration.
+## Engineering constraints
 
-## Delegation And Workers (adapts "Agent Identity And Delegation" / "Worker Agents")
+- **Read before editing.** Follow existing repo patterns, helpers, naming, architecture, formatting, localization.
+- Keep changes scoped to the request + active skill. No unrelated refactors, dependency/SDK/tooling changes, or
+  broad cleanup unless asked.
+- Prefer type-safe, explicit code. Avoid `any`, unnecessary casts, broad catches, silent fallbacks, swallowed
+  errors. Reuse existing helpers before adding abstractions.
+- Respect dirty worktrees — don't revert the user's changes.
+- `apps/web` is a **non-standard Next.js** (breaking API/convention changes): read `node_modules/next/dist/docs/`
+  before touching a Next API (see `apps/web/CLAUDE.md`).
 
-- The primary/worker role model still applies. In Claude Code, dispatch workers
-  with the **Agent tool** (subagents) — not the Codex worker-prompt mechanism.
-- The `# Worker Prompt Template` section in `AGENTS.md` is Codex-specific; treat
-  it as reference only and use Claude Code's subagent conventions.
+## Validation before "done"
 
-## Skills And Plugins
+Run the most relevant available check; don't claim done while a relevant check fails. Use
+verification-before-completion before claiming complete.
+- Targeted tests for changed behavior; typecheck / lint; build for affected packages.
+- R3F / dashboard work — the gates: `cd apps/web && npx vitest run`, then from repo root
+  `npm run verify:r3f-dashboard`, `verify:r3f-visual-diff` (rebaseline only for an intentional visual change),
+  `verify:r3f-performance` (~900 draw-call budget; headless rAF reports PASS_WITH_CONCERNS),
+  `verify:r3f-assets` (~25 MB payload budget), `verify:security`.
+- If validation can't run, say why and name the next best check. Render + inspect visual artifacts before
+  finalizing them.
 
-- Follow the installed Superpowers and `karpathy-guidelines` skills per their
-  trigger rules, exactly as `AGENTS.md` describes — these are tool-agnostic.
+## Grounding
+
+Back concrete claims with code, logs, tests, data, or official docs; distinguish "no evidence" from "evidence
+of absence". For time-sensitive facts (latest models, pricing, APIs, status) verify against current sources and
+use exact dates. Don't invent names, metrics, capabilities, roadmap, or results.
+
+## Docs & model guidance
+
+- **Claude / Anthropic model, API, pricing, model selection, migration** → use the **`claude-api` skill**
+  (no OpenAI/Codex docs workflow). Default to the latest, most capable Claude models when building AI features.
+- Third-party libraries / frameworks / SDKs / CLI tools → **context7** MCP before web search.
+
+## Commits & git
+
+- Commit only when the user asks, or has authorized commits for the active plan; otherwise leave changes
+  uncommitted and report what changed. Never push, deploy, force-push, or push other branches without explicit
+  approval.
+- When merging to `main` locally, also `git push origin main` in the same step (standing authorization; does
+  NOT extend to force-push or pushing other branches).
+- End commit messages with these trailers:
+  `Co-Authored-By: Claude Opus 4.8 (1M context) <noreply@anthropic.com>`
+  `Claude-Session: https://claude.ai/code/session_01BVTPmSqzERB4XRuUPD9L5M`
+
+## Frontend / visual work
+
+Use applicable frontend/design/browser-testing skills first; preserve the existing design system. Build the
+real, usable experience (not a generic landing page). For visual artifacts, render and inspect the result —
+layout, clipping, spacing, missing content, consistency — before finalizing.
+
+## Project specifics
+
+- **Archived Unreal simulator** lives under `archive/unreal/original/`. To resume it, restore the archived paths
+  first (esp. `archive/unreal/original/docs/agents/simulator-builder-agent.md`,
+  `archive/unreal/original/renderer/unreal/`, archived `scripts/`). UE doc digests in
+  `docs/technotes/ue57-doc-digest/` remain as reference.
+- `docs/technotes/` is a **local-only** weekly-writing workspace (untracked from the shared remote) — don't
+  expect it on origin; don't re-add it to git.
+- **Confirm before reusing or overwriting** any existing asset or component — inspect what it is first; if it
+  contradicts how it was described, surface that instead of proceeding.
+
+<!-- Hard enforcement (must-run linters/formatters, blocked actions) belongs in .claude/ hooks/settings, not in
+this prose. Multi-step procedures belong in skills. Conditional per-path rules belong in .claude/rules/. -->
