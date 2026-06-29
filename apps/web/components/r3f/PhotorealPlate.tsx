@@ -42,18 +42,29 @@ const PHOTOREAL_PLATES = {
   plainDay: {
     path: "/simulation/r3f/assets/plates/gangnam_photoreal_plain_day.webp",
     aspect: 1450 / 1085
+  },
+  // EXPERIMENTAL (?photoreal=1&plate=v5): the dense-canyon road-lock day plate
+  // (cover-v5). Its painted road grid + 4-way crosswalks are generated to match
+  // the metric projection at the operator-wide camera, so the R3F lane-marking
+  // overlay is DROPPED for this plate (markings come from the plate itself);
+  // vehicles seat on the plate's own lanes and the depth occluders stay on.
+  v5Day: {
+    path: "/simulation/r3f/assets/plates/gangnam_photoreal_v5_day.webp",
+    aspect: 1454 / 1082
   }
 } as const;
 
-// PlateVariant "plain" is a diagnostic-only override (?cmp=A). Default
-// "roadlock" preserves the committed photoreal behaviour exactly.
-export type PhotorealPlateVariant = "roadlock" | "plain";
+// PlateVariant "plain" is a diagnostic-only override (?cmp=A); "v5" is the
+// experimental dense-canyon road-lock day plate (?plate=v5). Default "roadlock"
+// preserves the committed photoreal behaviour exactly.
+export type PhotorealPlateVariant = "roadlock" | "plain" | "v5";
 
 export function resolvePhotorealPlate(
   timeOfDay: Stage6TimeOfDay,
   variant: PhotorealPlateVariant = "roadlock"
 ) {
   if (variant === "plain") return PHOTOREAL_PLATES.plainDay;
+  if (variant === "v5") return PHOTOREAL_PLATES.v5Day;
   return timeOfDay === "night" ? PHOTOREAL_PLATES.night : PHOTOREAL_PLATES.day;
 }
 
@@ -64,6 +75,7 @@ if (
   useTexture.preload(PHOTOREAL_PLATES.day.path);
   useTexture.preload(PHOTOREAL_PLATES.night.path);
   useTexture.preload(PHOTOREAL_PLATES.plainDay.path);
+  useTexture.preload(PHOTOREAL_PLATES.v5Day.path);
 }
 
 const PHOTOREAL_VERTEX_SHADER = /* glsl */ `

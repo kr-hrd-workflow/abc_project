@@ -66,6 +66,17 @@ function resolveCmpMode(): "A" | "B" | null {
   return v === "A" || v === "B" ? v : null;
 }
 
+// EXPERIMENTAL ROAD-LOCK PLATE (?photoreal=1&plate=v5) — uncommitted. Selects the
+// dense-canyon cover-v5 day plate as the road-lock backdrop. Because the v5 plate
+// already carries metric-aligned painted lanes + 4-way crosswalks, the R3F lane
+// markings overlay is dropped (the plate supplies the road); the depth-only
+// occluders, live vehicles, pedestrians and signals all stay on. This is the
+// road-lock architecture, NOT the cmp=A plain-plate+markings diagnostic path.
+function resolveV5Plate(): boolean {
+  if (typeof window === "undefined") return false;
+  return new URLSearchParams(window.location.search).get("plate") === "v5";
+}
+
 // DIAGNOSTIC (?cmp=A): the markings overlay + vehicles are registered onto the
 // plain plate via a SINGLE GLOBAL +X group translate (the dx8.5 mechanism) — one
 // <group> wraps the R3F markings and the live vehicles so they move TOGETHER by
@@ -107,14 +118,20 @@ export function SimulationScene({
   // normal scene (day: ACES pipeline; night: Bloom-only).
   const isPhotoreal = resolvePhotorealMode();
   const cmpMode = resolveCmpMode();
+  const isV5Plate = resolveV5Plate();
 
   if (isPhotoreal) {
-    // cmp=A → plain-asphalt plate; otherwise the committed roadlock plate.
-    const plateVariant = cmpMode === "A" ? "plain" : "roadlock";
-    // cmp=B drops the R3F markings overlay so only the plate's painted lanes
-    // show (vehicles are seated on them via ?calB= calibration). A and the
-    // committed default keep the markings overlay ON.
-    const showR3fMarkings = cmpMode !== "B";
+    // plate=v5 → experimental cover-v5 road-lock plate; cmp=A → plain-asphalt
+    // plate; otherwise the committed roadlock plate.
+    const plateVariant = isV5Plate
+      ? "v5"
+      : cmpMode === "A"
+        ? "plain"
+        : "roadlock";
+    // cmp=B and plate=v5 drop the R3F markings overlay so only the plate's
+    // painted lanes show (v5: the plate is metric-aligned; cmp=B: vehicles are
+    // seated via ?calB= calibration). A and the committed default keep markings ON.
+    const showR3fMarkings = !isV5Plate && cmpMode !== "B";
     // cmp=A is a clean road-registration diagnostic: hide the heavy 3D scene
     // except the plate + R3F markings + live vehicles + signals (+ depth
     // occluders). Pedestrians and the distant atmospheric scenery are suppressed

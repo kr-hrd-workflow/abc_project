@@ -15,9 +15,11 @@
 //     (Teheran Valley) growing into the distance.
 //   • Distant ring fills the horizon silhouette.
 //
-// Safe-zone: every footprint's near edge sits beyond the carriageway + sidewalk
-// clearance (|edge| ≥ BUILDING_SAFE on at least one axis), so vehicles are
-// occluded by true 3D depth and never overlap the road.
+// Safe-zone: every footprint's near edge sits beyond the carriageway + a narrow
+// (~4.5 m, realistic Seoul) sidewalk clearance (|edge| ≥ BUILDING_SAFE on the
+// axis facing its road), so buildings line the streets tightly (dense canyon)
+// yet still stay strictly OUTSIDE the carriageway, occluding vehicles by true 3D
+// depth and never overlapping the road box / corridors.
 
 import {
   INTERSECTION_BOX_X_METERS,
@@ -42,11 +44,17 @@ export type BuildingFootprint = {
   billboards?: boolean;
 };
 
+// Sidewalk clearance from the carriageway edge to the nearest building face.
+// ~4.5 m = a realistic Gangnam-daero sidewalk, so buildings front the street
+// tightly (was 7.95 m, which read as wide empty plazas). Still > 0 so the
+// near face is always OUTSIDE the carriageway box.
+const SIDEWALK_CLEARANCE_M = 4.5;
+
 /** Minimum distance from centre to nearest building face on the E/W axis. */
-export const BUILDING_SAFE_X = INTERSECTION_BOX_X_METERS / 2 + 7.95; // ≈ 25.95 m
+export const BUILDING_SAFE_X = INTERSECTION_BOX_X_METERS / 2 + SIDEWALK_CLEARANCE_M; // ≈ 22.5 m
 
 /** Minimum distance from centre to nearest building face on the N/S axis. */
-export const BUILDING_SAFE_Z = INTERSECTION_BOX_Z_METERS / 2 + 7.95; // ≈ 25.95 m
+export const BUILDING_SAFE_Z = INTERSECTION_BOX_Z_METERS / 2 + SIDEWALK_CLEARANCE_M; // ≈ 22.5 m
 
 export const BUILDING_FOOTPRINTS: BuildingFootprint[] = [
   // ───── SW (-x,+z): 서초 삼성타운 — landmark glass-tower cluster + skyline PEAK ─────
@@ -75,28 +83,31 @@ export const BUILDING_FOOTPRINTS: BuildingFootprint[] = [
   },
 
   // ───── West along 서초대로 (-x): GT Tower — slender distinctive all-glass ─────
+  // Pulled to the 서초대로 south frontage (near-z ≈ 22.5 m).
   {
     id: "gt-tower",
-    position: [-156, 65, 44],
+    position: [-156, 65, 37],
     size: [24, 130, 30],
     form: "glassTower",
     tint: "#4a7060"
   },
 
   // ───── SE frontage of 강남대로 (+x,+z): Meritz Tower ~30 fl glass office ─────
+  // Pulled to the 강남대로 east frontage (near-x ≈ 22.5 m).
   {
     id: "meritz-tower",
-    position: [42, 60, 74],
+    position: [35, 60, 74],
     size: [26, 120, 30],
     form: "glassTower",
     tint: "#46627c"
   },
 
   // ───── Corner mid-rise commercial/retail (billboard-heavy, NOT towers) ─────
+  // Pulled tight into each corner so near faces ≈ 22.5 m on BOTH axes (dense).
   // NW corner (-x,-z): 메가박스 cinema + retail block.
   {
     id: "nw-corner-megabox",
-    position: [-46, 29, -46],
+    position: [-42, 29, -41],
     size: [40, 58, 38],
     form: "midriseCommercial",
     tint: "#5a6470",
@@ -105,7 +116,7 @@ export const BUILDING_FOOTPRINTS: BuildingFootprint[] = [
   // NE corner (+x,-z): commercial/office retail block.
   {
     id: "ne-corner-commercial",
-    position: [46, 26, -46],
+    position: [41, 26, -40],
     size: [38, 52, 36],
     form: "midriseCommercial",
     tint: "#586470",
@@ -114,17 +125,28 @@ export const BUILDING_FOOTPRINTS: BuildingFootprint[] = [
   // SE corner (+x,+z): 스타벅스 / clinics / fashion-cosmetic brand stores.
   {
     id: "se-corner-retail",
-    position: [44, 24, 44],
+    position: [40, 24, 40],
     size: [34, 48, 34],
     form: "midriseCommercial",
     tint: "#606a74",
     billboards: true
   },
+  // SW corner (-x,+z): brand/retail block fronting the intersection (the Samsung
+  // towers sit set back, so this fills the SW street corner that was bare).
+  {
+    id: "sw-corner-retail",
+    position: [-42, 27, 42],
+    size: [36, 54, 34],
+    form: "midriseCommercial",
+    tint: "#5c6672",
+    billboards: true
+  },
 
   // 강남대로 retail canyon frontages (N) — mid-rise commercial, billboard signage.
+  // Pulled to the carriageway edge (near-x ≈ 22.5 m) so they line 강남대로 tightly.
   {
     id: "gangnam-n-west-commercial",
-    position: [-40, 23, -94],
+    position: [-31, 23, -94],
     size: [18, 46, 44],
     form: "midriseCommercial",
     tint: "#556070",
@@ -132,7 +154,7 @@ export const BUILDING_FOOTPRINTS: BuildingFootprint[] = [
   },
   {
     id: "gangnam-n-east-commercial",
-    position: [40, 26, -98],
+    position: [31, 26, -98],
     size: [18, 52, 46],
     form: "midriseCommercial",
     tint: "#586472",
@@ -141,7 +163,7 @@ export const BUILDING_FOOTPRINTS: BuildingFootprint[] = [
   // 강남대로 south frontages — lower mixed retail.
   {
     id: "gangnam-s-west-commercial",
-    position: [-40, 20, 96],
+    position: [-31, 20, 96],
     size: [18, 40, 44],
     form: "midriseCommercial",
     tint: "#525c68",
@@ -149,31 +171,65 @@ export const BUILDING_FOOTPRINTS: BuildingFootprint[] = [
   },
   {
     id: "gangnam-s-east-commercial",
-    position: [42, 22, 122],
+    position: [31, 22, 122],
     size: [18, 44, 42],
+    form: "midriseCommercial",
+    tint: "#54606c"
+  },
+  // 강남대로 frontage fillers — close the gaps between the corner blocks and the
+  // set-back frontage blocks so the avenue reads as a continuous canyon wall.
+  {
+    id: "gangnam-n-west-fill",
+    position: [-31, 21, -72],
+    size: [18, 42, 30],
+    form: "midriseCommercial",
+    tint: "#54606e",
+    billboards: true
+  },
+  {
+    id: "gangnam-n-east-fill",
+    position: [31, 24, -72],
+    size: [18, 48, 30],
+    form: "midriseCommercial",
+    tint: "#566270",
+    billboards: true
+  },
+  {
+    id: "gangnam-s-west-fill",
+    position: [-31, 22, 66],
+    size: [18, 44, 34],
+    form: "midriseCommercial",
+    tint: "#525c6a",
+    billboards: true
+  },
+  {
+    id: "gangnam-s-east-fill",
+    position: [31, 20, 100],
+    size: [18, 40, 30],
     form: "midriseCommercial",
     tint: "#54606c"
   },
 
   // ───── Receding EAST along 테헤란로 (+x): progressively taller office towers ─────
   // Teheran Valley — glass towers grow taller into the distance (peaking far off).
+  // Pulled to the 테헤란로 frontage (near-z ≈ 22.5 m), alternating N/S sides.
   {
     id: "teheran-e1-near",
-    position: [74, 36, -42],
+    position: [74, 36, -37],
     size: [30, 72, 30],
     form: "glassTower",
     tint: "#40607a"
   },
   {
     id: "teheran-e2",
-    position: [118, 48, 44],
+    position: [118, 48, 38],
     size: [30, 96, 32],
     form: "glassTower",
     tint: "#3f5872"
   },
   {
     id: "teheran-e3",
-    position: [176, 66, -46],
+    position: [176, 66, -38],
     size: [30, 132, 32],
     form: "glassTower",
     tint: "#456078"
@@ -185,14 +241,86 @@ export const BUILDING_FOOTPRINTS: BuildingFootprint[] = [
     form: "glassTower",
     tint: "#42587a"
   },
+  // 테헤란로 frontage fillers — line both kerbs of the avenue (the previously bare
+  // east plaza). Mid-rise near the junction, then receding glass towers eastward.
+  {
+    id: "teheran-frontage-n1",
+    position: [60, 27, -36],
+    size: [30, 54, 26],
+    form: "midriseCommercial",
+    tint: "#586472",
+    billboards: true
+  },
+  {
+    id: "teheran-frontage-s1",
+    position: [60, 30, 36],
+    size: [30, 60, 26],
+    form: "midriseCommercial",
+    tint: "#566270",
+    billboards: true
+  },
+  {
+    id: "teheran-frontage-s2",
+    position: [95, 42, 37],
+    size: [28, 84, 28],
+    form: "glassTower",
+    tint: "#3f5a76"
+  },
+  {
+    id: "teheran-frontage-n2",
+    position: [108, 46, -37],
+    size: [30, 92, 30],
+    form: "glassTower",
+    tint: "#425e78"
+  },
+  {
+    id: "teheran-frontage-n3",
+    position: [145, 55, -37],
+    size: [30, 110, 30],
+    form: "glassTower",
+    tint: "#3f5872"
+  },
+  {
+    id: "teheran-frontage-s3",
+    position: [150, 60, 37],
+    size: [30, 120, 30],
+    form: "glassTower",
+    tint: "#46607a"
+  },
 
-  // West along 서초대로 — mid-rise office filler beyond GT Tower.
+  // West along 서초대로 — mid-rise office filler beyond GT Tower. Pulled to the
+  // 서초대로 north frontage (near-z ≈ 22.5 m).
   {
     id: "seocheo-w-mid",
-    position: [-108, 33, -44],
+    position: [-108, 33, -37],
     size: [34, 66, 30],
     form: "midriseCommercial",
     tint: "#566472"
+  },
+  // 서초대로 frontage fillers — line the avenue both sides so the west arm is a
+  // continuous wall instead of isolated towers with bare ground between.
+  {
+    id: "seocheo-n1",
+    position: [-64, 28, -36],
+    size: [28, 56, 28],
+    form: "midriseCommercial",
+    tint: "#586470",
+    billboards: true
+  },
+  {
+    id: "seocheo-s1",
+    position: [-60, 29, 36],
+    size: [32, 58, 28],
+    form: "midriseCommercial",
+    tint: "#5a6470",
+    billboards: true
+  },
+  {
+    id: "seocheo-s2",
+    position: [-104, 36, 37],
+    size: [30, 72, 30],
+    form: "midriseCommercial",
+    tint: "#54606e"
   },
 
   // ───── Distant ring: low-detail horizon silhouette ─────
