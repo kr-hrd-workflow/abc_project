@@ -86,63 +86,8 @@ export function getStage6QualityPreset(
 
 export function getStage6PresentationMode(): Stage6PresentationMode {
   return {
-    qualityPreset: getStage6QualityPreset(
-      readStage6RuntimeValue("r3fQuality", "NEXT_PUBLIC_R3F_STAGE6_QUALITY")
-    ),
-    weather: getStage6WeatherPreset(
-      readStage6RuntimeValue("r3fWeather", "NEXT_PUBLIC_R3F_STAGE6_WEATHER")
-    ),
-    timeOfDay: getStage6TimeOfDay(
-      readStage6RuntimeValue(
-        "r3fTimeOfDay",
-        "NEXT_PUBLIC_R3F_STAGE6_TIME_OF_DAY"
-      )
-    )
+    qualityPreset: STAGE6_QUALITY_PRESETS.high,
+    weather: "rain",
+    timeOfDay: "day"
   };
-}
-
-function getStage6WeatherPreset(
-  input: string | undefined
-): Stage6WeatherPresetName {
-  const value = input?.toLowerCase();
-
-  if (value === "clear" || value === "cloudy" || value === "rain") {
-    return value;
-  }
-
-  return "rain";
-}
-
-function getStage6TimeOfDay(input: string | undefined): Stage6TimeOfDay {
-  return input?.toLowerCase() === "night" ? "night" : "day";
-}
-
-function readStage6RuntimeValue(
-  queryName: string,
-  envName: "NEXT_PUBLIC_R3F_STAGE6_QUALITY" | "NEXT_PUBLIC_R3F_STAGE6_WEATHER" | "NEXT_PUBLIC_R3F_STAGE6_TIME_OF_DAY"
-) {
-  const queryValue = readStage6QueryValue(queryName);
-  if (queryValue) return queryValue;
-
-  if (typeof process !== "undefined") {
-    return process.env[envName];
-  }
-
-  return undefined;
-}
-
-function readStage6QueryValue(name: string) {
-  if (typeof window === "undefined") {
-    return undefined;
-  }
-
-  const params = new URLSearchParams(window.location.search);
-  const shortName = name.replace(/^r3f/, "");
-
-  return (
-    params.get(name) ??
-    params.get(shortName) ??
-    params.get(shortName.toLowerCase()) ??
-    undefined
-  );
 }

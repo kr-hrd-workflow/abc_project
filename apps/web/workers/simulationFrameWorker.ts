@@ -345,21 +345,7 @@ function normalizeNumberRecord(value: unknown): Record<string, number> | null {
 }
 
 function cloneEntry(entry: SimulationFrameBufferEntry): SimulationFrameBufferEntry {
-  return {
-    ...entry,
-    frame: {
-      ...entry.frame,
-      bounds_meters: { ...entry.frame.bounds_meters },
-      vehicles: entry.frame.vehicles.map((vehicle) => ({ ...vehicle })),
-      pedestrians: entry.frame.pedestrians?.map((pedestrian) => ({
-        ...pedestrian
-      })) ?? [],
-      density_segments: entry.frame.density_segments.map((segment) => ({ ...segment })),
-      signals: entry.frame.signals.map((signal) => ({ ...signal })),
-      queues: { ...entry.frame.queues },
-      events: entry.frame.events.map((event) => ({ ...event }))
-    }
-  };
+  return structuredClone(entry);
 }
 
 function finiteNumber(value: unknown) {

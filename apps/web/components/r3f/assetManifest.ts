@@ -43,24 +43,7 @@ export type R3FAssetCompression = {
 };
 
 export type R3FAssetDetails = {
-  readonly wheels?: number;
-  readonly glassSurfaces?: number;
-  readonly lightEmitters?: number;
-  readonly bodyPanelBreaks?: number;
-  readonly mirrors?: boolean;
-  readonly mirrorReason?: string;
-  readonly frontRearDistinction?: boolean;
-  readonly normalizedPivot?: string;
-  readonly groundContact?: boolean;
-  readonly scaleReferenceMeters?: Readonly<Record<string, number>>;
-  readonly functionalParts?: readonly string[];
-  readonly materialFeatures?: readonly string[];
-  readonly decalFeatures?: readonly string[];
-  readonly spriteFeatures?: readonly string[];
   readonly provenance?: string;
-  readonly dimensions?: string;
-  readonly triangleCount?: number;
-  readonly fileSizeBytes?: number;
   readonly [detailKey: string]: unknown;
 };
 
@@ -105,10 +88,6 @@ export function listR3FAssetEntries(): R3FAssetEntry[] {
   return Object.values(R3F_ASSET_MANIFEST);
 }
 
-export function getR3FAssetEntry<AssetId extends R3FAssetId>(
-  assetId: AssetId
-): R3FAssetManifest[AssetId];
-export function getR3FAssetEntry(assetId: string): R3FAssetEntry;
 export function getR3FAssetEntry(assetId: string): R3FAssetEntry {
   const entry = R3F_ASSET_MANIFEST[assetId as R3FAssetId];
 
@@ -117,8 +96,4 @@ export function getR3FAssetEntry(assetId: string): R3FAssetEntry {
   }
 
   return entry;
-}
-
-export function listR3FAssetsByKind(kind: R3FAssetKind): R3FAssetEntry[] {
-  return listR3FAssetEntries().filter((asset) => asset.kind === kind);
 }
