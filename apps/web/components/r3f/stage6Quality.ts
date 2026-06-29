@@ -84,10 +84,54 @@ export function getStage6QualityPreset(
   return STAGE6_QUALITY_PRESETS.high;
 }
 
-export function getStage6PresentationMode(): Stage6PresentationMode {
+export function getStage6PresentationMode(
+  input?: string | URLSearchParams
+): Stage6PresentationMode {
+  const params = getStage6PresentationParams(input);
+
   return {
-    qualityPreset: STAGE6_QUALITY_PRESETS.high,
-    weather: "rain",
-    timeOfDay: "day"
+    qualityPreset: getStage6QualityPreset(params?.get("r3fQuality") ?? undefined),
+    weather: getStage6WeatherPreset(params?.get("r3fWeather")),
+    timeOfDay: getStage6TimeOfDay(params?.get("r3fTimeOfDay"))
   };
+}
+
+function getStage6PresentationParams(
+  input?: string | URLSearchParams
+): URLSearchParams | null {
+  if (typeof input === "string") {
+    return new URLSearchParams(input);
+  }
+
+  if (input) {
+    return input;
+  }
+
+  if (typeof window === "undefined") {
+    return null;
+  }
+
+  return new URLSearchParams(window.location.search);
+}
+
+function getStage6WeatherPreset(
+  input: string | null | undefined
+): Stage6WeatherPresetName {
+  const key = input?.toLowerCase();
+
+  if (key === "clear" || key === "cloudy" || key === "rain") {
+    return key;
+  }
+
+  return "rain";
+}
+
+function getStage6TimeOfDay(input: string | null | undefined): Stage6TimeOfDay {
+  const key = input?.toLowerCase();
+
+  if (key === "day" || key === "night") {
+    return key;
+  }
+
+  return "day";
 }

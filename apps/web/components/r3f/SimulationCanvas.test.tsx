@@ -34,6 +34,7 @@ import {
 } from "./shadowPolicy";
 import {
   STAGE6_QUALITY_PRESETS,
+  getStage6PresentationMode,
   getStage6QualityPreset
 } from "./stage6Quality";
 import {
@@ -154,6 +155,35 @@ describe("SimulationCanvas Stage 5 telemetry", () => {
     );
     expect(getStage6QualityPreset("unknown").name).toBe("high");
     expect(getStage6QualityPreset("low").reflections).toBe("fake");
+  });
+
+  test("reads verifier scenario mode from R3F query params", () => {
+    const presentation = getStage6PresentationMode(
+      "?r3fQuality=low&r3fWeather=clear&r3fTimeOfDay=night"
+    );
+
+    expect(presentation.qualityPreset.name).toBe("low");
+    expect(presentation.weather).toBe("clear");
+    expect(presentation.timeOfDay).toBe("night");
+  });
+
+  test("uses the browser location for verifier scenario mode by default", () => {
+    const originalUrl = window.location.href;
+    window.history.pushState(
+      null,
+      "",
+      "/?r3fQuality=medium&r3fWeather=cloudy&r3fTimeOfDay=night"
+    );
+
+    try {
+      const presentation = getStage6PresentationMode();
+
+      expect(presentation.qualityPreset.name).toBe("medium");
+      expect(presentation.weather).toBe("cloudy");
+      expect(presentation.timeOfDay).toBe("night");
+    } finally {
+      window.history.pushState(null, "", originalUrl);
+    }
   });
 
   test("configures restrained renderer settings and publishes draw-call proof without React state", () => {
