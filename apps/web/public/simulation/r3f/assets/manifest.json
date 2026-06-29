@@ -1580,5 +1580,81 @@
     "provenanceEvidencePath": "docs/compliance/r3f-asset-licenses.md",
     "runtimeUsage": "background-plate",
     "nonPowerOfTwoReason": "Full-frame background plate projected onto a backdrop quad (no mipmapping/tiling); 1536x1024 generated landscape kept as-is."
+  },
+  "plates/gangnam_photoreal_roadlock_day": {
+    "id": "plates/gangnam_photoreal_roadlock_day",
+    "path": "/simulation/r3f/assets/plates/gangnam_photoreal_roadlock_day.webp",
+    "kind": "texture",
+    "source": "photoreal-reconstruction-gangnam-station-intersection-day-roadlock",
+    "license": "Project-authored photoreal reconstruction of the real 강남역 사거리 (Gangnam Station intersection); landmark forms and infrastructure derived from the real location; all signage is invented Gangnam-style (clinics/academies/cafes); no real brand logos or trademarks; background-visual-only",
+    "authorship": "generated",
+    "units": "meters",
+    "pbr": false,
+    "lod": "atlas",
+    "maxTextureSize": 2048,
+    "maxTriangles": 0,
+    "maxFileSizeBytes": 700000,
+    "allowNonPowerOfTwo": true,
+    "realismStatus": "stage6_finishing_source_ready",
+    "visualRejectIfToyLike": true,
+    "details": {
+      "spriteFeatures": [
+        "photoreal daytime road-lock reconstruction of 강남역 사거리 (Gangnam Station intersection), operator-wide view",
+        "empty carriageway with a solid yellow centre line and all four approach corridors open",
+        "photoreal sidewalks, crosswalks, and Samsung-Town-style glass towers SW",
+        "fixed screen-space backdrop for the ?photoreal=1 production view; all signage is invented Gangnam-style (clinics/academies/cafes); no real brand logos or trademarks"
+      ],
+      "provenance": "Photoreal road-lock reconstruction of the real 강남역 사거리 (Gangnam Station intersection), operator-wide view at daytime (1454x1082): empty carriageway with a solid yellow centre line and all four approach corridors open, plus photoreal sidewalks and buildings; used only as a fixed screen-space backdrop for the ?photoreal=1 production view, never a vehicle/pedestrian/signal truth surface. All signage is invented Gangnam-style (clinics/academies/cafes); no real brand logos or trademarks. Background-visual-only. Runtime proof must come from browser-rendered day frames."
+    },
+    "pbrChannels": [
+      "sourceColor"
+    ],
+    "compression": {
+      "status": "webp-runtime",
+      "geometry": "not-applicable",
+      "texture": "webp",
+      "evidence": "screen-space photoreal backdrop sampled on a dome; not a runtime truth surface; scripts/verify-r3f-assets.mjs"
+    },
+    "provenanceEvidencePath": "docs/compliance/r3f-asset-licenses.md",
+    "runtimeUsage": "background-plate",
+    "nonPowerOfTwoReason": "Full-frame screen-space photoreal backdrop sampled on a dome (no mipmapping/tiling); 1454x1082 generated plate kept as-is."
+  },
+  "plates/gangnam_photoreal_roadlock_night": {
+    "id": "plates/gangnam_photoreal_roadlock_night",
+    "path": "/simulation/r3f/assets/plates/gangnam_photoreal_roadlock_night.webp",
+    "kind": "texture",
+    "source": "photoreal-reconstruction-gangnam-station-intersection-night-roadlock",
+    "license": "Project-authored photoreal reconstruction of the real 강남역 사거리 (Gangnam Station intersection); landmark forms and infrastructure derived from the real location; all signage is invented Gangnam-style (clinics/academies/cafes); no real brand logos or trademarks; background-visual-only",
+    "authorship": "generated",
+    "units": "meters",
+    "pbr": false,
+    "lod": "atlas",
+    "maxTextureSize": 2048,
+    "maxTriangles": 0,
+    "maxFileSizeBytes": 700000,
+    "allowNonPowerOfTwo": true,
+    "realismStatus": "stage6_finishing_source_ready",
+    "visualRejectIfToyLike": true,
+    "details": {
+      "spriteFeatures": [
+        "photoreal night road-lock reconstruction of 강남역 사거리 (Gangnam Station intersection), operator-wide view",
+        "empty carriageway with a solid yellow centre line and all four approach corridors open",
+        "glowing media poles, LED billboards, and Samsung-Town-style glass towers SW",
+        "fixed screen-space backdrop for the ?photoreal=1 production view; all signage is invented Gangnam-style (clinics/academies/cafes); no real brand logos or trademarks"
+      ],
+      "provenance": "Photoreal road-lock reconstruction of the real 강남역 사거리 (Gangnam Station intersection), operator-wide view at night (1454x1082): empty carriageway with a solid yellow centre line and all four approach corridors open, plus photoreal sidewalks and buildings; used only as a fixed screen-space backdrop for the ?photoreal=1 production view, never a vehicle/pedestrian/signal truth surface. All signage is invented Gangnam-style (clinics/academies/cafes); no real brand logos or trademarks. Background-visual-only. Runtime proof must come from browser-rendered night frames."
+    },
+    "pbrChannels": [
+      "sourceColor"
+    ],
+    "compression": {
+      "status": "webp-runtime",
+      "geometry": "not-applicable",
+      "texture": "webp",
+      "evidence": "screen-space photoreal backdrop sampled on a dome; not a runtime truth surface; scripts/verify-r3f-assets.mjs"
+    },
+    "provenanceEvidencePath": "docs/compliance/r3f-asset-licenses.md",
+    "runtimeUsage": "background-plate",
+    "nonPowerOfTwoReason": "Full-frame screen-space photoreal backdrop sampled on a dome (no mipmapping/tiling); 1454x1082 generated plate kept as-is."
   }
 }

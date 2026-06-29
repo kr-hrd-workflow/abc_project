@@ -8,6 +8,7 @@ import { CameraRig } from "./CameraRig";
 import { DynamicPedestrianLayer } from "./DynamicPedestrianLayer";
 import { DynamicVehicleLayer } from "./DynamicVehicleLayer";
 import { NightVehicleTreatment } from "./NightVehicleTreatment";
+import { PhotorealPlate } from "./PhotorealPlate";
 import { RoadSurfaceLayer } from "./RoadSurfaceLayer";
 import { SceneEnvironment } from "./SceneEnvironment";
 import { ScenePostFX } from "./ScenePostFX";
@@ -39,6 +40,17 @@ function resolveGuideMode(): boolean {
   return new URLSearchParams(window.location.search).get("guide") === "1";
 }
 
+// Production photoreal view: ?photoreal=1 — mounts the fixed photoreal empty-road
+// 강남역 plate as the full-canvas screen-space backdrop and composites the live
+// SUMO vehicles, pedestrians, and signals on top at the operator-wide camera,
+// with the 3D buildings and 3D road SUPPRESSED (metric building footprints stay
+// on as depth-only occluders). It is a supported, opt-in mode gated exactly like
+// ?guide=1, so the default scene is completely unaffected.
+function resolvePhotorealMode(): boolean {
+  if (typeof window === "undefined") return false;
+  return new URLSearchParams(window.location.search).get("photoreal") === "1";
+}
+
 export function SimulationScene({
   sceneSnapshot,
   qualityPreset = getStage6QualityPreset("high"),
@@ -63,6 +75,44 @@ export function SimulationScene({
   // structural guide. Camera stays aligned with the 3D scene camera via the
   // same viewpoint/cameraPreset path so the guide matches the live scene frame.
   const isGuide = resolveGuideMode();
+
+  // Production photoreal view (?photoreal=1): photoreal plate backdrop + live
+  // vehicles, pedestrians, and signals composited on top. Buildings + 3D road
+  // suppressed. The camera is pinned to the operator-wide day/clear rig because
+  // rain/night would add a shake offset (CameraRig) that misregisters the fixed
+  // screen-space plate; lighting, plate, vehicles, and signals still follow the
+  // real timeOfDay so day and night both read correctly. Post-FX mirrors the
+  // normal scene (day: ACES pipeline; night: Bloom-only).
+  const isPhotoreal = resolvePhotorealMode();
+
+  if (isPhotoreal) {
+    return (
+      <group name="photoreal-production-scene">
+        <CameraRig preset="operatorWide" weather="clear" timeOfDay="day" />
+        <SceneLighting
+          isNight={isNight}
+          sceneSnapshot={sceneSnapshot}
+          qualityPreset={qualityPreset}
+          weather="clear"
+          timeOfDay={timeOfDay}
+        />
+        <PhotorealPlate timeOfDay={timeOfDay} />
+        <DynamicVehicleLayerWithWeather
+          isNight={isNight}
+          timeOfDay={timeOfDay}
+          sceneSnapshot={sceneSnapshot}
+          qualityPreset={qualityPreset}
+          viewpoint="wide"
+        />
+        <DynamicPedestrianLayer sceneSnapshot={sceneSnapshot} />
+        <SignalLayer
+          signals={sceneSnapshot.signals}
+          lightingPreset={isNight ? "night" : "day"}
+        />
+        <SceneFinishing isNight={isNight} qualityPreset={qualityPreset} />
+      </group>
+    );
+  }
 
   if (isGuide) {
     // Use "nightAerialProof" for wide (= STAGE5_CAMERA, exact plate-camera match)
