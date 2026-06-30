@@ -15,6 +15,7 @@ from app.core.config import Settings
 from app.scenarios.data import EMERGENCY_SCENARIO
 from app.services.simulation_frame_provider import (
     FixtureSimulationFrameProvider,
+    ScenarioRoutingFrameProvider,
     SumoSimulationFrameProvider,
     get_simulation_frame_provider,
 )
@@ -22,6 +23,7 @@ from app.services.simulation_snapshot import (
     SNAPSHOT_BOUNDS_METERS,
     _derive_approach_length_meters,
     _derive_snapshot_bounds_meters,
+    _vehicles_for_scenario,
     build_fixture_simulation_frame,
 )
 from app.services.sumo_runtime import SumoRuntimeError, SumoRuntimeService
@@ -206,14 +208,14 @@ def test_provider_factory_selects_fixture_and_sumo_modes() -> None:
         get_simulation_frame_provider(Settings(sumo_simulation_mode="fixture")),
         FixtureSimulationFrameProvider,
     )
-    assert isinstance(
-        get_simulation_frame_provider(Settings(sumo_simulation_mode="sumo_traci")),
-        SumoSimulationFrameProvider,
-    )
-    assert isinstance(
-        get_simulation_frame_provider(Settings(sumo_simulation_mode="sumo_libsumo")),
-        SumoSimulationFrameProvider,
-    )
+    # Live modes select the SUMO path wrapped in the per-scenario router, so only
+    # the live-allowlisted scenario reaches SUMO and the rest stay on fixture.
+    for live_mode in ("sumo_traci", "sumo_libsumo"):
+        provider = get_simulation_frame_provider(
+            Settings(sumo_simulation_mode=live_mode)
+        )
+        assert isinstance(provider, ScenarioRoutingFrameProvider)
+        assert isinstance(provider._live_provider, SumoSimulationFrameProvider)
 
 
 def test_provider_factory_serializes_cold_live_provider_creation(
@@ -520,3 +522,12 @@ def test_sumo_provider_immediate_read_after_mapping_failure_stays_last_good() ->
     assert stale_frame.source == "sumo_last_good"
     assert immediate_frame.source == "sumo_last_good"
     assert immediate_frame.sim_time_seconds == live_frame.sim_time_seconds
+
+
+def test_normal_fixture_bus_rides_gangnamdaero_median_lane() -> None:
+    buses = [v for v in _vehicles_for_scenario("normal") if v.vehicle_type == "bus"]
+    assert len(buses) == 1
+    bus = buses[0]
+    assert bus.lane_id.startswith(("north-inbound", "south-inbound"))
+    assert bus.lane_id.endswith("-4")  # median bus lane index
+    assert bus.heading_degrees in (0.0, 180.0)  # aligned with the N/S approach
