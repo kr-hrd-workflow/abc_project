@@ -106,8 +106,8 @@ def test_cctv_flow_503_in_fixture_mode_without_building_source(monkeypatch) -> N
 
 
 def test_cctv_flow_503_does_not_leak_signed_url(monkeypatch) -> None:
-    secret = "https://cam.example/playlist.m3u8?wowzatokenhash=SECRETHASH123"
-    monkeypatch.setattr(routes.settings, "traffic_video_url", secret, raising=False)
+    signed_url = "https://cam.example/playlist.m3u8?wowzatokenhash=SECRETHASH123"
+    monkeypatch.setattr(routes.settings, "traffic_video_url", signed_url, raising=False)
     monkeypatch.setattr(routes.settings, "flow_window_seconds", 30.0, raising=False)
 
     class _DeadSource:
@@ -182,8 +182,8 @@ def test_cctv_flow_holds_lock_during_measurement(monkeypatch) -> None:
 
 
 def test_cctv_flow_failure_log_redacts_url(monkeypatch, caplog) -> None:
-    secret = "https://cam/live.m3u8?wowzatokenhash=SECRETLOG"
-    monkeypatch.setattr(routes.settings, "traffic_video_url", secret, raising=False)
+    signed_url = "https://cam/live.m3u8?wowzatokenhash=SECRETLOG"
+    monkeypatch.setattr(routes.settings, "traffic_video_url", signed_url, raising=False)
     monkeypatch.setattr(routes.settings, "flow_window_seconds", 30.0, raising=False)
 
     class _DeadSource:
