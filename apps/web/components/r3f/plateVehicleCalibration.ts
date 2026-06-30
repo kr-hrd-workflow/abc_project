@@ -41,11 +41,18 @@ export const PLATE_VEHICLE_CALIBRATION: Record<
 > = {
   wide: {
     // 강남대로 (N/S, lateral = X axis):
-    //   Empirical measurement 2026-06-27: guide overlay vs plate shows N/S road
-    //   center offset. Tuned to land vehicles within 0.3 lane of painted lanes.
-    north: { offset: 0, scale: 1 },
-    south: { offset: 0, scale: 1 },
-    // 테헤란로 / 서초대로 (E/W, lateral = Z axis):
+    //   The v5 plate's painted N/S corridor sits ~0.36 lane (≈1.3 m) east of the
+    //   metric lane centers, so live vehicles (which ride the metric grid) land
+    //   that far west of the painted lanes. A constant +1.3 m X shift seats them
+    //   on the painted lanes; scale stays 1 (lane spacing matches, only the
+    //   corridor is shifted). Measured 2026-06-30 by overlaying the metric grid
+    //   on the v5 plate and confirming vehicle-center vs painted-lane on both arms.
+    north: { offset: 1.3, scale: 1 },
+    south: { offset: 1.3, scale: 1 },
+    // 테헤란로 / 서초대로 (E/W, lateral = Z axis): left at identity — the operatorWide
+    // camera looks down the N/S corridor, so E/W arms recede toward the horizon and
+    // their vehicles are too small to measure a sub-meter residual; the X registration
+    // drift above is lateral to N/S only and does not project onto E/W's Z lateral.
     east:  { offset: 0, scale: 1 },
     west:  { offset: 0, scale: 1 }
   },
@@ -57,6 +64,57 @@ export const PLATE_VEHICLE_CALIBRATION: Record<
     west:  { offset: 0, scale: 1 }
   }
 };
+
+/**
+ * 강남대로 median bus-only lane (중앙버스전용차로) lateral pin, in world metres.
+ *
+ * The median bus lane is NOT a normal inbound-lane offset from the centreline:
+ * on the v5 plate it sits beside the central median, so the metric "innermost
+ * lane at 1.8 m" position — even after the general-lane calibration — lands
+ * buses off the painted blue lane. Buses on the median lane are pinned directly
+ * to this per-direction world lateral (X for N/S) instead of going through
+ * applyCalibratedLaneOffset. Tunable live via ?busLat=north:VAL;south:VAL
+ * (metres) for measuring against the plate; converged values are baked here.
+ */
+export const PLATE_BUS_LANE_LATERAL: Record<
+  SimulationViewpoint,
+  Partial<Record<Direction, number>>
+> = {
+  // Measured 2026-06-30 against the v5 plate: buses hug the median bus lane just
+  // off the yellow centreline (between the centre line and the blue bus-lane
+  // line). The general-lane calibration (+1.3 m) pushed them ~2 lanes out, so
+  // the pin overrides it. north < 0 = west of centre, south > 0 = east.
+  wide: { north: -0.7, south: 0.7 },
+  cctv: {}
+};
+
+function parseBusLatFromUrl(): Partial<Record<Direction, number>> {
+  if (typeof window === "undefined") return {};
+  const raw = new URLSearchParams(window.location.search).get("busLat");
+  if (!raw) return {};
+  const out: Partial<Record<Direction, number>> = {};
+  for (const part of raw.split(";")) {
+    const [dir, val] = part.split(":");
+    if (!dir || val === undefined) continue;
+    const n = Number(val);
+    if (Number.isFinite(n)) out[dir.trim() as Direction] = n;
+  }
+  return out;
+}
+
+/**
+ * Pinned world lateral for a bus on the median bus-only lane, or null when the
+ * approach has no median bus lane / no pin is configured (caller then falls back
+ * to the normal calibrated lane offset).
+ */
+export function getBusLaneLateral(
+  viewpoint: SimulationViewpoint,
+  direction: Direction
+): number | null {
+  const override = parseBusLatFromUrl()[direction];
+  if (override !== undefined) return override;
+  return PLATE_BUS_LANE_LATERAL[viewpoint][direction] ?? null;
+}
 
 /**
  * Returns the calibration record for the given viewpoint + approach direction.

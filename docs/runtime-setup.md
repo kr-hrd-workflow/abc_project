@@ -241,6 +241,32 @@ The dashboard must keep source, stale, and fallback state visible. It is a
 simulation visualization, not live CCTV, and this project does not perform real
 traffic signal control.
 
+### SUMO operating mode
+
+The committed code default is `fixture` — deterministic, offline, and the path
+CI and the regression suite run on. Do not flip this committed default to live.
+
+To run live, set the mode in the environment:
+
+```dotenv
+SUMO_SIMULATION_MODE=sumo_traci
+```
+
+Live mode needs the `sumo` binary plus `traci`; the `apps/api[simulation]` extra
+ships `.venv/bin/sumo` with the `apps/api` venv.
+
+Hybrid scenarios: in live mode only the `normal` scenario is served by live SUMO
+(busy 강남대로 with buses confined to the median bus lane). The `emergency`,
+`pedestrian`, and `blocked` scenarios keep serving their deterministic fixture
+instead of collapsing all four onto the same live arterial. Runtime failures
+fall back as described above (`sumo_last_good`, then `simulation_snapshot_fixture`).
+
+Live proof (opt-in; skips when SUMO is unavailable):
+
+```bash
+cd apps/api && RUN_SUMO_LIVE=1 .venv/bin/python -m pytest tests/test_sumo_live_operation.py -q
+```
+
 External tooling gates remain approval-based. Do not install or download SUMO,
 TraCI/libsumo, Blender, glTF Transform, meshopt/gltfpack, KTX2 encoders, or new
 runtime assets unless the user approves that tool/source. New R3F assets must

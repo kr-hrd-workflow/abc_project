@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<!-- generated on 2026-06-27T11:41:23.171770+09:00 by Eclipse SUMO netconvert 1.27.0
+<!-- generated on 2026-06-30T10:16:04.653636+09:00 by Eclipse SUMO netconvert 1.27.0
 <netconvertConfiguration xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://sumo.dlr.de/xsd/netconvertConfiguration.xsd">
 
     <input>
@@ -34,20 +34,20 @@
     <location netOffset="0.00,0.00" convBoundary="-140.00,-120.00,140.00,140.00" origBoundary="-140.00,-120.00,140.00,140.00" projParameter="!"/>
 
     <edge id=":center_0" function="internal">
-        <lane id=":center_0_0" index="0" speed="7.55" length="12.39" width="3.60" shape="-16.20,22.00 -16.56,17.89 -17.65,14.95 -19.46,13.19 -22.00,12.60"/>
+        <lane id=":center_0_0" index="0" disallow="bus" speed="7.55" length="12.39" width="3.60" shape="-16.20,22.00 -16.56,17.89 -17.65,14.95 -19.46,13.19 -22.00,12.60"/>
     </edge>
     <edge id=":center_1" function="internal">
-        <lane id=":center_1_0" index="0" speed="16.67" length="44.00" width="3.60" shape="-12.60,22.00 -12.60,-22.00"/>
-        <lane id=":center_1_1" index="1" speed="16.67" length="44.00" width="3.60" shape="-9.00,22.00 -9.00,-22.00"/>
+        <lane id=":center_1_0" index="0" disallow="bus" speed="16.67" length="44.00" width="3.60" shape="-12.60,22.00 -12.60,-22.00"/>
+        <lane id=":center_1_1" index="1" disallow="bus" speed="16.67" length="44.00" width="3.60" shape="-9.00,22.00 -9.00,-22.00"/>
     </edge>
     <edge id=":center_3" function="internal">
-        <lane id=":center_3_0" index="0" speed="13.81" length="44.19" width="3.60" shape="-5.40,22.00 -3.69,10.01 1.45,1.45 10.01,-3.69 22.00,-5.40"/>
+        <lane id=":center_3_0" index="0" disallow="bus" speed="13.81" length="44.19" width="3.60" shape="-5.40,22.00 -3.69,10.01 1.45,1.45 10.01,-3.69 22.00,-5.40"/>
     </edge>
     <edge id=":center_4" function="internal">
         <lane id=":center_4_0" index="0" allow="bus" speed="16.67" length="44.00" width="3.60" shape="-1.80,22.00 -1.80,-22.00"/>
     </edge>
     <edge id=":center_5" function="internal">
-        <lane id=":center_5_0" index="0" speed="6.65" length="9.35" width="3.60" shape="22.00,16.20 19.46,16.56 17.65,17.65 16.56,19.46 16.20,22.00"/>
+        <lane id=":center_5_0" index="0" disallow="bus" speed="6.65" length="9.35" width="3.60" shape="22.00,16.20 19.46,16.56 17.65,17.65 16.56,19.46 16.20,22.00"/>
     </edge>
     <edge id=":center_6" function="internal">
         <lane id=":center_6_0" index="0" speed="16.67" length="44.15" width="3.60" shape="22.00,12.60 -22.00,9.00"/>
@@ -55,30 +55,30 @@
         <lane id=":center_6_2" index="2" speed="16.67" length="44.15" width="3.60" shape="22.00,5.40 -22.00,1.80"/>
     </edge>
     <edge id=":center_9" function="internal">
-        <lane id=":center_9_0" index="0" speed="13.36" length="41.33" width="3.60" shape="22.00,1.80 10.01,0.31 1.45,-4.15 -3.69,-11.59 -5.40,-22.00"/>
+        <lane id=":center_9_0" index="0" disallow="bus" speed="13.36" length="41.33" width="3.60" shape="22.00,1.80 10.01,0.31 1.45,-4.15 -3.69,-11.59 -5.40,-22.00"/>
     </edge>
     <edge id=":center_10" function="internal">
-        <lane id=":center_10_0" index="0" speed="6.65" length="9.35" width="3.60" shape="16.20,-22.00 16.56,-19.46 17.65,-17.65 19.46,-16.56 22.00,-16.20"/>
+        <lane id=":center_10_0" index="0" disallow="bus" speed="6.65" length="9.35" width="3.60" shape="16.20,-22.00 16.56,-19.46 17.65,-17.65 19.46,-16.56 22.00,-16.20"/>
     </edge>
     <edge id=":center_11" function="internal">
-        <lane id=":center_11_0" index="0" speed="16.67" length="44.00" width="3.60" shape="12.60,-22.00 12.60,22.00"/>
-        <lane id=":center_11_1" index="1" speed="16.67" length="44.00" width="3.60" shape="9.00,-22.00 9.00,22.00"/>
+        <lane id=":center_11_0" index="0" disallow="bus" speed="16.67" length="44.00" width="3.60" shape="12.60,-22.00 12.60,22.00"/>
+        <lane id=":center_11_1" index="1" disallow="bus" speed="16.67" length="44.00" width="3.60" shape="9.00,-22.00 9.00,22.00"/>
     </edge>
     <edge id=":center_13" function="internal">
-        <lane id=":center_13_0" index="0" speed="13.36" length="41.33" width="3.60" shape="5.40,-22.00 3.69,-11.59 -1.45,-4.15 -10.01,0.31 -22.00,1.80"/>
+        <lane id=":center_13_0" index="0" disallow="bus" speed="13.36" length="41.33" width="3.60" shape="5.40,-22.00 3.69,-11.59 -1.45,-4.15 -10.01,0.31 -22.00,1.80"/>
     </edge>
     <edge id=":center_14" function="internal">
         <lane id=":center_14_0" index="0" allow="bus" speed="16.67" length="44.00" width="3.60" shape="1.80,-22.00 1.80,22.00"/>
     </edge>
     <edge id=":center_15" function="internal">
-        <lane id=":center_15_0" index="0" speed="7.55" length="12.39" width="3.60" shape="-22.00,-12.60 -19.46,-13.19 -17.65,-14.95 -16.56,-17.89 -16.20,-22.00"/>
+        <lane id=":center_15_0" index="0" disallow="bus" speed="7.55" length="12.39" width="3.60" shape="-22.00,-12.60 -19.46,-13.19 -17.65,-14.95 -16.56,-17.89 -16.20,-22.00"/>
     </edge>
     <edge id=":center_16" function="internal">
         <lane id=":center_16_0" index="0" speed="16.67" length="44.15" width="3.60" shape="-22.00,-9.00 22.00,-12.60"/>
         <lane id=":center_16_1" index="1" speed="16.67" length="44.15" width="3.60" shape="-22.00,-5.40 22.00,-9.00"/>
     </edge>
     <edge id=":center_18" function="internal">
-        <lane id=":center_18_0" index="0" speed="13.36" length="41.33" width="3.60" shape="-22.00,-1.80 -10.01,-0.31 -1.45,4.15 3.69,11.59 5.40,22.00"/>
+        <lane id=":center_18_0" index="0" disallow="bus" speed="13.36" length="41.33" width="3.60" shape="-22.00,-1.80 -10.01,-0.31 -1.45,4.15 3.69,11.59 5.40,22.00"/>
     </edge>
 
     <edge id="east_in" from="east_end" to="center" priority="-1">
@@ -96,31 +96,31 @@
         <lane id="east_out_4" index="4" speed="16.67" length="118.00" width="3.60" shape="22.00,-1.80 140.00,-1.80"/>
     </edge>
     <edge id="north_in" from="north_end" to="center" priority="-1">
-        <lane id="north_in_0" index="0" speed="16.67" length="118.00" width="3.60" shape="-16.20,140.00 -16.20,22.00"/>
-        <lane id="north_in_1" index="1" speed="16.67" length="118.00" width="3.60" shape="-12.60,140.00 -12.60,22.00"/>
-        <lane id="north_in_2" index="2" speed="16.67" length="118.00" width="3.60" shape="-9.00,140.00 -9.00,22.00"/>
-        <lane id="north_in_3" index="3" speed="16.67" length="118.00" width="3.60" shape="-5.40,140.00 -5.40,22.00"/>
+        <lane id="north_in_0" index="0" disallow="bus" speed="16.67" length="118.00" width="3.60" shape="-16.20,140.00 -16.20,22.00"/>
+        <lane id="north_in_1" index="1" disallow="bus" speed="16.67" length="118.00" width="3.60" shape="-12.60,140.00 -12.60,22.00"/>
+        <lane id="north_in_2" index="2" disallow="bus" speed="16.67" length="118.00" width="3.60" shape="-9.00,140.00 -9.00,22.00"/>
+        <lane id="north_in_3" index="3" disallow="bus" speed="16.67" length="118.00" width="3.60" shape="-5.40,140.00 -5.40,22.00"/>
         <lane id="north_in_4" index="4" allow="bus" speed="16.67" length="118.00" width="3.60" shape="-1.80,140.00 -1.80,22.00"/>
     </edge>
     <edge id="north_out" from="center" to="north_end" priority="-1">
-        <lane id="north_out_0" index="0" speed="16.67" length="118.00" width="3.60" shape="16.20,22.00 16.20,140.00"/>
-        <lane id="north_out_1" index="1" speed="16.67" length="118.00" width="3.60" shape="12.60,22.00 12.60,140.00"/>
-        <lane id="north_out_2" index="2" speed="16.67" length="118.00" width="3.60" shape="9.00,22.00 9.00,140.00"/>
-        <lane id="north_out_3" index="3" speed="16.67" length="118.00" width="3.60" shape="5.40,22.00 5.40,140.00"/>
+        <lane id="north_out_0" index="0" disallow="bus" speed="16.67" length="118.00" width="3.60" shape="16.20,22.00 16.20,140.00"/>
+        <lane id="north_out_1" index="1" disallow="bus" speed="16.67" length="118.00" width="3.60" shape="12.60,22.00 12.60,140.00"/>
+        <lane id="north_out_2" index="2" disallow="bus" speed="16.67" length="118.00" width="3.60" shape="9.00,22.00 9.00,140.00"/>
+        <lane id="north_out_3" index="3" disallow="bus" speed="16.67" length="118.00" width="3.60" shape="5.40,22.00 5.40,140.00"/>
         <lane id="north_out_4" index="4" allow="bus" speed="16.67" length="118.00" width="3.60" shape="1.80,22.00 1.80,140.00"/>
     </edge>
     <edge id="south_in" from="south_end" to="center" priority="-1">
-        <lane id="south_in_0" index="0" speed="16.67" length="98.00" width="3.60" shape="16.20,-120.00 16.20,-22.00"/>
-        <lane id="south_in_1" index="1" speed="16.67" length="98.00" width="3.60" shape="12.60,-120.00 12.60,-22.00"/>
-        <lane id="south_in_2" index="2" speed="16.67" length="98.00" width="3.60" shape="9.00,-120.00 9.00,-22.00"/>
-        <lane id="south_in_3" index="3" speed="16.67" length="98.00" width="3.60" shape="5.40,-120.00 5.40,-22.00"/>
+        <lane id="south_in_0" index="0" disallow="bus" speed="16.67" length="98.00" width="3.60" shape="16.20,-120.00 16.20,-22.00"/>
+        <lane id="south_in_1" index="1" disallow="bus" speed="16.67" length="98.00" width="3.60" shape="12.60,-120.00 12.60,-22.00"/>
+        <lane id="south_in_2" index="2" disallow="bus" speed="16.67" length="98.00" width="3.60" shape="9.00,-120.00 9.00,-22.00"/>
+        <lane id="south_in_3" index="3" disallow="bus" speed="16.67" length="98.00" width="3.60" shape="5.40,-120.00 5.40,-22.00"/>
         <lane id="south_in_4" index="4" allow="bus" speed="16.67" length="98.00" width="3.60" shape="1.80,-120.00 1.80,-22.00"/>
     </edge>
     <edge id="south_out" from="center" to="south_end" priority="-1">
-        <lane id="south_out_0" index="0" speed="16.67" length="98.00" width="3.60" shape="-16.20,-22.00 -16.20,-120.00"/>
-        <lane id="south_out_1" index="1" speed="16.67" length="98.00" width="3.60" shape="-12.60,-22.00 -12.60,-120.00"/>
-        <lane id="south_out_2" index="2" speed="16.67" length="98.00" width="3.60" shape="-9.00,-22.00 -9.00,-120.00"/>
-        <lane id="south_out_3" index="3" speed="16.67" length="98.00" width="3.60" shape="-5.40,-22.00 -5.40,-120.00"/>
+        <lane id="south_out_0" index="0" disallow="bus" speed="16.67" length="98.00" width="3.60" shape="-16.20,-22.00 -16.20,-120.00"/>
+        <lane id="south_out_1" index="1" disallow="bus" speed="16.67" length="98.00" width="3.60" shape="-12.60,-22.00 -12.60,-120.00"/>
+        <lane id="south_out_2" index="2" disallow="bus" speed="16.67" length="98.00" width="3.60" shape="-9.00,-22.00 -9.00,-120.00"/>
+        <lane id="south_out_3" index="3" disallow="bus" speed="16.67" length="98.00" width="3.60" shape="-5.40,-22.00 -5.40,-120.00"/>
         <lane id="south_out_4" index="4" allow="bus" speed="16.67" length="98.00" width="3.60" shape="-1.80,-22.00 -1.80,-120.00"/>
     </edge>
     <edge id="west_in" from="west_end" to="center" priority="-1">

@@ -1,4 +1,4 @@
-from collections.abc import Sequence
+from collections.abc import Iterable, Sequence
 from dataclasses import dataclass
 from datetime import UTC, datetime
 import threading
@@ -87,6 +87,42 @@ class SumoSimulationFrameProvider:
         return frame
 
 
+LIVE_SCENARIO_IDS = frozenset({"normal"})
+
+
+class ScenarioRoutingFrameProvider:
+    """Routes allowlisted scenarios to a live provider and the rest to fixture.
+
+    Live SUMO currently models one busy arterial (intersection.sumocfg); routing
+    only `normal` to it keeps the other scenarios on their deterministic fixture
+    instead of collapsing all four onto the same live sim.
+    """
+
+    def __init__(
+        self,
+        *,
+        live_provider: SimulationFrameProvider,
+        fixture_provider: SimulationFrameProvider,
+        live_scenario_ids: Iterable[str],
+    ) -> None:
+        self._live_provider = live_provider
+        self._fixture_provider = fixture_provider
+        self._live_scenario_ids = frozenset(live_scenario_ids)
+
+    def build_frame(
+        self,
+        scenario_id: str,
+        observation: VisionObservation,
+        event_reads: Sequence[TrafficEventRead],
+    ) -> SimulationFrameSnapshot:
+        provider = (
+            self._live_provider
+            if scenario_id in self._live_scenario_ids
+            else self._fixture_provider
+        )
+        return provider.build_frame(scenario_id, observation, event_reads)
+
+
 _PROVIDER_CACHE: dict[tuple[object, ...], SimulationFrameProvider] = {}
 _PROVIDER_CACHE_LOCK = threading.Lock()
 
@@ -102,10 +138,15 @@ def get_simulation_frame_provider(settings: Settings) -> SimulationFrameProvider
         if settings.sumo_simulation_mode == "fixture":
             provider: SimulationFrameProvider = fallback_provider
         else:
-            provider = SumoSimulationFrameProvider(
+            live_provider = SumoSimulationFrameProvider(
                 runtime=SumoRuntimeService(settings),
                 fallback_provider=fallback_provider,
                 frame_cache_ttl_ms=settings.sumo_frame_cache_ttl_ms,
+            )
+            provider = ScenarioRoutingFrameProvider(
+                live_provider=live_provider,
+                fixture_provider=fallback_provider,
+                live_scenario_ids=LIVE_SCENARIO_IDS,
             )
         _PROVIDER_CACHE[cache_key] = provider
         return provider
