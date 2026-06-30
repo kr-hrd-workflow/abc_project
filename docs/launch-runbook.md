@@ -135,6 +135,20 @@ is fresh enough, then fall back to `simulation_snapshot_fixture`. The UI must
 show stale or fallback labels; do not describe either path as live CCTV,
 production monitoring, or real signal control.
 
+To launch the API in live operation, set `SUMO_SIMULATION_MODE=sumo_traci` on
+the startup command, for example:
+
+```bash
+cd apps/api && SUMO_SIMULATION_MODE=sumo_traci .venv/bin/uvicorn app.main:app --port 8000
+```
+
+In live mode, only the `normal` scenario is routed to live SUMO; `emergency`,
+`pedestrian`, and `blocked` keep their deterministic fixture. The runtime keeps
+a warm SUMO subprocess per live scenario (so one for `normal`), evicted after
+`SUMO_RUNTIME_TTL_SECONDS` (300 s). The first request for a scenario pays a
+multi-second cold boot while that subprocess starts and warms up; subsequent
+requests reuse the warm session.
+
 External install/download gates:
 
 - SUMO binary and Python TraCI/libsumo packages require approval.
