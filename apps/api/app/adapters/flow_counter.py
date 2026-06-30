@@ -47,6 +47,9 @@ class CountingLine:
     y2: float
     classes: tuple[str, ...]
     kind: str = "vehicle"
+    # Optional travel-direction filter: "down"/"up" (cy +/-) or "right"/"left"
+    # (cx +/-). None counts crossings in either direction.
+    direction: str | None = None
 
 
 @dataclass(frozen=True)
@@ -81,6 +84,23 @@ class FlowMeasurement:
 
 def _orientation(a: Point, b: Point, c: Point) -> float:
     return (c[1] - a[1]) * (b[0] - a[0]) - (b[1] - a[1]) * (c[0] - a[0])
+
+
+def _moves_in_direction(prev: Point, curr: Point, direction: str | None) -> bool:
+    if direction is None:
+        return True
+    dx = curr[0] - prev[0]
+    dy = curr[1] - prev[1]
+    return {
+        "down": dy > 0,
+        "up": dy < 0,
+        "right": dx > 0,
+        "left": dx < 0,
+    }.get(direction, True)
+
+
+def _is_live_source(video: str) -> bool:
+    return video.startswith(("http://", "https://", "rtsp://", "rtmp://", "rtmps://"))
 
 
 def _segments_intersect(p1: Point, p2: Point, p3: Point, p4: Point) -> bool:
@@ -131,7 +151,7 @@ class FlowCounter:
                             continue
                         if _segments_intersect(
                             prior, current, (line.x1, line.y1), (line.x2, line.y2)
-                        ):
+                        ) and _moves_in_direction(prior, current, line.direction):
                             counted.add(key)
                             per_line_class[line.approach][det.label] += 1
                 previous[det.track_id] = current
@@ -265,6 +285,13 @@ class OpenCVYoloFlowSource:
                 # frames. Raise so callers 503 / fall back instead of reporting
                 # a bogus all-zero flow.
                 raise RuntimeError(f"CCTV stream yielded no frames: {video}")
+            if read_count < max_frames and _is_live_source(video):
+                # A live stream that died before the window (expired token, drop)
+                # would otherwise be divided by the full window -> bogus low rate.
+                # A finite clip legitimately ends early, so only guard live URLs.
+                raise RuntimeError(
+                    f"CCTV stream truncated before the sample window: {video}"
+                )
         finally:
             release = getattr(capture, "release", None)
             if callable(release):

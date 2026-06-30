@@ -6,6 +6,7 @@ a per-run `.rou.xml` + `.sumocfg` into an output directory the SUMO runtime then
 loads via `sumo_config_dir`. Pure file IO, no traci — directly unit-testable.
 """
 
+import logging
 import xml.etree.ElementTree as ET
 from collections.abc import Callable
 from pathlib import Path
@@ -18,6 +19,8 @@ from app.adapters.flow_counter import (
     measure_flow,
 )
 from app.core.config import Settings
+
+logger = logging.getLogger(__name__)
 
 # Camera approach -> SUMO flow id(s). The through line counts car/moto/truck (it
 # excludes buses) so it maps to the passenger flow; bus lines map to the median
@@ -122,7 +125,9 @@ def build_cctv_flow_calibrator(
 
     clock = clock or monotonic
     state: dict[str, OpenCVYoloFlowSource | None] = {"source": source}
-    memo: dict[str, tuple[float, str]] = {}
+    # Memo holds both successes (cfg path) and failures (None) so a dead stream
+    # falls back statically for the TTL instead of re-measuring every poll.
+    memo: dict[str, tuple[float, str | None]] = {}
 
     def calibrate(scenario_id: str) -> str | None:
         if scenario_id not in calibrate_scenarios:
@@ -134,31 +139,46 @@ def build_cctv_flow_calibrator(
         now = clock()
         if cached is not None and now - cached[0] < ttl_seconds:
             return cached[1]
-        if state["source"] is None:
-            state["source"] = OpenCVYoloFlowSource(
-                model_path=settings.yolo_model_path,
-                confidence_threshold=settings.yolo_confidence_threshold,
+        try:
+            if state["source"] is None:
+                state["source"] = OpenCVYoloFlowSource(
+                    model_path=settings.yolo_model_path,
+                    confidence_threshold=settings.yolo_confidence_threshold,
+                )
+            measurement = measure_flow(
+                source=state["source"],
+                video=video,
+                lines=load_counting_lines(settings.flow_counting_lines),
+                window_seconds=settings.flow_window_seconds,
+                source_label="cctv",
             )
-        measurement = measure_flow(
-            source=state["source"],
-            video=video,
-            lines=load_counting_lines(settings.flow_counting_lines),
-            window_seconds=settings.flow_window_seconds,
-            source_label="cctv",
-        )
-        base_dir = Path(settings.sumo_config_path).parent
-        out_dir = settings.sumo_calibrated_config_dir or str(base_dir / "_calibrated")
-        cfg_path = str(
-            calibrate_demand(
-                measurement,
-                base_rou_path=base_dir / "intersection.rou.xml",
-                base_net_path=base_dir / "intersection.net.xml",
-                out_dir=out_dir,
-                scenario_id=scenario_id,
-                period_min=settings.flow_period_min,
-                period_max=settings.flow_period_max,
+            # Calibrate from the active scenario config dir when one is set,
+            # else from the single configured .sumocfg's directory.
+            base_dir = (
+                Path(settings.sumo_config_dir)
+                if settings.sumo_config_dir
+                else Path(settings.sumo_config_path).parent
             )
-        )
+            out_dir = settings.sumo_calibrated_config_dir or str(base_dir / "_calibrated")
+            cfg_path = str(
+                calibrate_demand(
+                    measurement,
+                    base_rou_path=base_dir / "intersection.rou.xml",
+                    base_net_path=base_dir / "intersection.net.xml",
+                    out_dir=out_dir,
+                    scenario_id=scenario_id,
+                    period_min=settings.flow_period_min,
+                    period_max=settings.flow_period_max,
+                )
+            )
+        except Exception as exc:  # stream/model/IO failure -> static demand
+            logger.warning(
+                "CCTV calibration failed for %s; using static demand: %s",
+                scenario_id,
+                exc,
+            )
+            memo[scenario_id] = (now, None)
+            return None
         memo[scenario_id] = (now, cfg_path)
         return cfg_path
 

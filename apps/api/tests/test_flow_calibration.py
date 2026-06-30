@@ -200,3 +200,58 @@ def test_calibrator_memoizes_measurement_within_ttl(tmp_path) -> None:
     clock.advance(301.0)
     calibrator("normal")  # past TTL -> re-measure
     assert source.calls == 2
+
+
+# --- codex review: memoize failures + honor SUMO_CONFIG_DIR ------------------
+
+class _FailingSource:
+    def __init__(self) -> None:
+        self.calls = 0
+
+    def stream(self, video, window_seconds):
+        self.calls += 1
+        raise RuntimeError("stream dead")
+
+
+def test_calibrator_memoizes_failure_within_ttl(tmp_path) -> None:
+    out_dir = tmp_path / "calib"
+    settings = _settings_for(tmp_path, out_dir)
+    clock = _FakeClock()
+    source = _FailingSource()
+    calibrator = build_cctv_flow_calibrator(
+        settings, source=source, clock=clock, ttl_seconds=300.0
+    )
+
+    first = calibrator("normal")
+    second = calibrator("normal")  # within TTL -> cached failure, no re-attempt
+
+    assert first is None and second is None
+    assert source.calls == 1
+
+    clock.advance(301.0)
+    calibrator("normal")  # past TTL -> retry
+    assert source.calls == 2
+
+
+def test_calibrator_uses_sumo_config_dir_when_set(tmp_path) -> None:
+    cfg_dir = tmp_path / "cfgdir"
+    cfg_dir.mkdir()
+    (cfg_dir / "intersection.rou.xml").write_text(BASE_ROU)
+    (cfg_dir / "intersection.net.xml").write_text("<net/>")
+    out_dir = tmp_path / "calib"
+    settings = Settings(
+        sumo_config_path=str(tmp_path / "elsewhere" / "intersection.sumocfg"),  # no files here
+        sumo_config_dir=str(cfg_dir),
+        traffic_video_url="rtsp://cam",
+        flow_window_seconds=30.0,
+        sumo_calibrated_config_dir=str(out_dir),
+        flow_counting_lines=json.dumps(
+            [{"approach": "north", "x1": 0.0, "y1": 0.5, "x2": 1.0, "y2": 0.5, "classes": ["car"]}]
+        ),
+    )
+
+    calibrator = build_cctv_flow_calibrator(settings, source=_FakeFlowSource())
+    cfg = calibrator("normal")
+
+    assert cfg == str(out_dir / "normal.sumocfg")
+    assert _periods(out_dir / "normal.rou.xml")["flow_north_through"] == "30"

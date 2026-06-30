@@ -531,3 +531,20 @@ def test_normal_fixture_bus_rides_gangnamdaero_median_lane() -> None:
     assert bus.lane_id.startswith(("north-inbound", "south-inbound"))
     assert bus.lane_id.endswith("-4")  # median bus lane index
     assert bus.heading_degrees in (0.0, 180.0)  # aligned with the N/S approach
+
+
+def test_provider_cache_distinguishes_cctv_calibration_settings() -> None:
+    frame_provider_module._PROVIDER_CACHE.clear()
+    base = dict(sumo_simulation_mode="sumo_traci")
+    p_off = get_simulation_frame_provider(
+        Settings(**base, sumo_calibrate_from_cctv=False)
+    )
+    p_on = get_simulation_frame_provider(
+        Settings(**base, sumo_calibrate_from_cctv=True)
+    )
+    p_url = get_simulation_frame_provider(
+        Settings(**base, sumo_calibrate_from_cctv=True, traffic_video_url="rtsp://cam")
+    )
+
+    assert p_off is not p_on  # toggling calibration must not reuse stale provider
+    assert p_on is not p_url  # different source url -> different provider

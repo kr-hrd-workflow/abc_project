@@ -166,6 +166,15 @@ def _provider_cache_key(settings: Settings) -> tuple[object, ...]:
         settings.sumo_runtime_ttl_seconds,
         settings.sumo_authoritative_hz,
         settings.sumo_frame_cache_ttl_ms,
+        # CCTV calibration inputs: a different source/window/lines must not reuse
+        # a provider whose calibrator closed over the old settings.
+        settings.sumo_calibrate_from_cctv,
+        settings.sumo_calibrated_config_dir,
+        settings.traffic_video_url,
+        settings.flow_counting_lines,
+        settings.flow_window_seconds,
+        settings.flow_period_min,
+        settings.flow_period_max,
     )
 
 

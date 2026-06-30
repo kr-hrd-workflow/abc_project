@@ -200,9 +200,9 @@ def test_flow_source_yields_normalized_tracked_detections() -> None:
         model_path="x.pt", confidence_threshold=0.25, cv2_module=cv2, yolo_model=model
     )
 
-    yielded = list(source.stream("rtsp://cam", window_seconds=10.0))
+    yielded = list(source.stream("clip.mp4", window_seconds=10.0))
 
-    assert cv2.opened_with == "rtsp://cam"
+    assert cv2.opened_with == "clip.mp4"
     assert yielded == [
         [TrackedDetection(track_id=1, label="car", cx=0.2, cy=0.2)],
         [TrackedDetection(track_id=1, label="car", cx=0.2, cy=0.85)],
@@ -280,3 +280,34 @@ def test_flow_source_raises_when_stream_unreadable() -> None:
     with pytest.raises(RuntimeError):
         list(source.stream("rtsp://down", window_seconds=10.0))
     assert cv2._capture.released is True  # still releases on failure
+
+
+# --- codex review: direction filter + truncated-live-stream guard ----------
+
+def test_direction_filter_ignores_wrong_way_crossings() -> None:
+    # "down" = centroid cy increasing; oncoming (cy decreasing) must not count.
+    line = CountingLine("north", 0.0, 0.5, 1.0, 0.5, ("car",), direction="down")
+    counter = FlowCounter([line])
+
+    down = counter.measure(_track(1, "car", [(0.5, 0.2), (0.5, 0.8)]),
+                           window_seconds=30.0, captured_at=CAPTURED_AT)
+    up = counter.measure(_track(2, "car", [(0.5, 0.8), (0.5, 0.2)]),
+                         window_seconds=30.0, captured_at=CAPTURED_AT)
+
+    assert down.approaches["north"].crossings == 1
+    assert up.approaches["north"].crossings == 0
+
+
+def test_flow_source_raises_on_truncated_live_stream() -> None:
+    from app.adapters.flow_counter import OpenCVYoloFlowSource
+
+    frames = [_FakeFrame(), _FakeFrame()]  # only 2 frames
+    results = [_FakeResult([_FakeBox(1, 2, 0.9, [20, 5, 60, 35])]) for _ in range(2)]
+    cv2 = _FakeCv2(_FakeCapture(frames, fps=15.0))
+    source = OpenCVYoloFlowSource(
+        model_path="x.pt", cv2_module=cv2, yolo_model=_FakeYoloTrackModel(results)
+    )
+
+    # 10s * 15fps = 150 frames expected; only 2 from a LIVE url -> truncation failure
+    with pytest.raises(RuntimeError):
+        list(source.stream("https://cam/live.m3u8", window_seconds=10.0))

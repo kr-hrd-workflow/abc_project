@@ -1,4 +1,5 @@
 from pathlib import Path
+import logging
 import os
 from tempfile import NamedTemporaryFile
 from uuid import uuid4
@@ -112,11 +113,27 @@ SUPPORTED_UPLOAD_MEDIA: dict[str, tuple[str, str]] = {
     "video/quicktime": ("video", "blocked"),
 }
 
+logger = logging.getLogger(__name__)
+
+_FLOW_SOURCE_CACHE: list[OpenCVYoloFlowSource] = []
+
+
 def _build_flow_source() -> OpenCVYoloFlowSource:
     return OpenCVYoloFlowSource(
         model_path=settings.yolo_model_path,
         confidence_threshold=settings.yolo_confidence_threshold,
     )
+
+
+def _flow_source() -> OpenCVYoloFlowSource:
+    # Reuse one source so YOLO weights load once, not per request.
+    if not _FLOW_SOURCE_CACHE:
+        _FLOW_SOURCE_CACHE.append(_build_flow_source())
+    return _FLOW_SOURCE_CACHE[0]
+
+
+def _reset_flow_source_cache() -> None:
+    _FLOW_SOURCE_CACHE.clear()
 
 
 def _flow_lines() -> list[CountingLine]:
@@ -149,28 +166,37 @@ def _project_flow(measurement: FlowMeasurement) -> dict[str, object]:
 
 @router.get("/api/traffic/cctv-flow")
 def measure_cctv_flow() -> dict[str, object]:
-    video = settings.traffic_video_url
-    if not video:
+    # Keep a fixture-mode deployment fixture-only: never sample a live stream.
+    if settings.vision_analysis_mode != "opencv_yolo":
+        raise HTTPException(
+            status_code=503,
+            detail="CCTV flow requires VISION_ANALYSIS_MODE=opencv_yolo",
+        )
+    if not settings.traffic_video_url:
         raise HTTPException(
             status_code=503,
             detail="No CCTV source configured (set TRAFFIC_VIDEO_URL)",
         )
     try:
-        source = _build_flow_source()
+        source = _flow_source()
     except Exception as exc:  # vision extra missing OR model weights unloadable
-        raise HTTPException(status_code=503, detail=str(exc)) from exc
+        logger.warning("CCTV flow source unavailable: %s", exc)
+        raise HTTPException(
+            status_code=503, detail="CCTV flow source unavailable"
+        ) from exc
     try:
         measurement = measure_flow(
             source=source,
-            video=video,
+            video=settings.traffic_video_url,
             lines=_flow_lines(),
             window_seconds=settings.flow_window_seconds,
             source_label="cctv",
         )
     except Exception as exc:  # stream unreadable / token expired
+        # Generic detail: the exception text can embed the signed video URL.
+        logger.warning("CCTV flow measurement failed: %s", exc)
         raise HTTPException(
-            status_code=503,
-            detail=f"CCTV flow measurement failed: {exc}",
+            status_code=503, detail="CCTV flow measurement failed"
         ) from exc
     return _project_flow(measurement)
 
