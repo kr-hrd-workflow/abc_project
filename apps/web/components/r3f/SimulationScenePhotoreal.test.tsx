@@ -164,6 +164,7 @@ describe("photobash mode (?photobash=1)", () => {
     });
     const names = collectDeepDisplayNames(scene);
     expect(names).toContain("MarkingDecalLayer");
+    expect(names).toContain("LimitedOrbitControls");
     expect(names).not.toContain("PhotorealPlate");
     setSearch("");
   });

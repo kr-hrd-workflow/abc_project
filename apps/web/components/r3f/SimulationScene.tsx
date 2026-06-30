@@ -7,6 +7,7 @@ import { BuildingLayer } from "./BuildingLayer";
 import { CameraRig } from "./CameraRig";
 import { DynamicPedestrianLayer } from "./DynamicPedestrianLayer";
 import { DynamicVehicleLayer } from "./DynamicVehicleLayer";
+import { LimitedOrbitControls } from "./LimitedOrbitControls";
 import { MarkingDecalLayer } from "./MarkingDecalLayer";
 import { NightVehicleTreatment } from "./NightVehicleTreatment";
 import { PhotorealPlate } from "./PhotorealPlate";
@@ -251,6 +252,7 @@ export function SimulationScene({
     return (
       <group name="photobash-scene">
         <CameraRig preset="operatorWide" weather={weather} timeOfDay={timeOfDay} />
+        <LimitedOrbitControls />
         <SceneLighting
           isNight={isNight}
           sceneSnapshot={sceneSnapshot}
