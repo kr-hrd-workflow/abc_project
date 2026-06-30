@@ -229,7 +229,7 @@ def test_provider_factory_serializes_cold_live_provider_creation(
     errors: list[BaseException] = []
 
     class BlockingRuntime:
-        def __init__(self, _settings: Settings) -> None:
+        def __init__(self, _settings: Settings, **_kwargs: object) -> None:
             created_runtimes.append(self)
             entered_runtime_init.set()
             release_runtime_init.wait(timeout=2)

@@ -198,3 +198,17 @@ export type UploadAnalysisResult = {
   status_id: number;
   event_ids: number[];
 };
+
+export type CctvApproachFlow = {
+  veh_per_hour: number;
+  by_class: Record<string, number>;
+  crossings: number;
+};
+
+export type CctvFlow = {
+  source: string;
+  captured_at: string;
+  window_seconds: number;
+  per_approach: Record<string, CctvApproachFlow>;
+  pedestrian: { per_hour: number; crossings: number } | null;
+};

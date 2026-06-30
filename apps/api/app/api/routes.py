@@ -6,6 +6,13 @@ from uuid import uuid4
 from fastapi import APIRouter, Depends, HTTPException, Query, Request
 from sqlalchemy.orm import Session
 
+from app.adapters.flow_counter import (
+    CountingLine,
+    FlowMeasurement,
+    OpenCVYoloFlowSource,
+    load_counting_lines,
+    measure_flow,
+)
 from app.adapters.simulation import (
     FixtureSumoSimulationRunner,
     SumoTraciTrafficSimulationAdapter,
@@ -104,6 +111,68 @@ SUPPORTED_UPLOAD_MEDIA: dict[str, tuple[str, str]] = {
     "video/mp4": ("video", "blocked"),
     "video/quicktime": ("video", "blocked"),
 }
+
+def _build_flow_source() -> OpenCVYoloFlowSource:
+    return OpenCVYoloFlowSource(
+        model_path=settings.yolo_model_path,
+        confidence_threshold=settings.yolo_confidence_threshold,
+    )
+
+
+def _flow_lines() -> list[CountingLine]:
+    return load_counting_lines(settings.flow_counting_lines)
+
+
+def _project_flow(measurement: FlowMeasurement) -> dict[str, object]:
+    return {
+        "source": measurement.source,
+        "captured_at": measurement.captured_at.isoformat(),
+        "window_seconds": measurement.window_seconds,
+        "per_approach": {
+            name: {
+                "veh_per_hour": flow.veh_per_hour,
+                "by_class": flow.by_class,
+                "crossings": flow.crossings,
+            }
+            for name, flow in measurement.approaches.items()
+        },
+        "pedestrian": (
+            None
+            if measurement.pedestrian is None
+            else {
+                "per_hour": measurement.pedestrian.per_hour,
+                "crossings": measurement.pedestrian.crossings,
+            }
+        ),
+    }
+
+
+@router.get("/api/traffic/cctv-flow")
+def measure_cctv_flow() -> dict[str, object]:
+    video = settings.traffic_video_url
+    if not video:
+        raise HTTPException(
+            status_code=503,
+            detail="No CCTV source configured (set TRAFFIC_VIDEO_URL)",
+        )
+    try:
+        source = _build_flow_source()
+    except Exception as exc:  # vision extra missing OR model weights unloadable
+        raise HTTPException(status_code=503, detail=str(exc)) from exc
+    try:
+        measurement = measure_flow(
+            source=source,
+            video=video,
+            lines=_flow_lines(),
+            window_seconds=settings.flow_window_seconds,
+            source_label="cctv",
+        )
+    except Exception as exc:  # stream unreadable / token expired
+        raise HTTPException(
+            status_code=503,
+            detail=f"CCTV flow measurement failed: {exc}",
+        ) from exc
+    return _project_flow(measurement)
 
 
 @router.get("/api/fixtures")
