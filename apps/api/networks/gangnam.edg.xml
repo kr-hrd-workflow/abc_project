@@ -2,15 +2,31 @@
 <edges>
   <!-- 강남대로 N-S arterial: 5 in / 5 out, innermost lane (index 4) = median bus-only -->
   <edge id="north_in"  from="north_end" to="center"    numLanes="5" speed="16.67">
+    <lane index="0" disallow="bus"/>
+    <lane index="1" disallow="bus"/>
+    <lane index="2" disallow="bus"/>
+    <lane index="3" disallow="bus"/>
     <lane index="4" allow="bus"/>
   </edge>
   <edge id="north_out" from="center"    to="north_end" numLanes="5" speed="16.67">
+    <lane index="0" disallow="bus"/>
+    <lane index="1" disallow="bus"/>
+    <lane index="2" disallow="bus"/>
+    <lane index="3" disallow="bus"/>
     <lane index="4" allow="bus"/>
   </edge>
   <edge id="south_in"  from="south_end" to="center"    numLanes="5" speed="16.67">
+    <lane index="0" disallow="bus"/>
+    <lane index="1" disallow="bus"/>
+    <lane index="2" disallow="bus"/>
+    <lane index="3" disallow="bus"/>
     <lane index="4" allow="bus"/>
   </edge>
   <edge id="south_out" from="center"    to="south_end" numLanes="5" speed="16.67">
+    <lane index="0" disallow="bus"/>
+    <lane index="1" disallow="bus"/>
+    <lane index="2" disallow="bus"/>
+    <lane index="3" disallow="bus"/>
     <lane index="4" allow="bus"/>
   </edge>
 

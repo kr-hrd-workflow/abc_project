@@ -43,6 +43,18 @@ def test_median_bus_lane_on_gangnamdaero_only() -> None:
             assert lane.allows("passenger")
 
 
+def test_general_lanes_disallow_bus_on_gangnamdaero() -> None:
+    net = _net()
+    for edge_id in ("north_in", "north_out", "south_in", "south_out"):
+        edge = net.getEdge(edge_id)
+        for index in (0, 1, 2, 3):
+            lane = edge.getLane(index)
+            assert not lane.allows("bus"), f"{edge_id} lane {index} must disallow bus"
+            assert lane.allows("passenger"), f"{edge_id} lane {index} must allow cars"
+        assert edge.getLane(4).allows("bus")
+        assert not edge.getLane(4).allows("passenger")
+
+
 def test_traffic_light_exists() -> None:
     tls_ids = {tls.getID() for tls in _net().getTrafficLights()}
     assert "gangnam_center" in tls_ids
