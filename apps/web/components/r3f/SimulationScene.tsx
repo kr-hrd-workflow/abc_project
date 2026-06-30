@@ -260,6 +260,7 @@ export function SimulationScene({
           weather={weather}
           timeOfDay={timeOfDay}
         />
+        <BuildingLayerBoundary timeOfDay={timeOfDay} qualityPreset={qualityPreset} />
         <Suspense fallback={null}>
           <RoadSurfaceLayer isNight={isNight} suppressVectorMarkings />
         </Suspense>

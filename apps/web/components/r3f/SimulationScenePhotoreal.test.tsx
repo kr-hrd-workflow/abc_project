@@ -165,6 +165,7 @@ describe("photobash mode (?photobash=1)", () => {
     const names = collectDeepDisplayNames(scene);
     expect(names).toContain("MarkingDecalLayer");
     expect(names).toContain("LimitedOrbitControls");
+    expect(names).toContain("BuildingLayer"); // metric Gangnam buildings fill the scene
     expect(names).not.toContain("PhotorealPlate");
     setSearch("");
   });
