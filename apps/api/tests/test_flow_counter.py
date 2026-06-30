@@ -311,3 +311,50 @@ def test_flow_source_raises_on_truncated_live_stream() -> None:
     # 10s * 15fps = 150 frames expected; only 2 from a LIVE url -> truncation failure
     with pytest.raises(RuntimeError):
         list(source.stream("https://cam/live.m3u8", window_seconds=10.0))
+
+
+# --- codex review round 2: line-array shape, direction parse, URL redaction --
+
+import json as _json
+
+
+def test_load_counting_lines_accepts_line_array_and_direction() -> None:
+    from app.adapters.flow_counter import load_counting_lines
+
+    raw = _json.dumps([
+        {"approach": "north", "line": [0.0, 0.5, 1.0, 0.5], "classes": ["car"], "direction": "down"},
+    ])
+    lines = load_counting_lines(raw)
+
+    assert len(lines) == 1
+    line = lines[0]
+    assert (line.x1, line.y1, line.x2, line.y2) == (0.0, 0.5, 1.0, 0.5)
+    assert line.classes == ("car",)
+    assert line.direction == "down"
+
+
+def test_load_counting_lines_still_accepts_separate_coords() -> None:
+    from app.adapters.flow_counter import load_counting_lines
+
+    raw = _json.dumps([
+        {"approach": "south", "x1": 0.0, "y1": 0.6, "x2": 1.0, "y2": 0.6, "classes": ["bus"], "dir": "up"},
+    ])
+    lines = load_counting_lines(raw)
+
+    assert (lines[0].x1, lines[0].y2) == (0.0, 0.6)
+    assert lines[0].direction == "up"  # "dir" alias accepted
+
+
+def test_stream_error_redacts_signed_url() -> None:
+    from app.adapters.flow_counter import OpenCVYoloFlowSource
+
+    cv2 = _FakeCv2(_FakeCapture([], fps=15.0))  # zero frames -> raises
+    source = OpenCVYoloFlowSource(
+        model_path="x.pt", cv2_module=cv2, yolo_model=_FakeYoloTrackModel([])
+    )
+
+    with pytest.raises(RuntimeError) as excinfo:
+        list(source.stream("https://cam/live.m3u8?wowzatokenhash=SECRET123", window_seconds=5.0))
+
+    assert "SECRET123" not in str(excinfo.value)
+    assert "wowzatokenhash" not in str(excinfo.value)

@@ -149,3 +149,56 @@ def test_cctv_flow_reuses_cached_source_across_requests(monkeypatch) -> None:
     client.get("/api/traffic/cctv-flow")
 
     assert len(builds) == 1  # model weights loaded once, not per request
+
+
+def test_cctv_flow_holds_lock_during_measurement(monkeypatch) -> None:
+    import datetime as _dt
+
+    from app.adapters.flow_counter import FlowMeasurement
+
+    monkeypatch.setattr(routes.settings, "traffic_video_url", "rtsp://cam", raising=False)
+    monkeypatch.setattr(routes.settings, "flow_window_seconds", 30.0, raising=False)
+    monkeypatch.setattr(routes, "_build_flow_source", lambda: object())
+    monkeypatch.setattr(routes, "_flow_lines", lambda: [NORTH_LINE])
+    held: list[bool] = []
+
+    def fake_measure(**kwargs):
+        held.append(routes._FLOW_LOCK.locked())
+        return FlowMeasurement(
+            source="cctv",
+            captured_at=_dt.datetime(2026, 6, 30, tzinfo=_dt.timezone.utc),
+            window_seconds=30.0,
+            approaches={},
+            pedestrian=None,
+        )
+
+    monkeypatch.setattr(routes, "measure_flow", fake_measure)
+    client = TestClient(app)
+
+    response = client.get("/api/traffic/cctv-flow")
+
+    assert response.status_code == 200
+    assert held == [True]  # sampling ran under the shared-tracker lock
+
+
+def test_cctv_flow_failure_log_redacts_url(monkeypatch, caplog) -> None:
+    secret = "https://cam/live.m3u8?wowzatokenhash=SECRETLOG"
+    monkeypatch.setattr(routes.settings, "traffic_video_url", secret, raising=False)
+    monkeypatch.setattr(routes.settings, "flow_window_seconds", 30.0, raising=False)
+
+    class _DeadSource:
+        def stream(self, video, window_seconds):
+            if False:
+                yield []
+            raise RuntimeError(f"boom for {video}")
+
+    monkeypatch.setattr(routes, "_build_flow_source", lambda: _DeadSource())
+    monkeypatch.setattr(routes, "_flow_lines", lambda: [NORTH_LINE])
+    client = TestClient(app)
+
+    with caplog.at_level("WARNING"):
+        response = client.get("/api/traffic/cctv-flow")
+
+    assert response.status_code == 503
+    assert "SECRETLOG" not in caplog.text
+    assert "wowzatokenhash" not in caplog.text

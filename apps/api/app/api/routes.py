@@ -1,6 +1,7 @@
 from pathlib import Path
 import logging
 import os
+import threading
 from tempfile import NamedTemporaryFile
 from uuid import uuid4
 
@@ -13,6 +14,7 @@ from app.adapters.flow_counter import (
     OpenCVYoloFlowSource,
     load_counting_lines,
     measure_flow,
+    redact_url,
 )
 from app.adapters.simulation import (
     FixtureSumoSimulationRunner,
@@ -116,6 +118,9 @@ SUPPORTED_UPLOAD_MEDIA: dict[str, tuple[str, str]] = {
 logger = logging.getLogger(__name__)
 
 _FLOW_SOURCE_CACHE: list[OpenCVYoloFlowSource] = []
+# The cached source's YOLO tracker keeps persist=True ByteTrack state; serialize
+# sampling so concurrent requests don't corrupt each other's tracks.
+_FLOW_LOCK = threading.Lock()
 
 
 def _build_flow_source() -> OpenCVYoloFlowSource:
@@ -185,16 +190,18 @@ def measure_cctv_flow() -> dict[str, object]:
             status_code=503, detail="CCTV flow source unavailable"
         ) from exc
     try:
-        measurement = measure_flow(
-            source=source,
-            video=settings.traffic_video_url,
-            lines=_flow_lines(),
-            window_seconds=settings.flow_window_seconds,
-            source_label="cctv",
-        )
+        with _FLOW_LOCK:
+            measurement = measure_flow(
+                source=source,
+                video=settings.traffic_video_url,
+                lines=_flow_lines(),
+                window_seconds=settings.flow_window_seconds,
+                source_label="cctv",
+            )
     except Exception as exc:  # stream unreadable / token expired
-        # Generic detail: the exception text can embed the signed video URL.
-        logger.warning("CCTV flow measurement failed: %s", exc)
+        # Generic client detail + redacted log: the exception text can embed the
+        # signed video URL/token.
+        logger.warning("CCTV flow measurement failed: %s", redact_url(str(exc)))
         raise HTTPException(
             status_code=503, detail="CCTV flow measurement failed"
         ) from exc

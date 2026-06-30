@@ -17,6 +17,7 @@ from app.adapters.flow_counter import (
     OpenCVYoloFlowSource,
     load_counting_lines,
     measure_flow,
+    redact_url,
 )
 from app.core.config import Settings
 
@@ -175,7 +176,7 @@ def build_cctv_flow_calibrator(
             logger.warning(
                 "CCTV calibration failed for %s; using static demand: %s",
                 scenario_id,
-                exc,
+                redact_url(str(exc)),
             )
             memo[scenario_id] = (now, None)
             return None

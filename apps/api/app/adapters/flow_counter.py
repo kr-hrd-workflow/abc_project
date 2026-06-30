@@ -10,6 +10,7 @@ detections lives in `OpenCVYoloFlowSource` (this module, lazily importing cv2).
 import json
 import logging
 import math
+import re
 from collections import Counter
 from collections.abc import Iterable, Iterator, Sequence
 from dataclasses import dataclass
@@ -211,25 +212,43 @@ def default_counting_lines() -> list[CountingLine]:
     ]
 
 
+def redact_url(text: str) -> str:
+    """Strip query strings (signed tokens) from any stream URLs in ``text``."""
+
+    return re.sub(r"((?:https?|rtsps?|rtmps?)://[^\s?]+)\?\S*", r"\1", text)
+
+
+def _counting_line_from_item(item: dict) -> CountingLine:
+    # Accept both the documented {"line": [x1,y1,x2,y2]} shape and separate
+    # x1/y1/x2/y2 fields; "direction" or "dir" picks a travel-direction filter.
+    if "line" in item:
+        x1, y1, x2, y2 = (float(v) for v in item["line"])
+    else:
+        x1, y1, x2, y2 = (
+            float(item["x1"]),
+            float(item["y1"]),
+            float(item["x2"]),
+            float(item["y2"]),
+        )
+    return CountingLine(
+        approach=item["approach"],
+        x1=x1,
+        y1=y1,
+        x2=x2,
+        y2=y2,
+        classes=tuple(item["classes"]),
+        kind=item.get("kind", "vehicle"),
+        direction=item.get("direction") or item.get("dir"),
+    )
+
+
 def load_counting_lines(raw: str | None) -> list[CountingLine]:
     """Parse FLOW_COUNTING_LINES JSON; fall back to the default layout."""
 
     if not raw:
         return default_counting_lines()
     try:
-        items = json.loads(raw)
-        return [
-            CountingLine(
-                approach=item["approach"],
-                x1=float(item["x1"]),
-                y1=float(item["y1"]),
-                x2=float(item["x2"]),
-                y2=float(item["y2"]),
-                classes=tuple(item["classes"]),
-                kind=item.get("kind", "vehicle"),
-            )
-            for item in items
-        ]
+        return [_counting_line_from_item(item) for item in json.loads(raw)]
     except (ValueError, TypeError, KeyError) as exc:
         logger.warning("Invalid FLOW_COUNTING_LINES; using defaults: %s", exc)
         return default_counting_lines()
@@ -283,14 +302,16 @@ class OpenCVYoloFlowSource:
             if read_count == 0:
                 # Unreachable/expired stream: VideoCapture opened but read no
                 # frames. Raise so callers 503 / fall back instead of reporting
-                # a bogus all-zero flow.
-                raise RuntimeError(f"CCTV stream yielded no frames: {video}")
+                # a bogus all-zero flow. Redact the signed token from the message.
+                raise RuntimeError(
+                    f"CCTV stream yielded no frames: {redact_url(video)}"
+                )
             if read_count < max_frames and _is_live_source(video):
                 # A live stream that died before the window (expired token, drop)
                 # would otherwise be divided by the full window -> bogus low rate.
                 # A finite clip legitimately ends early, so only guard live URLs.
                 raise RuntimeError(
-                    f"CCTV stream truncated before the sample window: {video}"
+                    f"CCTV stream truncated before the sample window: {redact_url(video)}"
                 )
         finally:
             release = getattr(capture, "release", None)
