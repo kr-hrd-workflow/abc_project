@@ -1,6 +1,7 @@
 import type {
   AnalysisFixture,
   AnalysisJob,
+  CctvFlow,
   ChatResponse,
   FixtureIngestResult,
   IntersectionStatus,
@@ -224,6 +225,19 @@ export async function getAnalysisJob(jobId: string): Promise<AnalysisJob> {
   return requestJson<AnalysisJob>(
     `/api/analysis-jobs/${encodeURIComponent(jobId)}`
   );
+}
+
+// Returns null when the backend has no CCTV source configured / measurement
+// failed (503), so the dashboard tile can show an empty state instead of erroring.
+export async function getCctvFlow(): Promise<CctvFlow | null> {
+  try {
+    return await requestJson<CctvFlow>("/api/traffic/cctv-flow");
+  } catch (error) {
+    if (error instanceof Error && error.message.includes("API request failed: 503")) {
+      return null;
+    }
+    throw error;
+  }
 }
 
 function isMissingRouteError(error: unknown, path?: string): boolean {

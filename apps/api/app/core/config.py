@@ -20,11 +20,22 @@ class Settings(BaseSettings):
     vision_analysis_mode: Literal["fixture", "opencv_yolo"] = "fixture"
     yolo_model_path: str = "models/yolov8n.pt"
     yolo_confidence_threshold: float = Field(default=0.25, ge=0.0, le=1.0)
+    # CCTV traffic-flow measurement (YOLO + ByteTrack line-crossing).
+    traffic_video_url: str | None = None
+    flow_window_seconds: float = Field(default=30.0, gt=0)
+    # JSON list of counting lines; None -> default Gangnam-daero layout.
+    # Per-camera geometry is a calibration knob (a fixed model cannot infer it).
+    flow_counting_lines: str | None = None
+    flow_period_min: int = Field(default=1, ge=1)
+    flow_period_max: int = Field(default=120, ge=1)
     sumo_simulation_mode: Literal["fixture", "sumo_traci", "sumo_libsumo"] = "fixture"
     sumo_binary: str = "sumo"
     sumo_binary_path: str | None = None
     sumo_config_path: str = "networks/intersection.sumocfg"
     sumo_config_dir: str | None = None
+    # Rewrite SUMO flow demand from measured CCTV flow before traci.start.
+    sumo_calibrate_from_cctv: bool = False
+    sumo_calibrated_config_dir: str | None = None
     sumo_step_count: int = Field(default=300, ge=1)
     sumo_runtime_ttl_seconds: int = Field(default=300, ge=1)
     sumo_authoritative_hz: int = Field(default=10, ge=5, le=10)

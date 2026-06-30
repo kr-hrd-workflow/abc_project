@@ -205,3 +205,36 @@ describe("API client", () => {
     expect(recommendation.safety_boundary).toContain("No real traffic signal control");
   });
 });
+
+describe("getCctvFlow", () => {
+  test("parses the measured flow payload", async () => {
+    const { getCctvFlow } = await import("./api");
+    const payload = {
+      source: "cctv",
+      captured_at: "2026-06-30T12:00:00+00:00",
+      window_seconds: 30,
+      per_approach: { north: { veh_per_hour: 912, by_class: { car: 7 }, crossings: 7 } },
+      pedestrian: { per_hour: 240, crossings: 2 }
+    };
+    vi.spyOn(globalThis, "fetch").mockResolvedValue({
+      ok: true,
+      json: async () => payload
+    } as unknown as Response);
+
+    const flow = await getCctvFlow();
+
+    expect(flow?.per_approach.north.veh_per_hour).toBe(912);
+    expect(flow?.pedestrian?.per_hour).toBe(240);
+  });
+
+  test("returns null when no CCTV source is configured (503)", async () => {
+    const { getCctvFlow } = await import("./api");
+    vi.spyOn(globalThis, "fetch").mockResolvedValue({
+      ok: false,
+      status: 503,
+      json: async () => ({ detail: "No CCTV source configured" })
+    } as unknown as Response);
+
+    expect(await getCctvFlow()).toBeNull();
+  });
+});

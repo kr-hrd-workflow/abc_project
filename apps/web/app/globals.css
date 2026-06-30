@@ -10760,3 +10760,68 @@ body {
 .proof-visual span[data-proof-asset="city-ops-monitor"] {
   background-image: linear-gradient(180deg, rgba(5, 9, 13, 0.08), rgba(5, 9, 13, 0.54)), url("/landing/proof-city-ops-monitor.png");
 }
+
+/* Measured CCTV traffic-flow tile (right cockpit rail). Scoped to its own
+   classes so it never affects the tuned dashboard grid. */
+.cctv-flow-panel {
+  display: grid;
+  gap: 10px;
+  padding: 14px;
+  border: 1px solid rgba(98, 189, 177, 0.24);
+  border-radius: 14px;
+  background:
+    linear-gradient(180deg, rgba(98, 189, 177, 0.06), transparent 56%),
+    rgba(7, 10, 12, 0.82);
+}
+.cctv-flow-panel header {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 8px;
+}
+.cctv-flow-panel header strong {
+  font-size: 0.95rem;
+  letter-spacing: 0.01em;
+}
+.cctv-flow-panel header small {
+  color: rgba(143, 245, 210, 0.72);
+  font-size: 0.68rem;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+.cctv-flow-rows {
+  display: grid;
+  gap: 5px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.cctv-flow-row {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+  font-variant-numeric: tabular-nums;
+}
+.cctv-flow-approach {
+  color: rgba(226, 240, 237, 0.78);
+  text-transform: capitalize;
+  font-size: 0.86rem;
+}
+.cctv-flow-value {
+  font-weight: 600;
+  color: rgba(236, 247, 244, 0.96);
+}
+.cctv-flow-pedestrian {
+  margin: 0;
+  padding-top: 6px;
+  border-top: 1px solid rgba(98, 189, 177, 0.14);
+  color: rgba(226, 240, 237, 0.72);
+  font-size: 0.82rem;
+  font-variant-numeric: tabular-nums;
+}
+.cctv-flow-empty {
+  margin: 0;
+  color: rgba(226, 240, 237, 0.5);
+  font-size: 0.85rem;
+}

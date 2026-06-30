@@ -10,6 +10,7 @@ vi.mock("../lib/api", () => ({
   analyzeUpload: vi.fn(),
   generateReport: vi.fn().mockRejectedValue(new Error("not used")),
   getAnalysisJob: vi.fn(),
+  getCctvFlow: vi.fn().mockResolvedValue(null),
   getEvents: vi.fn().mockRejectedValue(new Error("not used")),
   getFixtures: vi.fn().mockRejectedValue(new Error("not used")),
   getIntersectionStatus: vi

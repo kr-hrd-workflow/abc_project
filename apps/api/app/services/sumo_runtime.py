@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import logging
 import re
 import threading
 from collections.abc import Callable
@@ -22,6 +23,8 @@ from app.domain.simulation_snapshot import (
     SimulationVehicleSnapshot,
 )
 from app.services.simulation_snapshot import APPROACH_LENGTH_METERS, SNAPSHOT_BOUNDS_METERS
+
+logger = logging.getLogger(__name__)
 
 LiveSumoMode = Literal["sumo_traci", "sumo_libsumo"]
 Approach = Literal["north", "south", "east", "west"]
@@ -139,6 +142,7 @@ class SumoRuntimeService:
         module_loader: Callable[[str], object] | None = None,
         binary_available: Callable[[str], bool] | None = None,
         path_exists: Callable[[str], bool] | None = None,
+        flow_calibrator: Callable[[str], str | None] | None = None,
     ) -> None:
         self.settings = settings
         self._clock = clock or monotonic
@@ -147,6 +151,7 @@ class SumoRuntimeService:
         self._binary_available = binary_available or _binary_available
         self._binary_resolver = resolve_binary_path if binary_available is None else None
         self._path_exists = path_exists or _path_exists
+        self._flow_calibrator = flow_calibrator
         self._sessions: dict[str, SumoRuntimeSession] = {}
         self._lock = threading.RLock()
 
@@ -285,6 +290,9 @@ class SumoRuntimeService:
         return self.settings.sumo_binary
 
     def _configured_config_path(self, scenario_id: str, mode: LiveSumoMode) -> str:
+        calibrated = self._calibrated_config_path(scenario_id)
+        if calibrated is not None:
+            return calibrated
         if self.settings.sumo_config_dir:
             config_path = self._scenario_config_path_from_dir(scenario_id, mode)
         else:
@@ -296,6 +304,34 @@ class SumoRuntimeService:
                 mode=mode,
             )
         return config_path_text
+
+    def _calibrated_config_path(self, scenario_id: str) -> str | None:
+        """Calibrated SUMO config from measured CCTV flow, or None to fall back.
+
+        Any failure (no source, unreadable stream, missing file) returns None so
+        the live session falls back to the static demand instead of crashing.
+        """
+
+        if not self.settings.sumo_calibrate_from_cctv or self._flow_calibrator is None:
+            return None
+        try:
+            calibrated = self._flow_calibrator(scenario_id)
+        except Exception as exc:  # measurement/IO failure -> static demand
+            logger.warning(
+                "CCTV calibration failed for %s; using static demand: %s",
+                scenario_id,
+                exc,
+            )
+            return None
+        if calibrated is None:
+            return None
+        if not self._path_exists(str(calibrated)):
+            logger.warning(
+                "Calibrated SUMO config missing (%s); using static demand",
+                calibrated,
+            )
+            return None
+        return str(calibrated)
 
     def _scenario_config_path_from_dir(
         self,

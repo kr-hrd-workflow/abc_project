@@ -229,7 +229,7 @@ def test_provider_factory_serializes_cold_live_provider_creation(
     errors: list[BaseException] = []
 
     class BlockingRuntime:
-        def __init__(self, _settings: Settings) -> None:
+        def __init__(self, _settings: Settings, **_kwargs: object) -> None:
             created_runtimes.append(self)
             entered_runtime_init.set()
             release_runtime_init.wait(timeout=2)
@@ -531,3 +531,32 @@ def test_normal_fixture_bus_rides_gangnamdaero_median_lane() -> None:
     assert bus.lane_id.startswith(("north-inbound", "south-inbound"))
     assert bus.lane_id.endswith("-4")  # median bus lane index
     assert bus.heading_degrees in (0.0, 180.0)  # aligned with the N/S approach
+
+
+def test_provider_cache_distinguishes_cctv_calibration_settings() -> None:
+    frame_provider_module._PROVIDER_CACHE.clear()
+    base = dict(sumo_simulation_mode="sumo_traci")
+    p_off = get_simulation_frame_provider(
+        Settings(**base, sumo_calibrate_from_cctv=False)
+    )
+    p_on = get_simulation_frame_provider(
+        Settings(**base, sumo_calibrate_from_cctv=True)
+    )
+    p_url = get_simulation_frame_provider(
+        Settings(**base, sumo_calibrate_from_cctv=True, traffic_video_url="rtsp://cam")
+    )
+
+    assert p_off is not p_on  # toggling calibration must not reuse stale provider
+    assert p_on is not p_url  # different source url -> different provider
+
+
+def test_provider_cache_distinguishes_yolo_model_settings() -> None:
+    frame_provider_module._PROVIDER_CACHE.clear()
+    base = dict(sumo_simulation_mode="sumo_traci", sumo_calibrate_from_cctv=True)
+    p_a = get_simulation_frame_provider(Settings(**base, yolo_model_path="models/yolov8n.pt"))
+    p_b = get_simulation_frame_provider(Settings(**base, yolo_model_path="models/yolov8s.pt"))
+    p_c = get_simulation_frame_provider(
+        Settings(**base, yolo_model_path="models/yolov8s.pt", yolo_confidence_threshold=0.5)
+    )
+    assert p_a is not p_b  # model path closed over by calibrator -> must key the cache
+    assert p_b is not p_c

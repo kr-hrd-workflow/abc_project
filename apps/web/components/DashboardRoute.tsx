@@ -8,6 +8,7 @@ import {
   askQuestion,
   generateReport,
   getAnalysisJob,
+  getCctvFlow,
   getEvents,
   getFixtures,
   getIntersectionStatus,
@@ -32,6 +33,7 @@ import {
 import type {
   AnalysisFixture,
   AnalysisJob,
+  CctvFlow,
   ChatResponse,
   FixtureIngestResult,
   IntersectionStatus,
@@ -71,6 +73,7 @@ type SimulationFrameLoadResult = {
 
 export function DashboardRoute() {
   const [data, setData] = useState<DashboardData | null>(null);
+  const [cctvFlow, setCctvFlow] = useState<CctvFlow | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [selectedScenarioId, setSelectedScenarioId] =
     useState<ScenarioId>(DEFAULT_SCENARIO_ID);
@@ -173,6 +176,23 @@ export function DashboardRoute() {
 
   useEffect(() => {
     void loadDashboard(DEFAULT_SCENARIO_ID);
+  }, []);
+
+  // Best-effort, off the critical path: a CCTV measurement can take ~30s and may
+  // have no source, so it must never block or fail the dashboard load.
+  // ponytail: fetch once on mount; add polling if a live-refresh tile is needed.
+  useEffect(() => {
+    let cancelled = false;
+    getCctvFlow()
+      .then((flow) => {
+        if (!cancelled) setCctvFlow(flow);
+      })
+      .catch(() => {
+        if (!cancelled) setCctvFlow(null);
+      });
+    return () => {
+      cancelled = true;
+    };
   }, []);
 
   useEffect(() => {
@@ -393,6 +413,7 @@ export function DashboardRoute() {
       runtimeReadiness={data.runtimeReadiness}
       latestFixtureIngest={data.latestFixtureIngest}
       latestAnalysisJob={data.latestAnalysisJob}
+      cctvFlow={cctvFlow}
       selectedScenarioId={selectedScenarioId}
       scenarioOptions={SCENARIO_OPTIONS}
       scenarioLoading={scenarioLoading}

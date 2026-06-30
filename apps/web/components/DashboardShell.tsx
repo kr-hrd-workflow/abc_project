@@ -7,6 +7,7 @@ import gsap from "gsap";
 import type {
   AnalysisFixture,
   AnalysisJob,
+  CctvFlow,
   ChatResponse,
   FixtureIngestResult,
   IntersectionStatus,
@@ -29,6 +30,7 @@ import { AnalysisIntakePanel } from "./AnalysisIntakePanel";
 import { ChatReportPanel } from "./ChatReportPanel";
 import { DigitalTwin } from "./DigitalTwin";
 import { EventTimeline } from "./EventTimeline";
+import { CctvFlowPanel } from "./CctvFlowPanel";
 import { LanguageToggle } from "./LanguageToggle";
 import { MetricsPanel } from "./MetricsPanel";
 import { RecommendationPanel } from "./RecommendationPanel";
@@ -46,6 +48,7 @@ export type DashboardShellProps = {
   runtimeReadiness: RuntimeReadiness;
   latestFixtureIngest: FixtureIngestResult | null;
   latestAnalysisJob: AnalysisJob | null;
+  cctvFlow?: CctvFlow | null;
   selectedScenarioId: ScenarioId;
   scenarioOptions: ScenarioOption[];
   scenarioLoading: boolean;
@@ -75,6 +78,7 @@ export function DashboardShell({
   runtimeReadiness,
   latestFixtureIngest,
   latestAnalysisJob,
+  cctvFlow = null,
   selectedScenarioId,
   scenarioOptions,
   scenarioLoading,
@@ -355,6 +359,7 @@ export function DashboardShell({
             onRefreshRecommendation={onRefreshRecommendation}
           />
           <MetricsPanel status={status} simulation={simulation} locale={locale} />
+          <CctvFlowPanel flow={cctvFlow} locale={locale} />
           <ChatReportPanel
             chat={chat}
             report={report}

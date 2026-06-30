@@ -1,11 +1,21 @@
 from pathlib import Path
+import logging
 import os
+import threading
 from tempfile import NamedTemporaryFile
 from uuid import uuid4
 
 from fastapi import APIRouter, Depends, HTTPException, Query, Request
 from sqlalchemy.orm import Session
 
+from app.adapters.flow_counter import (
+    CountingLine,
+    FlowMeasurement,
+    OpenCVYoloFlowSource,
+    load_counting_lines,
+    measure_flow,
+    redact_url,
+)
 from app.adapters.simulation import (
     FixtureSumoSimulationRunner,
     SumoTraciTrafficSimulationAdapter,
@@ -104,6 +114,101 @@ SUPPORTED_UPLOAD_MEDIA: dict[str, tuple[str, str]] = {
     "video/mp4": ("video", "blocked"),
     "video/quicktime": ("video", "blocked"),
 }
+
+logger = logging.getLogger(__name__)
+
+_FLOW_SOURCE_CACHE: list[OpenCVYoloFlowSource] = []
+# The cached source's YOLO tracker keeps persist=True ByteTrack state; serialize
+# sampling so concurrent requests don't corrupt each other's tracks.
+_FLOW_LOCK = threading.Lock()
+
+
+def _build_flow_source() -> OpenCVYoloFlowSource:
+    return OpenCVYoloFlowSource(
+        model_path=settings.yolo_model_path,
+        confidence_threshold=settings.yolo_confidence_threshold,
+    )
+
+
+def _flow_source() -> OpenCVYoloFlowSource:
+    # Reuse one source so YOLO weights load once, not per request. Double-checked
+    # under _FLOW_LOCK so concurrent first requests don't each load the model.
+    if not _FLOW_SOURCE_CACHE:
+        with _FLOW_LOCK:
+            if not _FLOW_SOURCE_CACHE:
+                _FLOW_SOURCE_CACHE.append(_build_flow_source())
+    return _FLOW_SOURCE_CACHE[0]
+
+
+def _reset_flow_source_cache() -> None:
+    _FLOW_SOURCE_CACHE.clear()
+
+
+def _flow_lines() -> list[CountingLine]:
+    return load_counting_lines(settings.flow_counting_lines)
+
+
+def _project_flow(measurement: FlowMeasurement) -> dict[str, object]:
+    return {
+        "source": measurement.source,
+        "captured_at": measurement.captured_at.isoformat(),
+        "window_seconds": measurement.window_seconds,
+        "per_approach": {
+            name: {
+                "veh_per_hour": flow.veh_per_hour,
+                "by_class": flow.by_class,
+                "crossings": flow.crossings,
+            }
+            for name, flow in measurement.approaches.items()
+        },
+        "pedestrian": (
+            None
+            if measurement.pedestrian is None
+            else {
+                "per_hour": measurement.pedestrian.per_hour,
+                "crossings": measurement.pedestrian.crossings,
+            }
+        ),
+    }
+
+
+@router.get("/api/traffic/cctv-flow")
+def measure_cctv_flow() -> dict[str, object]:
+    # Keep a fixture-mode deployment fixture-only: never sample a live stream.
+    if settings.vision_analysis_mode != "opencv_yolo":
+        raise HTTPException(
+            status_code=503,
+            detail="CCTV flow requires VISION_ANALYSIS_MODE=opencv_yolo",
+        )
+    if not settings.traffic_video_url:
+        raise HTTPException(
+            status_code=503,
+            detail="No CCTV source configured (set TRAFFIC_VIDEO_URL)",
+        )
+    try:
+        source = _flow_source()
+    except Exception as exc:  # vision extra missing OR model weights unloadable
+        logger.warning("CCTV flow source unavailable: %s", exc)
+        raise HTTPException(
+            status_code=503, detail="CCTV flow source unavailable"
+        ) from exc
+    try:
+        with _FLOW_LOCK:
+            measurement = measure_flow(
+                source=source,
+                video=settings.traffic_video_url,
+                lines=_flow_lines(),
+                window_seconds=settings.flow_window_seconds,
+                source_label="cctv",
+            )
+    except Exception as exc:  # stream unreadable / token expired
+        # Generic client detail + redacted log: the exception text can embed the
+        # signed video URL/token.
+        logger.warning("CCTV flow measurement failed: %s", redact_url(str(exc)))
+        raise HTTPException(
+            status_code=503, detail="CCTV flow measurement failed"
+        ) from exc
+    return _project_flow(measurement)
 
 
 @router.get("/api/fixtures")

@@ -658,6 +658,17 @@ function buildFixturePayloads() {
       },
       pgvector: { ready: true, mode: "database", missing: [], checks: [] }
     },
+    cctvFlow: {
+      source: "cctv",
+      captured_at: "2026-06-30T09:00:00+00:00",
+      window_seconds: 30,
+      per_approach: {
+        north: { veh_per_hour: 912, by_class: { car: 6, truck: 1 }, crossings: 8 },
+        south: { veh_per_hour: 720, by_class: { car: 6 }, crossings: 6 },
+        bus_north: { veh_per_hour: 120, by_class: { bus: 1 }, crossings: 1 }
+      },
+      pedestrian: { per_hour: 480, crossings: 4 }
+    },
     frame
   };
 }
@@ -690,6 +701,7 @@ async function installApiRoutes(page, options = {}) {
     if (pathname === "/api/report") body = payloads.report;
     if (pathname === "/api/fixtures") body = payloads.fixtures;
     if (pathname === "/api/runtime/readiness") body = payloads.runtimeReadiness;
+    if (pathname === "/api/traffic/cctv-flow") body = payloads.cctvFlow;
     if (pathname === "/api/simulation/frame") body = payloads.frame;
 
     if (body === null) {

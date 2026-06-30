@@ -8,6 +8,7 @@ from typing import Protocol
 from app.core.config import Settings
 from app.domain.schemas import TrafficEventRead, VisionObservation
 from app.domain.simulation_snapshot import SimulationFrameSnapshot
+from app.services.flow_calibration import build_cctv_flow_calibrator
 from app.services.simulation_snapshot import build_fixture_simulation_frame
 from app.services.sumo_runtime import SumoRuntimeError, SumoRuntimeService
 
@@ -139,7 +140,10 @@ def get_simulation_frame_provider(settings: Settings) -> SimulationFrameProvider
             provider: SimulationFrameProvider = fallback_provider
         else:
             live_provider = SumoSimulationFrameProvider(
-                runtime=SumoRuntimeService(settings),
+                runtime=SumoRuntimeService(
+                    settings,
+                    flow_calibrator=build_cctv_flow_calibrator(settings),
+                ),
                 fallback_provider=fallback_provider,
                 frame_cache_ttl_ms=settings.sumo_frame_cache_ttl_ms,
             )
@@ -162,6 +166,18 @@ def _provider_cache_key(settings: Settings) -> tuple[object, ...]:
         settings.sumo_runtime_ttl_seconds,
         settings.sumo_authoritative_hz,
         settings.sumo_frame_cache_ttl_ms,
+        # CCTV calibration inputs: a different source/window/lines/model must not
+        # reuse a provider whose calibrator closed over the old settings.
+        settings.sumo_calibrate_from_cctv,
+        settings.sumo_calibrated_config_dir,
+        settings.traffic_video_url,
+        settings.flow_counting_lines,
+        settings.flow_window_seconds,
+        settings.flow_period_min,
+        settings.flow_period_max,
+        settings.vision_analysis_mode,
+        settings.yolo_model_path,
+        settings.yolo_confidence_threshold,
     )
 
 

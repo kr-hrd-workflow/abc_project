@@ -20,6 +20,7 @@ const dashboardRouteApiMock = vi.hoisted(() => ({
   askQuestion: vi.fn(),
   generateReport: vi.fn(),
   getAnalysisJob: vi.fn(),
+  getCctvFlow: vi.fn().mockResolvedValue(null),
   getEvents: vi.fn(),
   getFixtures: vi.fn(),
   getIntersectionStatus: vi.fn(),
