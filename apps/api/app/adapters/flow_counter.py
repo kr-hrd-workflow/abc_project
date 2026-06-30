@@ -101,7 +101,9 @@ def _moves_in_direction(prev: Point, curr: Point, direction: str | None) -> bool
 
 
 def _is_live_source(video: str) -> bool:
-    return video.startswith(("http://", "https://", "rtsp://", "rtmp://", "rtmps://"))
+    return video.startswith(
+        ("http://", "https://", "rtsp://", "rtsps://", "rtmp://", "rtmps://")
+    )
 
 
 def _segments_intersect(p1: Point, p2: Point, p3: Point, p4: Point) -> bool:
@@ -213,14 +215,19 @@ def default_counting_lines() -> list[CountingLine]:
 
 
 def redact_url(text: str) -> str:
-    """Strip query strings (signed tokens) from any stream URLs in ``text``."""
+    """Strip signed tokens from stream URLs in ``text``: both query strings and
+    ``user:pass@`` userinfo (basic-auth RTSP carries no query string)."""
 
-    return re.sub(r"((?:https?|rtsps?|rtmps?)://[^\s?]+)\?\S*", r"\1", text)
+    text = re.sub(r"((?:https?|rtsps?|rtmps?)://[^\s?]+)\?\S*", r"\1", text)
+    text = re.sub(r"((?:https?|rtsps?|rtmps?)://)[^/\s@]+@", r"\1", text)
+    return text
 
 
 def _counting_line_from_item(item: dict) -> CountingLine:
     # Accept both the documented {"line": [x1,y1,x2,y2]} shape and separate
     # x1/y1/x2/y2 fields; "direction" or "dir" picks a travel-direction filter.
+    # Validate so a misconfigured line raises (caller falls back + warns) rather
+    # than silently producing zero / wrong-direction / mislabelled counts.
     if "line" in item:
         x1, y1, x2, y2 = (float(v) for v in item["line"])
     else:
@@ -230,15 +237,27 @@ def _counting_line_from_item(item: dict) -> CountingLine:
             float(item["x2"]),
             float(item["y2"]),
         )
+    for coord in (x1, y1, x2, y2):
+        if not 0.0 <= coord <= 1.0:
+            raise ValueError(f"counting-line coords must be normalized [0,1]: {coord}")
+    classes = item["classes"]
+    if not isinstance(classes, list | tuple) or isinstance(classes, str):
+        raise TypeError("counting-line 'classes' must be a list of labels")
+    kind = item.get("kind", "vehicle")
+    if kind not in ("vehicle", "pedestrian"):
+        raise ValueError(f"invalid counting-line kind: {kind}")
+    direction = item.get("direction") or item.get("dir")
+    if direction is not None and direction not in ("up", "down", "left", "right"):
+        raise ValueError(f"invalid counting-line direction: {direction}")
     return CountingLine(
         approach=item["approach"],
         x1=x1,
         y1=y1,
         x2=x2,
         y2=y2,
-        classes=tuple(item["classes"]),
-        kind=item.get("kind", "vehicle"),
-        direction=item.get("direction") or item.get("dir"),
+        classes=tuple(classes),
+        kind=kind,
+        direction=direction,
     )
 
 
@@ -273,6 +292,7 @@ class OpenCVYoloFlowSource:
         vehicle_class_ids: Sequence[int] = DEFAULT_VEHICLE_CLASS_IDS,
         tracker: str = "bytetrack.yaml",
         default_fps: float = 15.0,
+        timeout_ms: float = 5000.0,
         cv2_module: object | None = None,
         yolo_model: object | None = None,
     ) -> None:
@@ -281,6 +301,7 @@ class OpenCVYoloFlowSource:
         self.vehicle_class_ids = list(vehicle_class_ids)
         self.tracker = tracker
         self.default_fps = default_fps
+        self.timeout_ms = timeout_ms
         self.cv2_module = cv2_module or _load_cv2_module()
         self.yolo_model = yolo_model or _load_yolo_model(model_path)
 
@@ -288,9 +309,20 @@ class OpenCVYoloFlowSource:
         self, video: str, window_seconds: float
     ) -> Iterator[list[TrackedDetection]]:
         capture = self.cv2_module.VideoCapture(video)
+        # Bound the blocking FFMPEG open/read so a stalled live stream can't wedge
+        # the worker (and, when calibrating, the held SUMO runtime lock).
+        for prop_name in ("CAP_PROP_OPEN_TIMEOUT_MSEC", "CAP_PROP_READ_TIMEOUT_MSEC"):
+            prop = getattr(self.cv2_module, prop_name, None)
+            if prop is not None:
+                capture.set(prop, self.timeout_ms)
         fps_prop = getattr(self.cv2_module, "CAP_PROP_FPS", 5)
         try:
-            fps = float(capture.get(fps_prop) or 0.0) or self.default_fps
+            try:
+                fps = float(capture.get(fps_prop))
+            except (TypeError, ValueError):
+                fps = 0.0
+            if not math.isfinite(fps) or fps <= 0:
+                fps = self.default_fps
             max_frames = max(1, math.ceil(window_seconds * fps))
             read_count = 0
             while read_count < max_frames:

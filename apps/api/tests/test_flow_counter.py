@@ -155,9 +155,13 @@ class _FakeCapture:
         self._i = 0
         self._fps = fps
         self.released = False
+        self.timeout_settings: list[tuple[int, float]] = []
 
     def get(self, prop):
         return self._fps
+
+    def set(self, prop, value):
+        self.timeout_settings.append((prop, value))
 
     def read(self):
         if self._i >= len(self._frames):
@@ -172,6 +176,8 @@ class _FakeCapture:
 
 class _FakeCv2:
     CAP_PROP_FPS = 5
+    CAP_PROP_OPEN_TIMEOUT_MSEC = 53
+    CAP_PROP_READ_TIMEOUT_MSEC = 54
 
     def __init__(self, capture) -> None:
         self._capture = capture
@@ -358,3 +364,76 @@ def test_stream_error_redacts_signed_url() -> None:
 
     assert "SECRET123" not in str(excinfo.value)
     assert "wowzatokenhash" not in str(excinfo.value)
+
+
+# --- code-review max round 3: timeout, fps sanity, redaction, validation ----
+
+def test_redact_url_strips_userinfo_credentials() -> None:
+    from app.adapters.flow_counter import redact_url
+
+    assert "pass" not in redact_url("rtsp://user:pass@cam/live")
+    assert "user" not in redact_url("rtsp://user:pass@cam/live")
+    assert "SECRET" not in redact_url("https://cam/live.m3u8?token=SECRET")
+
+
+def test_fps_nan_inf_negative_fall_back_to_default() -> None:
+    from app.adapters.flow_counter import OpenCVYoloFlowSource
+
+    for bad in (float("nan"), float("inf"), -1.0, 0.0):
+        frames = [_FakeFrame() for _ in range(3)]
+        results = [_FakeResult([_FakeBox(1, 2, 0.9, [20, 5, 60, 35])]) for _ in range(3)]
+        cv2 = _FakeCv2(_FakeCapture(frames, fps=bad))
+        source = OpenCVYoloFlowSource(
+            model_path="x.pt", cv2_module=cv2,
+            yolo_model=_FakeYoloTrackModel(results), default_fps=15.0,
+        )
+        # window 0.2 * default 15 = 3 frames -> no crash, reads all 3
+        yielded = list(source.stream("clip.mp4", window_seconds=0.2))
+        assert len(yielded) == 3
+
+
+def test_rtsps_truncation_is_guarded() -> None:
+    from app.adapters.flow_counter import OpenCVYoloFlowSource
+
+    frames = [_FakeFrame(), _FakeFrame()]
+    results = [_FakeResult([_FakeBox(1, 2, 0.9, [20, 5, 60, 35])]) for _ in range(2)]
+    cv2 = _FakeCv2(_FakeCapture(frames, fps=15.0))
+    source = OpenCVYoloFlowSource(
+        model_path="x.pt", cv2_module=cv2, yolo_model=_FakeYoloTrackModel(results)
+    )
+
+    with pytest.raises(RuntimeError):
+        list(source.stream("rtsps://cam/live", window_seconds=10.0))
+
+
+def test_stream_sets_capture_timeouts() -> None:
+    from app.adapters.flow_counter import OpenCVYoloFlowSource
+
+    frames = [_FakeFrame() for _ in range(3)]
+    results = [_FakeResult([_FakeBox(1, 2, 0.9, [20, 5, 60, 35])]) for _ in range(3)]
+    cap = _FakeCapture(frames, fps=10.0)
+    cv2 = _FakeCv2(cap)
+    source = OpenCVYoloFlowSource(
+        model_path="x.pt", cv2_module=cv2,
+        yolo_model=_FakeYoloTrackModel(results), timeout_ms=4000,
+    )
+
+    list(source.stream("rtsp://cam", window_seconds=0.3))
+
+    props = {p for p, _ in cap.timeout_settings}
+    assert _FakeCv2.CAP_PROP_OPEN_TIMEOUT_MSEC in props
+    assert _FakeCv2.CAP_PROP_READ_TIMEOUT_MSEC in props
+
+
+def test_load_counting_lines_rejects_bad_configs() -> None:
+    from app.adapters.flow_counter import default_counting_lines, load_counting_lines
+
+    defaults = default_counting_lines()
+    bad = [
+        [{"approach": "n", "line": [0, 0.5, 1, 0.5], "classes": "car"}],  # str, not list
+        [{"approach": "n", "line": [0, 0.5, 1, 0.5], "classes": ["car"], "kind": "ped"}],  # bad kind
+        [{"approach": "n", "line": [0, 0.5, 1, 0.5], "classes": ["car"], "direction": "north"}],  # bad dir
+        [{"approach": "n", "line": [0, 540, 1920, 540], "classes": ["car"]}],  # pixel coords
+    ]
+    for cfg in bad:
+        assert load_counting_lines(_json.dumps(cfg)) == defaults  # fell back, not accepted

@@ -125,6 +125,7 @@ def _settings_for(tmp_path, out_dir) -> Settings:
     (base_dir / "intersection.rou.xml").write_text(BASE_ROU)
     (base_dir / "intersection.net.xml").write_text("<net/>")
     return Settings(
+        vision_analysis_mode="opencv_yolo",
         sumo_config_path=str(base_dir / "intersection.sumocfg"),
         traffic_video_url="rtsp://cam",
         flow_window_seconds=30.0,
@@ -240,6 +241,7 @@ def test_calibrator_uses_sumo_config_dir_when_set(tmp_path) -> None:
     (cfg_dir / "intersection.net.xml").write_text("<net/>")
     out_dir = tmp_path / "calib"
     settings = Settings(
+        vision_analysis_mode="opencv_yolo",
         sumo_config_path=str(tmp_path / "elsewhere" / "intersection.sumocfg"),  # no files here
         sumo_config_dir=str(cfg_dir),
         traffic_video_url="rtsp://cam",
@@ -255,3 +257,15 @@ def test_calibrator_uses_sumo_config_dir_when_set(tmp_path) -> None:
 
     assert cfg == str(out_dir / "normal.sumocfg")
     assert _periods(out_dir / "normal.rou.xml")["flow_north_through"] == "30"
+
+
+def test_calibrator_none_in_fixture_mode(tmp_path) -> None:
+    out_dir = tmp_path / "calib"
+    settings = _settings_for(tmp_path, out_dir)
+    settings.vision_analysis_mode = "fixture"
+    source = _CountingSource()
+
+    calibrator = build_cctv_flow_calibrator(settings, source=source)
+
+    assert calibrator("normal") is None
+    assert source.calls == 0  # never samples the live stream in fixture mode

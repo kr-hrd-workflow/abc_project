@@ -133,6 +133,10 @@ def build_cctv_flow_calibrator(
     def calibrate(scenario_id: str) -> str | None:
         if scenario_id not in calibrate_scenarios:
             return None
+        # Same invariant as the /api/traffic/cctv-flow endpoint: never touch the
+        # live stream / load YOLO unless explicitly in opencv_yolo mode.
+        if settings.vision_analysis_mode != "opencv_yolo":
+            return None
         video = settings.traffic_video_url
         if not video:
             return None

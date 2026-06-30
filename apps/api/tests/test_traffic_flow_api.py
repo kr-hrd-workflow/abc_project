@@ -202,3 +202,19 @@ def test_cctv_flow_failure_log_redacts_url(monkeypatch, caplog) -> None:
     assert response.status_code == 503
     assert "SECRETLOG" not in caplog.text
     assert "wowzatokenhash" not in caplog.text
+
+
+def test_flow_source_builds_under_lock(monkeypatch) -> None:
+    routes._reset_flow_source_cache()
+    locked_during_build: list[bool] = []
+
+    def fake_build() -> object:
+        locked_during_build.append(routes._FLOW_LOCK.locked())
+        return object()
+
+    monkeypatch.setattr(routes, "_build_flow_source", fake_build)
+
+    routes._flow_source()
+
+    assert locked_during_build == [True]  # cache init happened under the lock
+    routes._reset_flow_source_cache()

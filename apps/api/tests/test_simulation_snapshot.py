@@ -548,3 +548,15 @@ def test_provider_cache_distinguishes_cctv_calibration_settings() -> None:
 
     assert p_off is not p_on  # toggling calibration must not reuse stale provider
     assert p_on is not p_url  # different source url -> different provider
+
+
+def test_provider_cache_distinguishes_yolo_model_settings() -> None:
+    frame_provider_module._PROVIDER_CACHE.clear()
+    base = dict(sumo_simulation_mode="sumo_traci", sumo_calibrate_from_cctv=True)
+    p_a = get_simulation_frame_provider(Settings(**base, yolo_model_path="models/yolov8n.pt"))
+    p_b = get_simulation_frame_provider(Settings(**base, yolo_model_path="models/yolov8s.pt"))
+    p_c = get_simulation_frame_provider(
+        Settings(**base, yolo_model_path="models/yolov8s.pt", yolo_confidence_threshold=0.5)
+    )
+    assert p_a is not p_b  # model path closed over by calibrator -> must key the cache
+    assert p_b is not p_c

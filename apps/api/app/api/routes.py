@@ -131,9 +131,12 @@ def _build_flow_source() -> OpenCVYoloFlowSource:
 
 
 def _flow_source() -> OpenCVYoloFlowSource:
-    # Reuse one source so YOLO weights load once, not per request.
+    # Reuse one source so YOLO weights load once, not per request. Double-checked
+    # under _FLOW_LOCK so concurrent first requests don't each load the model.
     if not _FLOW_SOURCE_CACHE:
-        _FLOW_SOURCE_CACHE.append(_build_flow_source())
+        with _FLOW_LOCK:
+            if not _FLOW_SOURCE_CACHE:
+                _FLOW_SOURCE_CACHE.append(_build_flow_source())
     return _FLOW_SOURCE_CACHE[0]
 
 
