@@ -36,14 +36,21 @@ const outputDir =
 
 const routePath = "/dashboard";
 const viewport = { width: 1440, height: 1000 };
+// Higher-res capture for calibration measurement (env-driven; default 1 = prod).
+const deviceScaleFactor = Number(process.env.TRAFFIC_PHOTOREAL_DSF ?? "1") || 1;
 const r3fCanvasSelector =
   "canvas.r3f-simulation-canvas, .r3f-simulation-canvas canvas";
 
+// Optional extra query appended to every target (e.g. "&calv5=1&calB=north:1.5,1")
+// so the v5 lane calibration can be iterated live against a reused server without
+// a rebuild. Empty by default → committed production render.
+const extraQuery = process.env.TRAFFIC_PHOTOREAL_EXTRA_QUERY ?? "";
+
 const targets = [
-  { name: "day", query: "?photoreal=1", file: "traffic-photoreal-day.png" },
+  { name: "day", query: `?photoreal=1${extraQuery}`, file: "traffic-photoreal-day.png" },
   {
     name: "night",
-    query: "?photoreal=1&timeofday=night",
+    query: `?photoreal=1&timeofday=night${extraQuery}`,
     file: "traffic-photoreal-night.png"
   }
 ];
@@ -376,7 +383,7 @@ async function main() {
   try {
     for (const target of targets) {
       console.log(`[traffic-photoreal] capturing ${target.name} (${target.query})…`);
-      const ctx = await browser.newContext({ viewport });
+      const ctx = await browser.newContext({ viewport, deviceScaleFactor });
       const page = await ctx.newPage();
       const consoleErrors = [];
       page.on("pageerror", (e) => consoleErrors.push(`[pageerror] ${e.message}`));
