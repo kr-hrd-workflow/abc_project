@@ -305,16 +305,34 @@ class OpenCVYoloFlowSource:
         self.cv2_module = cv2_module or _load_cv2_module()
         self.yolo_model = yolo_model or _load_yolo_model(model_path)
 
+    def _open_capture(self, video: str) -> object:
+        # Bound the blocking FFMPEG open AND read so a stalled live stream can't
+        # wedge the worker (and, when calibrating, the held SUMO runtime lock).
+        # The open timeout must be passed at construction — set() after open is
+        # too late for a connect that hangs.
+        cv2 = self.cv2_module
+        params: list[int] = []
+        for prop_name in ("CAP_PROP_OPEN_TIMEOUT_MSEC", "CAP_PROP_READ_TIMEOUT_MSEC"):
+            prop = getattr(cv2, prop_name, None)
+            if prop is not None:
+                params += [int(prop), int(self.timeout_ms)]
+        api = getattr(cv2, "CAP_FFMPEG", None)
+        if params and api is not None:
+            try:
+                return cv2.VideoCapture(video, api, params)
+            except TypeError:
+                pass  # OpenCV too old for the params constructor — fall back
+        capture = cv2.VideoCapture(video)
+        for prop_name in ("CAP_PROP_OPEN_TIMEOUT_MSEC", "CAP_PROP_READ_TIMEOUT_MSEC"):
+            prop = getattr(cv2, prop_name, None)
+            if prop is not None:
+                capture.set(prop, self.timeout_ms)
+        return capture
+
     def stream(
         self, video: str, window_seconds: float
     ) -> Iterator[list[TrackedDetection]]:
-        capture = self.cv2_module.VideoCapture(video)
-        # Bound the blocking FFMPEG open/read so a stalled live stream can't wedge
-        # the worker (and, when calibrating, the held SUMO runtime lock).
-        for prop_name in ("CAP_PROP_OPEN_TIMEOUT_MSEC", "CAP_PROP_READ_TIMEOUT_MSEC"):
-            prop = getattr(self.cv2_module, prop_name, None)
-            if prop is not None:
-                capture.set(prop, self.timeout_ms)
+        capture = self._open_capture(video)
         fps_prop = getattr(self.cv2_module, "CAP_PROP_FPS", 5)
         try:
             try:
