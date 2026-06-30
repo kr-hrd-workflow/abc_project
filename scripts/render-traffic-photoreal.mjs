@@ -35,7 +35,12 @@ const outputDir =
   path.join(repoRoot, "artifacts", "traffic-photoreal");
 
 const routePath = "/dashboard";
-const viewport = { width: 1440, height: 1000 };
+// Viewport is env-driven (default 1440×1000); bump for a high-res facade/quality
+// capture — the captured r3f canvas is ~0.63× the viewport width.
+const viewport = {
+  width: Number(process.env.TRAFFIC_PHOTOREAL_VIEWPORT_W ?? "1440") || 1440,
+  height: Number(process.env.TRAFFIC_PHOTOREAL_VIEWPORT_H ?? "1000") || 1000
+};
 // Higher-res capture for calibration measurement (env-driven; default 1 = prod).
 const deviceScaleFactor = Number(process.env.TRAFFIC_PHOTOREAL_DSF ?? "1") || 1;
 const r3fCanvasSelector =
