@@ -44,7 +44,10 @@ import {
   LANE_WIDTH_METERS
 } from "./roadGeometry";
 import type { Vector3Tuple } from "./roadGeometry";
-import { getApproachInboundLaneCount } from "./intersectionTruth";
+import {
+  getApproachInboundLaneCount,
+  getApproachMedianBusLaneIndex
+} from "./intersectionTruth";
 import { getR3FAssetEntry, type R3FAssetId } from "./assetManifest";
 import {
   STAGE6_VEHICLE_LOD_POLICY,
@@ -54,7 +57,8 @@ import {
 } from "./stage6VehicleLod";
 import {
   applyCalibratedLaneOffset,
-  applyCmpAWestVehicleTransform
+  applyCmpAWestVehicleTransform,
+  getBusLaneLateral
 } from "./plateVehicleCalibration";
 
 export type TrafficDensitySourceLabel =
@@ -1393,16 +1397,28 @@ function getLaneAlignedPreciseVehiclePosition(
     };
   }
 
+  // Buses on the median bus-only lane are pinned to the painted 중앙버스전용차로
+  // (it sits beside the central median, off the normal lane grid). All other
+  // vehicles take the calibrated lane offset.
+  const isMedianBus =
+    vehicle.vehicle_type === "bus" &&
+    lanePlacement.laneIndex ===
+      getApproachMedianBusLaneIndex(lanePlacement.direction);
+  const busLaneLateral = isMedianBus
+    ? getBusLaneLateral(viewpoint, lanePlacement.direction)
+    : null;
   const rawLaneOffset = getInboundLaneOffset(
     lanePlacement.direction,
     lanePlacement.laneIndex,
     getApproachInboundLaneCount(lanePlacement.direction)
   );
-  const laneOffset = applyCalibratedLaneOffset(
-    rawLaneOffset,
-    viewpoint,
-    lanePlacement.direction
-  );
+  const laneOffset =
+    busLaneLateral ??
+    applyCalibratedLaneOffset(
+      rawLaneOffset,
+      viewpoint,
+      lanePlacement.direction
+    );
 
   if (
     lanePlacement.direction === "north" ||
