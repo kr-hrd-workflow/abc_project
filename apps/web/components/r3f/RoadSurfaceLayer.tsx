@@ -396,12 +396,18 @@ export type RoadSurfaceLayerProps = {
   // plain plate's carriageway (same SSOT the vehicles use) and extend the far end
   // to the visible plate-road extent. No effect on the committed road / photoreal.
   cmpA?: boolean;
+  // suppressVectorMarkings (?photobash=1): render ONLY the textured asphalt and
+  // skip every merged vector-marking mesh (lane lines, 중앙선, 정지선, crosswalks,
+  // arrows, bus legends). The photobash mode replaces those flat vector markings
+  // with MarkingDecalLayer's textured decals over this asphalt.
+  suppressVectorMarkings?: boolean;
 };
 
 export function RoadSurfaceLayer({
   isNight,
   markingsOnly = false,
-  cmpA = false
+  cmpA = false,
+  suppressVectorMarkings = false
 }: RoadSurfaceLayerProps) {
   const asphaltBase = useTexture(ASPHALT_PATH) as Texture;
 
@@ -547,6 +553,10 @@ export function RoadSurfaceLayer({
         </>
       )}
 
+      {/* Vector markings — suppressed in suppressVectorMarkings (?photobash=1),
+          where MarkingDecalLayer's textured decals replace these flat planes. */}
+      {!suppressVectorMarkings && (
+        <>
       {/* 중앙선 — yellow double-solid centre line (merged) */}
       {centerLineGeometry && (
         <mesh geometry={centerLineGeometry}>
@@ -600,6 +610,8 @@ export function RoadSurfaceLayer({
             depthWrite={false}
           />
         </mesh>
+      )}
+        </>
       )}
     </group>
   );

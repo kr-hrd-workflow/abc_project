@@ -152,3 +152,19 @@ describe("photoreal production mode (?photoreal=1)", () => {
     );
   });
 });
+
+describe("photobash mode (?photobash=1)", () => {
+  test("photobash mode mounts MarkingDecalLayer and no PhotorealPlate", () => {
+    setSearch("?photobash=1");
+    const scene = SimulationScene({
+      sceneSnapshot: snapshot(),
+      weather: "clear",
+      timeOfDay: "day",
+      viewpoint: "wide"
+    });
+    const names = collectDeepDisplayNames(scene);
+    expect(names).toContain("MarkingDecalLayer");
+    expect(names).not.toContain("PhotorealPlate");
+    setSearch("");
+  });
+});
