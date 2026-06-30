@@ -70,7 +70,8 @@
 
 ## 7. 검증 / 게이트
 
-- **정렬 게이트(핵심):** 제한 오비트 다각도 렌더에서 마킹 데칼이 차량 궤적/차로와 일치(육안 + 차로 폭 3.6m 정합). Phase 0의 done-gate.
+- **시각 확인은 codex CLI로 컨펌 (필수 프로세스).** 렌더/정렬/이음새 같은 모든 시각 판단은 내 자체 image Read로 끝내지 않고 **`/home/chan/.local/bin/codex`에 넘겨 분석·컨펌**받는다. (프로젝트 선호: `visual-confirm-via-codex-cli`)
+- **정렬 게이트(핵심):** 제한 오비트 다각도 렌더에서 마킹 데칼이 차량 궤적/차로와 일치(차로 폭 3.6m 정합) — **codex CLI 컨펌**으로 통과. Phase 0의 done-gate.
 - 프로젝트 R3F 게이트: `cd apps/web && npx vitest run`, `npm run verify:r3f-dashboard`, `verify:r3f-visual-diff`(의도된 변경이니 rebaseline), `verify:r3f-performance`(~900 draw-call 예산), `verify:r3f-assets`(~25MB 예산), `verify:security`.
 - 락트 렌더링(`apps/web/AGENTS.md`) 갱신은 인간 확인 게이트 후 반영.
 
