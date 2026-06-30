@@ -46,12 +46,17 @@ const r3fCanvasSelector =
 // a rebuild. Empty by default → committed production render.
 const extraQuery = process.env.TRAFFIC_PHOTOREAL_EXTRA_QUERY ?? "";
 
+// Base scene query — default ?photoreal=1 (committed production render). Override
+// with e.g. "?photobash=1" to render the plate-free decal-marking photobash scene.
+const baseQuery = process.env.TRAFFIC_PHOTOREAL_BASE_QUERY ?? "?photoreal=1";
+const filePrefix = process.env.TRAFFIC_PHOTOREAL_FILE_PREFIX ?? "traffic-photoreal";
+
 const targets = [
-  { name: "day", query: `?photoreal=1${extraQuery}`, file: "traffic-photoreal-day.png" },
+  { name: "day", query: `${baseQuery}${extraQuery}`, file: `${filePrefix}-day.png` },
   {
     name: "night",
-    query: `?photoreal=1&timeofday=night${extraQuery}`,
-    file: "traffic-photoreal-night.png"
+    query: `${baseQuery}&timeofday=night${extraQuery}`,
+    file: `${filePrefix}-night.png`
   }
 ];
 

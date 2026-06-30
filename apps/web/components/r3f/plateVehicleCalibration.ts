@@ -111,6 +111,7 @@ export function getBusLaneLateral(
   viewpoint: SimulationViewpoint,
   direction: Direction
 ): number | null {
+  if (isPhotobashMode()) return null; // metric grid: bus rides its real lane offset
   const override = parseBusLatFromUrl()[direction];
   if (override !== undefined) return override;
   return PLATE_BUS_LANE_LATERAL[viewpoint][direction] ?? null;
@@ -142,6 +143,18 @@ function isCmpBMode(): boolean {
 function isCmpAMode(): boolean {
   if (typeof window === "undefined") return false;
   return new URLSearchParams(window.location.search).get("cmp") === "A";
+}
+
+/**
+ * Photobash mode (?photobash=1) renders metric marking DECALS (no AI plate), so
+ * vehicles must ride the raw metric lane grid — the v5-plate vehicle calibration
+ * (+1.3 m N/S offset, median-bus pin) was a compensation for the plate being
+ * off-metric and would push vehicles off the metric decals. In photobash the
+ * calibration is identity and the bus pin is disabled.
+ */
+function isPhotobashMode(): boolean {
+  if (typeof window === "undefined") return false;
+  return new URLSearchParams(window.location.search).get("photobash") === "1";
 }
 
 /**
@@ -244,6 +257,10 @@ export function applyCalibratedLaneOffset(
   viewpoint: SimulationViewpoint,
   direction: Direction
 ): number {
+  if (isPhotobashMode()) {
+    // Metric decals own the lanes — vehicles use the raw metric lane offset.
+    return rawOffset;
+  }
   if (isCmpAMode()) {
     // cmp=A (dx8.5): vehicles keep their raw metric lane offset; the single GLOBAL
     // +X shift is applied by the cmp=A group translate in SimulationScene (markings
