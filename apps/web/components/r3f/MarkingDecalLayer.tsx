@@ -5,15 +5,16 @@ import {
   type MarkingTextureKey,
 } from "./markingDecalDescriptors";
 
-// Phase 0 placeholder paint textures (worn white line / yellow / crosswalk / stop bar).
-// Swap to imagegen-extracted photoreal paint in the Phase 0 authoring follow-on.
+// Photoreal worn road-paint textures (codex imagegen, alpha where the paint is
+// worn through so the asphalt shows). Three colours cover the six marking kinds.
+const WHITE = "/simulation/r3f/assets/markings/white_paint.webp";
 const PLACEHOLDER_URLS: Record<MarkingTextureKey, string> = {
-  lane_dashed: "/simulation/r3f/assets/markings/lane_dashed.webp",
-  lane_solid: "/simulation/r3f/assets/markings/lane_solid.webp",
-  center_yellow: "/simulation/r3f/assets/markings/center_yellow.webp",
-  bus_border: "/simulation/r3f/assets/markings/bus_border.webp",
-  stop_bar: "/simulation/r3f/assets/markings/stop_bar.webp",
-  crosswalk: "/simulation/r3f/assets/markings/crosswalk.webp",
+  lane_dashed: WHITE,
+  lane_solid: WHITE,
+  center_yellow: "/simulation/r3f/assets/markings/yellow_paint.webp",
+  bus_border: "/simulation/r3f/assets/markings/blue_paint.webp",
+  stop_bar: WHITE,
+  crosswalk: WHITE,
 };
 
 type Props = { textureUrls?: Partial<Record<MarkingTextureKey, string>> };
