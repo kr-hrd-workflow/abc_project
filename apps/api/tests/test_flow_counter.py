@@ -178,13 +178,16 @@ class _FakeCv2:
     CAP_PROP_FPS = 5
     CAP_PROP_OPEN_TIMEOUT_MSEC = 53
     CAP_PROP_READ_TIMEOUT_MSEC = 54
+    CAP_FFMPEG = 1900
 
     def __init__(self, capture) -> None:
         self._capture = capture
         self.opened_with = None
+        self.open_params = None
 
-    def VideoCapture(self, source):
+    def VideoCapture(self, source, api=None, params=None):
         self.opened_with = source
+        self.open_params = params
         return self._capture
 
 
@@ -420,9 +423,12 @@ def test_stream_sets_capture_timeouts() -> None:
 
     list(source.stream("rtsp://cam", window_seconds=0.3))
 
-    props = {p for p, _ in cap.timeout_settings}
-    assert _FakeCv2.CAP_PROP_OPEN_TIMEOUT_MSEC in props
-    assert _FakeCv2.CAP_PROP_READ_TIMEOUT_MSEC in props
+    # Timeouts must be passed at CONSTRUCTION so the blocking OPEN is bounded,
+    # not only set() afterwards (which is too late for a stalled connect).
+    assert cv2.open_params is not None
+    assert _FakeCv2.CAP_PROP_OPEN_TIMEOUT_MSEC in cv2.open_params
+    assert _FakeCv2.CAP_PROP_READ_TIMEOUT_MSEC in cv2.open_params
+    assert 4000 in cv2.open_params
 
 
 def test_load_counting_lines_rejects_bad_configs() -> None:
