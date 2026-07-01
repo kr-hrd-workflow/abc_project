@@ -2,6 +2,9 @@ import { readFile } from "node:fs/promises";
 import { pathToFileURL } from "node:url";
 
 const DEFAULT_ENDPOINT_URL = "http://localhost:3000/api/real-sample-drop-in";
+const LOW_CONFIDENCE_THRESHOLD = 0.5;
+const STALE_SIGNAL_THRESHOLD_MS = 30_000;
+const QUEUE_THRESHOLD = 25;
 
 export async function checkRealSampleDropInFile({
   filePath,
@@ -147,6 +150,9 @@ function validateOfflinePayload(payload) {
   if (errors.length > 0) {
     return buildOfflineSummary({
       accepted: false,
+      replayStatus: areReplayReadyGuardrailErrors(errors)
+        ? "replay_input_ready"
+        : "rejected",
       operatorWorkflowStatus: "manual_review_required",
       selectedPolicy: "safety_hold",
       confidence: "low",
@@ -157,6 +163,7 @@ function validateOfflinePayload(payload) {
 
   return buildOfflineSummary({
     accepted: true,
+    replayStatus: "replay_input_ready",
     operatorWorkflowStatus: "approval_review_ready",
     selectedPolicy: "offline_shape_check",
     confidence: "high",
@@ -193,6 +200,7 @@ function validateOfflineEnvelope(envelope, errors) {
   if (provenanceError) {
     errors.push(provenanceError);
   }
+  addOfflinePolicyGuardrailErrors(envelope, errors);
 }
 
 function validateOfflineCameraFrame(frame, label, errors) {
@@ -276,6 +284,7 @@ function validateOfflineSignalSnapshot(signal, errors) {
 
 function buildOfflineSummary({
   accepted,
+  replayStatus,
   operatorWorkflowStatus,
   selectedPolicy,
   confidence,
@@ -285,7 +294,7 @@ function buildOfflineSummary({
   return {
     validationMode: "offline_shape_check",
     accepted,
-    replayStatus: accepted ? "replay_input_ready" : "rejected",
+    replayStatus,
     recommendation: null,
     operatorWorkflowStatus,
     selectedPolicy,
@@ -293,6 +302,84 @@ function buildOfflineSummary({
     requiredInputs,
     validationErrors
   };
+}
+
+function addOfflinePolicyGuardrailErrors(envelope, errors) {
+  const frames = Array.isArray(envelope.cameraFrames) ? envelope.cameraFrames : [];
+  const detections = frames.flatMap((frame) =>
+    Array.isArray(frame?.detections) ? frame.detections : []
+  );
+
+  if (
+    detections.some(
+      (detection) =>
+        typeof detection?.confidence === "number" &&
+        detection.confidence < LOW_CONFIDENCE_THRESHOLD
+    )
+  ) {
+    errors.push("detection confidence below 0.5");
+  }
+
+  if (isOfflineSignalSnapshotStale(envelope)) {
+    errors.push("signal snapshot older than 30 seconds");
+  }
+
+  if (hasOfflineConflictingQueueAxes(detections)) {
+    errors.push("conflicting_queue_axes");
+  }
+}
+
+function isOfflineSignalSnapshotStale(envelope) {
+  if (
+    typeof envelope?.receivedAt !== "string" ||
+    typeof envelope?.signalSnapshot?.capturedAt !== "string"
+  ) {
+    return false;
+  }
+
+  const receivedAt = Date.parse(envelope.receivedAt);
+  const capturedAt = Date.parse(envelope.signalSnapshot.capturedAt);
+
+  return (
+    Number.isFinite(receivedAt) &&
+    Number.isFinite(capturedAt) &&
+    receivedAt - capturedAt > STALE_SIGNAL_THRESHOLD_MS
+  );
+}
+
+function hasOfflineConflictingQueueAxes(detections) {
+  if (
+    detections.some(
+      (detection) => detection?.classLabel === "emergency_vehicle"
+    )
+  ) {
+    return false;
+  }
+
+  const northSouthQueue = maxVehicleQueueForDirections(detections, [
+    "north",
+    "south"
+  ]);
+  const eastWestQueue = maxVehicleQueueForDirections(detections, [
+    "east",
+    "west"
+  ]);
+
+  return northSouthQueue > QUEUE_THRESHOLD && eastWestQueue > QUEUE_THRESHOLD;
+}
+
+function maxVehicleQueueForDirections(detections, directions) {
+  return Math.max(
+    0,
+    ...detections
+      .filter(
+        (detection) =>
+          detection?.classLabel === "vehicle" &&
+          directions.includes(detection.direction) &&
+          Number.isInteger(detection.count)
+      )
+      .map((detection) => detection.count)
+  );
 }
 
 function getProhibitedSampleIdentifierError(envelope) {
@@ -342,6 +429,15 @@ function hasProhibitedSampleIdentifierError(errors) {
 }
 
 function inferOfflineRequiredInputs(errors) {
+  if (errors.includes("detection confidence below 0.5")) {
+    return ["higher_confidence_detection"];
+  }
+  if (errors.includes("signal snapshot older than 30 seconds")) {
+    return ["fresh_signal_snapshot"];
+  }
+  if (errors.includes("conflicting_queue_axes")) {
+    return ["signal_phase.remaining_seconds"];
+  }
   if (hasProhibitedSampleIdentifierError(errors)) {
     return ["authorized_real_sample_identifiers"];
   }
@@ -355,6 +451,18 @@ function inferOfflineRequiredInputs(errors) {
     return ["schemaVersion"];
   }
   return ["live-input.v1 envelope"];
+}
+
+function areReplayReadyGuardrailErrors(errors) {
+  return errors.every((error) =>
+    [
+      "detection confidence below 0.5",
+      "signal snapshot older than 30 seconds",
+      "conflicting_queue_axes",
+      "fixture_or_synthetic_sample_not_allowed",
+      "placeholder_or_demo_sample_not_allowed"
+    ].includes(error)
+  );
 }
 
 function requireNonEmptyString(value, label, errors) {

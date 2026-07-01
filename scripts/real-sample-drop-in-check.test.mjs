@@ -173,6 +173,65 @@ describe("real sample drop-in file check", () => {
       "placeholder_or_demo_sample_not_allowed"
     ]);
   });
+
+  test("routes low-confidence detections to manual review offline", async () => {
+    const lowConfidenceEnvelope = buildAuthorizedEnvelope();
+    lowConfidenceEnvelope.cameraFrames[0].detections[0].confidence = 0.42;
+
+    const result = await checkRealSampleDropInFile({
+      filePath: "low-confidence-sample.json",
+      offline: true,
+      readFile: async () => JSON.stringify(lowConfidenceEnvelope)
+    });
+
+    assert.equal(result.exitCode, 1);
+    assert.equal(result.summary.validationMode, "offline_shape_check");
+    assert.equal(result.summary.accepted, false);
+    assert.deepEqual(result.summary.requiredInputs, [
+      "higher_confidence_detection"
+    ]);
+    assert.deepEqual(result.summary.validationErrors, [
+      "detection confidence below 0.5"
+    ]);
+  });
+
+  test("routes stale signal snapshots to manual review offline", async () => {
+    const staleEnvelope = buildAuthorizedEnvelope();
+    staleEnvelope.receivedAt = "2026-07-01T09:10:40.000Z";
+    staleEnvelope.signalSnapshot.capturedAt = "2026-07-01T09:10:00.000Z";
+
+    const result = await checkRealSampleDropInFile({
+      filePath: "stale-signal-sample.json",
+      offline: true,
+      readFile: async () => JSON.stringify(staleEnvelope)
+    });
+
+    assert.equal(result.exitCode, 1);
+    assert.equal(result.summary.validationMode, "offline_shape_check");
+    assert.equal(result.summary.accepted, false);
+    assert.deepEqual(result.summary.requiredInputs, ["fresh_signal_snapshot"]);
+    assert.deepEqual(result.summary.validationErrors, [
+      "signal snapshot older than 30 seconds"
+    ]);
+  });
+
+  test("routes conflicting queue axes to manual review offline", async () => {
+    const conflictEnvelope = buildConflictingQueueAxesEnvelope();
+
+    const result = await checkRealSampleDropInFile({
+      filePath: "queue-conflict-sample.json",
+      offline: true,
+      readFile: async () => JSON.stringify(conflictEnvelope)
+    });
+
+    assert.equal(result.exitCode, 1);
+    assert.equal(result.summary.validationMode, "offline_shape_check");
+    assert.equal(result.summary.accepted, false);
+    assert.deepEqual(result.summary.requiredInputs, [
+      "signal_phase.remaining_seconds"
+    ]);
+    assert.deepEqual(result.summary.validationErrors, ["conflicting_queue_axes"]);
+  });
 });
 
 function buildAuthorizedEnvelope() {
@@ -208,4 +267,38 @@ function buildAuthorizedEnvelope() {
       manualOverride: false
     }
   };
+}
+
+function buildConflictingQueueAxesEnvelope() {
+  const envelope = buildAuthorizedEnvelope();
+  envelope.cameraFrames = [
+    {
+      cameraId: "authorized-cctv-multi-axis-01",
+      frameId: "authorized-frame-queue-conflict-0001",
+      capturedAt: "2026-07-01T09:10:00.000Z",
+      detections: [
+        {
+          objectId: "det-north-queue-001",
+          classLabel: "vehicle",
+          confidence: 0.93,
+          direction: "north",
+          laneId: "north_through_1",
+          count: 32,
+          waitingSeconds: 92
+        },
+        {
+          objectId: "det-east-queue-001",
+          classLabel: "vehicle",
+          confidence: 0.92,
+          direction: "east",
+          laneId: "east_through_1",
+          count: 31,
+          waitingSeconds: 88
+        }
+      ]
+    }
+  ];
+  envelope.signalSnapshot.currentPhase = "normal_cycle";
+  envelope.signalSnapshot.nextPhase = "east_priority";
+  return envelope;
 }

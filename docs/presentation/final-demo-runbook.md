@@ -353,9 +353,10 @@ Dashboard shortcut:
   npm run real-sample:check -- <live-input-envelope.json>
   ```
 
-  The `--offline` form checks replay-ready shape and fixture/synthetic or
-  placeholder/mock/example/demo provenance without a running web server. The
-  second form keeps the local web server running and POSTs to
+  The `--offline` form checks replay-ready shape, fixture/synthetic or
+  placeholder/mock/example/demo provenance, low-confidence detections, stale
+  signal snapshots, and conflicting queue axes without a running web server.
+  The second form keeps the local web server running and POSTs to
   `/api/real-sample-drop-in`; pass a second URL argument if validating against
   a different local endpoint.
 - Low-confidence detections are routed to `manual_review_required` even when

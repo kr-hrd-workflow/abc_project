@@ -41,7 +41,7 @@ describe("real sample intake package route", () => {
     );
     expect(body.prohibitedInputs).toContain("raw stream credentials");
     expect(body.submissionSteps).toContain(
-      "run npm run real-sample:check -- --offline <live-input-envelope.json> for server-free shape and provenance checks"
+      "run npm run real-sample:check -- --offline <live-input-envelope.json> for server-free shape, provenance, and guardrail checks"
     );
     expect(body.submissionSteps).toContain(
       "run npm run real-sample:check -- <live-input-envelope.json> for the same local drop-in validation path"

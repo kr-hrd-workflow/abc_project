@@ -1959,6 +1959,33 @@ Real-sample placeholder/mock provenance guard evidence:
 
 Next active slice:
 
+- [x] Mirror real-sample drop-in guardrails in offline file validation so sample
+      providers can catch weak or contradictory evidence before starting the
+      local web server.
+
+Offline guardrail mirror evidence:
+
+- `npm run real-sample:check -- --offline <live-input-envelope.json>` now
+  routes replay-ready but weak evidence to manual review before HTTP POST.
+- Offline mode now mirrors these drop-in guardrails:
+  - low-confidence detections -> `requiredInputs=["higher_confidence_detection"]`
+    and `validationErrors=["detection confidence below 0.5"]`
+  - stale signal snapshots -> `requiredInputs=["fresh_signal_snapshot"]` and
+    `validationErrors=["signal snapshot older than 30 seconds"]`
+  - conflicting queue axes -> `requiredInputs=["signal_phase.remaining_seconds"]`
+    and `validationErrors=["conflicting_queue_axes"]`
+- The real-sample intake package and presentation docs now describe offline
+  validation as shape, provenance, and guardrail checking.
+- TDD RED check:
+  - `node --test scripts/real-sample-drop-in-check.test.mjs`:
+    failed before implementation because offline mode accepted low-confidence,
+    stale-signal, and conflicting-queue payloads.
+- Targeted GREEN check:
+  - `node --test scripts/real-sample-drop-in-check.test.mjs`:
+    8 passed.
+
+Next active slice:
+
 - [ ] Once an authorized CCTV frame/video and signal timing sample are
       available, POST the real `live-input.v1` envelope to
       `/api/real-sample-drop-in` and refresh the same demo evidence,
