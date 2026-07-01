@@ -87,7 +87,10 @@ export const STAGE6_LIGHTING_PRESETS = {
     hemisphereIntensity: 0.72,
     ambientIntensity: 0.18,
     keyLightIntensity: 1.08,
-    streetlightIntensityScale: 0.16,
+    // Daytime: streetlights OFF. They are night-atmosphere fixtures; at 0.16 they
+    // cast warm orange pools that, amplified by the day Bloom, made the carriageway
+    // read as a glowing floating strip. Real midday streetlights are dark.
+    streetlightIntensityScale: 0,
     signalAccentIntensityScale: 0.52,
     signalLensEmissiveScale: 0.78,
     headlightResponseTarget: 0.34,
@@ -409,22 +412,26 @@ export function LightingRig({
         />
       ))}
 
-      {VEHICLE_EMISSIVE_ACCENTS.map((light) => (
-        <pointLight
-          key={light.id}
-          name={light.id}
-          position={light.position}
-          color={light.color}
-          intensity={
-            light.intensity *
-            (light.kind === "headlight"
-              ? presetConfig.headlightResponseTarget
-              : Math.max(0.52, presetConfig.headlightResponseTarget * 0.72))
-          }
-          distance={light.distance}
-          decay={2}
-        />
-      ))}
+      {/* Fake static vehicle-headlight/taillight accent pools — night-atmosphere
+          fixtures, OFF in the clear-day preset where they painted warm orange streaks
+          down the empty carriageway. The real DynamicVehicleLayer supplies day car light. */}
+      {presetConfig.name !== "day" &&
+        VEHICLE_EMISSIVE_ACCENTS.map((light) => (
+          <pointLight
+            key={light.id}
+            name={light.id}
+            position={light.position}
+            color={light.color}
+            intensity={
+              light.intensity *
+              (light.kind === "headlight"
+                ? presetConfig.headlightResponseTarget
+                : Math.max(0.52, presetConfig.headlightResponseTarget * 0.72))
+            }
+            distance={light.distance}
+            decay={2}
+          />
+        ))}
 
     </group>
   );

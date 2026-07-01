@@ -7,6 +7,8 @@ import { BuildingLayer } from "./BuildingLayer";
 import { CameraRig } from "./CameraRig";
 import { DynamicPedestrianLayer } from "./DynamicPedestrianLayer";
 import { DynamicVehicleLayer } from "./DynamicVehicleLayer";
+import { LimitedOrbitControls } from "./LimitedOrbitControls";
+import { MarkingDecalLayer } from "./MarkingDecalLayer";
 import { NightVehicleTreatment } from "./NightVehicleTreatment";
 import { PhotorealPlate } from "./PhotorealPlate";
 import { getCmpAGlobalXShiftMeters } from "./plateVehicleCalibration";
@@ -50,6 +52,16 @@ function resolveGuideMode(): boolean {
 function resolvePhotorealMode(): boolean {
   if (typeof window === "undefined") return false;
   return new URLSearchParams(window.location.search).get("photoreal") === "1";
+}
+
+// Photobash view: ?photobash=1 — NO plate. Renders the textured asphalt road
+// (vector markings suppressed) + MarkingDecalLayer textured marking decals (which
+// reuse the same metric marking specs, so they are structurally aligned with the
+// lanes/vehicles) + live vehicles, signals, lighting, and post-FX. Gated exactly
+// like ?guide=1 / ?photoreal=1, so the default and photoreal scenes are unaffected.
+function resolvePhotobashMode(): boolean {
+  if (typeof window === "undefined") return false;
+  return new URLSearchParams(window.location.search).get("photobash") === "1";
 }
 
 // DIAGNOSTIC COMPARISON (?cmp=A|B) — experimental, only meaningful with
@@ -123,6 +135,9 @@ export function SimulationScene({
   // real timeOfDay so day and night both read correctly. Post-FX mirrors the
   // normal scene (day: ACES pipeline; night: Bloom-only).
   const isPhotoreal = resolvePhotorealMode();
+  // Photobash mode (?photobash=1): plate-free textured-asphalt road + decal
+  // markings + live vehicles/signals. See resolvePhotobashMode.
+  const isPhotobash = resolvePhotobashMode();
   const cmpMode = resolveCmpMode();
   const plateChoice = resolvePlateChoice();
 
@@ -224,6 +239,56 @@ export function SimulationScene({
       <group name="structural-guide-scene">
         <CameraRig preset={guideCameraPreset} />
         <StructuralGuideLayer />
+      </group>
+    );
+  }
+
+  if (isPhotobash) {
+    // Plate-free photobash scene: textured asphalt road with its flat vector
+    // markings SUPPRESSED, and MarkingDecalLayer's textured marking decals on top
+    // (same metric specs → structurally aligned with the lanes the vehicles use).
+    // No PhotorealPlate. Vehicles, signals, lighting, and post-FX mirror the
+    // default scene.
+    //
+    // ?roadonly=1 strips buildings, vehicles, signals and post-FX, leaving only
+    // the metric road + lane decals. This is the clean base fed to imagegen for a
+    // photoreal "plate B": no building boxes in the input → imagegen invents real
+    // Gangnam buildings freely while the road geometry stays the alignment anchor.
+    const isRoadOnly =
+      typeof window !== "undefined" &&
+      new URLSearchParams(window.location.search).get("roadonly") === "1";
+    return (
+      <group name="photobash-scene">
+        <CameraRig preset="operatorWide" weather={weather} timeOfDay={timeOfDay} />
+        <LimitedOrbitControls />
+        <SceneLighting
+          isNight={isNight}
+          sceneSnapshot={sceneSnapshot}
+          qualityPreset={qualityPreset}
+          weather={weather}
+          timeOfDay={timeOfDay}
+          suppressAtmosphericScenery={isRoadOnly}
+        />
+        {!isRoadOnly && (
+          <BuildingLayerBoundary timeOfDay={timeOfDay} qualityPreset={qualityPreset} />
+        )}
+        <Suspense fallback={null}>
+          <RoadSurfaceLayer isNight={isNight} suppressVectorMarkings />
+        </Suspense>
+        <MarkingDecalLayer />
+        {!isRoadOnly && (
+          <DynamicVehicleLayerWithWeather
+            isNight={isNight}
+            timeOfDay={timeOfDay}
+            sceneSnapshot={sceneSnapshot}
+            qualityPreset={qualityPreset}
+            viewpoint="wide"
+          />
+        )}
+        {!isRoadOnly && <SignalLayer signals={sceneSnapshot.signals} />}
+        {!isRoadOnly && (
+          <SceneFinishing isNight={isNight} qualityPreset={qualityPreset} />
+        )}
       </group>
     );
   }

@@ -213,9 +213,11 @@ export const BUILDING_FOOTPRINTS: BuildingFootprint[] = [
   // ───── Receding EAST along 테헤란로 (+x): progressively taller office towers ─────
   // Teheran Valley — glass towers grow taller into the distance (peaking far off).
   // Pulled to the 테헤란로 frontage (near-z ≈ 22.5 m), alternating N/S sides.
+  // teheran-e1-near/e3 nudged +25/+16m east (2026-07-01) to open a clean gap for
+  // teheran-frontage-n1's hero footprint below — was overlapping ne-corner-commercial.
   {
     id: "teheran-e1-near",
-    position: [74, 36, -37],
+    position: [99, 36, -37],
     size: [30, 72, 30],
     form: "glassTower",
     tint: "#40607a"
@@ -229,7 +231,7 @@ export const BUILDING_FOOTPRINTS: BuildingFootprint[] = [
   },
   {
     id: "teheran-e3",
-    position: [176, 66, -38],
+    position: [192, 66, -38],
     size: [30, 132, 32],
     form: "glassTower",
     tint: "#456078"
@@ -243,18 +245,21 @@ export const BUILDING_FOOTPRINTS: BuildingFootprint[] = [
   },
   // 테헤란로 frontage fillers — line both kerbs of the avenue (the previously bare
   // east plaza). Mid-rise near the junction, then receding glass towers eastward.
+  // n1/s1 narrowed 30m->22m and nudged east (2026-07-01) — at 30m wide they
+  // overlapped ne-corner-commercial/se-corner-retail's hero footprints by 12-15m;
+  // n1 also needed teheran-e1-near/n2/n3/e3 nudged further out to open the gap.
   {
     id: "teheran-frontage-n1",
-    position: [60, 27, -36],
-    size: [30, 54, 26],
+    position: [72, 27, -36],
+    size: [22, 54, 26],
     form: "midriseCommercial",
     tint: "#586472",
     billboards: true
   },
   {
     id: "teheran-frontage-s1",
-    position: [60, 30, 36],
-    size: [30, 60, 26],
+    position: [69, 30, 36],
+    size: [22, 60, 26],
     form: "midriseCommercial",
     tint: "#566270",
     billboards: true
@@ -268,14 +273,14 @@ export const BUILDING_FOOTPRINTS: BuildingFootprint[] = [
   },
   {
     id: "teheran-frontage-n2",
-    position: [108, 46, -37],
+    position: [130, 46, -37],
     size: [30, 92, 30],
     form: "glassTower",
     tint: "#425e78"
   },
   {
     id: "teheran-frontage-n3",
-    position: [145, 55, -37],
+    position: [161, 55, -37],
     size: [30, 110, 30],
     form: "glassTower",
     tint: "#3f5872"
@@ -299,18 +304,21 @@ export const BUILDING_FOOTPRINTS: BuildingFootprint[] = [
   },
   // 서초대로 frontage fillers — line the avenue both sides so the west arm is a
   // continuous wall instead of isolated towers with bare ground between.
+  // n1/s1 narrowed and nudged further from the intersection (2026-07-01) — at
+  // their original width/position they overlapped nw-corner-megabox/sw-corner-retail's
+  // hero footprints by 12-16m; now sit centered in the gap to seocheo-w-mid/s2.
   {
     id: "seocheo-n1",
-    position: [-64, 28, -36],
-    size: [28, 56, 28],
+    position: [-76.5, 28, -36],
+    size: [27, 56, 28],
     form: "midriseCommercial",
     tint: "#586470",
     billboards: true
   },
   {
     id: "seocheo-s1",
-    position: [-60, 29, 36],
-    size: [32, 58, 28],
+    position: [-74.5, 29, 36],
+    size: [27, 58, 28],
     form: "midriseCommercial",
     tint: "#5a6470",
     billboards: true

@@ -1825,10 +1825,13 @@ describe("DashboardShell", () => {
     const lengthAttr = viewport.getAttribute("data-r3f-corridor-length-meters");
 
     expect(lengthAttr).toBeTruthy();
-    expect(lengthAttr).toContain("north:140");
-    expect(lengthAttr).toContain("south:120");
-    expect(lengthAttr).toContain("east:140");
-    expect(lengthAttr).toContain("west:140");
+    // Base intersectionTruth lengths (140/120/140/140) plus the +240m render
+    // extension (roadGeometry.ts CORRIDOR_RENDER_EXTENSION_M) so corridors
+    // don't dead-end within the camera view.
+    expect(lengthAttr).toContain("north:380");
+    expect(lengthAttr).toContain("south:360");
+    expect(lengthAttr).toContain("east:380");
+    expect(lengthAttr).toContain("west:380");
   });
 
   test("keeps the fallback viewport when R3F is disabled", () => {
