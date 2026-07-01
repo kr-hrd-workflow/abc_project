@@ -11,7 +11,7 @@ export type SyntheticDetectionType =
 export type SyntheticDetection = {
   type: SyntheticDetectionType;
   lane: string;
-  direction: Direction;
+  direction: Direction | null;
   count: number;
   confidence: number;
   distanceMeters?: number;
@@ -30,6 +30,7 @@ export type SyntheticSignalSnapshot = {
 export type SyntheticExpectedOutcome = {
   recommendation:
     | "emergency_priority"
+    | "safety_hold"
     | "pedestrian_priority"
     | "blocked_response"
     | "normal_cycle";

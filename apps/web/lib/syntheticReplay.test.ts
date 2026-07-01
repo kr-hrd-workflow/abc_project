@@ -29,8 +29,35 @@ describe("buildSyntheticReplayTimeline", () => {
     const timeline = buildSyntheticReplayTimeline(dataset);
 
     expect(timeline.find((frame) => frame.family === "emergency")?.summary.emergencyDetected).toBe(true);
+    expect(timeline.find((frame) => frame.family === "emergency")?.summary.emergencyDirectionKnown).toBe(true);
     expect(timeline.find((frame) => frame.family === "pedestrian")?.summary.pedestrianWaiting).toBe(true);
     expect(timeline.find((frame) => frame.family === "blocked")?.summary.blockedDetected).toBe(true);
     expect(timeline.every((frame) => frame.summary.maxQueue >= 0)).toBe(true);
+  });
+
+  test("marks emergency direction as unknown when detection direction is missing", () => {
+    const dataset = generateSyntheticScenarioDataset({ caseCount: 4, seed: 41 });
+    const emergency = dataset.find((scenario) => scenario.family === "emergency");
+
+    expect(emergency).toBeTruthy();
+
+    const unknownDirectionDataset = dataset.map((scenario) =>
+      scenario.id === emergency!.id
+        ? {
+            ...scenario,
+            detections: scenario.detections.map((detection) =>
+              detection.type === "emergency_vehicle"
+                ? { ...detection, direction: null }
+                : detection
+            )
+          }
+        : scenario
+    );
+    const emergencyFrame = buildSyntheticReplayTimeline(unknownDirectionDataset).find(
+      (frame) => frame.family === "emergency"
+    );
+
+    expect(emergencyFrame?.summary.emergencyDetected).toBe(true);
+    expect(emergencyFrame?.summary.emergencyDirectionKnown).toBe(false);
   });
 });

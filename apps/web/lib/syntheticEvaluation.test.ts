@@ -68,4 +68,38 @@ describe("evaluateSyntheticReplayTimeline", () => {
       "blocked_response"
     );
   });
+
+  test("does not guess emergency priority when emergency direction is unknown", () => {
+    const dataset = generateSyntheticScenarioDataset({ caseCount: 4, seed: 404 });
+    const emergencyFrame = buildSyntheticReplayTimeline(dataset).find(
+      (frame) => frame.family === "emergency"
+    );
+
+    expect(emergencyFrame).toBeTruthy();
+
+    const unknownDirectionFrame = {
+      ...emergencyFrame!,
+      expected: {
+        ...emergencyFrame!.expected,
+        recommendation: "safety_hold" as const,
+        mustIncludeReason: "emergency_vehicle_direction_unknown",
+        mustNotRecommend: ["emergency_priority"]
+      },
+      summary: {
+        ...emergencyFrame!.summary,
+        emergencyDetected: true,
+        emergencyDirectionKnown: false
+      },
+      input: {
+        ...emergencyFrame!.input,
+        detections: emergencyFrame!.input.detections.map((detection) =>
+          detection.type === "emergency_vehicle"
+            ? { ...detection, direction: null }
+            : detection
+        )
+      }
+    };
+
+    expect(recommendFromSyntheticFrame(unknownDirectionFrame)).toBe("safety_hold");
+  });
 });

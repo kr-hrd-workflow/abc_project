@@ -2015,6 +2015,31 @@ Real-sample file-check blocked-reason evidence:
 
 Next active slice:
 
+- [x] Align the frontend synthetic replay evaluator with the backend policy
+      rule that an emergency vehicle without known direction must not be
+      guessed into an emergency-priority lane.
+
+Frontend/backend policy alignment evidence:
+
+- `SyntheticDetection.direction` can now represent `null` for synthetic
+  replay-only evidence gaps, while `live-input.v1` still requires a supported
+  direction before it becomes replay-compatible real-source input.
+- `buildSyntheticReplayTimeline()` now derives
+  `summary.emergencyDirectionKnown`.
+- `recommendFromSyntheticFrame()` now keeps `blocked_response` as the first
+  safety gate, then returns `safety_hold` for emergency detections whose
+  direction is unknown, matching the backend `safety_hold` behavior instead of
+  guessing `emergency_priority`.
+- TDD RED check:
+  - `npm --workspace apps/web run test -- syntheticReplay.test.ts syntheticEvaluation.test.ts`:
+    failed before implementation because `emergencyDirectionKnown` was missing
+    and unknown-direction emergency frames returned `emergency_priority`.
+- Targeted GREEN check:
+  - `npm --workspace apps/web run test -- syntheticReplay.test.ts syntheticEvaluation.test.ts`:
+    8 passed.
+
+Next active slice:
+
 - [ ] Once an authorized CCTV frame/video and signal timing sample are
       available, POST the real `live-input.v1` envelope to
       `/api/real-sample-drop-in` and refresh the same demo evidence,

@@ -9,6 +9,7 @@ import type {
 export type SyntheticReplaySummary = {
   maxQueue: number;
   emergencyDetected: boolean;
+  emergencyDirectionKnown: boolean;
   pedestrianWaiting: boolean;
   blockedDetected: boolean;
   activePhase: SyntheticSignalSnapshot["currentPhase"];
@@ -52,6 +53,10 @@ export function buildSyntheticReplayTimeline(
 }
 
 function buildReplaySummary(scenarioCase: SyntheticScenarioCase): SyntheticReplaySummary {
+  const emergencyDetections = scenarioCase.detections.filter(
+    (detection) => detection.type === "emergency_vehicle"
+  );
+
   return {
     maxQueue: Math.max(
       0,
@@ -59,8 +64,9 @@ function buildReplaySummary(scenarioCase: SyntheticScenarioCase): SyntheticRepla
         .filter((detection) => detection.type === "vehicle")
         .map((detection) => detection.count)
     ),
-    emergencyDetected: scenarioCase.detections.some(
-      (detection) => detection.type === "emergency_vehicle"
+    emergencyDetected: emergencyDetections.length > 0,
+    emergencyDirectionKnown: emergencyDetections.every(
+      (detection) => detection.direction !== null
     ),
     pedestrianWaiting: scenarioCase.detections.some(
       (detection) => detection.type === "pedestrian" && (detection.waitingSeconds ?? 0) >= 60

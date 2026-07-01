@@ -78,6 +78,9 @@ export function recommendFromSyntheticFrame(
   frame: SyntheticReplayFrame
 ): SyntheticEvaluationRecommendation {
   if (frame.summary.blockedDetected) return "blocked_response";
+  if (frame.summary.emergencyDetected && !frame.summary.emergencyDirectionKnown) {
+    return "safety_hold";
+  }
   if (frame.summary.emergencyDetected) return "emergency_priority";
   if (frame.summary.pedestrianWaiting) return "pedestrian_priority";
   return "normal_cycle";
