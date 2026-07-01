@@ -62,6 +62,7 @@ describe("real sample drop-in file check", () => {
       selectedPolicy: "emergency_clearance",
       confidence: "high",
       requiredInputs: [],
+      blockedReasons: [],
       validationErrors: []
     });
     assert.match(result.output, /accepted=true/);
@@ -93,7 +94,11 @@ describe("real sample drop-in file check", () => {
     assert.equal(result.exitCode, 1);
     assert.equal(result.summary.operatorWorkflowStatus, "manual_review_required");
     assert.deepEqual(result.summary.requiredInputs, ["fresh_signal_snapshot"]);
+    assert.deepEqual(result.summary.blockedReasons, [
+      "signal snapshot older than 30 seconds"
+    ]);
     assert.match(result.output, /accepted=false/);
+    assert.match(result.output, /blockedReasons=signal snapshot older than 30 seconds/);
     assert.match(result.output, /validationErrors=signal snapshot older than 30 seconds/);
   });
 
@@ -115,6 +120,7 @@ describe("real sample drop-in file check", () => {
     assert.equal(result.summary.operatorWorkflowStatus, "approval_review_ready");
     assert.equal(result.summary.selectedPolicy, "offline_shape_check");
     assert.deepEqual(result.summary.requiredInputs, []);
+    assert.deepEqual(result.summary.blockedReasons, []);
     assert.deepEqual(result.summary.validationErrors, []);
     assert.match(result.output, /validationMode=offline_shape_check/);
   });
@@ -258,6 +264,9 @@ describe("real sample drop-in file check", () => {
     assert.equal(result.summary.operatorWorkflowStatus, "manual_review_required");
     assert.equal(result.summary.selectedPolicy, "emergency_clearance");
     assert.deepEqual(result.summary.requiredInputs, ["operator_conflict_review"]);
+    assert.deepEqual(result.summary.blockedReasons, [
+      "emergency priority conflicts with waiting pedestrian"
+    ]);
     assert.deepEqual(result.summary.validationErrors, [
       "emergency priority conflicts with waiting pedestrian"
     ]);

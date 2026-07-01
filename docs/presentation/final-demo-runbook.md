@@ -359,6 +359,9 @@ Dashboard shortcut:
   without a running web server. The second form keeps the local web server
   running and POSTs to `/api/real-sample-drop-in`; pass a second URL argument
   if validating against a different local endpoint.
+- The file check output includes `requiredInputs`, `blockedReasons`, and
+  `validationErrors`, so a manual-review result can be audited without opening
+  source code.
 - Low-confidence detections are routed to `manual_review_required` even when
   the envelope can be normalized and replayed; the route returns the required
   input hint `higher_confidence_detection` instead of trusting the

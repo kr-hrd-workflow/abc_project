@@ -1990,6 +1990,31 @@ Offline guardrail mirror evidence:
 
 Next active slice:
 
+- [x] Add blocked reasons to the real-sample file-check summary so offline and
+      online manual-review results are auditable from the CLI output.
+
+Real-sample file-check blocked-reason evidence:
+
+- `checkRealSampleDropInFile()` now includes `blockedReasons` in both online
+  POST summaries and offline shape/guardrail summaries.
+- The CLI output now prints `blockedReasons=...` alongside `requiredInputs`
+  and `validationErrors`.
+- Online summaries copy `operatorWorkflow.blockedReasons` from
+  `/api/real-sample-drop-in`.
+- Offline summaries derive `blockedReasons` from the same guardrail errors
+  used for `validationErrors`.
+- Presentation docs now state that manual-review file-check output can be
+  audited without opening source code.
+- TDD RED check:
+  - `node --test scripts/real-sample-drop-in-check.test.mjs`:
+    failed before implementation because `blockedReasons` was missing from the
+    summary and output.
+- Targeted GREEN check:
+  - `node --test scripts/real-sample-drop-in-check.test.mjs`:
+    9 passed.
+
+Next active slice:
+
 - [ ] Once an authorized CCTV frame/video and signal timing sample are
       available, POST the real `live-input.v1` envelope to
       `/api/real-sample-drop-in` and refresh the same demo evidence,

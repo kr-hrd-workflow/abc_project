@@ -104,6 +104,9 @@ function summarizeValidation(body) {
     requiredInputs: Array.isArray(body?.operatorWorkflow?.requiredInputs)
       ? body.operatorWorkflow.requiredInputs
       : [],
+    blockedReasons: Array.isArray(body?.operatorWorkflow?.blockedReasons)
+      ? body.operatorWorkflow.blockedReasons
+      : [],
     validationErrors: Array.isArray(body?.validationErrors)
       ? body.validationErrors
       : []
@@ -120,6 +123,7 @@ function formatValidationSummary(summary) {
     `selectedPolicy=${summary.selectedPolicy}`,
     `confidence=${summary.confidence}`,
     `requiredInputs=${summary.requiredInputs.join(",") || "none"}`,
+    `blockedReasons=${summary.blockedReasons.join("; ") || "none"}`,
     `validationErrors=${summary.validationErrors.join("; ") || "none"}`
   ].join("\n");
 }
@@ -168,6 +172,7 @@ function validateOfflinePayload(payload) {
     selectedPolicy: "offline_shape_check",
     confidence: "high",
     requiredInputs: [],
+    blockedReasons: [],
     validationErrors: []
   });
 }
@@ -289,8 +294,11 @@ function buildOfflineSummary({
   selectedPolicy,
   confidence,
   requiredInputs,
+  blockedReasons,
   validationErrors
 }) {
+  const reasons = blockedReasons ?? validationErrors;
+
   return {
     validationMode: "offline_shape_check",
     accepted,
@@ -300,6 +308,7 @@ function buildOfflineSummary({
     selectedPolicy,
     confidence,
     requiredInputs,
+    blockedReasons: reasons,
     validationErrors
   };
 }

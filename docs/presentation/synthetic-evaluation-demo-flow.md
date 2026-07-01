@@ -459,7 +459,8 @@ contract:
   server-free first pass for replay-ready shape and fixture/synthetic or
   placeholder/mock/example/demo provenance, plus low-confidence, stale-signal,
   conflicting-queue, and emergency/pedestrian conflict guardrails before the
-  local POST validation step.
+  local POST validation step. The compact output includes `blockedReasons` for
+  operator audit.
 - `GET /api/live-input-submission-schema`: replay-ready `live-input.v1` JSON
   Schema is available for authorized sample providers.
 - `GET /api/llm-explanation-contract`: LLM role is explanation/review only;
