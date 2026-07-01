@@ -90,4 +90,44 @@ describe("live input adapter contract", () => {
       })
     ).toThrow("detection confidence must be between 0 and 1");
   });
+
+  test("keeps unknown emergency direction as replay evidence instead of rejecting it", () => {
+    const envelope = normalizeLiveInputEnvelope({
+      schemaVersion: "live-input.v1",
+      intersectionId: "INT-SEO-0001",
+      receivedAt: "2026-06-30T13:00:00.000Z",
+      cameraFrames: [
+        {
+          cameraId: "east_cam_01",
+          frameId: "frame-0001",
+          capturedAt: "2026-06-30T13:00:00.000Z",
+          detections: [
+            {
+              objectId: "ev-unknown-direction",
+              classLabel: "emergency_vehicle",
+              confidence: 0.97,
+              direction: null,
+              laneId: "east_approach_1",
+              count: 1,
+              distanceMeters: 82
+            }
+          ]
+        }
+      ],
+      signalSnapshot: {
+        controllerId: "seo-signal-01",
+        capturedAt: "2026-06-30T13:00:00.000Z",
+        currentPhase: "normal_cycle",
+        remainingSeconds: 18,
+        nextPhase: "east_priority",
+        controllerMode: "adaptive",
+        manualOverride: false
+      }
+    });
+
+    expect(toSyntheticReplayInput(envelope).detections[0]).toMatchObject({
+      type: "emergency_vehicle",
+      direction: null
+    });
+  });
 });

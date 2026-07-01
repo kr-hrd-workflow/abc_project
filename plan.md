@@ -49,12 +49,18 @@ Current maintenance slice:
 - [x] Add the policy contract drift check to the root `npm run verify` path.
 - [x] Extend the drift check to backend/web scorecard required evidence fields.
 - [x] Add policy contract checker tests to the root `npm run verify` path.
+- [x] Align `live-input.v1` unknown emergency direction handling with backend
+      `safety_hold` behavior.
 
 Maintenance evidence:
 
 - `node --test scripts/policy-scorecard-contract-check.test.mjs`: 4 passed.
 - `npm run policy-contract:check`: `policy scorecard contract aligned`.
 - `npm run test:package-scripts`: 1 passed.
+- `npm --workspace apps/web run test -- liveInputContract.test.ts liveInputSubmissionSchema.test.ts`:
+  4 passed.
+- `npm --workspace apps/web run test -- syntheticLiveInputDataset.test.ts realSampleDropIn.test.ts`:
+  19 passed.
 
 ## Historical Plan: Synthetic Scenario Evaluation
 

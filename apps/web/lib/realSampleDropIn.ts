@@ -173,6 +173,31 @@ export function validateRealSampleDropInEnvelope(
 
     const recommendation = recommendFromLiveReplayInput(replayInput.detections);
 
+    if (
+      recommendation === "safety_hold" &&
+      hasUnknownEmergencyDirection(replayInput.detections)
+    ) {
+      const requiredInputs = ["emergency_vehicle.direction"];
+      const validationErrors = ["emergency_vehicle_direction_unknown"];
+      return {
+        source: "real_sample_drop_in_validation",
+        schemaVersion: "real-sample-drop-in.v1",
+        accepted: false,
+        adapterBoundary: "live-input.v1",
+        replayStatus: "replay_input_ready",
+        recommendation,
+        operatorWorkflowStatus: "manual_review_required",
+        operatorWorkflow: buildOperatorWorkflowSummary({
+          status: "manual_review_required",
+          recommendation,
+          requiredInputs,
+          validationErrors
+        }),
+        requiredInputs,
+        validationErrors
+      };
+    }
+
     if (hasConflictingQueueAxes(replayInput.detections)) {
       const requiredInputs = ["signal_phase.remaining_seconds"];
       const validationErrors = ["conflicting_queue_axes"];
@@ -360,6 +385,15 @@ function hasEmergencyPedestrianConflict(
   );
 
   return hasEmergency && hasWaitingPedestrian;
+}
+
+function hasUnknownEmergencyDirection(
+  detections: ReturnType<typeof toSyntheticReplayInput>["detections"]
+) {
+  return detections.some(
+    (detection) =>
+      detection.type === "emergency_vehicle" && detection.direction === null
+  );
 }
 
 function hasConflictingQueueAxes(

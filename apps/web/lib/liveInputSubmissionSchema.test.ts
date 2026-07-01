@@ -38,6 +38,15 @@ describe("live input submission schema export", () => {
         .properties.confidence
     ).toEqual({ type: "number", minimum: 0, maximum: 1 });
     expect(
+      artifact.jsonSchema.properties.cameraFrames.items.properties.detections.items
+        .properties.direction
+    ).toEqual({
+      anyOf: [
+        { type: "string", enum: ["north", "south", "east", "west"] },
+        { type: "null" }
+      ]
+    });
+    expect(
       artifact.jsonSchema.properties.signalSnapshot.properties.currentPhase.enum
     ).toContain("normal_cycle");
     expect(artifact.guardrailNotes).toContain(
@@ -45,6 +54,9 @@ describe("live input submission schema export", () => {
     );
     expect(artifact.guardrailNotes).toContain(
       "schema requires a signal snapshot because /api/real-sample-drop-in validates replay-ready submissions"
+    );
+    expect(artifact.guardrailNotes).toContain(
+      "emergency_vehicle detections may use null direction; validation routes that evidence gap to safety_hold manual review"
     );
     expect(artifact.guardrailNotes).toContain(
       "real-sample drop-in validation routes fixture, synthetic, placeholder, mock, example, or demo sample identifiers to manual review"

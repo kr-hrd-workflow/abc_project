@@ -13,7 +13,7 @@ export type LiveDetection = {
   objectId: string;
   classLabel: LiveDetectionClassLabel;
   confidence: number;
-  direction: Direction;
+  direction: Direction | null;
   laneId: string;
   count: number;
   distanceMeters?: number;
@@ -133,6 +133,11 @@ function normalizeCameraFrame(input: unknown): LiveCameraFrame {
 function normalizeDetection(input: unknown): LiveDetection {
   const detection = requireRecord(input, "detection");
   const confidence = requireFiniteNumber(detection.confidence, "detection confidence");
+  const classLabel = requireOneOf(
+    detection.classLabel,
+    DETECTION_CLASS_LABELS,
+    "classLabel"
+  );
 
   if (confidence < 0 || confidence > 1) {
     throw new Error("detection confidence must be between 0 and 1");
@@ -140,13 +145,12 @@ function normalizeDetection(input: unknown): LiveDetection {
 
   return {
     objectId: requireNonEmptyString(detection.objectId, "objectId"),
-    classLabel: requireOneOf(
-      detection.classLabel,
-      DETECTION_CLASS_LABELS,
-      "classLabel"
-    ),
+    classLabel,
     confidence,
-    direction: requireOneOf(detection.direction, DIRECTIONS, "direction"),
+    direction:
+      classLabel === "emergency_vehicle" && detection.direction === null
+        ? null
+        : requireOneOf(detection.direction, DIRECTIONS, "direction"),
     laneId: requireNonEmptyString(detection.laneId, "laneId"),
     count: requireNonNegativeInteger(detection.count, "count"),
     ...(detection.distanceMeters === undefined

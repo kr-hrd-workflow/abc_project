@@ -88,7 +88,11 @@ Required fields:
 - `classLabel`: one of `vehicle`, `emergency_vehicle`, `pedestrian`,
   `stalled_vehicle`.
 - `confidence`: number from `0` to `1`.
-- `direction`: one of `north`, `south`, `east`, `west`.
+- `direction`: one of `north`, `south`, `east`, `west`. For
+  `emergency_vehicle` only, `null` is accepted when the detector can confirm an
+  emergency vehicle but cannot determine approach direction yet. That payload
+  stays replay-compatible and is routed to `safety_hold` manual review with
+  required input `emergency_vehicle.direction`.
 - `laneId`: lane or approach identifier mapped into the local intersection
   convention.
 - `count`: non-negative integer. Use `1` for individual object detections.
@@ -270,6 +274,10 @@ The local normalizer rejects:
 - detection confidence outside `0..1`
 - negative or non-integer counts
 - missing signal state when replay-compatible conversion is requested
+
+The local validator does not reject `emergency_vehicle` detections with `null`
+direction. It keeps them replay-compatible and routes them to manual review
+instead of selecting an emergency-priority lane.
 
 ## Example
 

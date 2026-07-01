@@ -206,6 +206,34 @@ describe("real sample drop-in readiness", () => {
     });
   });
 
+  test("requires manual review when an emergency vehicle direction is unknown", () => {
+    const unknownDirectionEnvelope = buildLiveInputEnvelope();
+    unknownDirectionEnvelope.cameraFrames[0].detections[0].direction = null;
+
+    const result = validateRealSampleDropInEnvelope(unknownDirectionEnvelope);
+
+    expect(result).toEqual({
+      source: "real_sample_drop_in_validation",
+      schemaVersion: "real-sample-drop-in.v1",
+      accepted: false,
+      adapterBoundary: "live-input.v1",
+      replayStatus: "replay_input_ready",
+      recommendation: "safety_hold",
+      operatorWorkflowStatus: "manual_review_required",
+      operatorWorkflow: {
+        source: "policy_scorecard",
+        contractEndpoint: "/api/policy-scorecard-contract",
+        status: "manual_review_required",
+        selectedPolicy: "safety_hold",
+        confidence: "low",
+        requiredInputs: ["emergency_vehicle.direction"],
+        blockedReasons: ["emergency_vehicle_direction_unknown"]
+      },
+      requiredInputs: ["emergency_vehicle.direction"],
+      validationErrors: ["emergency_vehicle_direction_unknown"]
+    });
+  });
+
   test("requires manual review for conflicting queue axes", () => {
     const conflictEnvelope = buildConflictingQueueAxesEnvelope();
 

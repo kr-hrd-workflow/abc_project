@@ -150,6 +150,9 @@ Current maintenance evidence:
   `npm run policy-contract:check` before web tests and build, so checker
   regressions and actual drift are both caught during the standard local
   verification path.
+- `live-input.v1` now preserves unknown emergency direction as replay-ready
+  evidence and routes it to `safety_hold` manual review instead of rejecting
+  the payload or guessing an emergency-priority lane.
 
 ## Recommended Next Work
 

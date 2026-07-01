@@ -310,6 +310,14 @@ export function recommendFromLiveReplayInput(
   if (detections.some((detection) => detection.type === "stalled_vehicle")) {
     return "blocked_response";
   }
+  if (
+    detections.some(
+      (detection) =>
+        detection.type === "emergency_vehicle" && detection.direction === null
+    )
+  ) {
+    return "safety_hold";
+  }
   if (detections.some((detection) => detection.type === "emergency_vehicle")) {
     return "emergency_priority";
   }

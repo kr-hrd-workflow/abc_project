@@ -63,8 +63,13 @@ export function buildLiveInputSubmissionSchemaExport({
                     },
                     confidence: { type: "number", minimum: 0, maximum: 1 },
                     direction: {
-                      type: "string",
-                      enum: ["north", "south", "east", "west"]
+                      anyOf: [
+                        {
+                          type: "string",
+                          enum: ["north", "south", "east", "west"]
+                        },
+                        { type: "null" }
+                      ]
                     },
                     laneId: { type: "string", minLength: 1 },
                     count: { type: "integer", minimum: 0 },
@@ -125,6 +130,7 @@ export function buildLiveInputSubmissionSchemaExport({
       "schema allows confidence values from 0 to 1; policy guardrail routes values below 0.5 to manual review",
       "schema accepts date-time strings; policy guardrail routes stale signal snapshots to manual review",
       "schema requires a signal snapshot because /api/real-sample-drop-in validates replay-ready submissions",
+      "emergency_vehicle detections may use null direction; validation routes that evidence gap to safety_hold manual review",
       "real-sample drop-in validation routes fixture, synthetic, placeholder, mock, example, or demo sample identifiers to manual review",
       "schema shape validation does not imply autonomous signal control"
     ]

@@ -171,6 +171,21 @@ describe("synthetic live-input JSON dataset", () => {
     ).toBe("blocked_response");
   });
 
+  test("returns safety hold for emergency live-input replay detections without direction", () => {
+    expect(
+      recommendFromLiveReplayInput([
+        {
+          type: "emergency_vehicle",
+          lane: "east_approach_1",
+          direction: null,
+          count: 1,
+          confidence: 0.97,
+          distanceMeters: 80
+        }
+      ])
+    ).toBe("safety_hold");
+  });
+
   test("recommends queue relief for high single-axis live-input replay detections", () => {
     expect(
       recommendFromLiveReplayInput([
