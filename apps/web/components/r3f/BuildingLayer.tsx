@@ -52,6 +52,14 @@ import {
   type BuildingFootprint,
   type BuildingForm
 } from "./buildingFootprints";
+import {
+  allHeroFaceTexturePaths,
+  computeHeroBuildingHeight,
+  coverFitUv,
+  HERO_BUILDINGS,
+  HERO_BUILDING_IDS,
+  HERO_FACE_KEYS
+} from "./heroBuildingFacades";
 import type { Stage6QualityPreset, Stage6TimeOfDay } from "./stage6Quality";
 
 // ── Facade texture assets (served from public/) ───────────────────────────────
@@ -93,6 +101,7 @@ if (
   useTexture.preload(FACADE_NIGHT_TEXTURE_PATH);
   useTexture.preload(FACADE_SIGNAGE_DAY_TEXTURE_PATH);
   for (const p of FACADE_ELEVATION_PATHS) useTexture.preload(p);
+  for (const p of allHeroFaceTexturePaths()) useTexture.preload(p);
 }
 
 // ── jsdom guard ───────────────────────────────────────────────────────────────
@@ -510,6 +519,13 @@ function BuildingVolumeSet({ isNight }: { isNight: boolean }) {
   ]) as Texture[];
   const [dayTex, nightTex, signageDayTex] = texAll;
 
+  // Hero buildings: a few prominent footprints get a DISTINCT imagegen photo
+  // per real-world wall (front/left/right/back) instead of one elevation image
+  // repeated on every side. Day only — night keeps the normal shared-tint
+  // pipeline below (no night photoset yet). Loaded as a flat array; index
+  // heroIdx*4 + faceIdx matches allHeroFaceTexturePaths()'s nested order.
+  const heroTexFlat = useTexture(allHeroFaceTexturePaths()) as Texture[];
+
   // Merge every sub-volume by material group → ~6 geometries for the whole city.
   // Day mid-rise (concrete) shafts are pulled out into a per-building facade pool
   // (byPool, keyed by pool index) so each carries a distinct full-elevation facade
@@ -530,6 +546,7 @@ function BuildingVolumeSet({ isNight }: { isNight: boolean }) {
     };
 
     for (const fp of BUILDING_FOOTPRINTS) {
+      if (!isNight && HERO_BUILDING_IDS.has(fp.id)) continue;
       const hash = hashId(fp.id);
       const offset: [number, number] = [(hash % 7) / 7, ((hash >> 3) % 5) / 5];
       for (const vol of composeBuildingVolumes(fp)) {
@@ -611,6 +628,77 @@ function BuildingVolumeSet({ isNight }: { isNight: boolean }) {
     [texAll]
   );
 
+  // Hero building meshes: one BoxGeometry per hero footprint with a material
+  // ARRAY (front/left/right/back distinct textures + plain roof material),
+  // sized from the front photo's own pixel aspect ratio so the box's real
+  // proportions match the photo instead of stretching the photo to fit.
+  const roofMaterial = useMemo(
+    () => new MeshStandardMaterial({ color: "#23252b", roughness: 0.86, metalness: 0.16 }),
+    []
+  );
+  const heroMeshes = useMemo(() => {
+    if (isNight) return [];
+    return HERO_BUILDINGS.map((hero, heroIdx) => {
+      const fp = BUILDING_FOOTPRINTS.find((b) => b.id === hero.id);
+      if (!fp) return null;
+      const faceTex = new Map<string, Texture>();
+      HERO_FACE_KEYS.forEach((face, faceIdx) => {
+        faceTex.set(face, heroTexFlat[heroIdx * HERO_FACE_KEYS.length + faceIdx]);
+      });
+      const front = faceTex.get("front");
+      if (!front?.image) return null;
+      const frontImage = front.image as { width: number; height: number };
+      const width = fp.size[0];
+      const depth = fp.size[2];
+      const height = computeHeroBuildingHeight(width, [
+        frontImage.width,
+        frontImage.height
+      ]);
+      const geometry = new BoxGeometry(width, height, depth);
+      geometry.translate(fp.position[0], height / 2, fp.position[2]);
+      // front/back span the box WIDTH; left/right span the box DEPTH. Only the
+      // front photo's aspect drives `height` (computeHeroBuildingHeight above),
+      // so every other face is cover-fit (cropped, never stretched) against
+      // whichever real-world dimension it spans.
+      const faceRealWidth: Record<string, number> = {
+        front: width,
+        back: width,
+        left: depth,
+        right: depth
+      };
+      const faceMaterial = (face: string) => {
+        const src = faceTex.get(face);
+        if (!src?.image) return new MeshStandardMaterial({ roughness: 0.7, metalness: 0.05 });
+        const img = src.image as { width: number; height: number };
+        const fit = coverFitUv(faceRealWidth[face], height, [img.width, img.height]);
+        const t = src.clone();
+        t.colorSpace = SRGBColorSpace;
+        t.repeat.set(fit.repeat[0], fit.repeat[1]);
+        t.offset.set(fit.offset[0], fit.offset[1]);
+        t.needsUpdate = true;
+        return new MeshStandardMaterial({ map: t, roughness: 0.7, metalness: 0.05 });
+      };
+      const byGroup = new Map<number, Material>();
+      (Object.keys(hero.faceToGroup) as (keyof typeof hero.faceToGroup)[]).forEach(
+        (face) => {
+          byGroup.set(hero.faceToGroup[face], faceMaterial(face));
+        }
+      );
+      const materialArray: Material[] = [
+        byGroup.get(0) ?? roofMaterial,
+        byGroup.get(1) ?? roofMaterial,
+        roofMaterial,
+        roofMaterial,
+        byGroup.get(4) ?? roofMaterial,
+        byGroup.get(5) ?? roofMaterial
+      ];
+      return { id: hero.id, geometry, materials: materialArray };
+    }).filter((m): m is { id: string; geometry: BoxGeometry; materials: Material[] } =>
+      m !== null
+    );
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isNight, heroTexFlat, roofMaterial]);
+
   return (
     <group name="gangnam-building-massing">
       {[...merged.entries()].map(([group, geometry]) => {
@@ -633,6 +721,16 @@ function BuildingVolumeSet({ isNight }: { isNight: boolean }) {
           key={`facade-${poolIndex}`}
           geometry={geometry}
           material={facadeMaterials[poolIndex]}
+          castShadow={false}
+          receiveShadow
+        />
+      ))}
+      {heroMeshes.map((hero) => (
+        <mesh
+          key={hero.id}
+          name={hero.id}
+          geometry={hero.geometry}
+          material={hero.materials}
           castShadow={false}
           receiveShadow
         />
