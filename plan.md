@@ -1890,6 +1890,38 @@ Real-sample fixture/synthetic identifier guard evidence:
 
 Next active slice:
 
+- [x] Add offline real-sample file validation so authorized sample providers
+      can check replay-ready shape and provenance before running the local web
+      server.
+
+Offline real-sample file check evidence:
+
+- `npm run real-sample:check -- --offline <live-input-envelope.json>` now reads
+  a local JSON envelope without calling the drop-in HTTP route.
+- Offline mode validates the core replay-ready `live-input.v1` shape:
+  schema version, intersection id, received timestamp, camera frame fields,
+  detection class/direction/confidence/count, and signal snapshot fields.
+- Offline mode also rejects `fixture` or `synthetic` identifiers before the
+  sample reaches the POST route.
+- The real-sample intake package and final local readiness export now expose
+  both commands:
+  - offline shape/provenance check
+  - online `/api/real-sample-drop-in` validation
+- Presentation docs now separate the server-free first pass from the local POST
+  validation step.
+- TDD RED checks:
+  - `node --test scripts/real-sample-drop-in-check.test.mjs`:
+    failed before implementation because `offline` still called `fetch`.
+  - `npm --workspace apps/web run test -- realSampleIntakePackage.test.ts app/api/real-sample-intake-package/route.test.ts finalLocalReadiness.test.ts app/api/final-local-readiness/route.test.ts -t "offline|real sample intake|final local readiness"`:
+    failed before the intake/readiness artifacts exposed the offline command.
+- Targeted GREEN checks:
+  - `node --test scripts/real-sample-drop-in-check.test.mjs`:
+    4 passed.
+  - `npm --workspace apps/web run test -- realSampleIntakePackage.test.ts app/api/real-sample-intake-package/route.test.ts finalLocalReadiness.test.ts app/api/final-local-readiness/route.test.ts -t "offline|real sample intake|final local readiness"`:
+    4 passed.
+
+Next active slice:
+
 - [ ] Once an authorized CCTV frame/video and signal timing sample are
       available, POST the real `live-input.v1` envelope to
       `/api/real-sample-drop-in` and refresh the same demo evidence,

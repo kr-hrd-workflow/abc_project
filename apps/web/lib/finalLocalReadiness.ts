@@ -15,6 +15,7 @@ export type FinalLocalReadinessExport = {
   };
   realSampleCheck: {
     command: "npm run real-sample:check -- <live-input-envelope.json>";
+    offlineCommand: "npm run real-sample:check -- --offline <live-input-envelope.json>";
     requiresRunningWebServer: true;
     endpoint: "/api/real-sample-drop-in";
   };
@@ -54,6 +55,8 @@ export function buildFinalLocalReadinessExport({
     },
     realSampleCheck: {
       command: "npm run real-sample:check -- <live-input-envelope.json>",
+      offlineCommand:
+        "npm run real-sample:check -- --offline <live-input-envelope.json>",
       requiresRunningWebServer: true,
       endpoint: demoEvidence.realSampleReadiness.dropInEndpoint
     },

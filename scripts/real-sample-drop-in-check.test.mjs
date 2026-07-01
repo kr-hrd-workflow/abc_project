@@ -96,4 +96,87 @@ describe("real sample drop-in file check", () => {
     assert.match(result.output, /accepted=false/);
     assert.match(result.output, /validationErrors=signal snapshot older than 30 seconds/);
   });
+
+  test("validates replay-ready envelope shape offline without calling fetch", async () => {
+    const result = await checkRealSampleDropInFile({
+      filePath: "authorized-sample.json",
+      offline: true,
+      readFile: async () => JSON.stringify(buildAuthorizedEnvelope()),
+      fetchImpl: async () => {
+        throw new Error("fetch should not be called in offline mode");
+      }
+    });
+
+    assert.equal(result.exitCode, 0);
+    assert.equal(result.summary.validationMode, "offline_shape_check");
+    assert.equal(result.summary.accepted, true);
+    assert.equal(result.summary.replayStatus, "replay_input_ready");
+    assert.equal(result.summary.recommendation, null);
+    assert.equal(result.summary.operatorWorkflowStatus, "approval_review_ready");
+    assert.equal(result.summary.selectedPolicy, "offline_shape_check");
+    assert.deepEqual(result.summary.requiredInputs, []);
+    assert.deepEqual(result.summary.validationErrors, []);
+    assert.match(result.output, /validationMode=offline_shape_check/);
+  });
+
+  test("rejects fixture or synthetic identifiers offline", async () => {
+    const fixtureEnvelope = buildAuthorizedEnvelope();
+    fixtureEnvelope.intersectionId = "INT-SYNTHETIC-FIXTURE-0001";
+
+    const result = await checkRealSampleDropInFile({
+      filePath: "fixture-sample.json",
+      offline: true,
+      readFile: async () => JSON.stringify(fixtureEnvelope),
+      fetchImpl: async () => {
+        throw new Error("fetch should not be called in offline mode");
+      }
+    });
+
+    assert.equal(result.exitCode, 1);
+    assert.equal(result.summary.validationMode, "offline_shape_check");
+    assert.equal(result.summary.accepted, false);
+    assert.equal(result.summary.operatorWorkflowStatus, "manual_review_required");
+    assert.equal(result.summary.selectedPolicy, "safety_hold");
+    assert.deepEqual(result.summary.requiredInputs, [
+      "authorized_real_sample_identifiers"
+    ]);
+    assert.deepEqual(result.summary.validationErrors, [
+      "fixture_or_synthetic_sample_not_allowed"
+    ]);
+  });
 });
+
+function buildAuthorizedEnvelope() {
+  return {
+    schemaVersion: "live-input.v1",
+    intersectionId: "INT-REAL-SAMPLE-0001",
+    receivedAt: "2026-07-01T09:10:01.000Z",
+    cameraFrames: [
+      {
+        cameraId: "authorized-cctv-east-01",
+        frameId: "authorized-frame-0001",
+        capturedAt: "2026-07-01T09:10:00.000Z",
+        detections: [
+          {
+            objectId: "det-emergency-001",
+            classLabel: "emergency_vehicle",
+            confidence: 0.96,
+            direction: "east",
+            laneId: "east_approach_1",
+            count: 1,
+            distanceMeters: 70
+          }
+        ]
+      }
+    ],
+    signalSnapshot: {
+      controllerId: "signal-controller-real-01",
+      capturedAt: "2026-07-01T09:10:00.000Z",
+      currentPhase: "east_priority",
+      remainingSeconds: 18,
+      nextPhase: "normal_cycle",
+      controllerMode: "adaptive",
+      manualOverride: false
+    }
+  };
+}

@@ -22,6 +22,8 @@ describe("final local readiness export", () => {
       },
       realSampleCheck: {
         command: "npm run real-sample:check -- <live-input-envelope.json>",
+        offlineCommand:
+          "npm run real-sample:check -- --offline <live-input-envelope.json>",
         requiresRunningWebServer: true,
         endpoint: "/api/real-sample-drop-in"
       },

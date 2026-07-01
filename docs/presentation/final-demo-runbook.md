@@ -349,12 +349,14 @@ Dashboard shortcut:
 - For a local file-based check against the same route, run:
 
   ```bash
+  npm run real-sample:check -- --offline <live-input-envelope.json>
   npm run real-sample:check -- <live-input-envelope.json>
   ```
 
-  Keep the local web server running so the command can POST to
-  `/api/real-sample-drop-in`; pass a second URL argument if validating against a
-  different local endpoint.
+  The `--offline` form checks replay-ready shape and fixture/synthetic
+  provenance without a running web server. The second form keeps the local web
+  server running and POSTs to `/api/real-sample-drop-in`; pass a second URL
+  argument if validating against a different local endpoint.
 - Low-confidence detections are routed to `manual_review_required` even when
   the envelope can be normalized and replayed; the route returns the required
   input hint `higher_confidence_detection` instead of trusting the

@@ -18,6 +18,8 @@ describe("real sample intake package route", () => {
       finalReadinessEndpoint: "/api/final-local-readiness",
       localCliCommand:
         "npm run real-sample:check -- <live-input-envelope.json>",
+      offlineCliCommand:
+        "npm run real-sample:check -- --offline <live-input-envelope.json>",
       noPersistence: true
     });
     expect(body.sampleSlotIds).toEqual([
@@ -38,6 +40,9 @@ describe("real sample intake package route", () => {
       "manual review when vehicle queues exceed threshold on conflicting movement axes"
     );
     expect(body.prohibitedInputs).toContain("raw stream credentials");
+    expect(body.submissionSteps).toContain(
+      "run npm run real-sample:check -- --offline <live-input-envelope.json> for server-free shape and provenance checks"
+    );
     expect(body.submissionSteps).toContain(
       "run npm run real-sample:check -- <live-input-envelope.json> for the same local drop-in validation path"
     );

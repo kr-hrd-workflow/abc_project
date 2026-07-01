@@ -19,6 +19,8 @@ describe("final local readiness route", () => {
     expect(body.healthCheck.expectedSummary).toBe("15/15 checks passed");
     expect(body.realSampleCheck).toEqual({
       command: "npm run real-sample:check -- <live-input-envelope.json>",
+      offlineCommand:
+        "npm run real-sample:check -- --offline <live-input-envelope.json>",
       requiresRunningWebServer: true,
       endpoint: "/api/real-sample-drop-in"
     });
