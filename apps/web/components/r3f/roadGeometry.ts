@@ -129,11 +129,18 @@ export const ROAD_WIDTH_METERS = corridorWidth("north");
 export const INBOUND_LANE_COUNT = getApproachInboundLaneCount("north");
 export const OUTBOUND_LANE_COUNT = getApproachOutboundLaneCount("north");
 
+// The SUMO-truth corridor (≈120–140 m) dead-ends mid-frame in the operator-wide
+// view, so the imagegen plate walls the road off with buildings. Extend every
+// corridor so the carriageway + all its derived markings/curbs/sidewalks/decals
+// reach toward the frame edge and recede to the horizon. Tunable via env for the
+// render harness (NEXT_PUBLIC_CORRIDOR_EXT_M).
+const CORRIDOR_RENDER_EXTENSION_M =
+  Number(process.env.NEXT_PUBLIC_CORRIDOR_EXT_M ?? "240") || 240;
 export const CORRIDOR_LENGTH_METERS: Record<Direction, number> = {
-  north: INTERSECTION_TRUTH.north.corridorLengthM,
-  south: INTERSECTION_TRUTH.south.corridorLengthM,
-  east: INTERSECTION_TRUTH.east.corridorLengthM,
-  west: INTERSECTION_TRUTH.west.corridorLengthM
+  north: INTERSECTION_TRUTH.north.corridorLengthM + CORRIDOR_RENDER_EXTENSION_M,
+  south: INTERSECTION_TRUTH.south.corridorLengthM + CORRIDOR_RENDER_EXTENSION_M,
+  east: INTERSECTION_TRUTH.east.corridorLengthM + CORRIDOR_RENDER_EXTENSION_M,
+  west: INTERSECTION_TRUTH.west.corridorLengthM + CORRIDOR_RENDER_EXTENSION_M
 };
 
 const HALF_BOX_X = INTERSECTION_BOX_X_METERS / 2;

@@ -249,6 +249,14 @@ export function SimulationScene({
     // (same metric specs → structurally aligned with the lanes the vehicles use).
     // No PhotorealPlate. Vehicles, signals, lighting, and post-FX mirror the
     // default scene.
+    //
+    // ?roadonly=1 strips buildings, vehicles, signals and post-FX, leaving only
+    // the metric road + lane decals. This is the clean base fed to imagegen for a
+    // photoreal "plate B": no building boxes in the input → imagegen invents real
+    // Gangnam buildings freely while the road geometry stays the alignment anchor.
+    const isRoadOnly =
+      typeof window !== "undefined" &&
+      new URLSearchParams(window.location.search).get("roadonly") === "1";
     return (
       <group name="photobash-scene">
         <CameraRig preset="operatorWide" weather={weather} timeOfDay={timeOfDay} />
@@ -259,21 +267,28 @@ export function SimulationScene({
           qualityPreset={qualityPreset}
           weather={weather}
           timeOfDay={timeOfDay}
+          suppressAtmosphericScenery={isRoadOnly}
         />
-        <BuildingLayerBoundary timeOfDay={timeOfDay} qualityPreset={qualityPreset} />
+        {!isRoadOnly && (
+          <BuildingLayerBoundary timeOfDay={timeOfDay} qualityPreset={qualityPreset} />
+        )}
         <Suspense fallback={null}>
           <RoadSurfaceLayer isNight={isNight} suppressVectorMarkings />
         </Suspense>
         <MarkingDecalLayer />
-        <DynamicVehicleLayerWithWeather
-          isNight={isNight}
-          timeOfDay={timeOfDay}
-          sceneSnapshot={sceneSnapshot}
-          qualityPreset={qualityPreset}
-          viewpoint="wide"
-        />
-        <SignalLayer signals={sceneSnapshot.signals} />
-        <SceneFinishing isNight={isNight} qualityPreset={qualityPreset} />
+        {!isRoadOnly && (
+          <DynamicVehicleLayerWithWeather
+            isNight={isNight}
+            timeOfDay={timeOfDay}
+            sceneSnapshot={sceneSnapshot}
+            qualityPreset={qualityPreset}
+            viewpoint="wide"
+          />
+        )}
+        {!isRoadOnly && <SignalLayer signals={sceneSnapshot.signals} />}
+        {!isRoadOnly && (
+          <SceneFinishing isNight={isNight} qualityPreset={qualityPreset} />
+        )}
       </group>
     );
   }
