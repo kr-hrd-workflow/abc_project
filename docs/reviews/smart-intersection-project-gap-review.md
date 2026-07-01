@@ -139,6 +139,14 @@ Recommended tasks:
 - keep evidence language honest: fixture, synthetic, or local-only data must
   stay labeled as such
 
+Current maintenance evidence:
+
+- `npm run policy-contract:check` compares backend recommendation constants
+  from `apps/api/app/services/recommendations.py` with the web contract in
+  `apps/web/lib/policyScorecardContract.ts`.
+- `npm run test:policy-contract` verifies that the checker fails on policy
+  order drift and scoring-constant drift.
+
 ## Recommended Next Work
 
 The next meaningful project step is not another benchmark. It is one of:
@@ -158,4 +166,3 @@ at least one of these conditions:
 - it reduces backend/frontend policy drift
 - it strengthens the truth boundary between synthetic, fixture, and real data
 - it fixes a failing test, build, health check, or documented presentation risk
-

@@ -41,6 +41,17 @@ Next meaningful decision:
 3. If code work must continue before a sample, do only narrow maintenance that
    reduces backend/frontend policy-contract drift.
 
+Current maintenance slice:
+
+- [x] Add a backend/web policy scorecard contract drift checker.
+- [x] Verify the checker fails when web policy order or scoring constants drift.
+- [x] Verify the current backend constants and web contract are aligned.
+
+Maintenance evidence:
+
+- `node --test scripts/policy-scorecard-contract-check.test.mjs`: 3 passed.
+- `npm run policy-contract:check`: `policy scorecard contract aligned`.
+
 ## Historical Plan: Synthetic Scenario Evaluation
 
 ## Target Outcome
