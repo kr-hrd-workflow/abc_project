@@ -54,12 +54,14 @@ import {
 } from "./buildingFootprints";
 import {
   allHeroFaceTexturePaths,
+  boxFaceGroupRealSize,
   computeHeroBuildingHeight,
   coverFitUv,
   HERO_BUILDINGS,
   HERO_BUILDING_IDS,
   HERO_FACE_KEYS
 } from "./heroBuildingFacades";
+import type { HeroFaceKey } from "./heroBuildingFacades";
 import type { Stage6QualityPreset, Stage6TimeOfDay } from "./stage6Quality";
 
 // ── Facade texture assets (served from public/) ───────────────────────────────
@@ -520,10 +522,11 @@ function BuildingVolumeSet({ isNight }: { isNight: boolean }) {
   const [dayTex, nightTex, signageDayTex] = texAll;
 
   // Hero buildings: a few prominent footprints get a DISTINCT imagegen photo
-  // per real-world wall (front/left/right/back) instead of one elevation image
-  // repeated on every side. Day only — night keeps the normal shared-tint
+  // per real-world wall (front/left/right/back/top) instead of one elevation
+  // image repeated on every side. Day only — night keeps the normal shared-tint
   // pipeline below (no night photoset yet). Loaded as a flat array; index
-  // heroIdx*4 + faceIdx matches allHeroFaceTexturePaths()'s nested order.
+  // heroIdx*HERO_FACE_KEYS.length + faceIdx matches allHeroFaceTexturePaths()'s
+  // nested order.
   const heroTexFlat = useTexture(allHeroFaceTexturePaths()) as Texture[];
 
   // Merge every sub-volume by material group → ~6 geometries for the whole city.
@@ -650,27 +653,31 @@ function BuildingVolumeSet({ isNight }: { isNight: boolean }) {
       const frontImage = front.image as { width: number; height: number };
       const width = fp.size[0];
       const depth = fp.size[2];
-      const height = computeHeroBuildingHeight(width, [
+      // The front face's real horizontal span depends on which BoxGeometry
+      // plane it's mapped to (z-facing corner blocks span width; x-facing
+      // avenue-frontage blocks span depth) — see boxFaceGroupRealSize.
+      const [frontRealWidth] = boxFaceGroupRealSize(hero.faceToGroup.front, width, 1, depth);
+      const height = computeHeroBuildingHeight(frontRealWidth, [
         frontImage.width,
         frontImage.height
       ]);
       const geometry = new BoxGeometry(width, height, depth);
       geometry.translate(fp.position[0], height / 2, fp.position[2]);
-      // front/back span the box WIDTH; left/right span the box DEPTH. Only the
-      // front photo's aspect drives `height` (computeHeroBuildingHeight above),
-      // so every other face is cover-fit (cropped, never stretched) against
-      // whichever real-world dimension it spans.
-      const faceRealWidth: Record<string, number> = {
-        front: width,
-        back: width,
-        left: depth,
-        right: depth
-      };
+      // Every face is cover-fit (cropped, never stretched) against whichever
+      // pair of real-world dimensions its own BoxGeometry group spans — only
+      // the front photo's aspect drives `height` (computeHeroBuildingHeight
+      // above).
       const faceMaterial = (face: string) => {
         const src = faceTex.get(face);
         if (!src?.image) return new MeshStandardMaterial({ roughness: 0.7, metalness: 0.05 });
         const img = src.image as { width: number; height: number };
-        const fit = coverFitUv(faceRealWidth[face], height, [img.width, img.height]);
+        const [realW, realH] = boxFaceGroupRealSize(
+          hero.faceToGroup[face as HeroFaceKey],
+          width,
+          height,
+          depth
+        );
+        const fit = coverFitUv(realW, realH, [img.width, img.height]);
         const t = src.clone();
         t.colorSpace = SRGBColorSpace;
         t.repeat.set(fit.repeat[0], fit.repeat[1]);
@@ -687,7 +694,7 @@ function BuildingVolumeSet({ isNight }: { isNight: boolean }) {
       const materialArray: Material[] = [
         byGroup.get(0) ?? roofMaterial,
         byGroup.get(1) ?? roofMaterial,
-        roofMaterial,
+        byGroup.get(2) ?? roofMaterial,
         roofMaterial,
         byGroup.get(4) ?? roofMaterial,
         byGroup.get(5) ?? roofMaterial
