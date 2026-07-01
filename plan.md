@@ -48,6 +48,7 @@ Current maintenance slice:
 - [x] Verify the current backend constants and web contract are aligned.
 - [x] Add the policy contract drift check to the root `npm run verify` path.
 - [x] Extend the drift check to backend/web scorecard required evidence fields.
+- [x] Add policy contract checker tests to the root `npm run verify` path.
 
 Maintenance evidence:
 

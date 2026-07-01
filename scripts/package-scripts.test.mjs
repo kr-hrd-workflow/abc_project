@@ -7,7 +7,13 @@ describe("root package scripts", () => {
     const packageJson = JSON.parse(await readFile("package.json", "utf8"));
     const verifyScript = packageJson.scripts.verify;
 
+    assert.match(verifyScript, /npm run test:policy-contract/);
     assert.match(verifyScript, /npm run policy-contract:check/);
+    assert.ok(
+      verifyScript.indexOf("npm run test:policy-contract") <
+        verifyScript.indexOf("npm run policy-contract:check"),
+      "policy contract drift tests should run before the live drift check"
+    );
     assert.ok(
       verifyScript.indexOf("npm run policy-contract:check") <
         verifyScript.indexOf("npm run test:web"),

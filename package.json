@@ -23,7 +23,7 @@
     "verify:r3f-performance": "node scripts/verify-r3f-performance.mjs",
     "verify:r3f-visual-diff": "node scripts/verify-r3f-visual-diff.mjs",
     "verify:security": "node scripts/verify-security-gates.mjs",
-    "verify": "npm run test:api && npm run policy-contract:check && npm run test:web && npm run build:web && npm run verify:r3f-assets && npm run verify:r3f-dashboard && npm run verify:r3f-performance && npm run verify:r3f-visual-diff && npm run verify:security && git diff --check"
+    "verify": "npm run test:api && npm run test:policy-contract && npm run policy-contract:check && npm run test:web && npm run build:web && npm run verify:r3f-assets && npm run verify:r3f-dashboard && npm run verify:r3f-performance && npm run verify:r3f-visual-diff && npm run verify:security && git diff --check"
   },
   "workspaces": [
     "apps/web"
