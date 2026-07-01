@@ -1922,6 +1922,43 @@ Offline real-sample file check evidence:
 
 Next active slice:
 
+- [x] Extend real-sample provenance guardrails to reject placeholder, mock,
+      example, or demo identifiers in addition to fixture/synthetic identifiers.
+
+Real-sample placeholder/mock provenance guard evidence:
+
+- `validateRealSampleDropInEnvelope()` now routes `placeholder`, `example`,
+  `mock`, or `demo` identifiers in submitted intersection, camera/frame,
+  detection, or signal-controller ids to manual review.
+- The validator returns:
+  - `accepted=false`
+  - `replayStatus=replay_input_ready`
+  - `operatorWorkflowStatus=manual_review_required`
+  - `selectedPolicy=safety_hold`
+  - `requiredInputs=["authorized_real_sample_identifiers"]`
+  - `validationErrors=["placeholder_or_demo_sample_not_allowed"]`
+- `POST /api/real-sample-drop-in` returns `400` for the same condition.
+- `npm run real-sample:check -- --offline <live-input-envelope.json>` applies
+  the same placeholder/mock/example/demo provenance guard without calling the
+  local web server.
+- The real-sample intake package, submission schema, and presentation docs now
+  explain that template/demo/mock identifiers are not accepted as authorized
+  real-sample evidence.
+- TDD RED checks:
+  - `npm --workspace apps/web run test -- realSampleDropIn.test.ts app/api/real-sample-drop-in/route.test.ts -t "placeholder|fixture"`:
+    failed before implementation because placeholder/mock/example identifiers
+    were accepted as `emergency_priority`.
+  - `node --test scripts/real-sample-drop-in-check.test.mjs`:
+    failed before implementation because offline mode accepted placeholder/mock
+    identifiers.
+- Targeted GREEN checks:
+  - `npm --workspace apps/web run test -- realSampleDropIn.test.ts app/api/real-sample-drop-in/route.test.ts -t "placeholder|fixture"`:
+    4 passed, 14 skipped.
+  - `node --test scripts/real-sample-drop-in-check.test.mjs`:
+    5 passed.
+
+Next active slice:
+
 - [ ] Once an authorized CCTV frame/video and signal timing sample are
       available, POST the real `live-input.v1` envelope to
       `/api/real-sample-drop-in` and refresh the same demo evidence,

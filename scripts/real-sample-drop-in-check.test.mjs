@@ -144,6 +144,35 @@ describe("real sample drop-in file check", () => {
       "fixture_or_synthetic_sample_not_allowed"
     ]);
   });
+
+  test("rejects placeholder or demo identifiers offline", async () => {
+    const placeholderEnvelope = buildAuthorizedEnvelope();
+    placeholderEnvelope.cameraFrames[0].frameId = "placeholder-frame-0001";
+    placeholderEnvelope.cameraFrames[0].detections[0].objectId =
+      "example-emergency-001";
+    placeholderEnvelope.signalSnapshot.controllerId = "mock-signal-controller-01";
+
+    const result = await checkRealSampleDropInFile({
+      filePath: "placeholder-sample.json",
+      offline: true,
+      readFile: async () => JSON.stringify(placeholderEnvelope),
+      fetchImpl: async () => {
+        throw new Error("fetch should not be called in offline mode");
+      }
+    });
+
+    assert.equal(result.exitCode, 1);
+    assert.equal(result.summary.validationMode, "offline_shape_check");
+    assert.equal(result.summary.accepted, false);
+    assert.equal(result.summary.operatorWorkflowStatus, "manual_review_required");
+    assert.equal(result.summary.selectedPolicy, "safety_hold");
+    assert.deepEqual(result.summary.requiredInputs, [
+      "authorized_real_sample_identifiers"
+    ]);
+    assert.deepEqual(result.summary.validationErrors, [
+      "placeholder_or_demo_sample_not_allowed"
+    ]);
+  });
 });
 
 function buildAuthorizedEnvelope() {

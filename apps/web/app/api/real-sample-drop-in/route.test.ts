@@ -207,6 +207,33 @@ describe("real sample drop-in route", () => {
       validationErrors: ["fixture_or_synthetic_sample_not_allowed"]
     });
   });
+
+  test("returns manual review for placeholder or demo posted samples", async () => {
+    const response = await POST(
+      new Request("http://localhost/api/real-sample-drop-in", {
+        method: "POST",
+        body: JSON.stringify(buildPlaceholderLikeEnvelope())
+      })
+    );
+    const body = await response.json();
+
+    expect(response.status).toBe(400);
+    expect(body).toMatchObject({
+      source: "real_sample_drop_in_validation",
+      accepted: false,
+      replayStatus: "replay_input_ready",
+      recommendation: null,
+      operatorWorkflowStatus: "manual_review_required",
+      operatorWorkflow: {
+        selectedPolicy: "safety_hold",
+        confidence: "low",
+        requiredInputs: ["authorized_real_sample_identifiers"],
+        blockedReasons: ["placeholder_or_demo_sample_not_allowed"]
+      },
+      requiredInputs: ["authorized_real_sample_identifiers"],
+      validationErrors: ["placeholder_or_demo_sample_not_allowed"]
+    });
+  });
 });
 
 function buildLiveInputEnvelope() {
@@ -310,6 +337,39 @@ function buildFixtureLikeEnvelope() {
     ],
     signalSnapshot: {
       controllerId: "synthetic-signal-controller-01",
+      capturedAt: "2026-07-01T09:10:00.000Z",
+      currentPhase: "east_priority",
+      remainingSeconds: 18,
+      nextPhase: "normal_cycle",
+      controllerMode: "adaptive",
+      manualOverride: false
+    }
+  };
+}
+
+function buildPlaceholderLikeEnvelope() {
+  return {
+    ...buildLiveInputEnvelope(),
+    cameraFrames: [
+      {
+        cameraId: "authorized-cctv-east-01",
+        frameId: "placeholder-frame-0001",
+        capturedAt: "2026-07-01T09:10:00.000Z",
+        detections: [
+          {
+            objectId: "example-emergency-001",
+            classLabel: "emergency_vehicle",
+            confidence: 0.96,
+            direction: "east",
+            laneId: "east_approach_1",
+            count: 1,
+            distanceMeters: 70
+          }
+        ]
+      }
+    ],
+    signalSnapshot: {
+      controllerId: "mock-signal-controller-01",
       capturedAt: "2026-07-01T09:10:00.000Z",
       currentPhase: "east_priority",
       remainingSeconds: 18,

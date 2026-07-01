@@ -189,8 +189,9 @@ function validateOfflineEnvelope(envelope, errors) {
     validateOfflineSignalSnapshot(envelope.signalSnapshot, errors);
   }
 
-  if (hasFixtureOrSyntheticIdentifier(envelope)) {
-    errors.push("fixture_or_synthetic_sample_not_allowed");
+  const provenanceError = getProhibitedSampleIdentifierError(envelope);
+  if (provenanceError) {
+    errors.push(provenanceError);
   }
 }
 
@@ -294,9 +295,9 @@ function buildOfflineSummary({
   };
 }
 
-function hasFixtureOrSyntheticIdentifier(envelope) {
+function getProhibitedSampleIdentifierError(envelope) {
   if (!envelope || typeof envelope !== "object" || Array.isArray(envelope)) {
-    return false;
+    return null;
   }
 
   const frames = Array.isArray(envelope.cameraFrames) ? envelope.cameraFrames : [];
@@ -312,14 +313,36 @@ function hasFixtureOrSyntheticIdentifier(envelope) {
     envelope.signalSnapshot?.controllerId
   ];
 
-  return identifiers.some(
+  if (
+    identifiers.some(
+      (identifier) =>
+        typeof identifier === "string" && /(?:fixture|synthetic)/i.test(identifier)
+    )
+  ) {
+    return "fixture_or_synthetic_sample_not_allowed";
+  }
+  if (
+    identifiers.some(
+      (identifier) =>
+        typeof identifier === "string" &&
+        /(?:placeholder|example|mock|demo)/i.test(identifier)
+    )
+  ) {
+    return "placeholder_or_demo_sample_not_allowed";
+  }
+  return null;
+}
+
+function hasProhibitedSampleIdentifierError(errors) {
+  return errors.some(
     (identifier) =>
-      typeof identifier === "string" && /(?:fixture|synthetic)/i.test(identifier)
+      identifier === "fixture_or_synthetic_sample_not_allowed" ||
+      identifier === "placeholder_or_demo_sample_not_allowed"
   );
 }
 
 function inferOfflineRequiredInputs(errors) {
-  if (errors.includes("fixture_or_synthetic_sample_not_allowed")) {
+  if (hasProhibitedSampleIdentifierError(errors)) {
     return ["authorized_real_sample_identifiers"];
   }
   if (errors.some((error) => error.includes("signalSnapshot"))) {

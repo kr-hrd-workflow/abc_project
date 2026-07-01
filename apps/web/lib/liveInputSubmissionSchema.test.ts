@@ -47,7 +47,7 @@ describe("live input submission schema export", () => {
       "schema requires a signal snapshot because /api/real-sample-drop-in validates replay-ready submissions"
     );
     expect(artifact.guardrailNotes).toContain(
-      "real-sample drop-in validation routes fixture or synthetic sample identifiers to manual review"
+      "real-sample drop-in validation routes fixture, synthetic, placeholder, mock, example, or demo sample identifiers to manual review"
     );
 
     const serialized = JSON.stringify(artifact);

@@ -353,10 +353,11 @@ Dashboard shortcut:
   npm run real-sample:check -- <live-input-envelope.json>
   ```
 
-  The `--offline` form checks replay-ready shape and fixture/synthetic
-  provenance without a running web server. The second form keeps the local web
-  server running and POSTs to `/api/real-sample-drop-in`; pass a second URL
-  argument if validating against a different local endpoint.
+  The `--offline` form checks replay-ready shape and fixture/synthetic or
+  placeholder/mock/example/demo provenance without a running web server. The
+  second form keeps the local web server running and POSTs to
+  `/api/real-sample-drop-in`; pass a second URL argument if validating against
+  a different local endpoint.
 - Low-confidence detections are routed to `manual_review_required` even when
   the envelope can be normalized and replayed; the route returns the required
   input hint `higher_confidence_detection` instead of trusting the
@@ -367,10 +368,10 @@ Dashboard shortcut:
 - Vehicle queues over threshold on both north/south and east/west movement
   axes are routed to `manual_review_required` with
   `signal_phase.remaining_seconds`, matching the local policy safety hold.
-- Payloads whose sample identifiers still contain `fixture` or `synthetic`
-  are routed to `manual_review_required` with
-  `authorized_real_sample_identifiers`; fixture evidence cannot be passed off
-  as an authorized real sample.
+- Payloads whose sample identifiers still contain `fixture`, `synthetic`,
+  `placeholder`, `mock`, `example`, or `demo` are routed to
+  `manual_review_required` with `authorized_real_sample_identifiers`; fixture
+  or template evidence cannot be passed off as an authorized real sample.
 - Point out that the export also records policy-scorecard-derived operator
   workflow statuses and the full set of scorecard-backed backend policies, not
   autonomous signal control.
