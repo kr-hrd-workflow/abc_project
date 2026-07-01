@@ -17,6 +17,7 @@ import {
   ingestFixture,
   isSimulationFrameRouteMissingError,
   recommendSignal,
+  recheckOpenAIExplanationEvaluation,
   simulateSignal
 } from "../lib/api";
 import {
@@ -219,7 +220,11 @@ export function DashboardRoute() {
     let timer: ReturnType<typeof setTimeout> | null = null;
 
     const poll = async () => {
-      const result = await loadSimulationFrame(selectedScenarioId);
+      const result = await loadSimulationFrame(selectedScenarioId).catch(() => ({
+        frame: null,
+        routeAvailable: false,
+        networkLatencyMs: null
+      }));
       if (cancelled) return;
 
       if (!result.routeAvailable) {
@@ -422,6 +427,7 @@ export function DashboardRoute() {
       onCityChange={setSelectedCityId}
       onAskQuestion={handleAskQuestion}
       onGenerateReport={handleGenerateReport}
+      onRecheckOpenAIExplanationEvaluation={recheckOpenAIExplanationEvaluation}
       onIngestFixture={handleIngestFixture}
       onAnalyzeUpload={handleAnalyzeUpload}
       onRefreshAnalysisJob={handleRefreshAnalysisJob}

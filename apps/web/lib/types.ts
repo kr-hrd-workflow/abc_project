@@ -91,13 +91,21 @@ export type TrafficEvent = {
   source: string;
 };
 
+export type RecommendationEvidenceValue =
+  | string
+  | number
+  | boolean
+  | null
+  | RecommendationEvidenceValue[]
+  | { [key: string]: RecommendationEvidenceValue };
+
 export type Recommendation = {
   id: number;
   intersection_id: string;
   created_at: string;
   action: string;
   recommended_plan: Record<string, number>;
-  evidence: Record<string, string | number>;
+  evidence: Record<string, RecommendationEvidenceValue>;
   safety_boundary: string;
   status: string;
 };
@@ -188,6 +196,21 @@ export type RuntimeReadiness = {
   simulation: RuntimeSection;
   openai: RuntimeSection;
   pgvector: RuntimeSection;
+};
+
+export type OpenAIExplanationCriterion = {
+  name: string;
+  label: string;
+  passed: boolean;
+};
+
+export type OpenAIExplanationEvaluationResult = {
+  model: string;
+  passed: boolean;
+  passed_criteria: number;
+  total_criteria: number;
+  response_text_present: boolean;
+  criteria: OpenAIExplanationCriterion[];
 };
 
 export type UploadAnalysisResult = {

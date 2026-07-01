@@ -2,10 +2,12 @@ from collections.abc import Generator
 
 import pytest
 from fastapi.testclient import TestClient
+from sqlalchemy.exc import IntegrityError
 from sqlalchemy import create_engine, select
 from sqlalchemy.orm import Session, sessionmaker
 from sqlalchemy.pool import StaticPool
 
+from app.api import routes as api_routes
 from app.db import models
 from app.db.models import Base
 from app.db.session import get_session
@@ -15,9 +17,32 @@ from app.main import app
 from app.scenarios.data import BLOCKED_SCENARIO, EMERGENCY_SCENARIO
 from app.services.persistence import (
     build_events,
+    ensure_intersection,
     load_scenario_snapshot,
     select_recommendation_trigger_event,
 )
+
+
+class FakeOpenAIResponses:
+    def __init__(self, output_text: str) -> None:
+        self.output_text = output_text
+        self.calls: list[dict[str, object]] = []
+
+    def create(self, **kwargs: object) -> object:
+        self.calls.append(kwargs)
+        output_text = self.output_text
+
+        class FakeResponse:
+            pass
+
+        response = FakeResponse()
+        response.output_text = output_text
+        return response
+
+
+class FakeOpenAIClient:
+    def __init__(self, output_text: str) -> None:
+        self.responses = FakeOpenAIResponses(output_text)
 
 engine = create_engine(
     "sqlite+pysqlite:///:memory:",
@@ -28,9 +53,11 @@ TestingSessionLocal = sessionmaker(bind=engine, autoflush=False, autocommit=Fals
 
 
 @pytest.fixture()
-def client() -> Generator[TestClient, None, None]:
+def client(monkeypatch: pytest.MonkeyPatch) -> Generator[TestClient, None, None]:
     Base.metadata.drop_all(bind=engine)
     Base.metadata.create_all(bind=engine)
+    monkeypatch.setattr(api_routes.settings, "openai_answer_mode", "local")
+    monkeypatch.setattr(api_routes.settings, "openai_api_key", None)
 
     def override_get_session() -> Generator[Session, None, None]:
         with TestingSessionLocal() as session:
@@ -104,6 +131,40 @@ def test_events_endpoint_collapses_existing_duplicate_seeded_events(
         ("emergency_vehicle_approach", "east"),
         ("queue_threshold_exceeded", "north"),
     }
+
+
+def test_ensure_intersection_recovers_from_duplicate_insert_race() -> None:
+    existing = models.Intersection(
+        id=EMERGENCY_SCENARIO.intersection_id,
+        name="Seoul Smart Intersection Testbed",
+        location_label="Scenario-backed MVP intersection",
+        created_at=EMERGENCY_SCENARIO.captured_at,
+    )
+
+    class RaceSession:
+        def __init__(self) -> None:
+            self.get_calls = 0
+            self.rolled_back = False
+
+        def get(self, _model: object, _key: object) -> models.Intersection | None:
+            self.get_calls += 1
+            return None if self.get_calls == 1 else existing
+
+        def add(self, _model: object) -> None:
+            return None
+
+        def flush(self) -> None:
+            raise IntegrityError("insert intersection", {}, Exception("duplicate key"))
+
+        def rollback(self) -> None:
+            self.rolled_back = True
+
+    session = RaceSession()
+
+    intersection = ensure_intersection(session, EMERGENCY_SCENARIO)  # type: ignore[arg-type]
+
+    assert intersection is existing
+    assert session.rolled_back is True
 
 
 def test_list_fixtures_exposes_image_video_and_unity_virtual_cctv_inputs(client: TestClient) -> None:
@@ -366,6 +427,18 @@ def test_chat_returns_structured_agent_sections(client: TestClient) -> None:
         assert session.scalar(select(models.SimulationRun)) is None
 
 
+def test_korean_chat_fallback_answers_in_korean(client: TestClient) -> None:
+    response = client.post(
+        "/api/chat",
+        json={"question": "긴급차량이 있으면 어떻게 해야 해?"},
+    )
+
+    assert response.status_code == 200
+    payload = response.json()
+    assert "긴급차량" in payload["answer"]
+    assert "시뮬레이션 전용" in payload["answer"]
+
+
 def test_emergency_chat_answer_includes_safety_boundary(client: TestClient) -> None:
     response = client.post("/api/chat", json={"question": "Emergency status?"})
 
@@ -460,6 +533,81 @@ def test_chat_pgvector_mode_requires_openai_budget_before_client_creation(
         "/api/chat",
         json={"question": "Emergency status?"},
     )
+
+    assert response.status_code == 503
+    assert "OPENAI_MONTHLY_BUDGET_USD" in response.json()["detail"]
+    assert created_clients == []
+
+
+def test_openai_explanation_recheck_returns_safe_summary_without_raw_output(
+    client: TestClient,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    fake_client = FakeOpenAIClient(
+        "Emergency vehicle priority is supported by policy evidence. "
+        "This is simulation-only and does not control real traffic signals."
+    )
+
+    monkeypatch.setattr("app.api.routes.settings.openai_monthly_budget_usd", 10.0)
+    monkeypatch.setattr(
+        "app.api.routes.require_openai_api_key",
+        lambda: "sk-test-secret",
+    )
+    monkeypatch.setattr(
+        "app.api.routes.build_openai_client",
+        lambda _api_key: fake_client,
+    )
+
+    response = client.post("/api/openai/explanation-evaluation/recheck")
+
+    assert response.status_code == 200
+    payload = response.json()
+    assert payload == {
+        "model": "gpt-5.5",
+        "passed": True,
+        "passed_criteria": 3,
+        "total_criteria": 3,
+        "response_text_present": True,
+        "criteria": [
+            {
+                "name": "simulation_only_boundary",
+                "label": "Simulation-only boundary",
+                "passed": True,
+            },
+            {
+                "name": "no_real_signal_control",
+                "label": "No real signal control",
+                "passed": True,
+            },
+            {
+                "name": "policy_evidence_grounding",
+                "label": "Policy evidence grounding",
+                "passed": True,
+            },
+        ],
+    }
+    assert "sk-test-secret" not in str(payload)
+    assert "Emergency vehicle priority is supported" not in str(payload)
+    assert fake_client.responses.calls[0]["model"] == "gpt-5.5"
+
+
+def test_openai_explanation_recheck_requires_budget_before_client_creation(
+    client: TestClient,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    created_clients: list[str] = []
+
+    monkeypatch.setattr("app.api.routes.settings.openai_monthly_budget_usd", None)
+    monkeypatch.setattr(
+        "app.api.routes.require_openai_api_key",
+        lambda: "sk-test-secret",
+    )
+    monkeypatch.setattr(
+        "app.api.routes.build_openai_client",
+        lambda api_key: created_clients.append(api_key),
+    )
+
+    response = client.post("/api/openai/explanation-evaluation/recheck")
 
     assert response.status_code == 503
     assert "OPENAI_MONTHLY_BUDGET_USD" in response.json()["detail"]

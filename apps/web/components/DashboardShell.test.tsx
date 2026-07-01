@@ -1,6 +1,6 @@
 ﻿// @vitest-environment jsdom
 
-import { act, cleanup, render, screen, waitFor } from "@testing-library/react";
+import { act, cleanup, render, screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import type { ReactNode } from "react";
 import { useState } from "react";
@@ -31,6 +31,7 @@ const dashboardRouteApiMock = vi.hoisted(() => ({
     error instanceof Error &&
     error.message.includes("API request failed: 404 /api/simulation/frame"),
   recommendSignal: vi.fn(),
+  recheckOpenAIExplanationEvaluation: vi.fn(),
   simulateSignal: vi.fn()
 }));
 
@@ -400,6 +401,7 @@ function dashboardProps(overrides: Partial<Parameters<typeof DashboardShell>[0]>
     simulationFrame: frameSnapshot,
     onAskQuestion: vi.fn(),
     onGenerateReport: vi.fn(),
+    onRecheckOpenAIExplanationEvaluation: vi.fn(),
     onRefreshRecommendation: vi.fn(),
     onRunSimulation: vi.fn(),
     selectedScenarioId: "emergency" as ScenarioId,
@@ -588,6 +590,38 @@ describe("DashboardShell", () => {
     expect(screen.queryByText("Dashboard API unavailable")).toBeNull();
   });
 
+  test("stops background frame polling without surfacing the dashboard error when a later poll fails", async () => {
+    vi.useFakeTimers();
+    vi.stubEnv("NEXT_PUBLIC_R3F_SIMULATION_ENABLED", "true");
+    mockWebGLSupport(true);
+    mockDashboardRouteApi();
+    dashboardRouteApiMock.getSimulationFrame
+      .mockResolvedValueOnce(frameSnapshot)
+      .mockRejectedValueOnce(
+        new Error("API request failed: 500 /api/simulation/frame?scenario_id=emergency")
+      );
+
+    render(<DashboardRoute />);
+
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(0);
+    });
+    expect(screen.getByTestId("r3f-simulation-viewport")).toBeTruthy();
+    expect(dashboardRouteApiMock.getSimulationFrame).toHaveBeenCalledTimes(1);
+
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(SIMULATION_FRAME_POLL_INTERVAL_MS);
+    });
+    expect(dashboardRouteApiMock.getSimulationFrame).toHaveBeenCalledTimes(2);
+
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(250);
+    });
+
+    expect(dashboardRouteApiMock.getSimulationFrame).toHaveBeenCalledTimes(2);
+    expect(screen.queryByText("Dashboard API unavailable")).toBeNull();
+  });
+
   test("ignores late worker-buffered frames from the previous scenario after a scenario switch", async () => {
     vi.stubEnv("NEXT_PUBLIC_R3F_SIMULATION_ENABLED", "true");
     mockWebGLSupport(true);
@@ -654,37 +688,26 @@ describe("DashboardShell", () => {
     expect(
       screen.getByRole("heading", { level: 1, name: "스마트 교차로 운영 시스템" })
     ).toBeTruthy();
-    expect(screen.getByLabelText("Scenario Rail")).toBeTruthy();
-    expect(screen.getByText("Incident Brief Spine")).toBeTruthy();
-    expect(screen.getByLabelText("Spatial command surface")).toBeTruthy();
-    expect(screen.getByText("Response Plan")).toBeTruthy();
+    expect(screen.getByLabelText("시나리오 레일")).toBeTruthy();
+    expect(screen.getByText("현장 증거")).toBeTruthy();
+    expect(screen.getByLabelText("공간 관제 화면")).toBeTruthy();
+    expect(screen.getByText("대응 계획")).toBeTruthy();
     expect(screen.getAllByText("긴급차량 우선 통과").length).toBeGreaterThanOrEqual(1);
-    expect(screen.getByText("Simulation only / No real signal control")).toBeTruthy();
+    expect(screen.getByText("시뮬레이션 전용 / 실제 신호 제어 없음")).toBeTruthy();
+    expect(screen.queryByText("Response Plan")).toBeNull();
+    expect(screen.queryByText("Simulation only / No real signal control")).toBeNull();
   });
 
-  test("renders the selected city profile independently from the scenario", () => {
+  test("renders one fixed intersection profile without multi-city selection controls", () => {
     renderDashboard({ selectedCityId: "seoul" });
 
-    expect(screen.getByLabelText("도시 선택")).toBeTruthy();
-    expect(screen.getByLabelText("도시 프로필")).toBeTruthy();
+    expect(screen.queryByLabelText("도시 선택")).toBeNull();
+    expect(screen.getByLabelText("교차로 프로필")).toBeTruthy();
     expect(screen.getByText("강남대로 / 테헤란로")).toBeTruthy();
     expect(screen.getByText(/INT-SEO-0001/)).toBeTruthy();
-    expect(screen.getByRole("button", { name: /서울/ }).getAttribute("aria-pressed")).toBe("true");
-    expect(screen.getByRole("button", { name: /뉴욕/ })).toBeTruthy();
-    expect(screen.getByRole("button", { name: /파리/ })).toBeTruthy();
-    expect(screen.getByRole("button", { name: /런던/ })).toBeTruthy();
-  });
-
-  test("calls city change without touching the scenario handler", async () => {
-    const onCityChange = vi.fn();
-    const onScenarioChange = vi.fn();
-
-    renderDashboard({ onCityChange, onScenarioChange });
-
-    await userEvent.click(screen.getByRole("button", { name: /뉴욕/ }));
-
-    expect(onCityChange).toHaveBeenCalledWith("new_york");
-    expect(onScenarioChange).not.toHaveBeenCalled();
+    expect(screen.queryByRole("button", { name: /뉴욕/ })).toBeNull();
+    expect(screen.queryByRole("button", { name: /파리/ })).toBeNull();
+    expect(screen.queryByRole("button", { name: /런던/ })).toBeNull();
   });
 
   test("renders the approved safety and simulation viewport copy", () => {
@@ -775,13 +798,87 @@ describe("DashboardShell", () => {
     expect(screen.getByText("SUMO Delta")).toBeTruthy();
   });
 
+  test("shows operator policy scorecard evidence in the recommendation panel", () => {
+    renderDashboard({
+      recommendation: {
+        ...recommendation,
+        action: "green_extension",
+        evidence: {
+          reason: "queue_threshold_exceeded",
+          direction: "north",
+          queue: 34,
+          policy_scorecard: {
+            selected_policy: "queue_relief",
+            candidate_scores: {
+              queue_relief: 69,
+              pedestrian_efficiency: 0,
+              maintain_cycle: 10
+            },
+            constraints: {
+              queue_threshold_exceeded: true,
+              pedestrian_waiting: false,
+              vehicle_pressure_present: true
+            },
+            blocked_reasons: [],
+            required_inputs: [],
+            objective_metrics: {
+              max_queue: 34,
+              queue_over_threshold: 9
+            },
+            confidence: "high",
+            operator_note:
+              "Northbound queue exceeds the local threshold; extend green for queue relief while preserving operator review."
+          }
+        }
+      }
+    });
+
+    expect(screen.getByText("정책 스코어카드")).toBeTruthy();
+    expect(screen.getByText("운영자 검토 상태")).toBeTruthy();
+    expect(screen.getByText("승인 검토 준비")).toBeTruthy();
+    expect(screen.getByText("queue_relief")).toBeTruthy();
+    expect(screen.getByText("max_queue 34")).toBeTruthy();
+    expect(screen.getByText("queue_over_threshold 9")).toBeTruthy();
+    expect(screen.queryByText("[object Object]")).toBeNull();
+  });
+
+  test("marks low-confidence scorecards as requiring manual review", () => {
+    renderDashboard({
+      recommendation: {
+        ...recommendation,
+        action: "all_red_safety",
+        evidence: {
+          reason: "emergency_vehicle_direction_unknown",
+          policy_scorecard: {
+            selected_policy: "safety_hold",
+            candidate_scores: {},
+            constraints: {
+              emergency_vehicle_present: true,
+              emergency_vehicle_direction_known: false
+            },
+            blocked_reasons: ["emergency_vehicle_direction_unknown"],
+            required_inputs: ["emergency_vehicle.direction"],
+            objective_metrics: {},
+            confidence: "low",
+            operator_note:
+              "Emergency vehicle is detected, but its approach direction is unknown; hold all-red until direction evidence is available."
+          }
+        }
+      }
+    });
+
+    expect(screen.getByText("운영자 검토 상태")).toBeTruthy();
+    expect(screen.getByText("수동검토 필요")).toBeTruthy();
+    expect(screen.getByText("emergency_vehicle.direction")).toBeTruthy();
+  });
+
   test("promotes the response plan into a focus-first command stack", () => {
     renderDashboard();
 
-    expect(screen.getByText("Decision focus")).toBeTruthy();
+    expect(screen.getByText("의사결정 초점")).toBeTruthy();
     expect(screen.getByText("권고안 검토")).toBeTruthy();
     expect(screen.getByText("실행 전 승인 필요")).toBeTruthy();
-    expect(screen.getByText("Response stack")).toBeTruthy();
+    expect(screen.getByText("대응 절차")).toBeTruthy();
   });
 
   test("renders the accepted B plus A spatial command dashboard structure", () => {
@@ -790,12 +887,12 @@ describe("DashboardShell", () => {
     const shell = container.querySelector(".dashboard-shell");
     expect(shell?.getAttribute("data-layout")).toBe("spatial-command-hybrid");
     expect(shell?.getAttribute("data-concept")).toBe("b-plus-a");
-    expect(screen.getByLabelText("Spatial command surface")).toBeTruthy();
-    expect(screen.getByLabelText("Operational detail rail")).toBeTruthy();
-    expect(screen.getByLabelText("Command decision rail")).toBeTruthy();
-    expect(screen.getByText("Spatial command")).toBeTruthy();
-    expect(screen.getByText("Live evidence rail")).toBeTruthy();
-    expect(screen.getByText("Operator action stack")).toBeTruthy();
+    expect(screen.getByLabelText("공간 관제 화면")).toBeTruthy();
+    expect(screen.getByLabelText("운영 상세 레일")).toBeTruthy();
+    expect(screen.getByLabelText("의사결정 레일")).toBeTruthy();
+    expect(screen.getByText("공간 관제")).toBeTruthy();
+    expect(screen.getByText("현장 증거")).toBeTruthy();
+    expect(screen.getByText("운영자 조치")).toBeTruthy();
   });
 
   test("renders the replaceable SUMO simulation viewport boundary", () => {
@@ -1668,7 +1765,7 @@ describe("DashboardShell", () => {
     expect(screen.getByTestId("r3f-canvas")).toBeTruthy();
     expect(screen.getByText("R3F digital twin")).toBeTruthy();
     expect(screen.queryByText("Digital twin fallback")).toBeNull();
-    expect(screen.getByText("Simulation only / No real signal control")).toBeTruthy();
+    expect(screen.getByText("시뮬레이션 전용 / 실제 신호 제어 없음")).toBeTruthy();
     expect(viewport.getAttribute("data-r3f-simulation-ready")).toBe("true");
     expect(viewport.getAttribute("data-r3f-renderer-mode")).toBe(STAGE5_RENDERER_MODE);
     expect(viewport.getAttribute("data-r3f-photoreal-stage")).toBe("5");
@@ -1752,7 +1849,7 @@ describe("DashboardShell", () => {
     expect(screen.getByTestId("r3f-frame-stale-badge").textContent).toContain(
       "degraded"
     );
-    expect(screen.getByText("Simulation only / No real signal control")).toBeTruthy();
+    expect(screen.getByText("시뮬레이션 전용 / 실제 신호 제어 없음")).toBeTruthy();
   });
 
   test("uses explicit fixture queue fallback when the simulation frame is absent", async () => {
@@ -1839,7 +1936,36 @@ describe("DashboardShell", () => {
     expect(screen.getByText("Digital twin fallback")).toBeTruthy();
     expect(screen.getByText("실사형 가상 CCTV / 디지털 트윈")).toBeTruthy();
     expect(screen.queryByTestId("r3f-simulation-viewport")).toBeNull();
-    expect(screen.getByText("Simulation only / No real signal control")).toBeTruthy();
+    expect(screen.getByText("시뮬레이션 전용 / 실제 신호 제어 없음")).toBeTruthy();
+  });
+
+  test("shows how live inputs become the LLM recommendation", () => {
+    renderDashboard();
+    const pipeline = screen.getByLabelText("Recommendation generation pipeline");
+
+    expect(pipeline.textContent).toContain("추천 생성 흐름");
+    expect(pipeline.textContent).toContain("CCTV 프레임");
+    expect(pipeline.textContent).toContain("객체 감지");
+    expect(pipeline.textContent).toContain("신호 데이터 결합");
+    expect(pipeline.textContent).toContain("정책 평가");
+    expect(pipeline.textContent).toContain("LLM 추천안");
+    expect(pipeline.textContent).toContain("east_priority");
+    expect(pipeline.textContent).toContain("emergency_priority");
+    expect(pipeline.textContent).toContain("실제 제어 아님");
+  });
+
+  test("shows a decision trace for operator recommendation review", () => {
+    renderDashboard();
+    const trace = screen.getByLabelText("Decision trace");
+
+    expect(trace.textContent).toContain("Decision Trace");
+    expect(trace.textContent).toContain("영상 감지");
+    expect(trace.textContent).toContain("신호 상태");
+    expect(trace.textContent).toContain("정책 비교");
+    expect(trace.textContent).toContain("LLM 설명");
+    expect(trace.textContent).toContain("긴급차량 접근");
+    expect(trace.textContent).toContain("east_priority");
+    expect(trace.textContent).toContain("운영자 승인 필요");
   });
 
   test("keeps the fallback viewport when R3F is enabled but WebGL is unavailable", () => {
@@ -1851,7 +1977,7 @@ describe("DashboardShell", () => {
     expect(screen.getByText("Digital twin fallback")).toBeTruthy();
     expect(screen.getByText("실사형 가상 CCTV / 디지털 트윈")).toBeTruthy();
     expect(screen.queryByTestId("r3f-simulation-viewport")).toBeNull();
-    expect(screen.getByText("Simulation only / No real signal control")).toBeTruthy();
+    expect(screen.getByText("시뮬레이션 전용 / 실제 신호 제어 없음")).toBeTruthy();
   });
 
   test("mounts the hosted simulation stream URL before the legacy alias", () => {
@@ -1885,7 +2011,7 @@ describe("DashboardShell", () => {
     expect(screen.getByText("Hosted simulation stream")).toBeTruthy();
     expect(screen.queryByText("Legacy stream alias")).toBeNull();
     expect(screen.queryByTestId("r3f-simulation-viewport")).toBeNull();
-    expect(screen.getByText("Simulation only / No real signal control")).toBeTruthy();
+    expect(screen.getByText("시뮬레이션 전용 / 실제 신호 제어 없음")).toBeTruthy();
     expect(screen.getByText("SUMO/TraCI Renderer")).toBeTruthy();
   });
 
@@ -1959,6 +2085,16 @@ describe("DashboardShell", () => {
       latestAnalysisJob
     });
 
+    const sources = screen.getByLabelText("Live input sources");
+
+    expect(sources.textContent).toContain("Live Input Sources");
+    expect(sources.textContent).toContain("CCTV 분석");
+    expect(sources.textContent).toContain("fixture");
+    expect(sources.textContent).toContain("신호/시뮬레이션");
+    expect(sources.textContent).toContain("SUMO fixture");
+    expect(sources.textContent).toContain("LLM 추천");
+    expect(sources.textContent).toContain("OPENAI_API_KEY 필요");
+    expect(sources.textContent).toContain("실시간 연동 전 준비 상태");
     expect(screen.getByText("Analysis Intake")).toBeTruthy();
     expect(screen.getByText("운영자가 샘플·업로드 분석을 시작하고 job 상태를 확인합니다.")).toBeTruthy();
     expect(screen.getByRole("button", { name: /emergency-east-frame.jpg/ })).toBeTruthy();
@@ -2105,28 +2241,26 @@ describe("DashboardShell", () => {
     expect(screen.queryByLabelText("긴급차량")).toBeNull();
   });
 
-  test("renders structured AI agent sections when the API provides them", async () => {
+  test("keeps structured AI agent sections out of the Korean primary answer view", async () => {
     renderDashboard({
       chat: {
-        answer: "Fallback answer",
+        answer: "동쪽 접근로는 긴급차량 우선 통과를 검토해야 합니다.",
         referenced_event_ids: [1],
         sections: {
-          current_situation: "현재 상황 내용",
-          recommended_action: "추천 조치 내용",
-          recommendation_rationale: ["근거 A", "근거 B"],
+          current_situation: "INT-0001 has high congestion.",
+          recommended_action: "emergency_priority",
+          recommendation_rationale: ["emergency vehicle present", "east approach"],
           authority_limit:
             "Recommendation and simulation only. No real traffic signal control is performed.",
-          simulation_result: "시뮬레이션 결과 내용"
+          simulation_result: "Delay improves by 18%."
         }
       }
     });
 
-    expect(screen.getAllByText("현재 상황").length).toBeGreaterThanOrEqual(1);
-    expect(screen.getByText("추천 조치")).toBeTruthy();
-    expect(screen.getAllByText("추천 근거").length).toBeGreaterThanOrEqual(1);
-    expect(screen.getByText("권한 한계")).toBeTruthy();
-    expect(screen.getByText("시뮬레이션 결과")).toBeTruthy();
-    expect(screen.getByText("근거 A")).toBeTruthy();
+    expect(screen.getByText("최근 답변")).toBeTruthy();
+    expect(screen.getByText("동쪽 접근로는 긴급차량 우선 통과를 검토해야 합니다.")).toBeTruthy();
+    expect(screen.queryByText("INT-0001 has high congestion.")).toBeNull();
+    expect(screen.queryByText("emergency vehicle present")).toBeNull();
 
     await userEvent.click(screen.getByRole("button", { name: "EN" }));
 
@@ -2148,6 +2282,44 @@ describe("DashboardShell", () => {
     await userEvent.click(screen.getByRole("button", { name: "전송" }));
 
     expect(onAskQuestion).toHaveBeenCalledWith("동쪽 상황은?");
+  });
+
+  test("shows the submitted operator question instead of the canned starter prompt", async () => {
+    const onAskQuestion = vi.fn().mockResolvedValue(undefined);
+    renderDashboard({ onAskQuestion });
+
+    await userEvent.type(
+      screen.getByPlaceholderText("현재 교통 상황 질문"),
+      "동쪽 상황은?"
+    );
+    await userEvent.click(screen.getByRole("button", { name: "전송" }));
+
+    expect(await screen.findByText("동쪽 상황은?")).toBeTruthy();
+    expect(
+      screen.queryByText("현재 교차로 상황과 권고 조치의 효과는 어떤가요?")
+    ).toBeNull();
+  });
+
+  test("prioritizes a readable Korean agent answer in Korean mode", () => {
+    renderDashboard({
+      chat: {
+        answer: "동쪽 접근로는 긴급차량 우선 통과를 유지하고 보행자 대기는 다음 주기에 보정해야 합니다.",
+        referenced_event_ids: ["evt-1"],
+        sections: {
+          current_situation: "INT-0001 has high congestion.",
+          recommended_action: "priority_signal",
+          recommendation_rationale: ["emergency vehicle present"],
+          authority_limit: "No real traffic signal control.",
+          simulation_result: "Delay improves by 18%."
+        }
+      }
+    });
+
+    expect(screen.getByText("최근 답변")).toBeTruthy();
+    expect(
+      screen.getByText("동쪽 접근로는 긴급차량 우선 통과를 유지하고 보행자 대기는 다음 주기에 보정해야 합니다.")
+    ).toBeTruthy();
+    expect(screen.queryByText("Ask about current traffic situation")).toBeNull();
   });
 
   test("shows recoverable chat errors without clearing the operator question", async () => {
@@ -2176,6 +2348,242 @@ describe("DashboardShell", () => {
 
     expect(alert.textContent).toContain("리포트 생성 실패");
     expect(screen.getByRole("button", { name: /리포트 생성/ })).toBeTruthy();
+  });
+
+  test("renders report copy in the selected language", async () => {
+    const { container } = renderDashboard();
+    const reportPanel = container.querySelector(".report-panel") as HTMLElement;
+
+    expect(within(reportPanel).getByRole("heading", { name: "리포트" })).toBeTruthy();
+    expect(within(reportPanel).getByText("시나리오 08:42 리포트")).toBeTruthy();
+    expect(within(reportPanel).queryByText("Reports")).toBeNull();
+    expect(within(reportPanel).queryByText("Generate Report")).toBeNull();
+
+    await userEvent.click(screen.getByRole("button", { name: "EN" }));
+
+    expect(within(reportPanel).getByRole("heading", { name: "Reports" })).toBeTruthy();
+    expect(within(reportPanel).getByText("Scenario 08:42 report")).toBeTruthy();
+    expect(within(reportPanel).getAllByText("Generate Report").length).toBeGreaterThanOrEqual(1);
+  });
+
+  test("shows synthetic evaluation evidence in the report panel", () => {
+    renderDashboard();
+
+    const card = screen.getByRole("region", { name: "Synthetic evaluation evidence" });
+
+    expect(within(card).getByText("Synthetic Evaluation")).toBeTruthy();
+    expect(within(card).getByText("100 cases")).toBeTruthy();
+    expect(within(card).getAllByText("100 passed").length).toBeGreaterThan(0);
+    expect(within(card).getAllByText("0 failed").length).toBeGreaterThan(0);
+    expect(within(card).getByText("No synthetic policy failures detected.")).toBeTruthy();
+  });
+
+  test("shows multi-seed benchmark evidence in the report panel", () => {
+    renderDashboard();
+
+    expect(screen.getByText("Benchmark Report")).toBeTruthy();
+    expect(screen.getByText("5 seeds")).toBeTruthy();
+    expect(screen.getByText("5,000 cases")).toBeTruthy();
+    expect(screen.getByText("100% benchmark pass")).toBeTruthy();
+  });
+
+  test("shows downloadable demo evidence summary in the report panel", () => {
+    renderDashboard();
+
+    const card = screen.getByRole("region", {
+      name: "Demo evidence summary"
+    });
+
+    expect(within(card).getByText("Demo Evidence")).toBeTruthy();
+    expect(within(card).getByText("Health 15/15")).toBeTruthy();
+    expect(within(card).getByText("5,000/5,000 benchmark")).toBeTruthy();
+    expect(within(card).getByText("10,000/10,000 live-input JSON")).toBeTruthy();
+    expect(within(card).getByText("6 guarded / 0 misses")).toBeTruthy();
+    expect(within(card).getByText("source adapter replay ready")).toBeTruthy();
+    expect(within(card).getByText("6 scorecard policies")).toBeTruthy();
+    expect(within(card).getByText("real sample blocked")).toBeTruthy();
+    expect(within(card).getByText("live-input.v1 boundary ready")).toBeTruthy();
+    expect(within(card).getByRole("link", { name: "Evidence JSON" })).toHaveProperty(
+      "pathname",
+      "/api/demo-evidence-export"
+    );
+    expect(within(card).getByRole("link", { name: "Final Readiness" })).toHaveProperty(
+      "pathname",
+      "/api/final-local-readiness"
+    );
+    expect(within(card).getByRole("link", { name: "Intake Package" })).toHaveProperty(
+      "pathname",
+      "/api/real-sample-intake-package"
+    );
+    expect(
+      within(card).getByRole("link", { name: "Submission Schema" })
+    ).toHaveProperty("pathname", "/api/live-input-submission-schema");
+    expect(within(card).getByRole("link", { name: "LLM Contract" })).toHaveProperty(
+      "pathname",
+      "/api/llm-explanation-contract"
+    );
+    expect(within(card).getByRole("link", { name: "Drop-in Checklist" })).toHaveProperty(
+      "pathname",
+      "/api/real-sample-drop-in"
+    );
+  });
+
+  test("switches the benchmark suite size in the report panel", async () => {
+    renderDashboard();
+
+    await userEvent.click(screen.getByRole("button", { name: "10K benchmark suite" }));
+
+    expect(screen.getByText("10,000 cases")).toBeTruthy();
+    expect(screen.getByText("100% benchmark pass")).toBeTruthy();
+    expect(
+      screen.getByRole("button", { name: "10K benchmark suite" }).getAttribute("aria-pressed")
+    ).toBe("true");
+  });
+
+  test("shows live-input JSON benchmark evidence in the report panel", async () => {
+    renderDashboard();
+
+    const card = screen.getByRole("region", {
+      name: "Live-input JSON benchmark evidence"
+    });
+
+    expect(within(card).getByText("Live-input JSON Benchmark")).toBeTruthy();
+    expect(within(card).getByText("live-input.v1")).toBeTruthy();
+    expect(within(card).getByText("100 JSON payloads")).toBeTruthy();
+    expect(within(card).getByText("100 passed")).toBeTruthy();
+    expect(within(card).getByText("0 failed")).toBeTruthy();
+
+    await userEvent.click(
+      screen.getByRole("button", { name: "10K live-input JSON suite" })
+    );
+
+    expect(within(card).getByText("10,000 JSON payloads")).toBeTruthy();
+    expect(within(card).getByText("10,000 passed")).toBeTruthy();
+    expect(
+      screen
+        .getByRole("button", { name: "10K live-input JSON suite" })
+        .getAttribute("aria-pressed")
+    ).toBe("true");
+  });
+
+  test("shows live-input JSON guardrail evidence in the report panel", () => {
+    renderDashboard();
+
+    const card = screen.getByRole("region", {
+      name: "Live-input JSON guardrail evidence"
+    });
+
+    expect(within(card).getByText("Live-input JSON Guardrails")).toBeTruthy();
+    expect(within(card).getByText("6 guarded")).toBeTruthy();
+    expect(within(card).getByText("0 misses")).toBeTruthy();
+    expect(within(card).getByText("Invalid schema version")).toBeTruthy();
+    expect(within(card).getByText("reject_payload")).toBeTruthy();
+    expect(within(card).getByText("Emergency and pedestrian conflict")).toBeTruthy();
+    expect(
+      within(card).getByText("emergency_priority_with_conflict_note")
+    ).toBeTruthy();
+    expect(within(card).getByText("Conflicting queue axes")).toBeTruthy();
+    expect(
+      within(card).getByText("manual_review_conflicting_queue_axes")
+    ).toBeTruthy();
+  });
+
+  test("shows source-specific adapter evidence in the report panel", () => {
+    renderDashboard();
+
+    const card = screen.getByRole("region", {
+      name: "Source-specific adapter evidence"
+    });
+
+    expect(within(card).getByText("Source Adapter Fixture")).toBeTruthy();
+    expect(within(card).getByText("road-vision.fixture.v1")).toBeTruthy();
+    expect(within(card).getByText("signal-controller.fixture.v1")).toBeTruthy();
+    expect(within(card).getByText("live-input.v1")).toBeTruthy();
+    expect(within(card).getByText("replay input ready")).toBeTruthy();
+    expect(within(card).getByText("emergency_vehicle")).toBeTruthy();
+  });
+
+  test("shows noisy edge-case suite evidence in the report panel", () => {
+    renderDashboard();
+
+    expect(screen.getByText("Edge-case Suite")).toBeTruthy();
+    expect(screen.getByText("4 edge cases")).toBeTruthy();
+    expect(screen.getByText("4 guarded")).toBeTruthy();
+    expect(screen.getAllByText("0 misses").length).toBeGreaterThan(0);
+    expect(screen.getAllByText("Emergency and pedestrian conflict").length).toBeGreaterThan(0);
+  });
+
+  test("shows OpenAI explanation evaluation evidence in the report panel", () => {
+    renderDashboard();
+
+    expect(screen.getByText("OpenAI Explanation Evaluation")).toBeTruthy();
+    expect(screen.getByText("3/3 criteria passed")).toBeTruthy();
+    expect(screen.getAllByText("gpt-5.5").length).toBeGreaterThan(0);
+    expect(screen.getByText("response text present")).toBeTruthy();
+    expect(screen.getByText("Simulation-only boundary")).toBeTruthy();
+    expect(screen.getByText("No real signal control")).toBeTruthy();
+    expect(screen.getByText("Policy evidence grounding")).toBeTruthy();
+  });
+
+  test("shows live input contract adapter evidence in the report panel", () => {
+    renderDashboard();
+
+    expect(screen.getByText("Live Input Contract")).toBeTruthy();
+    expect(screen.getAllByText("live-input.v1").length).toBeGreaterThan(0);
+    expect(screen.getByText("contract normalized")).toBeTruthy();
+    expect(screen.getAllByText("replay input ready").length).toBeGreaterThan(0);
+    expect(screen.getAllByText("emergency_vehicle").length).toBeGreaterThan(0);
+  });
+
+  test("runs OpenAI explanation live recheck from the report panel", async () => {
+    const onRecheckOpenAIExplanationEvaluation = vi.fn().mockResolvedValue({
+      model: "gpt-5.5",
+      passed: true,
+      passed_criteria: 3,
+      total_criteria: 3,
+      response_text_present: true,
+      criteria: [
+        {
+          name: "simulation_only_boundary",
+          label: "Simulation-only boundary",
+          passed: true
+        },
+        {
+          name: "no_real_signal_control",
+          label: "No real signal control",
+          passed: true
+        },
+        {
+          name: "policy_evidence_grounding",
+          label: "Policy evidence grounding",
+          passed: true
+        }
+      ]
+    });
+    renderDashboard({ onRecheckOpenAIExplanationEvaluation });
+
+    expect(onRecheckOpenAIExplanationEvaluation).not.toHaveBeenCalled();
+
+    await userEvent.click(screen.getByRole("button", { name: "Live recheck" }));
+
+    await waitFor(() =>
+      expect(onRecheckOpenAIExplanationEvaluation).toHaveBeenCalledTimes(1)
+    );
+    expect(screen.getByText("3/3 criteria passed")).toBeTruthy();
+    expect(screen.getByText("response text present")).toBeTruthy();
+  });
+
+  test("shows failed synthetic case drilldown from the report panel", async () => {
+    renderDashboard();
+
+    await userEvent.click(screen.getByRole("button", { name: "Failure drilldown" }));
+
+    expect(screen.getByText("8 cases")).toBeTruthy();
+    expect(screen.getByText("7 passed")).toBeTruthy();
+    expect(screen.getByText("1 failed")).toBeTruthy();
+    expect(screen.getByText("synthetic-0606-0001")).toBeTruthy();
+    expect(screen.getByText("expected normal_cycle")).toBeTruthy();
+    expect(screen.getByText("actual emergency_priority")).toBeTruthy();
   });
 
   test("downloads the current report as JSON", async () => {
@@ -2209,6 +2617,45 @@ describe("DashboardShell", () => {
     expect(createObjectURL).toHaveBeenCalledWith(expect.any(Blob));
     expect(click).toHaveBeenCalledTimes(1);
     expect(revokeObjectURL).toHaveBeenCalledWith("blob:report");
+  });
+
+  test("downloads the current report JSON in the selected language", async () => {
+    const exportedBlobs: Blob[] = [];
+    const createObjectURL = vi.fn((blob: Blob) => {
+      exportedBlobs.push(blob);
+      return "blob:report";
+    });
+    const revokeObjectURL = vi.fn();
+    const click = vi.fn();
+    const originalCreateElement = document.createElement.bind(document);
+
+    vi.stubGlobal("URL", {
+      ...URL,
+      createObjectURL,
+      revokeObjectURL
+    });
+
+    renderDashboard();
+
+    vi.spyOn(document, "createElement").mockImplementation((tagName, options) => {
+      if (tagName === "a") {
+        return {
+          click,
+          download: "",
+          href: ""
+        } as unknown as HTMLAnchorElement;
+      }
+
+      return originalCreateElement(tagName, options);
+    });
+
+    await userEvent.click(screen.getByRole("button", { name: "다운로드" }));
+
+    expect(exportedBlobs).toHaveLength(1);
+    await expect(exportedBlobs[0].text().then(JSON.parse)).resolves.toMatchObject({
+      language: "ko",
+      summary: "시나리오 08:42 리포트"
+    });
   });
 
   test("shows feedback after running the simulation", async () => {

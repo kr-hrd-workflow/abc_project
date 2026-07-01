@@ -5,6 +5,7 @@ import type {
   ChatResponse,
   FixtureIngestResult,
   IntersectionStatus,
+  OpenAIExplanationEvaluationResult,
   Recommendation,
   Report,
   RuntimeReadiness,
@@ -149,6 +150,13 @@ export async function askQuestion(
     }
     throw error;
   }
+}
+
+export async function recheckOpenAIExplanationEvaluation(): Promise<OpenAIExplanationEvaluationResult> {
+  return requestJson<OpenAIExplanationEvaluationResult>(
+    "/api/openai/explanation-evaluation/recheck",
+    { method: "POST" }
+  );
 }
 
 export async function generateReport(scenarioId?: ScenarioId): Promise<Report> {

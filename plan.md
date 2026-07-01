@@ -1,34 +1,1883 @@
-# Plan: Day plate + Task 9 vehicle-quality redo (from scratch)
+# Plan: Synthetic Scenario Evaluation
 
-## Target outcome
-- Day scene becomes photoreal (daytime Gangnam plate), not the procedural blockout city.
-- Task 9 redone from scratch: vehicles look photoreal/acceptable on BOTH plates (day + night). Current crude procedural silhouettes / blockout cars are rejected by the user ("차량 품질 마음에 안 듦").
+## Target Outcome
 
-## Success criteria
-- `gangnam_day_operator_wide.png` plate exists (same operator-wide composition as night), mounted on the day path.
-- Vehicles read as photoreal and correctly positioned (SUMO truth: position/heading/type) on both plates — not toy/blockout.
-- All gates pass: `verify:r3f-assets`, `test:web`, `verify:r3f-dashboard`, `verify:r3f-visual-diff` (re-baseline if needed), `build:web`.
-- Browser day + night proofs reviewed and accepted by the user.
+Shift the project from a mostly static operations dashboard demo to a local
+evaluation system that generates realistic detection/signal data at scale,
+replays it, evaluates recommendation logic, and reports measurable results.
 
-## Key files
-- Plate mount: `BackgroundPlateLayer.tsx` (night-only gate line 71), `plateManifest.ts`, `seamlessGrade.ts`
-- Vehicles: `TrafficDensityLayer.tsx`, `Stage5SceneAssets.tsx`, `NightVehicleTreatment.tsx`, `stage6VehicleLod.ts`
-- Manifest/compliance: `manifest.json`, `docs/compliance/r3f-asset-licenses.md`, `verify-r3f-assets.mjs`
-- imagegen: `codex exec` (image_gen)
+Work remains local. Git actions remain disabled until the user explicitly asks.
+OpenAI API calls are limited to approved smoke and explanation-evaluation
+checks. Secrets remain local in `.env.local`.
 
-## Phases
-1. **Decide vehicle-quality approach** (ultra design panel) — evaluate: render real GLBs properly vs imagegen top-down sprite billboards vs CC0 photoreal GLBs vs better-procedural. Pick by quality / truth-preservation / perf / CI / effort. [USER picks]
-2. **Day plate image** — codex img2img from night plate → daytime; review. [long pole]
-3. **Mount day plate** — manifest + compliance; plateManifest day entry; BackgroundPlateLayer day path + DAY_GRADE; gates.
-4. **Implement chosen vehicle approach** (ultra) — rebuild vehicle rendering; verify on both plates; adversarial review.
-5. **Validation** — full pipeline green + browser proofs (day + night) reviewed.
+## Product Message
 
-## State / decisions
-- ultracode ON: orchestrate with workflows + adversarial verify; imagegen via codex with human review.
-- Part A (runtime color palettes, per-instance id-hash variety) is DONE + green but UNCOMMITTED — vehicle quality redo supersedes it; keep palettes only if the chosen approach reuses runtime tinting.
-- DO NOT recolor GLB baseColorFactor (no-op at runtime — see memory r3f-vehicle-color-is-runtime-palette).
-- DO NOT change getInboundLaneOffset (lane-center math is test-enforced to visible lanes).
-- Plate is screen-space projected (BackgroundPlateLayer dome+ground shaders); day plate must match night composition for proxy alignment.
+Instead of saying:
 
-## Open questions
-- Phase 1 output: which vehicle-quality approach. Needs user decision before Phase 4.
+- "Assume CCTV and signal data arrive, then AI recommends an action."
+
+The project should demonstrate:
+
+- "Before live CCTV/signal integration, we generate realistic detection and
+  signal datasets, run many traffic situations through the recommendation
+  pipeline, and show measurable pass/fail evidence."
+
+## Execution Order
+
+1. Synthetic dataset schema and generator
+   - Generate realistic object-detection snapshots and signal-state snapshots.
+   - Include expected recommendation outcomes for each case.
+   - Start small and deterministic, then scale count.
+
+2. Replay runner
+   - Replay generated cases in timestamp order.
+   - Produce state snapshots that look like live pipeline inputs.
+
+3. Recommendation evaluator
+   - Run local recommendation policy against each generated case.
+   - Compare actual recommendation to expected outcome.
+   - Record pass/fail, reason, scenario family, and risk notes.
+
+4. Evaluation report
+   - Summarize pass rate, failures by scenario type, and notable edge cases.
+   - Connect report data to the dashboard.
+
+5. Optional LLM evaluation
+   - Add OpenAI-backed explanation checks after local policy evaluation is
+     useful and the user provides/approves `OPENAI_API_KEY`.
+
+## Current Implementation Step
+
+- [x] Define TypeScript types for synthetic detection/signal/evaluation data.
+- [x] Implement deterministic synthetic scenario generator.
+- [x] Add unit tests for count, schema shape, scenario diversity, and expected
+      outcomes.
+- [x] Expose a local script or library entry that future replay/evaluation can
+      consume.
+
+Completed evidence:
+
+- `npm --workspace apps/web run test -- syntheticScenarios.test.ts`: 4 passed.
+- `npm run test:web`: 36 files, 287 tests passed.
+- `npm run build:web`: passed.
+
+- [x] Implement a replay runner that turns generated cases into timestamped
+      state snapshots for future evaluation and dashboard playback.
+
+Replay evidence:
+
+- `npm --workspace apps/web run test -- syntheticReplay.test.ts`: 3 passed.
+- `npm run test:web`: 37 files, 290 tests passed.
+- `npm run build:web`: passed.
+
+- [x] Implement a local recommendation evaluator that scores replay frames
+      against expected outcomes without OpenAI calls.
+
+Evaluator evidence:
+
+- `npm --workspace apps/web run test -- syntheticEvaluation.test.ts`: 2 passed.
+- `npm run test:web`: 38 files, 292 tests passed.
+- `npm run build:web`: passed.
+
+Next active slice:
+
+- [x] Build an evaluation report model that turns generated evaluation results
+      into a presentation-ready summary with pass rate, family breakdown,
+      failures, and risk notes.
+
+Evaluation report evidence:
+
+- `npm --workspace apps/web run test -- syntheticEvaluationReport.test.ts`: 2 passed.
+- `npm run test:web`: 39 files, 294 tests passed.
+- `npm run build:web`: passed.
+
+- [x] Connect the evaluation report data to the dashboard so the demo can show
+      measurable pass/fail evidence in the UI.
+
+Dashboard evidence:
+
+- `npm --workspace apps/web run test -- DashboardShell.test.tsx -t "shows synthetic evaluation evidence"`:
+  1 passed.
+- `npm run test:web`: 39 files, 295 tests passed.
+- `npm run build:web`: passed.
+- Playwright desktop/mobile layout check:
+  - `output/playwright/synthetic-evaluation-desktop-card.png`
+  - `output/playwright/synthetic-evaluation-mobile-card.png`
+  - horizontal overflow: 0 on desktop and mobile
+  - report-panel child overlaps: 0
+
+- [x] Prepare the presentation flow and screen-by-screen explanation around
+      synthetic data generation, replay, local recommendation evaluation, and
+      dashboard evidence.
+
+Presentation evidence:
+
+- Added `docs/presentation/synthetic-evaluation-demo-flow.md`.
+- The document covers the 5-minute demo story, screen-by-screen roles,
+  recommended talk track, architecture diagram, presentation boundaries, and
+  next upgrade order.
+- Secret scan against the new presentation doc did not find an API key.
+- `npm run test:web`: 39 files, 295 tests passed.
+- `npm run build:web`: passed.
+
+- [x] Add failed-case drilldown so the dashboard can demonstrate not only
+      success evidence but also how failures are inspected and improved.
+
+Failed-case drilldown evidence:
+
+- Added `buildSyntheticFailureDemoReport()` for a deterministic failing
+  synthetic suite.
+- Added Reports panel controls for `Pass suite` and `Failure drilldown`.
+- Failure drilldown shows case id, family, expected recommendation, and actual
+  recommendation.
+- `npm --workspace apps/web run test -- syntheticEvaluationReport.test.ts -t "buildSyntheticFailureDemoReport"`:
+  1 passed.
+- `npm --workspace apps/web run test -- DashboardShell.test.tsx -t "failed synthetic case drilldown"`:
+  1 passed.
+- `npm run test:web`: 39 files, 297 tests passed.
+- `npm run build:web`: passed.
+- Playwright desktop/mobile layout check:
+  - `output/playwright/synthetic-failure-drilldown-desktop-card.png`
+  - `output/playwright/synthetic-failure-drilldown-mobile-card.png`
+  - horizontal overflow: 0 on desktop and mobile
+  - synthetic evaluation card child overlaps: 0
+
+- [x] Add multi-seed benchmark report so the dashboard can demonstrate scale
+      beyond the current 100-case pass suite and 8-case failure drilldown suite.
+
+Multi-seed benchmark evidence:
+
+- Added `buildSyntheticBenchmarkReport()` for deterministic multi-seed
+  benchmark aggregation.
+- Dashboard Reports panel now shows `Benchmark Report`, `5 seeds`,
+  `5,000 cases`, and `100% benchmark pass`.
+- Updated presentation flow with benchmark report talk track.
+- `npm --workspace apps/web run test -- syntheticEvaluationReport.test.ts -t "buildSyntheticBenchmarkReport"`:
+  1 passed.
+- `npm --workspace apps/web run test -- DashboardShell.test.tsx -t "multi-seed benchmark evidence"`:
+  1 passed.
+- Playwright desktop/mobile card screenshots:
+  - `output/playwright/synthetic-benchmark-desktop-card.png`
+  - `output/playwright/synthetic-benchmark-mobile-card.png`
+  - horizontal overflow: 0 on desktop and mobile
+  - synthetic evaluation card child overlaps: 0
+- `npm run test:web`: 39 files, 299 tests passed.
+- `npm run build:web`: passed.
+- Secret and stub-marker scan against touched files found no API key pattern or
+  unfinished placeholder marker.
+
+Next active slice:
+
+- [x] Add noisy edge-case suites so the benchmark can cover low-confidence
+      detections, missing/stale signal states, and conflicting emergency plus
+      pedestrian situations.
+
+Noisy edge-case suite evidence:
+
+- Added `buildSyntheticEdgeCaseReport()` for low-confidence detection, stale
+  signal state, missing signal state, and emergency/pedestrian conflict
+  guardrails.
+- Dashboard Reports panel now shows `Edge-case Suite`, `4 edge cases`,
+  `4 guarded`, and `0 misses`.
+- `npm --workspace apps/web run test -- syntheticEvaluationReport.test.ts -t "buildSyntheticEdgeCaseReport"`:
+  1 passed.
+- `npm --workspace apps/web run test -- DashboardShell.test.tsx -t "noisy edge-case suite evidence"`:
+  1 passed.
+- Playwright desktop/mobile card screenshots:
+  - `output/playwright/synthetic-edge-cases-desktop-card.png`
+  - `output/playwright/synthetic-edge-cases-mobile-card.png`
+  - horizontal overflow: 0 on desktop and mobile
+  - synthetic evaluation card child overlaps: 0
+- `npm run test:web`: 39 files, 301 tests passed.
+- `npm run build:web`: passed.
+
+Next active slice:
+
+- [x] Add user-selectable larger suite size or seed controls for presentation
+      handoff, such as 10,000-case and 50,000-case local benchmark options.
+
+Benchmark suite selector evidence:
+
+- Dashboard Reports panel now has `5K`, `10K`, and `50K` benchmark suite
+  controls.
+- Selecting `10K` shows `10,000 cases`; selecting `50K` shows
+  `50,000 cases`.
+- `npm --workspace apps/web run test -- DashboardShell.test.tsx -t "switches the benchmark suite size"`:
+  1 passed.
+- `npm --workspace apps/web run test -- DashboardShell.test.tsx -t "multi-seed benchmark evidence|noisy edge-case suite evidence|switches the benchmark suite size"`:
+  3 passed.
+- Playwright desktop/mobile card screenshots after selecting `50K`:
+  - `output/playwright/synthetic-benchmark-suite-desktop-card.png`
+  - `output/playwright/synthetic-benchmark-suite-mobile-card.png`
+  - horizontal overflow: 0 on desktop and mobile
+  - synthetic evaluation card child overlaps: 0
+- `npm run test:web`: 39 files, 302 tests passed.
+- `npm run build:web`: passed.
+
+Next active slice:
+
+- [x] Add OpenAI-backed explanation evaluation only after confirming the local
+      pass/fail evaluator is useful enough to judge LLM explanations.
+
+OpenAI explanation evaluation evidence:
+
+- `.env.local` contains `OPENAI_API_KEY`; the value was not printed or copied
+  into tracked files.
+- `npm run runtime:readiness -- --section openai`: `openai ready=True
+  mode=gpt-5.5`.
+- Live OpenAI smoke check:
+  - `openai smoke ready=True`
+  - `embedding_dimensions=1536`
+  - `response_text_present=True`
+- Added `apps/api/app/services/openai_explanation_evaluation.py` to score LLM
+  explanation text against local safety/evidence criteria:
+  `simulation_only_boundary`, `no_real_signal_control`, and
+  `policy_evidence_grounding`.
+- Added `apps/api/app/cli/openai_explanation_eval.py` to run an approved live
+  explanation evaluation without printing secrets or full model output.
+- Live OpenAI explanation evaluation:
+  - `openai explanation evaluation ready=True`
+  - `passed=True`
+
+  - `criteria=3/3`
+  - `response_text_present=True`
+- Added test isolation so ordinary API flow tests stay in local answer mode even
+  when `.env.local` has a real OpenAI key.
+- `apps/api/.venv/bin/python -m pytest tests/test_openai_explanation_evaluation.py -v`:
+  3 passed.
+- `apps/api/.venv/bin/python -m pytest tests/test_openai_explanation_eval_cli.py -v`:
+  3 passed.
+- `npm run test:api`: 149 passed, 2 skipped.
+
+Next active slice:
+
+- [x] Surface OpenAI explanation evaluation evidence in the dashboard Reports
+      panel, without exposing raw model output or API secrets.
+
+Dashboard OpenAI explanation evidence:
+
+- Added `apps/web/lib/openAIExplanationEvaluationReport.ts` for a local,
+  presentation-safe summary of the approved live explanation evaluation.
+- Dashboard Reports panel now shows `OpenAI Explanation Evaluation`,
+  `gpt-5.5`, `3/3 criteria passed`, and `response text present`.
+- The card lists only criterion names and pass/fail status:
+  `Simulation-only boundary`, `No real signal control`, and
+  `Policy evidence grounding`.
+- Raw model output and API secrets are not shown in the UI.
+- `npm --workspace apps/web run test -- DashboardShell.test.tsx -t "OpenAI explanation evaluation evidence"`:
+  1 passed.
+- `npm --workspace apps/web run test -- DashboardShell.test.tsx -t "multi-seed benchmark evidence|noisy edge-case suite evidence|OpenAI explanation evaluation evidence|switches the benchmark suite size"`:
+  4 passed.
+- `npm run test:web`: 39 files, 303 tests passed.
+- `npm run build:web`: passed.
+- Playwright desktop/mobile card screenshots:
+  - `output/playwright/openai-explanation-evaluation-desktop-card.png`
+  - `output/playwright/openai-explanation-evaluation-mobile-card.png`
+  - horizontal overflow: 0 on desktop and mobile
+  - synthetic evaluation card child overlaps: 0
+
+Next active slice:
+
+- [x] Add an explicit operator-triggered live recheck flow only if the user
+      approves additional OpenAI API calls from the dashboard UI.
+
+Operator-triggered live recheck evidence:
+
+- User approved using the charged OpenAI API budget for real verification.
+- Added `POST /api/openai/explanation-evaluation/recheck`, gated by
+  `OPENAI_API_KEY` and `OPENAI_MONTHLY_BUDGET_USD`.
+- The API returns only a safe summary: model, pass/fail counts,
+  `response_text_present`, and criterion pass/fail statuses. It does not return
+  raw model output or secrets.
+- Added `recheckOpenAIExplanationEvaluation()` to the web API client.
+- Dashboard Reports panel now has an explicit `Live recheck` button on the
+  `OpenAI Explanation Evaluation` card. The live check is not called on page
+  load.
+- Actual dashboard-driven OpenAI verification was run through Playwright:
+  - model: `gpt-5.5`
+  - passed: `true`
+  - criteria: `3/3`
+  - response text present: `true`
+- Playwright live recheck screenshots:
+  - `output/playwright/openai-live-recheck-desktop-card.png`
+  - `output/playwright/openai-live-recheck-mobile-card.png`
+- Playwright layout checks after the live recheck:
+  - horizontal overflow: 0 on desktop and mobile
+  - report sibling overlaps: 0 on desktop and mobile
+  - synthetic evidence sibling overlaps: 0 on desktop and mobile
+- `npm --workspace apps/web run test -- api.test.ts -t "OpenAI explanation recheck"`:
+  1 passed.
+- `npm --workspace apps/web run test -- DashboardShell.test.tsx -t "OpenAI explanation live recheck"`:
+  1 passed.
+- `npm run test:api`: 151 passed, 2 skipped.
+- `npm run test:web`: 39 files, 305 tests passed.
+- `npm run build:web`: passed.
+
+Next active slice:
+
+- [x] Create the final presenter rehearsal script and demo runbook.
+
+Final demo runbook evidence:
+
+- Added `docs/presentation/final-demo-runbook.md`.
+- The runbook covers:
+  - core presentation claim
+  - pre-demo readiness checklist
+  - exact dashboard URL guidance: use `http://localhost:3000/dashboard`
+  - step-by-step demo flow from problem framing to `Live recheck`
+  - expected results for benchmark controls and OpenAI live recheck
+  - recovery notes for loading, API readiness, and OpenAI recheck failure
+  - screenshot evidence artifacts for backup slides
+  - next technical upgrade recommendation
+- Updated `docs/presentation/synthetic-evaluation-demo-flow.md` to point to the
+  runbook and record the latest validation evidence.
+- Secret scan against the presentation docs and plan found no API key pattern.
+
+Next active slice:
+
+- [x] Define the real CCTV/signal adapter contract so future live inputs can
+      enter the same replay/evaluation pipeline without changing the dashboard
+      story.
+
+Live input adapter contract evidence:
+
+- Added `apps/web/lib/liveInputContract.ts`.
+- The contract defines `live-input.v1` envelopes for future CCTV object
+  detections and signal-controller snapshots.
+- Added validation for:
+  - schema version
+  - ids and timestamps
+  - supported detection classes
+  - supported directions and signal phases
+  - confidence range from 0 to 1
+  - non-negative integer counts and remaining signal seconds
+- Added `toSyntheticReplayInput()` so validated live input can map into the
+  same replay-compatible shape used by synthetic evaluation.
+- Added `apps/web/lib/liveInputContract.test.ts`.
+- Added `docs/architecture/live-input-adapter-contract.md` with envelope,
+  camera frame, detection, signal snapshot, validation, replay mapping, and
+  presentation framing.
+- Updated `docs/presentation/final-demo-runbook.md` so the next technical step
+  is implementing a source-specific adapter against the contract.
+- `npm --workspace apps/web run test -- liveInputContract.test.ts`: 2 passed.
+
+Next active slice:
+
+- [x] Implement a source-specific local fixture adapter that produces a
+      `live-input.v1` envelope, then feed it through the contract normalizer.
+
+Local fixture live-input adapter evidence:
+
+- Added `apps/web/lib/liveInputFixtureAdapter.ts`.
+- `buildFixtureLiveInputEnvelope()` converts a `SyntheticScenarioCase` into a
+  validated `live-input.v1` envelope.
+- `buildFixtureReplayInput()` runs the envelope through
+  `toSyntheticReplayInput()` so the local adapter output can enter the same
+  replay-compatible shape as future real CCTV/signal adapters.
+- Added `apps/web/lib/liveInputFixtureAdapter.test.ts`.
+- Updated `docs/architecture/live-input-adapter-contract.md` with the local
+  fixture adapter path:
+  `SyntheticScenarioCase -> live-input.v1 envelope -> normalizer -> replay input`.
+- Updated `docs/presentation/final-demo-runbook.md` so the next technical step
+  is exposing the local adapter as a visible demo/API surface.
+- `npm --workspace apps/web run test -- liveInputFixtureAdapter.test.ts`: 2 passed.
+
+Next active slice:
+
+- [x] Expose the local `live-input.v1` fixture adapter as a visible demo step
+      or API route so the live-input contract path can be shown outside tests.
+
+Visible live-input contract demo evidence:
+
+- Added a `Live Input Contract` card to the dashboard Reports evidence stack.
+- The card shows:
+  - `live-input.v1`
+  - `1 camera frame`
+  - `emergency_vehicle`
+  - `contract normalized`
+  - `replay input ready`
+- The card is powered by the local fixture adapter:
+  `SyntheticScenarioCase -> live-input.v1 envelope -> normalizer -> replay input`.
+- Added `DashboardShell` coverage for the visible evidence card.
+- Updated `docs/presentation/synthetic-evaluation-demo-flow.md` and
+  `docs/presentation/final-demo-runbook.md` with the dashboard card and
+  presentation wording.
+- Playwright desktop/mobile card screenshots:
+  - `output/playwright/live-input-contract-desktop-card.png`
+  - `output/playwright/live-input-contract-mobile-card.png`
+- Playwright layout checks:
+  - horizontal overflow: 0 on desktop and mobile
+  - report sibling overlaps: 0 on desktop and mobile
+  - synthetic evidence sibling overlaps: 0 on desktop and mobile
+- `npm --workspace apps/web run test -- DashboardShell.test.tsx -t "live input contract adapter evidence"`:
+  1 passed.
+- `npm run test:web`: 41 files, 310 tests passed.
+- `npm run build:web`: passed.
+
+Next active slice:
+
+- [x] Add a small API endpoint or export artifact for the local `live-input.v1`
+      fixture adapter so external demos can inspect the contract payload outside
+      the dashboard.
+
+Local live-input fixture export evidence:
+
+- Added `apps/web/lib/liveInputFixtureExport.ts`.
+- Added `GET /api/live-input-fixture`.
+- The JSON artifact includes:
+  - `source: local_fixture_adapter`
+  - `schemaVersion: live-input.v1`
+  - local emergency fixture scenario metadata
+  - normalized `live-input.v1` envelope
+  - replay readiness summary with detection classes and signal phase
+- Added `apps/web/lib/liveInputFixtureExport.test.ts`.
+- Updated the live input architecture doc and final demo runbook with the local
+  API inspection path.
+- `npm --workspace apps/web run test -- liveInputFixtureExport.test.ts`: 1
+  passed.
+- `npm run test:web`: 42 files, 311 tests passed.
+- `npm run build:web`: passed and listed `/api/live-input-fixture` as a dynamic
+  app route.
+- Local HTTP check against `http://localhost:3000/api/live-input-fixture`:
+  `status=200`, `schemaVersion=live-input.v1`, `family=emergency`,
+  `ready=replay_input_ready`, detection types include `emergency_vehicle`.
+- Secret and unfinished-marker scan against touched files found no matching
+  API-key pattern or placeholder marker.
+
+Next active slice:
+
+- [x] Add a benchmark export artifact so generated pass/fail evidence can be
+      inspected or downloaded outside the dashboard UI.
+
+Synthetic benchmark export evidence:
+
+- Added `apps/web/lib/syntheticBenchmarkExport.ts`.
+- Added `GET /api/synthetic-benchmark-export`.
+- The JSON artifact includes:
+  - `source: synthetic_benchmark`
+  - `format: json`
+  - suite label, `caseCountPerSeed`, and seed list
+  - the deterministic 5K local benchmark report
+  - presentation summary from the benchmark headline
+- Added `apps/web/lib/syntheticBenchmarkExport.test.ts`.
+- Updated the final demo runbook and synthetic evaluation demo flow with the
+  external benchmark inspection path.
+- `npm --workspace apps/web run test -- syntheticBenchmarkExport.test.ts`: 1
+  passed.
+- `npm run test:web`: 43 files, 312 tests passed.
+- `npm run build:web`: passed and listed `/api/synthetic-benchmark-export` as a
+  dynamic app route.
+- Local HTTP check against `http://localhost:3000/api/synthetic-benchmark-export`:
+  `status=200`, `source=synthetic_benchmark`, `format=json`,
+  `total=5000`, `passed=5000`, `failed=0`, `passRate=100`.
+- Secret and unfinished-marker scan against touched files found no matching
+  API-key pattern or placeholder marker.
+
+Next active slice:
+
+- [x] Add a presenter-facing local health check that verifies web/API
+      readiness and the local export endpoints before rehearsal.
+
+Presenter-facing local health check evidence:
+
+- Added `scripts/demo-health-check.mjs`.
+- Added root npm scripts:
+  - `npm run demo:health`
+  - `npm run test:demo-health`
+- The health check verifies:
+  - `http://localhost:3000/dashboard`
+  - `http://localhost:3000/api/live-input-fixture`
+  - `http://localhost:3000/api/synthetic-benchmark-export`
+  - `http://127.0.0.1:8000/health`
+  - `http://127.0.0.1:8000/api/runtime/readiness?section=openai`
+- Added `scripts/demo-health-check.test.mjs`.
+- Updated the final demo runbook with `npm run demo:health` and recovery
+  guidance.
+- `npm run test:demo-health`: 2 passed.
+- `npm run test:web`: 43 files, 312 tests passed.
+- `npm run build:web`: passed.
+- Secret and unfinished-marker scan against touched files found no matching
+  API-key pattern or placeholder marker.
+- Actual local `npm run demo:health` result:
+  - web dashboard: pass
+  - live input fixture export: pass
+  - synthetic benchmark export: pass
+  - API health: pass
+  - OpenAI readiness: fail, because the currently running API process reports
+    missing `OPENAI_API_KEY`
+  - summary: 4/5 checks passed
+- Fresh CLI readiness still reports `openai ready=True mode=gpt-5.5`, so the
+  likely required action is restarting the local API server to reload
+  `.env.local`.
+
+Next active slice:
+
+- [x] Restart or relaunch the local API process for rehearsal so
+      `npm run demo:health` reaches 5/5, then rerun the dashboard live recheck
+      only if another approved OpenAI verification is needed.
+
+API restart and final rehearsal readiness evidence:
+
+- Reproduced the issue:
+  - `npm run demo:health`: 4/5, OpenAI readiness failed with missing
+    `OPENAI_API_KEY`.
+  - `npm run runtime:readiness -- --section openai`: ready=True,
+    mode=gpt-5.5.
+- Root cause: the running API process on `127.0.0.1:8000` had stale settings
+  and did not see the updated `.env.local`; fresh CLI settings did.
+- Relaunched the API with the project API environment on
+  `http://127.0.0.1:8000`.
+- `npm run demo:health`: 5/5 checks passed.
+- `npm run runtime:readiness -- --section openai`: `openai ready=True
+  mode=gpt-5.5`.
+- Approved live OpenAI recheck endpoint was exercised after the API restart:
+  `POST /api/openai/explanation-evaluation/recheck` returned `status=200`,
+  `model=gpt-5.5`, `passed=true`, `passed_criteria=3`,
+  `total_criteria=3`, and `response_text_present=true`.
+
+Next active slice:
+
+- [x] Capture or refresh final dashboard evidence screenshots only if the
+      presenter needs new images after this API restart; otherwise move to the
+      real-source adapter planning step.
+
+Final dashboard evidence screenshot refresh:
+
+- `npm run demo:health`: 5/5 checks passed before capture.
+- Captured final desktop evidence under `output/playwright/final-demo/`:
+  - `01-dashboard-full-desktop.png`
+  - `02-dashboard-first-viewport-desktop.png`
+  - `03-reports-panel-initial.png`
+  - `04-synthetic-evaluation-pass-suite.png`
+  - `05-synthetic-evaluation-failure-drilldown.png`
+  - `06-benchmark-report-5k.png`
+  - `07-benchmark-report-10k.png`
+  - `08-benchmark-report-50k.png`
+  - `09-edge-case-suite.png`
+  - `10-live-input-contract.png`
+  - `11-openai-evaluation-before-live-recheck.png`
+  - `12-openai-evaluation-after-live-recheck.png`
+  - `13-api-live-input-fixture-summary.json`
+  - `14-api-synthetic-benchmark-summary.json`
+  - `15-final-dashboard-layout-check.json`
+- The capture flow clicked `Live recheck`; the final OpenAI card showed
+  `gpt-5.5`, `3/3 criteria passed`, and `response text present`.
+- Layout evidence:
+  - full desktop screenshot: 1440 x 4392
+  - first viewport screenshot: 1440 x 1100
+  - `horizontalOverflow=0`
+- Representative images were visually inspected:
+  - first viewport dashboard
+  - OpenAI evaluation after live recheck
+  - 50K benchmark report
+- API summary artifacts confirmed:
+  - live input fixture: `status=200`, `schemaVersion=live-input.v1`,
+    `family=emergency`, `replayStatus=replay_input_ready`
+  - synthetic benchmark: `status=200`, `totalCases=5000`,
+    `passedCases=5000`, `failedCases=0`, `passRatePercent=100`
+- `npm run demo:health`: 5/5 checks passed after capture.
+
+Next active slice:
+
+- [x] Generate bulk `live-input.v1` JSON payloads and evaluate recommendations
+      directly from those JSON payloads.
+
+Bulk live-input JSON generation/evaluation evidence:
+
+- Added `apps/web/lib/syntheticLiveInputDataset.ts`.
+- Added `apps/web/lib/syntheticLiveInputDataset.test.ts`.
+- Added `GET /api/synthetic-live-input-export`.
+- The generator produces actual `live-input.v1` envelopes with attached
+  expected recommendations:
+  - `caseCount=100`
+  - `seed=404`
+  - 25 emergency cases
+  - 25 pedestrian cases
+  - 25 blocked cases
+  - 25 normal cases
+- The evaluator normalizes each generated JSON envelope, converts it through
+  `toSyntheticReplayInput()`, computes the recommendation from the JSON-derived
+  detections, and compares actual vs expected recommendation.
+- Added the new export endpoint to `npm run demo:health`.
+- Saved an inspectable artifact:
+  `output/live-input-json/synthetic-live-input-export-100.json`.
+- `npm --workspace apps/web run test -- syntheticLiveInputDataset.test.ts`: 3
+  passed.
+- `npm run test:demo-health`: 2 passed.
+- `npm run test:web`: 44 files, 315 tests passed.
+- `npm run build:web`: passed and listed `/api/synthetic-live-input-export` as
+  a dynamic app route.
+- Local HTTP check against `http://localhost:3000/api/synthetic-live-input-export`:
+  `status=200`, `source=synthetic_live_input_json`,
+  `schemaVersion=live-input.v1`, `count=100`, `passed=100`, `failed=0`.
+- `npm run demo:health`: 6/6 checks passed.
+- Secret and unfinished-marker scan against touched files found no matching
+  API-key pattern or placeholder marker.
+
+Next active slice:
+
+- [x] Add larger bulk `live-input.v1` JSON export options, such as 1K/5K/10K,
+      or move to the first real-source adapter fixture once a target input shape
+      is chosen.
+
+Bulk live-input JSON scale-up evidence:
+
+- Extended `apps/web/lib/syntheticLiveInputDataset.ts` with supported export
+  suites:
+  - `100`: 100 cases
+  - `1k`: 1,000 cases
+  - `5k`: 5,000 cases
+  - `10k`: 10,000 cases
+- Updated `GET /api/synthetic-live-input-export` to accept `?size=100`,
+  `?size=1k`, `?size=5k`, or `?size=10k`; unsupported sizes fall back to 100.
+- Updated `npm run demo:health` so it verifies the `1k` live-input JSON export.
+- Generated inspectable artifacts:
+  - `output/live-input-json/synthetic-live-input-export-100.json`
+  - `output/live-input-json/synthetic-live-input-export-1k.json`
+  - `output/live-input-json/synthetic-live-input-export-5k.json`
+  - `output/live-input-json/synthetic-live-input-export-10k.json`
+- Artifact results:
+  - 100 cases: 100 passed, 0 failed, 25 emergency cases
+  - 1K cases: 1,000 passed, 0 failed, 250 emergency cases
+  - 5K cases: 5,000 passed, 0 failed, 1,250 emergency cases
+  - 10K cases: 10,000 passed, 0 failed, 2,500 emergency cases
+- File sizes:
+  - 100: 145 KB
+  - 1K: 1.4 MB
+  - 5K: 7.0 MB
+  - 10K: 14 MB
+- `npm --workspace apps/web run test -- syntheticLiveInputDataset.test.ts`: 5
+  passed.
+- `npm run test:demo-health`: 2 passed.
+- `npm run test:web`: 44 files, 317 tests passed.
+- `npm run build:web`: passed.
+- `npm run demo:health`: 6/6 checks passed, including
+  `1K live-input.v1 JSON cases passed`.
+- Secret and unfinished-marker scan against touched files and generated JSON
+  artifacts found no matching API-key pattern or placeholder marker.
+
+Next active slice:
+
+- [x] Surface the 100/1K/5K/10K live-input JSON benchmark in the
+      dashboard/report visuals so the presenter can show input-contract
+      payload evaluation from the Reports panel.
+
+Live-input JSON benchmark dashboard evidence:
+
+- Added a `Live-input JSON Benchmark` card to the dashboard Reports evidence
+  stack.
+- The card has `100`, `1K`, `5K`, and `10K` suite controls.
+- The default view shows `100 JSON payloads`, `100 passed`, and `0 failed`.
+- Selecting `10K` shows `10,000 JSON payloads`, `10,000 passed`, and
+  `0 failed`.
+- The card is powered by `buildSyntheticLiveInputEvaluationReport()`, which
+  evaluates generated `live-input.v1` JSON payloads after normalizing and
+  mapping them through the replay-compatible input shape.
+- Updated presentation docs:
+  - `docs/presentation/final-demo-runbook.md`
+  - `docs/presentation/synthetic-evaluation-demo-flow.md`
+- Playwright desktop/mobile card screenshots:
+  - `output/playwright/live-input-json-benchmark-desktop.png`
+  - `output/playwright/live-input-json-benchmark-mobile.png`
+- Playwright layout checks:
+  - horizontal overflow: 0 on desktop and mobile
+  - live-input JSON benchmark card child overflow: 0 on desktop and mobile
+- `npm --workspace apps/web run test -- DashboardShell.test.tsx -t "shows live-input JSON benchmark evidence"`:
+  1 passed.
+- `npm run test:web`: 44 files, 318 tests passed.
+- `npm run build:web`: passed.
+- `npm run demo:health`: 6/6 checks passed.
+- Secret scan against touched files and new screenshots found no matching
+  API-key pattern.
+
+Next active slice:
+
+- [x] Add a live-input JSON failure/guardrail suite for malformed, stale,
+      low-confidence, or contradictory `live-input.v1` payloads, then surface
+      those misses/guarded cases in the dashboard.
+
+Live-input JSON guardrail evidence:
+
+- Added `buildSyntheticLiveInputGuardrailReport()` to evaluate risky
+  `live-input.v1` payloads separately from the clean benchmark pass suite.
+- The guardrail suite covers:
+  - invalid schema version -> `reject_payload`
+  - missing signal snapshot -> `reject_replay_input`
+  - stale signal state -> `manual_review_stale_signal`
+  - low-confidence emergency detection -> `manual_review_low_confidence`
+  - emergency plus pedestrian conflict ->
+    `emergency_priority_with_conflict_note`
+- Dashboard Reports panel now shows `Live-input JSON Guardrails`, `5 guarded`,
+  and `0 misses`.
+- Updated presentation docs:
+  - `docs/presentation/final-demo-runbook.md`
+  - `docs/presentation/synthetic-evaluation-demo-flow.md`
+- Playwright desktop/mobile card screenshots:
+  - `output/playwright/live-input-json-guardrails-desktop.png`
+  - `output/playwright/live-input-json-guardrails-mobile.png`
+- Playwright layout checks:
+  - horizontal overflow: 0 on desktop and mobile
+  - live-input JSON guardrail card child overflow: 0 on desktop and mobile
+- `npm --workspace apps/web run test -- syntheticLiveInputDataset.test.ts -t "guards malformed"`:
+  1 passed.
+- `npm --workspace apps/web run test -- DashboardShell.test.tsx -t "live-input JSON guardrail evidence"`:
+  1 passed.
+- `npm --workspace apps/web run test -- syntheticLiveInputDataset.test.ts DashboardShell.test.tsx -t "live-input JSON"`:
+  8 passed.
+- `npm run test:web`: 44 files, 320 tests passed.
+- `npm run build:web`: passed.
+- `npm run demo:health`: 6/6 checks passed.
+- Secret scan against touched files and new screenshots found no matching
+  API-key pattern.
+
+Next active slice:
+
+- [x] Implement a source-specific detector/signal adapter fixture that maps a
+      realistic external source shape into `live-input.v1`, then validate it
+      through the same normalizer/replay path.
+
+Source-specific adapter fixture evidence:
+
+- Added `apps/web/lib/sourceLiveInputAdapter.ts`.
+- The fixture starts from two source-shaped payloads:
+  - detector: `road-vision.fixture.v1`
+  - signal: `signal-controller.fixture.v1`
+- The adapter maps source detector classes into `live-input.v1` classes:
+  - `ambulance` / `fire_truck` -> `emergency_vehicle`
+  - `pedestrian` -> `pedestrian`
+  - `stopped_vehicle` -> `stalled_vehicle`
+  - `car` / `bus` -> `vehicle`
+- The adapter maps signal phases into local phases:
+  - `E_GREEN` -> `east_priority`
+  - `NORMAL` -> `normal_cycle`
+- Added `GET /api/source-live-input-fixture`.
+- Dashboard Reports panel now shows `Source Adapter Fixture`,
+  `road-vision.fixture.v1`, `signal-controller.fixture.v1`, `live-input.v1`,
+  `replay input ready`, and `emergency_vehicle`.
+- Updated `npm run demo:health` so it verifies the source-specific fixture
+  endpoint; latest result is 7/7 checks passed.
+- Updated docs:
+  - `docs/architecture/live-input-adapter-contract.md`
+  - `docs/presentation/final-demo-runbook.md`
+  - `docs/presentation/synthetic-evaluation-demo-flow.md`
+- Playwright desktop/mobile screenshots:
+  - `output/playwright/source-specific-adapter-desktop.png`
+  - `output/playwright/source-specific-adapter-mobile.png`
+- Playwright layout checks:
+  - horizontal overflow: 0 on desktop and mobile
+  - source-specific adapter card child overflow: 0 on desktop and mobile
+- `npm --workspace apps/web run test -- sourceLiveInputAdapter.test.ts`:
+  3 passed.
+- `npm --workspace apps/web run test -- app/api/source-live-input-fixture/route.test.ts`:
+  1 passed.
+- `npm --workspace apps/web run test -- DashboardShell.test.tsx -t "source-specific adapter evidence"`:
+  1 passed.
+- `npm --workspace apps/web run test -- sourceLiveInputAdapter.test.ts app/api/source-live-input-fixture/route.test.ts DashboardShell.test.tsx -t "source-specific|Source-specific"`:
+  5 passed.
+- `npm run test:demo-health`: 2 passed.
+- `npm run test:web`: 46 files, 325 tests passed.
+- `npm run build:web`: passed and listed `/api/source-live-input-fixture`.
+- `npm run demo:health`: 7/7 checks passed.
+- Local HTTP check against
+  `http://localhost:3000/api/source-live-input-fixture` returned
+  `source_specific_adapter_fixture`, `road-vision.fixture.v1`,
+  `signal-controller.fixture.v1`, `live-input.v1`,
+  `replay_input_ready`, and detection types including
+  `emergency_vehicle`.
+- Secret scan against touched files and new screenshots found no API-key
+  pattern. The only flagged credential-like string was the literal `rtsp://`
+  inside a negative test assertion that verifies raw stream credentials are not
+  present.
+
+Next active slice:
+
+- [x] Add a small downloadable evidence export for benchmark/source-adapter
+      reports because no real detector or signal sample is available yet.
+
+Downloadable demo evidence export:
+
+- Added `apps/web/lib/demoEvidenceExport.ts`.
+- Added `GET /api/demo-evidence-export`.
+- The export intentionally summarizes evidence without embedding the full 10K
+  dataset:
+  - synthetic benchmark: 5,000 total, 5,000 passed, 0 failed
+  - live-input JSON suites: 100, 1K, 5K, 10K summaries
+  - 10K live-input JSON: 10,000 total, 10,000 passed, 0 failed
+  - live-input guardrails: 5 guarded, 0 misses
+  - source adapter: `road-vision.fixture.v1` plus
+    `signal-controller.fixture.v1`, `live-input.v1`, replay ready
+- Updated `npm run demo:health` so it verifies `/api/demo-evidence-export`.
+- Updated docs:
+  - `docs/presentation/final-demo-runbook.md`
+  - `docs/presentation/synthetic-evaluation-demo-flow.md`
+- `npm --workspace apps/web run test -- demoEvidenceExport.test.ts`: 1
+  passed.
+- `npm --workspace apps/web run test -- app/api/demo-evidence-export/route.test.ts`:
+  1 passed.
+- `npm run test:demo-health`: 2 passed.
+- Local HTTP check against `http://localhost:3000/api/demo-evidence-export`
+  returned:
+  - `source=demo_evidence_export`
+  - `schemaVersion=demo-evidence.v1`
+  - benchmark `5000/5000`
+  - live-input JSON 10K `10000/10000`
+  - guardrails `5/5`
+  - source adapter `replay_input_ready`
+- `npm run test:web`: 48 files, 327 tests passed.
+- `npm run build:web`: passed and listed `/api/demo-evidence-export`.
+- `npm run demo:health`: 8/8 checks passed.
+- Secret scan against touched files found no API-key pattern. The only flagged
+  credential-like string was the literal `rtsp://` inside a negative test
+  assertion that verifies raw stream credentials are not present.
+
+Presenter-facing demo evidence UI:
+
+- Added a `Demo Evidence` card to the dashboard report panel because no real
+  CCTV or signal sample is available yet.
+- The card summarizes:
+  - health `8/8`
+  - synthetic benchmark `5,000/5,000`
+  - live-input JSON `10,000/10,000`
+  - guardrails `5 guarded / 0 misses`
+  - source-adapter replay readiness
+- The card links to `/api/demo-evidence-export` through `Evidence JSON`.
+- Browser proof:
+  - `output/playwright/demo-evidence-summary-desktop.png`
+  - `output/playwright/demo-evidence-summary-mobile.png`
+  - `output/playwright/demo-evidence-summary-layout.json`
+- Playwright layout check on `http://localhost:3000/dashboard`:
+  - desktop `documentOverflowX=0`, card child overflow `0`
+  - mobile `documentOverflowX=0`, card child overflow `0`
+
+Next active slice:
+
+- [ ] When a real detector or signal sample becomes available, replace the
+      source-specific fixture with that sample and rerun the same export,
+      dashboard, health, and OpenAI validation flow.
+
+OpenAI-backed full validation run on 2026-07-01:
+
+- Initial OpenAI CLI attempts failed before client creation because those CLI
+  commands require `OPENAI_API_KEY` in `os.environ`; `runtime:readiness` was
+  ready because settings can read `.env.local`.
+- Re-ran the OpenAI CLI commands after loading `.env.local` into the shell
+  environment without printing secrets.
+- Live OpenAI smoke:
+  - `openai smoke ready=True`
+  - `model=gpt-5.5`
+  - `embedding_model=text-embedding-3-small`
+  - `embedding_dimensions=1536`
+  - `response_text_present=True`
+- Live OpenAI explanation evaluation CLI:
+  - `openai explanation evaluation ready=True`
+  - `model=gpt-5.5`
+  - `passed=True`
+  - `criteria=3/3`
+  - `response_text_present=True`
+- Live API recheck endpoint:
+  - `POST /api/openai/explanation-evaluation/recheck`
+  - `status=200`
+  - `model=gpt-5.5`
+  - `passed=true`
+  - `criteria=3/3`
+  - `responseTextPresent=true`
+  - all criteria passed:
+    `simulation_only_boundary`, `no_real_signal_control`,
+    `policy_evidence_grounding`
+- Local validation also completed:
+  - `npm run test:api`: 151 passed, 2 skipped
+  - `npm run test:web`: 44 files, 317 tests passed
+  - `npm run build:web`: passed
+  - `npm run test:demo-health`: 2 passed
+  - `npm run demo:health`: 6/6 checks passed
+  - `GET /api/synthetic-live-input-export?size=10k`:
+    `status=200`, `count=10000`, `passed=10000`, `failed=0`,
+    `passRate=100`
+- Secret and unfinished-marker scan against touched files and generated JSON
+  artifacts found no matching API-key pattern or placeholder marker.
+
+Next active slice:
+
+- [x] Refine the backend local policy engine from simple priority if-branches
+      toward explicit safety gates and scored operational candidates.
+
+Local policy engine evidence:
+
+- Safety gate now outranks emergency priority when the intersection is blocked,
+  returning `ALL_RED_SAFETY` with `policy_priority=safety_gate`.
+- Unknown emergency direction still returns an all-red safety hold instead of
+  guessing a lane.
+- Operational candidates now expose `candidate_scores` and `constraints` for
+  `queue_relief`, `pedestrian_efficiency`, and `maintain_cycle`.
+- Pedestrian efficiency receives an explicit no-vehicle-pressure constraint when
+  queues and vehicle object counts are zero.
+- `apps/api/.venv/bin/pytest apps/api/tests/test_recommendations.py`: 10
+  passed.
+- `apps/api/.venv/bin/pytest apps/api/tests/test_recommendations.py apps/api/tests/test_api_flow.py apps/api/tests/test_agent_service.py`:
+  38 passed, 1 existing Starlette/httpx warning.
+- `apps/api/.venv/bin/pytest apps/api/tests`: 156 passed, 2 skipped, 1
+  existing Starlette/httpx warning.
+
+Next active slice:
+
+- [x] Align backend and frontend local policy criteria around safety-gate-first
+      ordering, shared reason codes, and operator-facing scorecard evidence.
+
+Policy alignment evidence:
+
+- Backend recommendation evidence now includes `policy_scorecard` for queue
+  relief and unknown-emergency-direction safety hold paths.
+- The scorecard records `selected_policy`, `candidate_scores`, `constraints`,
+  `blocked_reasons`, `required_inputs`, `objective_metrics`, `confidence`, and
+  `operator_note`.
+- Queue relief scorecards include quantitative `max_queue` and
+  `queue_over_threshold` metrics.
+- Frontend replay and live-input JSON evaluators now apply the same
+  safety-gate-first ordering as the backend: blocked-intersection safety gates
+  outrank emergency priority.
+- Synthetic expected reason codes now use backend names:
+  `intersection_blocked` and `normal_flow`.
+- Dashboard/digital-twin event label maps now use backend event keys:
+  `queue_threshold_exceeded` and `intersection_blocked`.
+- Updated presentation docs:
+  - `docs/presentation/synthetic-evaluation-demo-flow.md`
+  - `docs/presentation/final-demo-runbook.md`
+- `apps/api/.venv/bin/pytest apps/api/tests/test_recommendations.py`:
+  12 passed.
+- `apps/api/.venv/bin/pytest apps/api/tests/test_recommendations.py apps/api/tests/test_api_flow.py apps/api/tests/test_agent_service.py`:
+  40 passed, 1 existing Starlette/httpx warning.
+- `npm --workspace apps/web run test -- syntheticScenarios.test.ts syntheticEvaluation.test.ts syntheticLiveInputDataset.test.ts`:
+  15 passed.
+
+Next active slice:
+
+- [x] Surface backend policy scorecard evidence in the dashboard
+      recommendation panel for operator review.
+
+Operator scorecard UI evidence:
+
+- `Recommendation.evidence` now accepts structured evidence objects.
+- `RecommendationPanel` renders `policy_scorecard` separately instead of
+  flattening nested objects into `[object Object]`.
+- The scorecard shows selected policy, confidence, required inputs when present,
+  and objective metrics such as `max_queue` and `queue_over_threshold`.
+- `npm --workspace apps/web run test -- DashboardShell.test.tsx -t "operator policy scorecard"`:
+  1 passed.
+- `apps/api/.venv/bin/pytest apps/api/tests`: 158 passed, 2 skipped, 1
+  existing Starlette/httpx warning.
+- `npm run test:web`: 48 files, 335 tests passed.
+- `npm run build:web`: passed.
+
+Next active slice:
+
+- [x] Connect policy scorecards to an operator workflow status in the dashboard
+      and downloadable demo evidence export.
+
+Operator workflow evidence:
+
+- `RecommendationPanel` now derives operator review state from
+  `policy_scorecard`.
+- High-confidence scorecards with no required inputs or blocked reasons show
+  `승인 검토 준비` / `Ready for approval review`.
+- Low-confidence scorecards, required inputs, or blocked reasons show
+  `수동검토 필요` / `Manual review required`.
+- `GET /api/demo-evidence-export` now includes `operatorWorkflow` with
+  supported and demonstrated statuses plus required scorecard evidence fields.
+- The export includes a presentation claim that workflow state is derived from
+  policy scorecards, not autonomous signal control.
+- `npm --workspace apps/web run test -- DashboardShell.test.tsx -t "operator policy scorecard|low-confidence scorecards"`:
+  2 passed.
+- `npm --workspace apps/web run test -- demoEvidenceExport.test.ts app/api/demo-evidence-export/route.test.ts`:
+  2 passed.
+- `apps/api/.venv/bin/pytest apps/api/tests`: 158 passed, 2 skipped, 1
+  existing Starlette/httpx warning.
+- `npm run test:web`: 48 files, 336 tests passed.
+- `npm run build:web`: passed.
+
+Next active slice:
+
+- [x] Add real-sample readiness evidence while preserving the boundary that no
+      authorized live CCTV frames or real signal samples are currently
+      available.
+
+Real-sample readiness evidence:
+
+- `GET /api/demo-evidence-export` now includes `realSampleReadiness`.
+- The readiness summary states:
+  - `status=blocked_waiting_for_authorized_samples`
+  - `adapterBoundary=live-input.v1`
+  - `fixtureReplayStatus=replay_input_ready`
+  - CCTV status is `metadata_only` because authorized frame/stream access is
+    required.
+  - Signal status is `blocked_without_api_key` because a Seoul V2X or signal
+    controller timing sample is required.
+- The next required inputs are:
+  - authorized CCTV frame or video sample
+  - signal phase and remaining-time sample
+  - detector output mapped through `live-input.v1`
+- The Demo Evidence dashboard card now shows `real sample blocked` and
+  `live-input.v1 boundary ready`.
+- `npm --workspace apps/web run test -- demoEvidenceExport.test.ts app/api/demo-evidence-export/route.test.ts`:
+  2 passed.
+- `npm --workspace apps/web run test -- DashboardShell.test.tsx -t "downloadable demo evidence"`:
+  1 passed.
+- `apps/api/.venv/bin/pytest apps/api/tests`: 158 passed, 2 skipped, 1
+  existing Starlette/httpx warning.
+- `npm run test:web`: 48 files, 336 tests passed.
+- `npm run build:web`: passed.
+
+Next active slice:
+
+- [x] Add a real-sample drop-in checklist/API surface so authorized samples can
+      be routed into the existing `live-input.v1` validation path without
+      inventing live data.
+
+Real-sample drop-in evidence:
+
+- Added `apps/web/lib/realSampleDropIn.ts`.
+- Added `GET /api/real-sample-drop-in`.
+- The route returns:
+  - `source=real_sample_drop_in_readiness`
+  - `schemaVersion=real-sample-drop-in.v1`
+  - `status=waiting_for_authorized_samples`
+  - `adapterBoundary=live-input.v1`
+  - sample slots for authorized CCTV frame/video, signal phase remaining-time
+    JSON, and detector output
+  - validation flow through `live-input.v1`, replay input, local recommendation
+    policy, operator workflow status, and demo evidence export
+- `/api/demo-evidence-export` now points to `/api/real-sample-drop-in`.
+- The Demo Evidence dashboard card now links to `Drop-in Checklist`.
+- `npm run test:demo-health` now checks the real sample drop-in endpoint.
+- `npm --workspace apps/web run test -- realSampleDropIn.test.ts app/api/real-sample-drop-in/route.test.ts`:
+  2 passed.
+- `npm --workspace apps/web run test -- demoEvidenceExport.test.ts app/api/demo-evidence-export/route.test.ts realSampleDropIn.test.ts app/api/real-sample-drop-in/route.test.ts`:
+  4 passed.
+- `npm run test:demo-health`: 2 passed.
+- `apps/api/.venv/bin/pytest apps/api/tests`: 158 passed, 2 skipped, 1
+  existing Starlette/httpx warning.
+- `npm run test:web`: 50 files, 338 tests passed.
+- `npm run build:web`: passed and listed `/api/real-sample-drop-in`.
+
+Next active slice:
+
+- [x] Add POST validation to the real-sample drop-in route so an authorized
+      `live-input.v1` envelope can be tested without persistence.
+
+Real-sample POST validation evidence:
+
+- `validateRealSampleDropInEnvelope()` validates a supplied `live-input.v1`
+  envelope, converts it to replay input, runs the local live-input
+  recommendation helper, and derives operator workflow status.
+- `POST /api/real-sample-drop-in` returns:
+  - accepted validation with `replayStatus=replay_input_ready`,
+    `recommendation=emergency_priority`, and
+    `operatorWorkflowStatus=approval_review_ready`
+  - rejected validation with `operatorWorkflowStatus=manual_review_required`
+    and required input hints when the payload cannot become replay input
+- The POST route does not persist samples.
+- `npm --workspace apps/web run test -- realSampleDropIn.test.ts app/api/real-sample-drop-in/route.test.ts`:
+  6 passed.
+- `npm run test:demo-health`: 2 passed.
+- `apps/api/.venv/bin/pytest apps/api/tests`: 158 passed, 2 skipped, 1
+  existing Starlette/httpx warning.
+- `npm run test:web`: 50 files, 342 tests passed.
+- `npm run build:web`: passed and listed `/api/real-sample-drop-in`.
+
+Next active slice:
+
+- [x] Add low-confidence guardrail validation to the real-sample drop-in POST
+      path so replay-ready but weak evidence is not treated as approval-ready.
+
+Real-sample low-confidence guardrail evidence:
+
+- `validateRealSampleDropInEnvelope()` now routes detections with
+  `confidence < 0.5` to `manual_review_required`.
+- Low-confidence payloads keep `replayStatus=replay_input_ready` because the
+  envelope can be normalized and replayed, but return `accepted=false`,
+  `recommendation=null`, `requiredInputs=["higher_confidence_detection"]`, and
+  `validationErrors=["detection confidence below 0.5"]`.
+- `POST /api/real-sample-drop-in` returns `400` for low-confidence posted
+  detections without persisting the sample.
+- Updated presentation docs:
+  - `docs/presentation/final-demo-runbook.md`
+  - `docs/presentation/synthetic-evaluation-demo-flow.md`
+- TDD RED check:
+  - `npm --workspace apps/web run test -- realSampleDropIn.test.ts -t "low-confidence"`:
+    failed before implementation because the old behavior returned
+    `accepted=true` and `recommendation=emergency_priority`.
+- Targeted GREEN check:
+  - `npm --workspace apps/web run test -- realSampleDropIn.test.ts -t "low-confidence"`:
+    1 passed.
+- Route/lib check:
+  - `npm --workspace apps/web run test -- realSampleDropIn.test.ts app/api/real-sample-drop-in/route.test.ts`:
+    8 passed.
+- `npm run test:demo-health`: 2 passed.
+- `npm run test:web`: 50 files, 344 tests passed.
+- `npm run build:web`: passed and listed `/api/real-sample-drop-in`.
+
+Next active slice:
+
+- [x] Extend real-sample POST validation to route stale signal snapshots and
+      contradictory emergency/pedestrian evidence into explicit operator review
+      states, matching the existing live-input JSON guardrail suite.
+
+Real-sample stale/conflict guardrail evidence:
+
+- Stale signal snapshots now return `accepted=false`,
+  `replayStatus=replay_input_ready`, `operatorWorkflowStatus=manual_review_required`,
+  `requiredInputs=["fresh_signal_snapshot"]`, and
+  `validationErrors=["signal snapshot older than 30 seconds"]`.
+- Emergency plus long-waiting pedestrian conflicts keep
+  `recommendation=emergency_priority` visible, but return
+  `operatorWorkflowStatus=manual_review_required` with
+  `requiredInputs=["operator_conflict_review"]`.
+- `POST /api/real-sample-drop-in` returns `400` for both stale-signal and
+  emergency/pedestrian conflict guardrails without persisting the sample.
+- Updated presentation docs:
+  - `docs/presentation/final-demo-runbook.md`
+  - `docs/presentation/synthetic-evaluation-demo-flow.md`
+- TDD RED check:
+  - `npm --workspace apps/web run test -- realSampleDropIn.test.ts -t "stale signal|conflict review"`:
+    failed before implementation because the old behavior returned
+    `accepted=true` and `operatorWorkflowStatus=approval_review_ready`.
+- Targeted GREEN checks:
+  - `npm --workspace apps/web run test -- realSampleDropIn.test.ts -t "stale signal|conflict review"`:
+    2 passed.
+  - `npm --workspace apps/web run test -- realSampleDropIn.test.ts app/api/real-sample-drop-in/route.test.ts`:
+    12 passed.
+- `npm run test:demo-health`: 2 passed.
+- `npm run test:web`: 50 files, 348 tests passed.
+- `npm run build:web`: passed and listed `/api/real-sample-drop-in`.
+
+Next active slice:
+
+- [x] Expand backend policy scorecards so all major recommendation paths expose
+      the same operator-facing scorecard fields, not only queue relief and
+      selected safety-hold paths.
+
+Backend policy scorecard expansion evidence:
+
+- `apps/api/app/services/recommendations.py` now emits `policy_scorecard` for:
+  - blocked-intersection `safety_gate`
+  - known-direction `emergency_clearance`
+  - unknown-direction `safety_hold`
+  - `queue_relief`
+  - `pedestrian_efficiency`
+  - `maintain_cycle`
+- The added scorecards use the shared fields:
+  `selected_policy`, `candidate_scores`, `constraints`, `blocked_reasons`,
+  `required_inputs`, `objective_metrics`, `confidence`, and `operator_note`.
+- Emergency clearance scorecards include direction and estimated arrival.
+- Safety-gate scorecards include all-red duration and the blocked reason.
+- Pedestrian and maintain-cycle scorecards expose the operational candidate
+  scores and constraints used by the local policy engine.
+- Updated presentation docs:
+  - `docs/presentation/final-demo-runbook.md`
+  - `docs/presentation/synthetic-evaluation-demo-flow.md`
+- TDD RED check:
+  - `apps/api/.venv/bin/pytest apps/api/tests/test_recommendations.py -k "scorecard and (emergency_priority_evidence or blocked_intersection_evidence or pedestrian_efficiency_evidence or normal_flow_evidence)" -q`:
+    failed before implementation with missing `policy_scorecard` keys.
+- Targeted GREEN checks:
+  - `apps/api/.venv/bin/pytest apps/api/tests/test_recommendations.py -k "scorecard and (emergency_priority_evidence or blocked_intersection_evidence or pedestrian_efficiency_evidence or normal_flow_evidence)" -q`:
+    4 passed.
+  - `apps/api/.venv/bin/pytest apps/api/tests/test_recommendations.py -q`:
+    16 passed.
+  - `apps/api/.venv/bin/pytest apps/api/tests/test_recommendations.py apps/api/tests/test_api_flow.py apps/api/tests/test_agent_service.py -q`:
+    44 passed, 1 existing Starlette/httpx warning.
+- Full validation:
+  - `apps/api/.venv/bin/pytest apps/api/tests -q`:
+    162 passed, 2 skipped, 1 existing Starlette/httpx warning.
+  - `npm run test:web`: 50 files, 348 tests passed.
+  - `npm run build:web`: passed and listed `/api/real-sample-drop-in`.
+
+Next active slice:
+
+- [x] Reconcile frontend operator workflow evidence/export with the expanded
+      backend scorecard coverage so downloadable evidence describes the full
+      set of scorecard-backed policies.
+
+Frontend/export scorecard coverage evidence:
+
+- `GET /api/demo-evidence-export` now includes
+  `operatorWorkflow.scorecardBackedPolicies` for:
+  - `safety_gate`
+  - `emergency_clearance`
+  - `safety_hold`
+  - `queue_relief`
+  - `pedestrian_efficiency`
+  - `maintain_cycle`
+- `operatorWorkflow.requiredEvidence` now lists the full shared scorecard
+  fields: `selected_policy`, `candidate_scores`, `constraints`,
+  `blocked_reasons`, `confidence`, `required_inputs`, `objective_metrics`, and
+  `operator_note`.
+- The Demo Evidence dashboard card now surfaces `6 scorecard policies` so the
+  presenter can show that scorecard coverage is not limited to one example.
+- The export presentation claims now state that backend policy scorecards cover
+  safety gates, emergency clearance, queue relief, pedestrian efficiency, and
+  normal-cycle decisions.
+- Updated presentation docs:
+  - `docs/presentation/final-demo-runbook.md`
+  - `docs/presentation/synthetic-evaluation-demo-flow.md`
+- TDD RED check:
+  - `npm --workspace apps/web run test -- demoEvidenceExport.test.ts DashboardShell.test.tsx -t "demo evidence|downloadable demo evidence"`:
+    failed before implementation because the export did not include
+    `scorecardBackedPolicies` and the dashboard card did not show
+    `6 scorecard policies`.
+- Targeted GREEN check:
+  - `npm --workspace apps/web run test -- demoEvidenceExport.test.ts DashboardShell.test.tsx -t "demo evidence|downloadable demo evidence"`:
+    2 passed.
+- Full validation:
+  - `npm run test:web`: 50 files, 348 tests passed.
+  - `npm run build:web`: passed and listed `/api/demo-evidence-export`.
+  - `apps/api/.venv/bin/pytest apps/api/tests -q`:
+    162 passed, 2 skipped, 1 existing Starlette/httpx warning.
+  - `npm run test:demo-health`: 2 passed.
+
+Next active slice:
+
+- [x] Add explicit backend/frontend contract coverage for scorecard-backed
+      policy names so future changes cannot silently drift between API evidence,
+      demo export, and dashboard labels.
+
+Policy scorecard contract coverage evidence:
+
+- Backend now exports `POLICY_SCORECARD_BACKED_POLICIES` from
+  `apps/api/app/services/recommendations.py`.
+- Backend recommendation tests now collect `selected_policy` from representative
+  safety gate, emergency clearance, safety hold, queue relief, pedestrian
+  efficiency, and maintain-cycle observations and compare that set with the
+  backend policy contract.
+- Frontend now defines `apps/web/lib/policyScorecardContract.ts` with:
+  - `POLICY_SCORECARD_BACKED_POLICIES`
+  - `POLICY_SCORECARD_REQUIRED_EVIDENCE`
+- `GET /api/demo-evidence-export` now builds
+  `operatorWorkflow.scorecardBackedPolicies` and `requiredEvidence` from the
+  frontend contract constants instead of duplicating inline strings.
+- Presentation docs now state that backend/frontend contract tests keep policy
+  names aligned across API evidence, demo export, and dashboard summary.
+- TDD RED checks:
+  - `apps/api/.venv/bin/pytest apps/api/tests/test_recommendations.py -k "policy_scorecard_contract" -q`:
+    failed before implementation because
+    `POLICY_SCORECARD_BACKED_POLICIES` was not exported.
+  - `npm --workspace apps/web run test -- demoEvidenceExport.test.ts`:
+    failed before implementation because `policyScorecardContract` did not
+    exist.
+- Targeted GREEN checks:
+  - `apps/api/.venv/bin/pytest apps/api/tests/test_recommendations.py -k "policy_scorecard_contract" -q`:
+    1 passed.
+  - `npm --workspace apps/web run test -- demoEvidenceExport.test.ts`:
+    1 passed.
+  - `npm --workspace apps/web run test -- DashboardShell.test.tsx -t "downloadable demo evidence"`:
+    1 passed.
+  - `apps/api/.venv/bin/pytest apps/api/tests/test_recommendations.py -q`:
+    17 passed.
+  - `npm --workspace apps/web run test -- demoEvidenceExport.test.ts DashboardShell.test.tsx -t "demo evidence|downloadable demo evidence"`:
+    2 passed.
+- Full validation:
+  - `apps/api/.venv/bin/pytest apps/api/tests -q`:
+    163 passed, 2 skipped, 1 existing Starlette/httpx warning.
+  - `npm run test:web`: 50 files, 348 tests passed.
+  - `npm run build:web`: passed and listed `/api/demo-evidence-export`.
+  - `npm run test:demo-health`: 2 passed.
+
+Next active slice:
+
+- [x] Add a small scorecard contract export or local inspection artifact so the
+      presenter can show the policy contract directly, without reading source
+      code or relying only on tests.
+
+Policy scorecard contract inspection evidence:
+
+- Added `apps/web/lib/policyScorecardContractExport.ts`.
+- Added `GET /api/policy-scorecard-contract`.
+- The JSON artifact includes:
+  - `source=policy_scorecard_contract`
+  - `schemaVersion=policy-scorecard-contract.v1`
+  - `operatorWorkflowSource=policy_scorecard`
+  - `adapterBoundary=live-input.v1`
+  - `decisionBoundary=operator_decision_support_not_signal_control`
+  - six `scorecardBackedPolicies`
+  - required scorecard evidence fields
+  - supported operator workflow statuses
+- `GET /api/demo-evidence-export` now includes
+  `operatorWorkflow.contractEndpoint=/api/policy-scorecard-contract`.
+- `npm run demo:health` now checks the policy scorecard contract export; the
+  presenter-facing health count is now `11/11`.
+- The Demo Evidence dashboard card now shows `Health 11/11`.
+- Updated presentation docs:
+  - `docs/presentation/final-demo-runbook.md`
+  - `docs/presentation/synthetic-evaluation-demo-flow.md`
+- TDD RED checks:
+  - `npm --workspace apps/web run test -- policyScorecardContractExport.test.ts app/api/policy-scorecard-contract/route.test.ts`:
+    failed before implementation because the export builder and route did not
+    exist.
+  - `npm run test:demo-health`:
+    failed before implementation because the health check still had 10 checks.
+  - `npm --workspace apps/web run test -- demoEvidenceExport.test.ts`:
+    failed before adding `operatorWorkflow.contractEndpoint`.
+  - `npm --workspace apps/web run test -- DashboardShell.test.tsx -t "downloadable demo evidence"`:
+    failed before updating the dashboard health label from `8/8` to `11/11`.
+- Targeted GREEN checks:
+  - `npm --workspace apps/web run test -- policyScorecardContractExport.test.ts app/api/policy-scorecard-contract/route.test.ts`:
+    2 passed.
+  - `npm run test:demo-health`: 2 passed.
+  - `npm --workspace apps/web run test -- demoEvidenceExport.test.ts`:
+    1 passed.
+  - `npm --workspace apps/web run test -- DashboardShell.test.tsx -t "downloadable demo evidence"`:
+    1 passed.
+  - `npm --workspace apps/web run test -- policyScorecardContractExport.test.ts app/api/policy-scorecard-contract/route.test.ts demoEvidenceExport.test.ts DashboardShell.test.tsx -t "policy scorecard contract|demo evidence|downloadable demo evidence"`:
+    4 passed.
+- Full validation:
+  - `apps/api/.venv/bin/pytest apps/api/tests -q`:
+    163 passed, 2 skipped, 1 existing Starlette/httpx warning.
+  - `npm run test:web`: 52 files, 350 tests passed.
+  - `npm run build:web`: passed and listed `/api/policy-scorecard-contract`.
+  - `npm run test:demo-health`: 2 passed.
+
+Next active slice:
+
+- [x] Run a final local readiness reconciliation across demo evidence,
+      scorecard contract, real-sample drop-in, health checks, and presentation
+      docs so the remaining work is clearly separated from the blocker of
+      missing authorized CCTV/signal samples.
+
+Final local readiness reconciliation evidence:
+
+- Added `apps/web/lib/finalLocalReadiness.ts`.
+- Added `GET /api/final-local-readiness`.
+- The JSON artifact includes:
+  - `source=final_local_readiness_reconciliation`
+  - `schemaVersion=final-local-readiness.v1`
+  - `localRehearsalStatus=ready_for_local_rehearsal`
+  - `realSampleStatus=blocked_waiting_for_authorized_samples`
+  - `decisionBoundary=operator_decision_support_not_signal_control`
+  - `adapterBoundary=live-input.v1`
+  - `healthCheck.expectedSummary=12/12 checks passed`
+  - links to demo evidence, policy scorecard contract, real-sample drop-in,
+    live-input fixture, source adapter fixture, and 10K live-input JSON export
+  - local evidence summaries for benchmark, live-input JSON, guardrails,
+    scorecard policy count, and source adapter replay status
+  - real-sample blockers and next required inputs
+- `npm run demo:health` now includes the final local readiness export in the
+  health flow.
+- The Demo Evidence dashboard card now links to `Final Readiness`.
+- The presenter-facing health label is now `Health 12/12`.
+- Updated presentation docs:
+  - `docs/presentation/final-demo-runbook.md`
+  - `docs/presentation/synthetic-evaluation-demo-flow.md`
+- TDD RED checks:
+  - `npm --workspace apps/web run test -- finalLocalReadiness.test.ts app/api/final-local-readiness/route.test.ts`:
+    failed before implementation because the builder and route did not exist.
+  - `npm run test:demo-health`:
+    failed before implementation because the health flow still had 11 checks.
+  - `npm --workspace apps/web run test -- DashboardShell.test.tsx -t "downloadable demo evidence"`:
+    failed before adding the `Final Readiness` link.
+- Targeted GREEN checks:
+  - `npm --workspace apps/web run test -- finalLocalReadiness.test.ts app/api/final-local-readiness/route.test.ts`:
+    2 passed.
+  - `npm run test:demo-health`: 2 passed.
+  - `npm --workspace apps/web run test -- DashboardShell.test.tsx -t "downloadable demo evidence"`:
+    1 passed.
+  - `npm --workspace apps/web run test -- finalLocalReadiness.test.ts app/api/final-local-readiness/route.test.ts DashboardShell.test.tsx -t "final local readiness|downloadable demo evidence"`:
+    3 passed.
+- Full validation:
+  - `apps/api/.venv/bin/pytest apps/api/tests -q`:
+    163 passed, 2 skipped, 1 existing Starlette/httpx warning.
+  - `npm run test:web`: 54 files, 352 tests passed.
+  - `npm run build:web`: passed and listed `/api/final-local-readiness`.
+  - `npm run test:demo-health`: 2 passed.
+
+Next active slice:
+
+- [x] Add a real-sample intake package so authorized sample providers can see
+      the exact `live-input.v1` submission fields, guardrails, prohibited
+      inputs, and POST steps before a real sample is available.
+
+Real-sample intake package evidence:
+
+- Added `apps/web/lib/realSampleIntakePackage.ts`.
+- Added `GET /api/real-sample-intake-package`.
+- The JSON artifact includes:
+  - `source=real_sample_intake_package`
+  - `schemaVersion=real-sample-intake-package.v1`
+  - `status=waiting_for_authorized_samples`
+  - `adapterBoundary=live-input.v1`
+  - `dropInEndpoint=/api/real-sample-drop-in`
+  - `finalReadinessEndpoint=/api/final-local-readiness`
+  - `noPersistence=true`
+  - required top-level, detection, and signal fields for `live-input.v1`
+  - validation guardrails for invalid envelopes, stale signal snapshots,
+    low-confidence detections, and emergency/pedestrian conflicts
+  - prohibited inputs: raw stream credentials, unauthorized CCTV frames/video,
+    and secret API keys
+  - submission steps for authorized samples
+- `GET /api/final-local-readiness` now links to
+  `/api/real-sample-intake-package`.
+- `npm run demo:health` now includes the real-sample intake package; the
+  presenter-facing health count is now `13/13`.
+- The Demo Evidence dashboard card now links to `Intake Package` and shows
+  `Health 13/13`.
+- Updated presentation docs:
+  - `docs/presentation/final-demo-runbook.md`
+  - `docs/presentation/synthetic-evaluation-demo-flow.md`
+- TDD RED checks:
+  - `npm --workspace apps/web run test -- realSampleIntakePackage.test.ts app/api/real-sample-intake-package/route.test.ts DashboardShell.test.tsx -t "real sample intake|downloadable demo evidence"`:
+    failed before implementation because the builder/route did not exist and
+    the dashboard card did not expose `Intake Package`.
+  - `npm run test:demo-health`:
+    failed before implementation because the health flow still had 12 checks.
+- Targeted GREEN checks:
+  - `npm --workspace apps/web run test -- realSampleIntakePackage.test.ts app/api/real-sample-intake-package/route.test.ts DashboardShell.test.tsx -t "real sample intake|downloadable demo evidence"`:
+    3 passed.
+  - `npm run test:demo-health`: 2 passed.
+  - `npm --workspace apps/web run test -- realSampleIntakePackage.test.ts app/api/real-sample-intake-package/route.test.ts finalLocalReadiness.test.ts app/api/final-local-readiness/route.test.ts DashboardShell.test.tsx -t "real sample intake|final local readiness|downloadable demo evidence"`:
+    5 passed.
+- Full validation:
+  - `apps/api/.venv/bin/pytest apps/api/tests -q`:
+    163 passed, 2 skipped, 1 existing Starlette/httpx warning.
+  - `npm run test:web`: 56 files, 354 tests passed.
+  - `npm run build:web`: passed and listed `/api/real-sample-intake-package`.
+  - `npm run test:demo-health`: 2 passed.
+
+Next active slice:
+
+- [x] Add a machine-readable replay-ready `live-input.v1` submission schema so
+      authorized sample providers can validate envelope shape before posting to
+      the real-sample drop-in path.
+
+Live-input submission schema evidence:
+
+- Added `apps/web/lib/liveInputSubmissionSchema.ts`.
+- Added `GET /api/live-input-submission-schema`.
+- The JSON artifact includes:
+  - `source=live_input_submission_schema`
+  - `schemaVersion=live-input-submission-schema.v1`
+  - `adapterBoundary=live-input.v1`
+  - `dropInEndpoint=/api/real-sample-drop-in`
+  - `decisionBoundary=operator_decision_support_not_signal_control`
+  - JSON Schema draft 2020-12 metadata
+  - required replay-ready top-level fields, including `signalSnapshot`
+  - detection class enum with `emergency_vehicle`
+  - confidence bounds from 0 to 1
+  - signal phase/controller-mode enums
+  - guardrail notes for low confidence, stale signal snapshots, required
+    signal snapshots, and no autonomous signal control
+- `GET /api/real-sample-intake-package` now links to
+  `/api/live-input-submission-schema` and tells providers to validate envelope
+  shape before POST.
+- `GET /api/final-local-readiness` now links to
+  `/api/live-input-submission-schema`.
+- `npm run demo:health` now includes the live-input submission schema; the
+  presenter-facing health count is now `14/14`.
+- The Demo Evidence dashboard card now links to `Submission Schema` and shows
+  `Health 14/14`.
+- Updated presentation docs:
+  - `docs/presentation/final-demo-runbook.md`
+  - `docs/presentation/synthetic-evaluation-demo-flow.md`
+- TDD RED checks:
+  - `npm --workspace apps/web run test -- liveInputSubmissionSchema.test.ts app/api/live-input-submission-schema/route.test.ts`:
+    failed before implementation because the builder and route did not exist.
+  - `npm --workspace apps/web run test -- realSampleIntakePackage.test.ts app/api/real-sample-intake-package/route.test.ts finalLocalReadiness.test.ts app/api/final-local-readiness/route.test.ts DashboardShell.test.tsx -t "real sample intake|final local readiness|downloadable demo evidence"`:
+    failed before connecting the schema endpoint, final readiness summary, and
+    dashboard link.
+- Targeted GREEN checks:
+  - `npm --workspace apps/web run test -- liveInputSubmissionSchema.test.ts app/api/live-input-submission-schema/route.test.ts`:
+    2 passed.
+  - `npm --workspace apps/web run test -- realSampleIntakePackage.test.ts app/api/real-sample-intake-package/route.test.ts finalLocalReadiness.test.ts app/api/final-local-readiness/route.test.ts DashboardShell.test.tsx -t "real sample intake|final local readiness|downloadable demo evidence"`:
+    5 passed.
+  - `node --test scripts/demo-health-check.test.mjs`:
+    2 passed.
+- Full validation:
+  - `apps/api/.venv/bin/pytest apps/api/tests -q`:
+    163 passed, 2 skipped, 1 existing Starlette/httpx warning.
+  - `npm run test:demo-health`:
+    2 passed.
+  - `npm run test:web`:
+    58 files, 356 tests passed.
+  - `npm run build:web`:
+    passed and listed `/api/live-input-submission-schema`.
+
+Next active slice:
+
+- [x] Extend the policy scorecard contract so backend/frontend evidence exposes
+      decision order and scoring constants, not only policy names.
+
+Policy scorecard contract detail evidence:
+
+- Added backend recommendation constants in
+  `apps/api/app/services/recommendations.py`:
+  - `POLICY_DECISION_ORDER`
+  - `POLICY_SCORING_CONSTANTS`
+- Extended frontend contract constants in
+  `apps/web/lib/policyScorecardContract.ts` with the same decision order and
+  scoring values.
+- `GET /api/policy-scorecard-contract` now includes:
+  - `decisionOrder`
+  - `scoringConstants`
+- `npm run demo:health` now validates those policy contract details while
+  keeping the health count at `14/14`.
+- Updated presentation docs:
+  - `docs/presentation/final-demo-runbook.md`
+  - `docs/presentation/synthetic-evaluation-demo-flow.md`
+- TDD RED checks:
+  - `apps/api/.venv/bin/pytest apps/api/tests/test_recommendations.py -k "policy_contract_exposes_decision_order" -q`:
+    failed before implementation because `POLICY_DECISION_ORDER` was not
+    exported.
+  - `npm --workspace apps/web run test -- policyScorecardContractExport.test.ts app/api/policy-scorecard-contract/route.test.ts`:
+    failed before implementation because `decisionOrder` and
+    `scoringConstants` were missing.
+- Targeted GREEN checks:
+  - `apps/api/.venv/bin/pytest apps/api/tests/test_recommendations.py -k "policy_contract_exposes_decision_order" -q`:
+    1 passed.
+  - `npm --workspace apps/web run test -- policyScorecardContractExport.test.ts app/api/policy-scorecard-contract/route.test.ts`:
+    2 passed.
+  - `node --test scripts/demo-health-check.test.mjs`:
+    2 passed.
+- Full validation:
+  - `apps/api/.venv/bin/pytest apps/api/tests -q`:
+    164 passed, 2 skipped, 1 existing Starlette/httpx warning.
+  - `npm run test:demo-health`:
+    2 passed.
+  - `npm run test:web`:
+    58 files, 356 tests passed.
+  - `npm run build:web`:
+    passed and listed `/api/policy-scorecard-contract`.
+
+Next active slice:
+
+- [x] Add operator-facing workflow summary fields to real-sample drop-in POST
+      responses so authorized sample validation can be audited without opening
+      separate source code.
+
+Real-sample drop-in operator workflow evidence:
+
+- `validateRealSampleDropInEnvelope()` now returns `operatorWorkflow` in
+  addition to the existing top-level `operatorWorkflowStatus`.
+- The nested `operatorWorkflow` includes:
+  - `source=policy_scorecard`
+  - `contractEndpoint=/api/policy-scorecard-contract`
+  - `status`
+  - `selectedPolicy`
+  - `confidence`
+  - `requiredInputs`
+  - `blockedReasons`
+- Approval-ready emergency validation maps to
+  `selectedPolicy=emergency_clearance` with high confidence.
+- Rejected or uncertain inputs map to `selectedPolicy=safety_hold` with low
+  confidence unless a visible recommendation remains useful, such as emergency
+  priority plus pedestrian conflict.
+- `npm run demo:health` now validates the drop-in POST operator workflow
+  summary while keeping the health count at `14/14`.
+- Updated presentation docs:
+  - `docs/presentation/final-demo-runbook.md`
+  - `docs/presentation/synthetic-evaluation-demo-flow.md`
+- TDD RED checks:
+  - `npm --workspace apps/web run test -- realSampleDropIn.test.ts app/api/real-sample-drop-in/route.test.ts`:
+    failed before implementation because `operatorWorkflow` was missing.
+- Targeted GREEN checks:
+  - `npm --workspace apps/web run test -- realSampleDropIn.test.ts app/api/real-sample-drop-in/route.test.ts`:
+    12 passed.
+  - `node --test scripts/demo-health-check.test.mjs`:
+    2 passed.
+- Full validation:
+  - `apps/api/.venv/bin/pytest apps/api/tests -q`:
+    164 passed, 2 skipped, 1 existing Starlette/httpx warning.
+  - `npm run test:demo-health`:
+    2 passed.
+  - `npm run test:web`:
+    58 files, 356 tests passed.
+  - `npm run build:web`:
+    passed and listed `/api/real-sample-drop-in`.
+
+Next active slice:
+
+- [x] Add a local LLM explanation contract so the project can show that LLM
+      output explains and reviews policy evidence, rather than deciding signal
+      plans.
+
+LLM explanation contract evidence:
+
+- Added `apps/web/lib/llmExplanationContract.ts`.
+- Added `GET /api/llm-explanation-contract`.
+- The JSON artifact includes:
+  - `source=llm_explanation_contract`
+  - `schemaVersion=llm-explanation-contract.v1`
+  - `role=explanation_review_only`
+  - `decisionSource=local_policy_scorecard`
+  - `decisionBoundary=operator_decision_support_not_signal_control`
+  - `noOpenAICallRequired=true`
+  - allowed responsibilities for explaining local recommendations, summarizing
+    scorecard evidence, flagging missing evidence, and checking explanation
+    text against guardrails
+  - prohibited responsibilities for choosing signal plans, overriding local
+    policy recommendations, claiming autonomous signal control, or inventing
+    live CCTV/signal-controller evidence
+  - evaluation criteria matching the backend OpenAI explanation evaluator:
+    `simulation_only_boundary`, `no_real_signal_control`, and
+    `policy_evidence_grounding`
+- `GET /api/demo-evidence-export` now links
+  `operatorWorkflow.llmExplanationContractEndpoint=/api/llm-explanation-contract`
+  and records the presentation claim that LLM explanations review local policy
+  evidence and do not choose signal plans.
+- `GET /api/final-local-readiness` now links to
+  `/api/llm-explanation-contract`.
+- `npm run demo:health` now validates the LLM explanation contract; the
+  presenter-facing health count is now `15/15`.
+- Updated presentation docs:
+  - `docs/presentation/final-demo-runbook.md`
+  - `docs/presentation/synthetic-evaluation-demo-flow.md`
+- TDD RED checks:
+  - `npm --workspace apps/web run test -- llmExplanationContract.test.ts app/api/llm-explanation-contract/route.test.ts demoEvidenceExport.test.ts finalLocalReadiness.test.ts app/api/final-local-readiness/route.test.ts`:
+    failed before implementation because the builder/route did not exist and
+    demo/final readiness did not link the contract.
+  - `node --test scripts/demo-health-check.test.mjs`:
+    failed before adding the 15th health check.
+- Targeted GREEN checks:
+  - `npm --workspace apps/web run test -- llmExplanationContract.test.ts app/api/llm-explanation-contract/route.test.ts demoEvidenceExport.test.ts finalLocalReadiness.test.ts app/api/final-local-readiness/route.test.ts`:
+    5 passed.
+  - `node --test scripts/demo-health-check.test.mjs`:
+    2 passed.
+- Full validation:
+  - `apps/api/.venv/bin/pytest apps/api/tests -q`:
+    164 passed, 2 skipped, 1 existing Starlette/httpx warning.
+  - `npm run test:demo-health`:
+    2 passed.
+  - `npm run test:web`:
+    60 files, 358 tests passed.
+  - `npm run build:web`:
+    passed and listed `/api/llm-explanation-contract`.
+
+Next active slice:
+
+- [x] Align the dashboard Demo Evidence card with the new LLM explanation
+      contract and 15-check health flow.
+
+Dashboard LLM contract link evidence:
+
+- The Demo Evidence card now shows `Health 15/15`.
+- The card now links to `LLM Contract` at `/api/llm-explanation-contract`.
+- This keeps the visible dashboard shortcut aligned with:
+  - `GET /api/demo-evidence-export`
+  - `GET /api/final-local-readiness`
+  - `npm run demo:health`
+- TDD RED check:
+  - `npm --workspace apps/web run test -- DashboardShell.test.tsx -t "downloadable demo evidence"`:
+    failed before implementation because the card still showed `Health 14/14`
+    and did not expose `LLM Contract`.
+- Targeted GREEN check:
+  - `npm --workspace apps/web run test -- DashboardShell.test.tsx -t "downloadable demo evidence"`:
+    1 passed.
+
+Next active slice:
+
+- [x] Add a local policy safety hold for conflicting queue axes so the
+      recommendation engine does not choose a single green extension when both
+      north/south and east/west movement axes exceed the queue threshold.
+
+Conflicting queue axes safety-hold evidence:
+
+- Backend recommendation policy now detects conflicting queue axes after
+  existing safety/emergency gates and before ordinary queue relief.
+- When both movement axes exceed the queue threshold, the policy returns:
+  - `RecommendationAction.ALL_RED_SAFETY`
+  - `reason=conflicting_queue_axes`
+  - `policy_priority=safety_hold`
+  - low-confidence policy scorecard requiring
+    `signal_phase.remaining_seconds`
+- The inspectable policy scorecard contract now exposes
+  `conflictingQueueAxesAllRedSeconds=6` /
+  `conflicting_queue_axes_all_red_seconds=6`.
+- TDD RED checks:
+  - `apps/api/.venv/bin/pytest apps/api/tests/test_recommendations.py -k "conflicting_queue_axes" -q`:
+    failed before implementation because the policy returned
+    `green_extension`.
+  - `apps/api/.venv/bin/pytest apps/api/tests/test_recommendations.py -k "policy_contract_exposes" -q`:
+    failed before adding the new scoring constant to the backend contract.
+  - `npm --workspace apps/web run test -- policyScorecardContractExport.test.ts app/api/policy-scorecard-contract/route.test.ts`:
+    failed before adding the frontend contract constant.
+- Targeted GREEN checks:
+  - `apps/api/.venv/bin/pytest apps/api/tests/test_recommendations.py -q`:
+    19 passed.
+  - `npm --workspace apps/web run test -- policyScorecardContractExport.test.ts app/api/policy-scorecard-contract/route.test.ts`:
+    2 passed.
+  - `node --test scripts/demo-health-check.test.mjs`:
+    2 passed.
+- Full validation:
+  - `apps/api/.venv/bin/pytest apps/api/tests -q`:
+    165 passed, 2 skipped, 1 existing Starlette/httpx warning.
+  - `npm run test:demo-health`:
+    2 passed.
+  - `npm run test:web`:
+    60 files, 358 tests passed.
+  - `npm run build:web`:
+    passed and listed `/api/policy-scorecard-contract`.
+
+Next active slice:
+
+- [x] Add the same conflicting queue axes scenario to the synthetic
+      `live-input.v1` guardrail suite so local evaluation catches the new
+      safety-hold condition before real samples are available.
+
+Synthetic conflicting queue axes guardrail evidence:
+
+- `buildSyntheticLiveInputGuardrailReport()` now includes a sixth case:
+  `Conflicting queue axes`.
+- The case builds a replay-compatible `live-input.v1` envelope with vehicle
+  queues over threshold on both north/south and east/west movement axes.
+- `detectLiveInputGuardrail()` now maps that case to
+  `manual_review_conflicting_queue_axes` when no higher emergency priority is
+  present.
+- Demo evidence, final local readiness, dashboard copy, health test fixtures,
+  and presentation docs now report `6 guarded / 0 misses`.
+- TDD RED check:
+  - `npm --workspace apps/web run test -- syntheticLiveInputDataset.test.ts demoEvidenceExport.test.ts finalLocalReadiness.test.ts DashboardShell.test.tsx -t "guardrail|downloadable demo evidence"`:
+    failed before implementation because reports still showed 5 guardrails and
+    the new case was missing.
+- Targeted GREEN checks:
+  - `npm --workspace apps/web run test -- syntheticLiveInputDataset.test.ts demoEvidenceExport.test.ts finalLocalReadiness.test.ts DashboardShell.test.tsx -t "guardrail|downloadable demo evidence"`:
+    3 passed, 96 skipped.
+  - `npm --workspace apps/web run test -- syntheticLiveInputDataset.test.ts demoEvidenceExport.test.ts finalLocalReadiness.test.ts DashboardShell.test.tsx`:
+    99 passed.
+  - `npm --workspace apps/web run test -- app/api/demo-evidence-export/route.test.ts`:
+    1 passed after updating the stale route assertion.
+- Full validation:
+  - `apps/api/.venv/bin/pytest apps/api/tests -q`:
+    165 passed, 2 skipped, 1 existing Starlette/httpx warning.
+  - `npm run test:demo-health`:
+    2 passed.
+  - `npm run test:web`:
+    60 files, 358 tests passed.
+  - `npm run build:web`:
+    passed and listed `/api/demo-evidence-export` and
+    `/api/final-local-readiness`.
+- Playwright desktop/mobile guardrail card proof:
+  - `output/playwright/live-input-json-guardrails-conflict-desktop.png`
+  - `output/playwright/live-input-json-guardrails-conflict-mobile.png`
+  - `output/playwright/live-input-json-guardrails-conflict-layout.json`
+  - horizontal overflow: 0 on desktop and mobile.
+
+Next active slice:
+
+- [x] Add a local file-based real-sample check command so an authorized
+      `live-input.v1` envelope can be validated through the same drop-in route
+      as soon as a sample is available.
+
+Real-sample file check evidence:
+
+- Added `scripts/real-sample-drop-in-check.mjs`.
+- Added root script:
+  `npm run real-sample:check -- <live-input-envelope.json>`.
+- The command reads a local JSON envelope and POSTs it to
+  `http://localhost:3000/api/real-sample-drop-in` by default.
+- The command prints a compact operator-facing summary:
+  `accepted`, `replayStatus`, `recommendation`, `operatorWorkflowStatus`,
+  `selectedPolicy`, `confidence`, `requiredInputs`, and `validationErrors`.
+- The command exits `0` for accepted samples, `1` for manual-review/rejected
+  validation, and `2` for local file/JSON usage errors.
+- `GET /api/real-sample-intake-package` now exposes the local CLI command in
+  addition to the POST endpoint.
+- `GET /api/final-local-readiness` now exposes `realSampleCheck` with the
+  command, route, and running-web-server requirement.
+- Presentation docs now mention the file-based command for authorized
+  `live-input.v1` envelopes.
+- TDD RED checks:
+  - `node --test scripts/real-sample-drop-in-check.test.mjs`:
+    failed before implementation because `scripts/real-sample-drop-in-check.mjs`
+    did not exist.
+  - `npm --workspace apps/web run test -- realSampleIntakePackage.test.ts finalLocalReadiness.test.ts app/api/real-sample-intake-package/route.test.ts app/api/final-local-readiness/route.test.ts`:
+    failed before adding CLI metadata to the intake and readiness artifacts.
+- Targeted GREEN checks:
+  - `node --test scripts/real-sample-drop-in-check.test.mjs`:
+    2 passed.
+  - `node --test scripts/real-sample-drop-in-check.test.mjs scripts/demo-health-check.test.mjs`:
+    4 passed.
+  - `npm --workspace apps/web run test -- realSampleIntakePackage.test.ts finalLocalReadiness.test.ts app/api/real-sample-intake-package/route.test.ts app/api/final-local-readiness/route.test.ts`:
+    4 passed.
+- Full validation:
+  - `apps/api/.venv/bin/pytest apps/api/tests -q`:
+    165 passed, 2 skipped, 1 existing Starlette/httpx warning.
+  - `npm run test:demo-health`:
+    2 passed.
+  - `npm run test:web`:
+    60 files, 358 tests passed.
+  - `npm run build:web`:
+    passed and listed `/api/real-sample-drop-in`,
+    `/api/real-sample-intake-package`, and `/api/final-local-readiness`.
+
+Next active slice:
+
+- [x] Align the real-sample drop-in validator with the conflicting queue axes
+      safety hold so authorized sample submissions use the same guardrail as
+      backend policy and synthetic `live-input.v1` evaluation.
+
+Real-sample conflicting queue axes evidence:
+
+- `validateRealSampleDropInEnvelope()` now detects vehicle queues above the
+  local threshold on both north/south and east/west movement axes when no
+  emergency vehicle is present.
+- The validator returns:
+  - `accepted=false`
+  - `replayStatus=replay_input_ready`
+  - `operatorWorkflowStatus=manual_review_required`
+  - `selectedPolicy=safety_hold`
+  - `requiredInputs=["signal_phase.remaining_seconds"]`
+  - `validationErrors=["conflicting_queue_axes"]`
+- `POST /api/real-sample-drop-in` returns `400` for the same condition.
+- The real-sample intake package now lists this guardrail:
+  `manual review when vehicle queues exceed threshold on conflicting movement axes`.
+- Presentation docs now describe the same file/POST validation behavior without
+  claiming live CCTV or signal-controller integration.
+- TDD RED checks:
+  - `npm --workspace apps/web run test -- realSampleDropIn.test.ts app/api/real-sample-drop-in/route.test.ts -t "conflicting queue axes"`:
+    failed before implementation because the sample was accepted as
+    `normal_cycle`.
+  - `npm --workspace apps/web run test -- realSampleIntakePackage.test.ts app/api/real-sample-intake-package/route.test.ts`:
+    failed before the intake artifact documented the new guardrail.
+- Targeted GREEN checks:
+  - `npm --workspace apps/web run test -- realSampleDropIn.test.ts app/api/real-sample-drop-in/route.test.ts -t "conflicting queue axes"`:
+    2 passed, 12 skipped.
+  - `npm --workspace apps/web run test -- realSampleDropIn.test.ts app/api/real-sample-drop-in/route.test.ts`:
+    14 passed.
+  - `npm --workspace apps/web run test -- realSampleIntakePackage.test.ts app/api/real-sample-intake-package/route.test.ts`:
+    2 passed.
+  - `npm --workspace apps/web run test -- realSampleDropIn.test.ts app/api/real-sample-drop-in/route.test.ts realSampleIntakePackage.test.ts app/api/real-sample-intake-package/route.test.ts`:
+    16 passed.
+  - `node --test scripts/real-sample-drop-in-check.test.mjs`:
+    2 passed.
+- Full validation:
+  - `apps/api/.venv/bin/pytest apps/api/tests -q`:
+    165 passed, 2 skipped, 1 existing Starlette/httpx warning.
+  - `npm run test:demo-health`:
+    2 passed.
+  - `npm run test:web`:
+    60 files, 360 tests passed.
+  - `npm run build:web`:
+    passed and listed `/api/real-sample-drop-in` and
+    `/api/real-sample-intake-package`.
+
+Next active slice:
+
+- [ ] Once an authorized CCTV frame/video and signal timing sample are
+      available, POST the real `live-input.v1` envelope to
+      `/api/real-sample-drop-in` and refresh the same demo evidence,
+      scorecard contract, final readiness, intake package, health, and
+      presentation flow.
+
+## Validation
+
+Run after each completed slice:
+
+- `npm run test:web`
+- `npm run build:web`
+
+For dashboard UI changes, also use Playwright screenshots and overflow checks.
+
+## Constraints
+
+- Do not use git.
+- Do not call OpenAI unless the user approves the specific live check or budget
+  scope. Current approval covered real dashboard verification within the stated
+  test budget.
+- Keep changes local and scoped.
+- Prefer existing TypeScript/Vitest patterns.
+- Preserve the current dashboard while adding evaluation capability.
