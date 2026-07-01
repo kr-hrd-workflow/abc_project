@@ -8,6 +8,7 @@ import type {
 
 export type SyntheticReplaySummary = {
   maxQueue: number;
+  vehiclePressurePresent: boolean;
   emergencyDetected: boolean;
   emergencyDirectionKnown: boolean;
   pedestrianWaiting: boolean;
@@ -56,14 +57,17 @@ function buildReplaySummary(scenarioCase: SyntheticScenarioCase): SyntheticRepla
   const emergencyDetections = scenarioCase.detections.filter(
     (detection) => detection.type === "emergency_vehicle"
   );
+  const vehicleDetections = scenarioCase.detections.filter(
+    (detection) => detection.type === "vehicle"
+  );
+  const maxQueue = Math.max(
+    0,
+    ...vehicleDetections.map((detection) => detection.count)
+  );
 
   return {
-    maxQueue: Math.max(
-      0,
-      ...scenarioCase.detections
-        .filter((detection) => detection.type === "vehicle")
-        .map((detection) => detection.count)
-    ),
+    maxQueue,
+    vehiclePressurePresent: maxQueue > 0,
     emergencyDetected: emergencyDetections.length > 0,
     emergencyDirectionKnown: emergencyDetections.every(
       (detection) => detection.direction !== null

@@ -117,14 +117,19 @@ function buildScenarioCase({
 }): SyntheticScenarioCase {
   const signal = buildSignalSnapshot(direction, remainingSeconds, family === "normal");
   const adjustedQueueBase = adjustQueueBaseForFamily(family, queueBase);
-  const baseVehicle: SyntheticDetection = {
-    type: "vehicle",
-    lane: `${direction}_through_1`,
-    direction,
-    count: adjustedQueueBase,
-    confidence: 0.94,
-    waitingSeconds: family === "normal" ? 12 : 45
-  };
+  const baseDetections: SyntheticDetection[] =
+    adjustedQueueBase > 0
+      ? [
+          {
+            type: "vehicle",
+            lane: `${direction}_through_1`,
+            direction,
+            count: adjustedQueueBase,
+            confidence: 0.94,
+            waitingSeconds: family === "normal" ? 12 : 45
+          }
+        ]
+      : [];
 
   const familyDetails = buildFamilyDetails(family, direction, adjustedQueueBase);
 
@@ -134,7 +139,7 @@ function buildScenarioCase({
     timestamp,
     cameraId: `${direction}_cam_01`,
     signal,
-    detections: [baseVehicle, ...familyDetails.detections],
+    detections: [...baseDetections, ...familyDetails.detections],
     expected: familyDetails.expected
   };
 }
@@ -250,7 +255,7 @@ function adjustQueueBaseForFamily(
   queueBase: number
 ): number {
   if (family === "congestion") return Math.max(queueBase, QUEUE_THRESHOLD + 7);
-  if (family === "pedestrian") return Math.min(queueBase, 8);
+  if (family === "pedestrian") return 0;
   if (family === "normal") return Math.min(queueBase, 18);
   return queueBase;
 }

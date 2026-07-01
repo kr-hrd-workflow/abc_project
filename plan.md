@@ -2079,6 +2079,36 @@ Synthetic congestion evaluation evidence:
 
 Next active slice:
 
+- [x] Add no-vehicle pedestrian-wait coverage to synthetic evaluation so the
+      benchmark measures the third project target: pedestrians should not wait
+      unnecessarily when there is no vehicle pressure.
+
+Synthetic no-vehicle pedestrian evidence:
+
+- `generateSyntheticScenarioDataset()` now models `pedestrian` cases without
+  positive-count vehicle detections, while keeping long-waiting pedestrian
+  detections and the `pedestrian_priority` expected recommendation.
+- `buildSyntheticReplayTimeline()` now exposes
+  `summary.vehiclePressurePresent`, so reports and future scorecards can
+  distinguish pedestrian waiting with and without vehicle pressure.
+- TDD RED check:
+  - `npm --workspace apps/web run test -- syntheticScenarios.test.ts syntheticReplay.test.ts`:
+    failed before implementation because pedestrian cases still included a
+    positive vehicle queue and replay summaries did not expose
+    no-vehicle pressure.
+- Targeted GREEN checks:
+  - `npm --workspace apps/web run test -- syntheticScenarios.test.ts syntheticReplay.test.ts`:
+    12 passed.
+  - `npm --workspace apps/web run test -- syntheticScenarios.test.ts syntheticReplay.test.ts syntheticEvaluation.test.ts syntheticEvaluationReport.test.ts syntheticLiveInputDataset.test.ts`:
+    30 passed.
+- Broader checks:
+  - `npm run test:web`: 61 files, 375 tests passed.
+  - `npm run build:web`: passed.
+  - `apps/api/.venv/bin/pytest apps/api/tests/test_recommendations.py -q`:
+    19 passed.
+
+Next active slice:
+
 - [ ] Once an authorized CCTV frame/video and signal timing sample are
       available, POST the real `live-input.v1` envelope to
       `/api/real-sample-drop-in` and refresh the same demo evidence,

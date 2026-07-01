@@ -35,6 +35,18 @@ describe("buildSyntheticReplayTimeline", () => {
     expect(timeline.every((frame) => frame.summary.maxQueue >= 0)).toBe(true);
   });
 
+  test("marks pedestrian waiting cases as having no vehicle pressure", () => {
+    const dataset = generateSyntheticScenarioDataset({ caseCount: 10, seed: 51 });
+    const pedestrianFrame = buildSyntheticReplayTimeline(dataset).find(
+      (frame) => frame.family === "pedestrian"
+    );
+
+    expect(pedestrianFrame).toBeTruthy();
+    expect(pedestrianFrame?.summary.pedestrianWaiting).toBe(true);
+    expect(pedestrianFrame?.summary.maxQueue).toBe(0);
+    expect(pedestrianFrame?.summary.vehiclePressurePresent).toBe(false);
+  });
+
   test("marks emergency direction as unknown when detection direction is missing", () => {
     const dataset = generateSyntheticScenarioDataset({ caseCount: 4, seed: 41 });
     const emergency = dataset.find((scenario) => scenario.family === "emergency");

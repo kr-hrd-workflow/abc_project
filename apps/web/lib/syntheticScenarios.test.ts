@@ -62,4 +62,24 @@ describe("generateSyntheticScenarioDataset", () => {
     expect(congestion?.expected.mustIncludeReason).toBe("queue_threshold_exceeded");
     expect(congestion?.expected.mustNotRecommend).toContain("normal_cycle");
   });
+
+  test("pedestrian cases model long-waiting pedestrians without vehicle pressure", () => {
+    const dataset = generateSyntheticScenarioDataset({ caseCount: 10, seed: 13 });
+    const pedestrian = dataset.find((scenario) => scenario.family === "pedestrian");
+
+    expect(pedestrian).toBeTruthy();
+    expect(
+      pedestrian?.detections.some(
+        (detection) => detection.type === "vehicle" && detection.count > 0
+      )
+    ).toBe(false);
+    expect(
+      pedestrian?.detections.some(
+        (detection) =>
+          detection.type === "pedestrian" && (detection.waitingSeconds ?? 0) >= 60
+      )
+    ).toBe(true);
+    expect(pedestrian?.expected.recommendation).toBe("pedestrian_priority");
+    expect(pedestrian?.expected.mustIncludeReason).toBe("pedestrian_waiting");
+  });
 });
