@@ -1857,6 +1857,39 @@ Real-sample conflicting queue axes evidence:
 
 Next active slice:
 
+- [x] Add a real-sample provenance guardrail so fixture or synthetic payloads
+      cannot be accepted as authorized real-sample submissions.
+
+Real-sample fixture/synthetic identifier guard evidence:
+
+- `validateRealSampleDropInEnvelope()` now detects `fixture` or `synthetic`
+  identifiers in the submitted `intersectionId`, camera/frame ids, detection
+  ids, or signal controller id.
+- The validator returns:
+  - `accepted=false`
+  - `replayStatus=replay_input_ready`
+  - `operatorWorkflowStatus=manual_review_required`
+  - `selectedPolicy=safety_hold`
+  - `requiredInputs=["authorized_real_sample_identifiers"]`
+  - `validationErrors=["fixture_or_synthetic_sample_not_allowed"]`
+- `POST /api/real-sample-drop-in` returns `400` for the same condition.
+- The real-sample intake package and live-input submission schema now document
+  the guardrail so fixture/demo payloads cannot be presented as real CCTV or
+  signal-controller evidence.
+- Presentation docs now describe this boundary without claiming live CCTV or
+  signal-controller integration.
+- TDD RED check:
+  - `npm --workspace apps/web run test -- realSampleDropIn.test.ts app/api/real-sample-drop-in/route.test.ts realSampleIntakePackage.test.ts liveInputSubmissionSchema.test.ts -t "fixture|synthetic|real sample intake|submission schema"`:
+    failed before implementation because fixture/synthetic payloads were
+    accepted and the intake/schema artifacts lacked the guardrail.
+- Targeted GREEN checks:
+  - `npm --workspace apps/web run test -- realSampleDropIn.test.ts app/api/real-sample-drop-in/route.test.ts realSampleIntakePackage.test.ts liveInputSubmissionSchema.test.ts -t "fixture|synthetic|real sample intake|submission schema"`:
+    4 passed, 14 skipped.
+  - `npm --workspace apps/web run test -- realSampleDropIn.test.ts app/api/real-sample-drop-in/route.test.ts realSampleIntakePackage.test.ts app/api/real-sample-intake-package/route.test.ts liveInputSubmissionSchema.test.ts app/api/live-input-submission-schema/route.test.ts`:
+    20 passed.
+
+Next active slice:
+
 - [ ] Once an authorized CCTV frame/video and signal timing sample are
       available, POST the real `live-input.v1` envelope to
       `/api/real-sample-drop-in` and refresh the same demo evidence,
@@ -1874,7 +1907,9 @@ For dashboard UI changes, also use Playwright screenshots and overflow checks.
 
 ## Constraints
 
-- Do not use git.
+- Use the dedicated work branch only for this thread.
+- Do not merge into local or remote `main`.
+- At the end of each completed part, commit and push the work branch.
 - Do not call OpenAI unless the user approves the specific live check or budget
   scope. Current approval covered real dashboard verification within the stated
   test budget.

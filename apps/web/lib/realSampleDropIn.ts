@@ -104,6 +104,28 @@ export function validateRealSampleDropInEnvelope(
     const envelope = normalizeLiveInputEnvelope(input);
     const replayInput = toSyntheticReplayInput(envelope);
 
+    if (hasFixtureOrSyntheticIdentifier(envelope)) {
+      const requiredInputs = ["authorized_real_sample_identifiers"];
+      const validationErrors = ["fixture_or_synthetic_sample_not_allowed"];
+      return {
+        source: "real_sample_drop_in_validation",
+        schemaVersion: "real-sample-drop-in.v1",
+        accepted: false,
+        adapterBoundary: "live-input.v1",
+        replayStatus: "replay_input_ready",
+        recommendation: null,
+        operatorWorkflowStatus: "manual_review_required",
+        operatorWorkflow: buildOperatorWorkflowSummary({
+          status: "manual_review_required",
+          recommendation: null,
+          requiredInputs,
+          validationErrors
+        }),
+        requiredInputs,
+        validationErrors
+      };
+    }
+
     if (isSignalSnapshotStale(envelope)) {
       const requiredInputs = ["fresh_signal_snapshot"];
       const validationErrors = ["signal snapshot older than 30 seconds"];
@@ -297,6 +319,24 @@ function isSignalSnapshotStale(
   const capturedAt = Date.parse(envelope.signalSnapshot.capturedAt);
 
   return receivedAt - capturedAt > 30_000;
+}
+
+function hasFixtureOrSyntheticIdentifier(
+  envelope: ReturnType<typeof normalizeLiveInputEnvelope>
+) {
+  const identifiers = [
+    envelope.intersectionId,
+    ...envelope.cameraFrames.flatMap((frame) => [
+      frame.cameraId,
+      frame.frameId,
+      ...frame.detections.map((detection) => detection.objectId)
+    ]),
+    envelope.signalSnapshot?.controllerId ?? ""
+  ];
+
+  return identifiers.some((identifier) =>
+    /(?:fixture|synthetic)/i.test(identifier)
+  );
 }
 
 function hasEmergencyPedestrianConflict(

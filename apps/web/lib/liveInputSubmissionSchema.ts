@@ -125,6 +125,7 @@ export function buildLiveInputSubmissionSchemaExport({
       "schema allows confidence values from 0 to 1; policy guardrail routes values below 0.5 to manual review",
       "schema accepts date-time strings; policy guardrail routes stale signal snapshots to manual review",
       "schema requires a signal snapshot because /api/real-sample-drop-in validates replay-ready submissions",
+      "real-sample drop-in validation routes fixture or synthetic sample identifiers to manual review",
       "schema shape validation does not imply autonomous signal control"
     ]
   } as const;

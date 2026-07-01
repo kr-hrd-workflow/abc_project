@@ -232,6 +232,33 @@ describe("real sample drop-in readiness", () => {
       validationErrors: ["conflicting_queue_axes"]
     });
   });
+
+  test("does not accept fixture or synthetic payloads as real samples", () => {
+    const fixtureEnvelope = buildFixtureLikeEnvelope();
+
+    const result = validateRealSampleDropInEnvelope(fixtureEnvelope);
+
+    expect(result).toEqual({
+      source: "real_sample_drop_in_validation",
+      schemaVersion: "real-sample-drop-in.v1",
+      accepted: false,
+      adapterBoundary: "live-input.v1",
+      replayStatus: "replay_input_ready",
+      recommendation: null,
+      operatorWorkflowStatus: "manual_review_required",
+      operatorWorkflow: {
+        source: "policy_scorecard",
+        contractEndpoint: "/api/policy-scorecard-contract",
+        status: "manual_review_required",
+        selectedPolicy: "safety_hold",
+        confidence: "low",
+        requiredInputs: ["authorized_real_sample_identifiers"],
+        blockedReasons: ["fixture_or_synthetic_sample_not_allowed"]
+      },
+      requiredInputs: ["authorized_real_sample_identifiers"],
+      validationErrors: ["fixture_or_synthetic_sample_not_allowed"]
+    });
+  });
 });
 
 function buildLiveInputEnvelope() {
@@ -305,6 +332,40 @@ function buildConflictingQueueAxesEnvelope() {
       currentPhase: "normal_cycle",
       remainingSeconds: 18,
       nextPhase: "east_priority",
+      controllerMode: "adaptive",
+      manualOverride: false
+    }
+  };
+}
+
+function buildFixtureLikeEnvelope() {
+  return {
+    ...buildLiveInputEnvelope(),
+    intersectionId: "INT-SYNTHETIC-FIXTURE-0001",
+    cameraFrames: [
+      {
+        cameraId: "synthetic-fixture-camera-01",
+        frameId: "fixture-frame-0001",
+        capturedAt: "2026-07-01T09:10:00.000Z",
+        detections: [
+          {
+            objectId: "fixture-emergency-001",
+            classLabel: "emergency_vehicle",
+            confidence: 0.96,
+            direction: "east",
+            laneId: "east_approach_1",
+            count: 1,
+            distanceMeters: 70
+          }
+        ]
+      }
+    ],
+    signalSnapshot: {
+      controllerId: "synthetic-signal-controller-01",
+      capturedAt: "2026-07-01T09:10:00.000Z",
+      currentPhase: "east_priority",
+      remainingSeconds: 18,
+      nextPhase: "normal_cycle",
       controllerMode: "adaptive",
       manualOverride: false
     }

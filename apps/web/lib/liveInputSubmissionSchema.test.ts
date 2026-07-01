@@ -46,6 +46,9 @@ describe("live input submission schema export", () => {
     expect(artifact.guardrailNotes).toContain(
       "schema requires a signal snapshot because /api/real-sample-drop-in validates replay-ready submissions"
     );
+    expect(artifact.guardrailNotes).toContain(
+      "real-sample drop-in validation routes fixture or synthetic sample identifiers to manual review"
+    );
 
     const serialized = JSON.stringify(artifact);
     expect(serialized).not.toContain(["OPENAI", "API", "KEY"].join("_"));

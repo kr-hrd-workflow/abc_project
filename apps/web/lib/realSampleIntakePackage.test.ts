@@ -55,6 +55,7 @@ describe("real sample intake package", () => {
       },
       validationGuardrails: [
         "reject invalid live-input.v1 envelope",
+        "manual review when sample identifiers indicate fixture or synthetic data",
         "manual review when signal snapshot older than 30 seconds",
         "manual review when any detection confidence is below 0.5",
         "manual review when vehicle queues exceed threshold on conflicting movement axes",

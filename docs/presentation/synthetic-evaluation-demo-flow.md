@@ -453,7 +453,7 @@ contract:
 - `npm run real-sample:check -- <live-input-envelope.json>`: local file-based
   check for an authorized `live-input.v1` envelope, using the same
   `/api/real-sample-drop-in` validation path, including the conflicting queue
-  axes manual-review guard.
+  axes manual-review guard and the fixture/synthetic identifier guard.
 - `GET /api/live-input-submission-schema`: replay-ready `live-input.v1` JSON
   Schema is available for authorized sample providers.
 - `GET /api/llm-explanation-contract`: LLM role is explanation/review only;

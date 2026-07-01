@@ -365,6 +365,10 @@ Dashboard shortcut:
 - Vehicle queues over threshold on both north/south and east/west movement
   axes are routed to `manual_review_required` with
   `signal_phase.remaining_seconds`, matching the local policy safety hold.
+- Payloads whose sample identifiers still contain `fixture` or `synthetic`
+  are routed to `manual_review_required` with
+  `authorized_real_sample_identifiers`; fixture evidence cannot be passed off
+  as an authorized real sample.
 - Point out that the export also records policy-scorecard-derived operator
   workflow statuses and the full set of scorecard-backed backend policies, not
   autonomous signal control.
