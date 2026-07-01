@@ -1,4 +1,47 @@
-# Plan: Synthetic Scenario Evaluation
+# Plan: Smart Intersection Evidence Readiness
+
+## Current Review Gate: 2026-07-01
+
+Implementation is paused for project review because additional synthetic-only
+work is no longer the most meaningful path. The local dashboard, exports,
+guardrails, policy scorecards, and `live-input.v1` handoff surfaces are already
+rich enough for rehearsal. The unresolved blocker is an authorized real CCTV or
+detector sample plus a matching signal phase/remaining-time sample.
+
+Current branch management:
+
+- Work only on `codex/smart-intersection-policy-readiness`.
+- Do not merge into local or remote `main`.
+- Commit and push completed parts only to the work branch.
+- Keep `.playwright-cli/` untracked and out of staged changes.
+
+Review artifact:
+
+- `docs/reviews/smart-intersection-project-gap-review.md`
+
+Stop rule:
+
+- Stop implementation and review the project when the next proposed task only
+  expands synthetic/dashboard proof without validating real input, reducing
+  backend/frontend policy drift, strengthening truth boundaries, or fixing a
+  concrete failure.
+
+Next meaningful decision:
+
+1. If an authorized sample bundle is available, convert it to `live-input.v1`
+   and run:
+
+   ```bash
+   npm run real-sample:check -- --offline <live-input-envelope.json>
+   npm run real-sample:check -- <live-input-envelope.json>
+   ```
+
+2. If no authorized sample is available, freeze feature expansion and present
+   the current state as local evaluation plus adapter readiness.
+3. If code work must continue before a sample, do only narrow maintenance that
+   reduces backend/frontend policy-contract drift.
+
+## Historical Plan: Synthetic Scenario Evaluation
 
 ## Target Outcome
 
@@ -6,7 +49,8 @@ Shift the project from a mostly static operations dashboard demo to a local
 evaluation system that generates realistic detection/signal data at scale,
 replays it, evaluates recommendation logic, and reports measurable results.
 
-Work remains local. Git actions remain disabled until the user explicitly asks.
+Work remains local. Completed parts may be committed and pushed only on the
+work branch named above.
 OpenAI API calls are limited to approved smoke and explanation-evaluation
 checks. Secrets remain local in `.env.local`.
 
