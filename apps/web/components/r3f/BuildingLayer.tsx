@@ -60,28 +60,11 @@ export const FACADE_DAY_TEXTURE_PATH =
   "/simulation/r3f/assets/textures/facade-glass-day.webp";
 export const FACADE_NIGHT_TEXTURE_PATH =
   "/simulation/r3f/assets/textures/facade-windows-night.webp";
-// 강남 고증: glass towers carry the Samsung dark-glass tile (FACADE_DAY path);
-// mid-rise commercial buildings carry the Gangnam illuminated-signage facade.
-export const FACADE_SIGNAGE_DAY_TEXTURE_PATH =
-  "/simulation/r3f/assets/textures/facade-signage-day.webp";
-// Day per-building facade pool: distinct full-elevation Gangnam facades mapped
-// 1:1 onto each mid-rise (no tiling), so buildings stop reading as one repeated
-// texture. Each mid-rise is assigned a pool entry by hashId % pool size; same-
-// entry buildings merge into one mesh, so the whole pool costs only N draw calls.
-export const FACADE_ELEVATION_PATHS = [
-  "/simulation/r3f/assets/textures/facade-elev-1.webp",
-  "/simulation/r3f/assets/textures/facade-elev-2.webp",
-  "/simulation/r3f/assets/textures/facade-elev-3.webp",
-  "/simulation/r3f/assets/textures/facade-elev-4.webp",
-  "/simulation/r3f/assets/textures/facade-elev-5.webp"
-];
 
 // One glass tile covers ~14 m of facade → ≈4 floors at ~3.5 m/floor.
 export const FACADE_METERS_PER_TILE = 14;
-// Mid-rise commercial carries the Gangnam signage facade — one tile spans the
-// full ~9-floor signboard elevation (~30 m) so floors read at natural height
-// instead of a compressed window band.
-export const CONCRETE_METERS_PER_TILE = 30;
+// Concrete/small-window buildings tile tighter so windows read smaller.
+export const CONCRETE_METERS_PER_TILE = 7;
 
 // Preload both facade textures in the browser so they are warm on first paint
 // and do not cause a black-frame flicker in the capture harness.
@@ -91,8 +74,6 @@ if (
 ) {
   useTexture.preload(FACADE_DAY_TEXTURE_PATH);
   useTexture.preload(FACADE_NIGHT_TEXTURE_PATH);
-  useTexture.preload(FACADE_SIGNAGE_DAY_TEXTURE_PATH);
-  for (const p of FACADE_ELEVATION_PATHS) useTexture.preload(p);
 }
 
 // ── jsdom guard ───────────────────────────────────────────────────────────────
@@ -502,31 +483,18 @@ BuildingLayer.displayName = "BuildingLayer";
 // ── Building volume set (has hooks) ──────────────────────────────────────────
 
 function BuildingVolumeSet({ isNight }: { isNight: boolean }) {
-  const texAll = useTexture([
+  const [dayTex, nightTex] = useTexture([
     FACADE_DAY_TEXTURE_PATH,
-    FACADE_NIGHT_TEXTURE_PATH,
-    FACADE_SIGNAGE_DAY_TEXTURE_PATH,
-    ...FACADE_ELEVATION_PATHS
+    FACADE_NIGHT_TEXTURE_PATH
   ]) as Texture[];
-  const [dayTex, nightTex, signageDayTex] = texAll;
 
   // Merge every sub-volume by material group → ~6 geometries for the whole city.
-  // Day mid-rise (concrete) shafts are pulled out into a per-building facade pool
-  // (byPool, keyed by pool index) so each carries a distinct full-elevation facade
-  // mapped 1:1 (no tiling); same-index buildings still merge into one mesh.
-  const { merged, facadeByPool } = useMemo(() => {
-    const poolSize = FACADE_ELEVATION_PATHS.length;
+  const merged = useMemo(() => {
     const byGroup = new Map<VolumeGroup, BufferGeometry[]>();
-    const byPool = new Map<number, BufferGeometry[]>();
     const push = (g: VolumeGroup, geo: BufferGeometry) => {
       const list = byGroup.get(g);
       if (list) list.push(geo);
       else byGroup.set(g, [geo]);
-    };
-    const pushPool = (i: number, geo: BufferGeometry) => {
-      const list = byPool.get(i);
-      if (list) list.push(geo);
-      else byPool.set(i, [geo]);
     };
 
     for (const fp of BUILDING_FOOTPRINTS) {
@@ -540,9 +508,6 @@ function BuildingVolumeSet({ isNight }: { isNight: boolean }) {
           );
         } else if (vol.group === "dark" || vol.group === "far") {
           push(vol.group, buildPlainBox(vol.size, vol.center));
-        } else if (vol.group === "concrete" && !isNight) {
-          // buildPlainBox keeps the default 0–1 box UVs → one facade per face.
-          pushPool(hash % poolSize, buildPlainBox(vol.size, vol.center));
         } else {
           push(
             vol.group,
@@ -557,58 +522,24 @@ function BuildingVolumeSet({ isNight }: { isNight: boolean }) {
       const geo = geos.length === 1 ? geos[0] : mergeGeometries(geos, false);
       if (geo) result.set(group, geo);
     }
-    const facadeResult = new Map<number, BufferGeometry>();
-    for (const [i, geos] of byPool) {
-      const geo = geos.length === 1 ? geos[0] : mergeGeometries(geos, false);
-      if (geo) facadeResult.set(i, geo);
-    }
-    return { merged: result, facadeByPool: facadeResult };
-  }, [isNight]);
+    return result;
+  }, []);
 
   // Shared facade texture: tiling is baked into UVs, so repeat stays [1,1] and
   // wrapping handles the >1 UVs. One texture instance serves every glass group.
-  const wrapFacade = (src: Texture) => {
-    const t = src.clone();
+  const facadeTex = useMemo(() => {
+    const t = (isNight ? nightTex : dayTex).clone();
     t.wrapS = RepeatWrapping;
     t.wrapT = RepeatWrapping;
     t.colorSpace = SRGBColorSpace;
     t.repeat.set(1, 1);
     t.needsUpdate = true;
     return t;
-  };
-  // Glass towers = dark Samsung glass (day) / lit windows (night).
-  const facadeTex = useMemo(
-    () => wrapFacade(isNight ? nightTex : dayTex),
-    [isNight, dayTex, nightTex]
-  );
-  // Mid-rise commercial = Gangnam illuminated-signage facade (day); night keeps
-  // the lit-window sheet so the existing night glow is unchanged.
-  const concreteFacadeTex = useMemo(
-    () => wrapFacade(isNight ? nightTex : signageDayTex),
-    [isNight, signageDayTex, nightTex]
-  );
+  }, [isNight, dayTex, nightTex]);
 
   const materials = useMemo(
-    () => buildGroupMaterials(facadeTex, concreteFacadeTex, isNight),
-    [facadeTex, concreteFacadeTex, isNight]
-  );
-
-  // One day-facade material per pool entry; the 1:1 elevation carries its own
-  // colour so keep the tint near-white. Empty at night (no facade-pool geometry).
-  const facadeMaterials = useMemo(
-    () =>
-      texAll.slice(3).map(
-        (t) =>
-          new MeshStandardMaterial({
-            map: wrapFacade(t),
-            color: "#d7d4cc",
-            roughness: CONCRETE_TUNING.dayRoughness,
-            metalness: CONCRETE_TUNING.dayMetalness,
-            envMapIntensity: CONCRETE_TUNING.dayEnvMapIntensity
-          })
-      ),
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-    [texAll]
+    () => buildGroupMaterials(facadeTex, isNight),
+    [facadeTex, isNight]
   );
 
   return (
@@ -628,15 +559,6 @@ function BuildingVolumeSet({ isNight }: { isNight: boolean }) {
           />
         );
       })}
-      {[...facadeByPool.entries()].map(([poolIndex, geometry]) => (
-        <mesh
-          key={`facade-${poolIndex}`}
-          geometry={geometry}
-          material={facadeMaterials[poolIndex]}
-          castShadow={false}
-          receiveShadow
-        />
-      ))}
     </group>
   );
 }
@@ -649,7 +571,6 @@ BuildingVolumeSet.displayName = "BuildingVolumeSet";
 // billboard is an unlit vertex-coloured LED signage material.
 function buildGroupMaterials(
   facadeTex: Texture,
-  concreteTex: Texture,
   isNight: boolean
 ): Record<VolumeGroup, Material> {
   const glass = (tintIndex: number): MeshPhysicalMaterial => {
@@ -681,26 +602,25 @@ function buildGroupMaterials(
     const t = CONCRETE_TUNING;
     if (isNight) {
       const m = new MeshStandardMaterial({
-        map: concreteTex,
+        map: facadeTex,
         roughness: t.nightRoughness,
         metalness: 0.02,
         envMapIntensity: t.nightEnvMapIntensity
       });
       m.color.set("#3a3c40");
       m.emissive.set("#ffffff");
-      m.emissiveMap = concreteTex;
+      m.emissiveMap = facadeTex;
       m.emissiveIntensity = t.emissiveIntensity;
       return m;
     }
     const m = new MeshStandardMaterial({
-      map: concreteTex,
-      // Signage facade carries its own colour; keep it near-white so the
-      // illuminated signboards read at full chroma instead of muted stone.
-      color: "#d7d4cc",
+      map: facadeTex,
       roughness: t.dayRoughness,
       metalness: t.dayMetalness,
       envMapIntensity: t.dayEnvMapIntensity
     });
+    // Grey/stone tint + high roughness mutes the glass look into concrete.
+    m.color.set("#9a978f");
     return m;
   };
 
