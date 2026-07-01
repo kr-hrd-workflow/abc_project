@@ -12,9 +12,9 @@ export const POLICY_SCORECARD_REQUIRED_EVIDENCE = [
   "candidate_scores",
   "constraints",
   "blocked_reasons",
-  "confidence",
   "required_inputs",
   "objective_metrics",
+  "confidence",
   "operator_note"
 ] as const;
 

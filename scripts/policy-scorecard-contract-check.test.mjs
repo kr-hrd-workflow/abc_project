@@ -29,7 +29,17 @@ const backendContract = {
     pedestrian_efficiency_score: 45,
     pedestrian_no_vehicle_bonus: 10,
     maintain_cycle_score: 10
-  }
+  },
+  requiredEvidence: [
+    "selected_policy",
+    "candidate_scores",
+    "constraints",
+    "blocked_reasons",
+    "required_inputs",
+    "objective_metrics",
+    "confidence",
+    "operator_note"
+  ]
 };
 
 const webContractSource = `
@@ -61,6 +71,17 @@ export const POLICY_SCORING_CONSTANTS = {
   pedestrianNoVehicleBonus: 10,
   maintainCycleScore: 10
 } as const;
+
+export const POLICY_SCORECARD_REQUIRED_EVIDENCE = [
+  "selected_policy",
+  "candidate_scores",
+  "constraints",
+  "blocked_reasons",
+  "required_inputs",
+  "objective_metrics",
+  "confidence",
+  "operator_note"
+] as const;
 `;
 
 function buildChecker(overrides = {}) {
@@ -106,5 +127,15 @@ describe("policy scorecard contract drift check", () => {
     assert.equal(result.exitCode, 1);
     assert.match(result.output, /scoringConstants mismatch/);
     assert.match(result.output, /queue_threshold/);
+  });
+
+  test("fails when web required evidence fields drift from backend scorecard fields", async () => {
+    const result = await buildChecker({
+      webSource: webContractSource.replace('"operator_note"', '"operator_comment"')
+    });
+
+    assert.equal(result.exitCode, 1);
+    assert.match(result.output, /requiredEvidence mismatch/);
+    assert.match(result.output, /operator_note/);
   });
 });

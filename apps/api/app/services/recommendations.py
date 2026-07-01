@@ -26,6 +26,16 @@ POLICY_DECISION_ORDER = (
     "pedestrian_efficiency",
     "maintain_cycle",
 )
+POLICY_SCORECARD_REQUIRED_EVIDENCE = (
+    "selected_policy",
+    "candidate_scores",
+    "constraints",
+    "blocked_reasons",
+    "required_inputs",
+    "objective_metrics",
+    "confidence",
+    "operator_note",
+)
 POLICY_SCORING_CONSTANTS = {
     "queue_threshold": QUEUE_THRESHOLD,
     "safety_gate_all_red_seconds": SAFETY_GATE_ALL_RED_SECONDS,

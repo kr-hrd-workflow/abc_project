@@ -47,10 +47,11 @@ Current maintenance slice:
 - [x] Verify the checker fails when web policy order or scoring constants drift.
 - [x] Verify the current backend constants and web contract are aligned.
 - [x] Add the policy contract drift check to the root `npm run verify` path.
+- [x] Extend the drift check to backend/web scorecard required evidence fields.
 
 Maintenance evidence:
 
-- `node --test scripts/policy-scorecard-contract-check.test.mjs`: 3 passed.
+- `node --test scripts/policy-scorecard-contract-check.test.mjs`: 4 passed.
 - `npm run policy-contract:check`: `policy scorecard contract aligned`.
 - `npm run test:package-scripts`: 1 passed.
 

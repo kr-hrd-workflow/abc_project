@@ -145,7 +145,7 @@ Current maintenance evidence:
   from `apps/api/app/services/recommendations.py` with the web contract in
   `apps/web/lib/policyScorecardContract.ts`.
 - `npm run test:policy-contract` verifies that the checker fails on policy
-  order drift and scoring-constant drift.
+  order drift, scoring-constant drift, and required-evidence-field drift.
 - The root `npm run verify` flow now runs `npm run policy-contract:check`
   before web tests and build, so drift is caught during the standard local
   verification path.

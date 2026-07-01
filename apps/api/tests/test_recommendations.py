@@ -9,6 +9,7 @@ from app.scenarios.data import (
 from app.services.recommendations import (
     POLICY_DECISION_ORDER,
     POLICY_SCORING_CONSTANTS,
+    POLICY_SCORECARD_REQUIRED_EVIDENCE,
     POLICY_SCORECARD_BACKED_POLICIES,
     recommend_signal_action,
 )
@@ -480,3 +481,13 @@ def test_policy_contract_exposes_decision_order_and_scoring_constants() -> None:
         "pedestrian_no_vehicle_bonus": 10,
         "maintain_cycle_score": 10,
     }
+    assert POLICY_SCORECARD_REQUIRED_EVIDENCE == (
+        "selected_policy",
+        "candidate_scores",
+        "constraints",
+        "blocked_reasons",
+        "required_inputs",
+        "objective_metrics",
+        "confidence",
+        "operator_note",
+    )

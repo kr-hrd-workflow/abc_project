@@ -20,12 +20,14 @@ import json
 from app.services.recommendations import (
     POLICY_DECISION_ORDER,
     POLICY_SCORING_CONSTANTS,
+    POLICY_SCORECARD_REQUIRED_EVIDENCE,
     POLICY_SCORECARD_BACKED_POLICIES,
 )
 print(json.dumps({
     "scorecardBackedPolicies": list(POLICY_SCORECARD_BACKED_POLICIES),
     "decisionOrder": list(POLICY_DECISION_ORDER),
     "scoringConstants": POLICY_SCORING_CONSTANTS,
+    "requiredEvidence": list(POLICY_SCORECARD_REQUIRED_EVIDENCE),
 }, sort_keys=True))
 `;
 
@@ -91,7 +93,11 @@ function parseWebPolicyContract(source) {
       "POLICY_SCORECARD_BACKED_POLICIES"
     ),
     decisionOrder: extractStringArray(source, "POLICY_DECISION_ORDER"),
-    scoringConstants: extractScoringConstants(source)
+    scoringConstants: extractScoringConstants(source),
+    requiredEvidence: extractStringArray(
+      source,
+      "POLICY_SCORECARD_REQUIRED_EVIDENCE"
+    )
   };
 }
 
@@ -153,6 +159,12 @@ export async function checkPolicyScorecardContract({
     "scoringConstants",
     backendContract.scoringConstants,
     webContract.scoringConstants
+  );
+  appendMismatch(
+    mismatches,
+    "requiredEvidence",
+    backendContract.requiredEvidence,
+    webContract.requiredEvidence
   );
 
   if (mismatches.length > 0) {
