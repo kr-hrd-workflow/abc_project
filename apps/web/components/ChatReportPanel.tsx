@@ -521,6 +521,19 @@ function SyntheticEvaluationEvidence({
         ))}
       </div>
       <p>{report.riskNotes[0]}</p>
+      <div className="synthetic-policy-evidence" aria-label="Policy evidence summary">
+        <span>Policy Evidence</span>
+        <ul>
+          {report.policyEvidence.map((item) => (
+            <li key={item.policy}>
+              <strong>{item.policy}</strong>
+              <small>
+                {item.evidence} · {item.passed}/{item.total}
+              </small>
+            </li>
+          ))}
+        </ul>
+      </div>
       <DemoEvidenceSummaryCard evidence={demoEvidence} />
       <div className="synthetic-benchmark-card">
         <span>Benchmark Report</span>

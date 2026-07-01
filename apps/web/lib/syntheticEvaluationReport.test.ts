@@ -31,6 +31,48 @@ describe("buildSyntheticEvaluationReport", () => {
       { family: "blocked", total: 20, passed: 20, failed: 0, passRatePercent: 100 },
       { family: "normal", total: 20, passed: 20, failed: 0, passRatePercent: 100 }
     ]);
+    expect(report.policyEvidence).toEqual([
+      {
+        policy: "safety_gate",
+        family: "blocked",
+        recommendation: "blocked_response",
+        passed: 20,
+        total: 20,
+        evidence: "intersection_blocked"
+      },
+      {
+        policy: "emergency_clearance",
+        family: "emergency",
+        recommendation: "emergency_priority",
+        passed: 20,
+        total: 20,
+        evidence: "emergency_vehicle_approach"
+      },
+      {
+        policy: "queue_relief",
+        family: "congestion",
+        recommendation: "queue_relief",
+        passed: 20,
+        total: 20,
+        evidence: "queue_threshold_exceeded"
+      },
+      {
+        policy: "pedestrian_efficiency",
+        family: "pedestrian",
+        recommendation: "pedestrian_priority",
+        passed: 20,
+        total: 20,
+        evidence: "pedestrian_waiting"
+      },
+      {
+        policy: "maintain_cycle",
+        family: "normal",
+        recommendation: "normal_cycle",
+        passed: 20,
+        total: 20,
+        evidence: "normal_flow"
+      }
+    ]);
   });
 });
 

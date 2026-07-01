@@ -18,6 +18,25 @@ export type SyntheticEvaluationScenarioBreakdown = {
   passRatePercent: number;
 };
 
+export type SyntheticEvaluationPolicyEvidence = {
+  policy:
+    | "safety_gate"
+    | "emergency_clearance"
+    | "queue_relief"
+    | "pedestrian_efficiency"
+    | "maintain_cycle";
+  family: SyntheticScenarioFamily;
+  recommendation:
+    | "blocked_response"
+    | "emergency_priority"
+    | "queue_relief"
+    | "pedestrian_priority"
+    | "normal_cycle";
+  passed: number;
+  total: number;
+  evidence: string;
+};
+
 export type SyntheticEvaluationDashboardReport = {
   generatedAt: string;
   seed: number;
@@ -27,6 +46,7 @@ export type SyntheticEvaluationDashboardReport = {
   passRatePercent: number;
   headline: string;
   scenarioBreakdown: SyntheticEvaluationScenarioBreakdown[];
+  policyEvidence: SyntheticEvaluationPolicyEvidence[];
   riskNotes: string[];
   failures: SyntheticEvaluationFailure[];
 };
@@ -96,6 +116,42 @@ const SCENARIO_FAMILY_ORDER: SyntheticScenarioFamily[] = [
   "pedestrian",
   "blocked",
   "normal"
+];
+
+const POLICY_EVIDENCE_ORDER: Omit<
+  SyntheticEvaluationPolicyEvidence,
+  "passed" | "total"
+>[] = [
+  {
+    policy: "safety_gate",
+    family: "blocked",
+    recommendation: "blocked_response",
+    evidence: "intersection_blocked"
+  },
+  {
+    policy: "emergency_clearance",
+    family: "emergency",
+    recommendation: "emergency_priority",
+    evidence: "emergency_vehicle_approach"
+  },
+  {
+    policy: "queue_relief",
+    family: "congestion",
+    recommendation: "queue_relief",
+    evidence: "queue_threshold_exceeded"
+  },
+  {
+    policy: "pedestrian_efficiency",
+    family: "pedestrian",
+    recommendation: "pedestrian_priority",
+    evidence: "pedestrian_waiting"
+  },
+  {
+    policy: "maintain_cycle",
+    family: "normal",
+    recommendation: "normal_cycle",
+    evidence: "normal_flow"
+  }
 ];
 
 export function buildSyntheticEvaluationReport(
@@ -250,9 +306,24 @@ export function summarizeSyntheticEvaluationReport(
         passRatePercent: summary.total === 0 ? 0 : toPercent(summary.passed / summary.total)
       };
     }),
+    policyEvidence: buildPolicyEvidence(evaluation),
     riskNotes: buildRiskNotes(evaluation),
     failures: evaluation.failures
   };
+}
+
+function buildPolicyEvidence(
+  evaluation: SyntheticEvaluationReport
+): SyntheticEvaluationPolicyEvidence[] {
+  return POLICY_EVIDENCE_ORDER.map((policy) => {
+    const summary = evaluation.byFamily[policy.family];
+
+    return {
+      ...policy,
+      passed: summary.passed,
+      total: summary.total
+    };
+  });
 }
 
 function buildRiskNotes(evaluation: SyntheticEvaluationReport): string[] {

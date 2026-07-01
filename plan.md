@@ -2109,6 +2109,45 @@ Synthetic no-vehicle pedestrian evidence:
 
 Next active slice:
 
+- [x] Add presentation-ready policy evidence to the synthetic evaluation report
+      so the dashboard explains which local policy each scenario family proves,
+      not only aggregate pass/fail counts.
+
+Synthetic policy evidence evidence:
+
+- `SyntheticEvaluationDashboardReport` now includes `policyEvidence` entries
+  for:
+  - `safety_gate` from `blocked_response` and `intersection_blocked`
+  - `emergency_clearance` from `emergency_priority` and
+    `emergency_vehicle_approach`
+  - `queue_relief` from `queue_relief` and `queue_threshold_exceeded`
+  - `pedestrian_efficiency` from `pedestrian_priority` and
+    `pedestrian_waiting`
+  - `maintain_cycle` from `normal_cycle` and `normal_flow`
+- The dashboard synthetic evaluation card now renders a compact
+  `Policy Evidence` block with policy id, reason code, and passed/total count.
+- TDD RED check:
+  - `npm --workspace apps/web run test -- syntheticEvaluationReport.test.ts DashboardShell.test.tsx -t "presentation-ready report|shows synthetic evaluation evidence"`:
+    failed before implementation because `policyEvidence` was missing from the
+    report and the dashboard card did not render `Policy Evidence`.
+- Targeted GREEN check:
+  - `npm --workspace apps/web run test -- syntheticEvaluationReport.test.ts DashboardShell.test.tsx -t "presentation-ready report|shows synthetic evaluation evidence"`:
+    2 passed, 93 skipped.
+- Broader checks:
+  - `npm run test:web`: 61 files, 375 tests passed.
+  - `npm run build:web`: passed.
+- Playwright dashboard check with local web/API servers:
+  - desktop synthetic evaluation card visible, `Policy Evidence` present,
+    `queue_relief` and `intersection_blocked` present, horizontal overflow 0.
+  - mobile synthetic evaluation card visible, `Policy Evidence` present,
+    `queue_relief` and `intersection_blocked` present, horizontal overflow 0.
+- Process note:
+  - If future work starts repeating synthetic-only polish without improving
+    the requested end state, stop implementation and review project problems
+    before continuing.
+
+Next active slice:
+
 - [ ] Once an authorized CCTV frame/video and signal timing sample are
       available, POST the real `live-input.v1` envelope to
       `/api/real-sample-drop-in` and refresh the same demo evidence,

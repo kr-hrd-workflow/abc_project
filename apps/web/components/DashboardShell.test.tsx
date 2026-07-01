@@ -836,7 +836,7 @@ describe("DashboardShell", () => {
     expect(screen.getByText("정책 스코어카드")).toBeTruthy();
     expect(screen.getByText("운영자 검토 상태")).toBeTruthy();
     expect(screen.getByText("승인 검토 준비")).toBeTruthy();
-    expect(screen.getByText("queue_relief")).toBeTruthy();
+    expect(screen.getAllByText("queue_relief").length).toBeGreaterThan(0);
     expect(screen.getByText("max_queue 34")).toBeTruthy();
     expect(screen.getByText("queue_over_threshold 9")).toBeTruthy();
     expect(screen.queryByText("[object Object]")).toBeNull();
@@ -2376,6 +2376,11 @@ describe("DashboardShell", () => {
     expect(within(card).getAllByText("100 passed").length).toBeGreaterThan(0);
     expect(within(card).getAllByText("0 failed").length).toBeGreaterThan(0);
     expect(within(card).getByText("No synthetic policy failures detected.")).toBeTruthy();
+    expect(within(card).getByText("Policy Evidence")).toBeTruthy();
+    expect(within(card).getByText("emergency_clearance")).toBeTruthy();
+    expect(within(card).getByText("queue_relief")).toBeTruthy();
+    expect(within(card).getByText("pedestrian_efficiency")).toBeTruthy();
+    expect(card.textContent).toContain("intersection_blocked");
   });
 
   test("shows multi-seed benchmark evidence in the report panel", () => {
