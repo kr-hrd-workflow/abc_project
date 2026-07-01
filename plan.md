@@ -1974,15 +1974,19 @@ Offline guardrail mirror evidence:
     `validationErrors=["signal snapshot older than 30 seconds"]`
   - conflicting queue axes -> `requiredInputs=["signal_phase.remaining_seconds"]`
     and `validationErrors=["conflicting_queue_axes"]`
+  - emergency plus long-waiting pedestrian conflict ->
+    `selectedPolicy=emergency_clearance`,
+    `requiredInputs=["operator_conflict_review"]`, and
+    `validationErrors=["emergency priority conflicts with waiting pedestrian"]`
 - The real-sample intake package and presentation docs now describe offline
   validation as shape, provenance, and guardrail checking.
 - TDD RED check:
   - `node --test scripts/real-sample-drop-in-check.test.mjs`:
     failed before implementation because offline mode accepted low-confidence,
-    stale-signal, and conflicting-queue payloads.
+    stale-signal, conflicting-queue, and emergency/pedestrian conflict payloads.
 - Targeted GREEN check:
   - `node --test scripts/real-sample-drop-in-check.test.mjs`:
-    8 passed.
+    9 passed.
 
 Next active slice:
 

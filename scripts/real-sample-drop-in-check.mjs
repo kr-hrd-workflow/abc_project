@@ -154,7 +154,7 @@ function validateOfflinePayload(payload) {
         ? "replay_input_ready"
         : "rejected",
       operatorWorkflowStatus: "manual_review_required",
-      selectedPolicy: "safety_hold",
+      selectedPolicy: inferOfflineSelectedPolicy(errors),
       confidence: "low",
       requiredInputs: inferOfflineRequiredInputs(errors),
       validationErrors: errors
@@ -327,6 +327,10 @@ function addOfflinePolicyGuardrailErrors(envelope, errors) {
   if (hasOfflineConflictingQueueAxes(detections)) {
     errors.push("conflicting_queue_axes");
   }
+
+  if (hasOfflineEmergencyPedestrianConflict(detections)) {
+    errors.push("emergency priority conflicts with waiting pedestrian");
+  }
 }
 
 function isOfflineSignalSnapshotStale(envelope) {
@@ -382,6 +386,20 @@ function maxVehicleQueueForDirections(detections, directions) {
   );
 }
 
+function hasOfflineEmergencyPedestrianConflict(detections) {
+  const hasEmergency = detections.some(
+    (detection) => detection?.classLabel === "emergency_vehicle"
+  );
+  const hasWaitingPedestrian = detections.some(
+    (detection) =>
+      detection?.classLabel === "pedestrian" &&
+      typeof detection.waitingSeconds === "number" &&
+      detection.waitingSeconds >= 60
+  );
+
+  return hasEmergency && hasWaitingPedestrian;
+}
+
 function getProhibitedSampleIdentifierError(envelope) {
   if (!envelope || typeof envelope !== "object" || Array.isArray(envelope)) {
     return null;
@@ -429,6 +447,9 @@ function hasProhibitedSampleIdentifierError(errors) {
 }
 
 function inferOfflineRequiredInputs(errors) {
+  if (errors.includes("emergency priority conflicts with waiting pedestrian")) {
+    return ["operator_conflict_review"];
+  }
   if (errors.includes("detection confidence below 0.5")) {
     return ["higher_confidence_detection"];
   }
@@ -453,12 +474,20 @@ function inferOfflineRequiredInputs(errors) {
   return ["live-input.v1 envelope"];
 }
 
+function inferOfflineSelectedPolicy(errors) {
+  if (errors.includes("emergency priority conflicts with waiting pedestrian")) {
+    return "emergency_clearance";
+  }
+  return "safety_hold";
+}
+
 function areReplayReadyGuardrailErrors(errors) {
   return errors.every((error) =>
     [
       "detection confidence below 0.5",
       "signal snapshot older than 30 seconds",
       "conflicting_queue_axes",
+      "emergency priority conflicts with waiting pedestrian",
       "fixture_or_synthetic_sample_not_allowed",
       "placeholder_or_demo_sample_not_allowed"
     ].includes(error)

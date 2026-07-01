@@ -232,6 +232,36 @@ describe("real sample drop-in file check", () => {
     ]);
     assert.deepEqual(result.summary.validationErrors, ["conflicting_queue_axes"]);
   });
+
+  test("routes emergency and long-waiting pedestrian conflict to manual review offline", async () => {
+    const conflictEnvelope = buildAuthorizedEnvelope();
+    conflictEnvelope.cameraFrames[0].detections.push({
+      objectId: "det-pedestrian-conflict-001",
+      classLabel: "pedestrian",
+      confidence: 0.91,
+      direction: "north",
+      laneId: "north_crosswalk_1",
+      count: 1,
+      waitingSeconds: 120
+    });
+
+    const result = await checkRealSampleDropInFile({
+      filePath: "emergency-pedestrian-conflict-sample.json",
+      offline: true,
+      readFile: async () => JSON.stringify(conflictEnvelope)
+    });
+
+    assert.equal(result.exitCode, 1);
+    assert.equal(result.summary.validationMode, "offline_shape_check");
+    assert.equal(result.summary.accepted, false);
+    assert.equal(result.summary.replayStatus, "replay_input_ready");
+    assert.equal(result.summary.operatorWorkflowStatus, "manual_review_required");
+    assert.equal(result.summary.selectedPolicy, "emergency_clearance");
+    assert.deepEqual(result.summary.requiredInputs, ["operator_conflict_review"]);
+    assert.deepEqual(result.summary.validationErrors, [
+      "emergency priority conflicts with waiting pedestrian"
+    ]);
+  });
 });
 
 function buildAuthorizedEnvelope() {
