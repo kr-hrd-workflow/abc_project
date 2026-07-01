@@ -28,10 +28,13 @@ export type SyntheticEvaluationReport = {
 
 const EMPTY_FAMILY_SUMMARY: Record<SyntheticScenarioFamily, SyntheticEvaluationFamilySummary> = {
   emergency: { total: 0, passed: 0, failed: 0 },
+  congestion: { total: 0, passed: 0, failed: 0 },
   pedestrian: { total: 0, passed: 0, failed: 0 },
   blocked: { total: 0, passed: 0, failed: 0 },
   normal: { total: 0, passed: 0, failed: 0 }
 };
+
+const QUEUE_THRESHOLD = 25;
 
 export function evaluateSyntheticReplayTimeline(
   timeline: SyntheticReplayFrame[]
@@ -82,6 +85,7 @@ export function recommendFromSyntheticFrame(
     return "safety_hold";
   }
   if (frame.summary.emergencyDetected) return "emergency_priority";
+  if (frame.summary.maxQueue > QUEUE_THRESHOLD) return "queue_relief";
   if (frame.summary.pedestrianWaiting) return "pedestrian_priority";
   return "normal_cycle";
 }
@@ -89,6 +93,7 @@ export function recommendFromSyntheticFrame(
 function cloneFamilySummary() {
   return {
     emergency: { ...EMPTY_FAMILY_SUMMARY.emergency },
+    congestion: { ...EMPTY_FAMILY_SUMMARY.congestion },
     pedestrian: { ...EMPTY_FAMILY_SUMMARY.pedestrian },
     blocked: { ...EMPTY_FAMILY_SUMMARY.blocked },
     normal: { ...EMPTY_FAMILY_SUMMARY.normal }

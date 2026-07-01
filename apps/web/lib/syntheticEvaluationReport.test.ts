@@ -25,10 +25,11 @@ describe("buildSyntheticEvaluationReport", () => {
     expect(report.riskNotes).toEqual(["No synthetic policy failures detected."]);
     expect(report.failures).toEqual([]);
     expect(report.scenarioBreakdown).toEqual([
-      { family: "emergency", total: 25, passed: 25, failed: 0, passRatePercent: 100 },
-      { family: "pedestrian", total: 25, passed: 25, failed: 0, passRatePercent: 100 },
-      { family: "blocked", total: 25, passed: 25, failed: 0, passRatePercent: 100 },
-      { family: "normal", total: 25, passed: 25, failed: 0, passRatePercent: 100 }
+      { family: "emergency", total: 20, passed: 20, failed: 0, passRatePercent: 100 },
+      { family: "congestion", total: 20, passed: 20, failed: 0, passRatePercent: 100 },
+      { family: "pedestrian", total: 20, passed: 20, failed: 0, passRatePercent: 100 },
+      { family: "blocked", total: 20, passed: 20, failed: 0, passRatePercent: 100 },
+      { family: "normal", total: 20, passed: 20, failed: 0, passRatePercent: 100 }
     ]);
   });
 });

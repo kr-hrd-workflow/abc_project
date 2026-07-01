@@ -1,6 +1,11 @@
-import type { Direction, ScenarioId } from "./types";
+import type { Direction } from "./types";
 
-export type SyntheticScenarioFamily = ScenarioId;
+export type SyntheticScenarioFamily =
+  | "emergency"
+  | "congestion"
+  | "pedestrian"
+  | "blocked"
+  | "normal";
 
 export type SyntheticDetectionType =
   | "vehicle"
@@ -31,6 +36,7 @@ export type SyntheticExpectedOutcome = {
   recommendation:
     | "emergency_priority"
     | "safety_hold"
+    | "queue_relief"
     | "pedestrian_priority"
     | "blocked_response"
     | "normal_cycle";
@@ -53,7 +59,14 @@ export type SyntheticScenarioDatasetOptions = {
   seed: number;
 };
 
-const FAMILIES: SyntheticScenarioFamily[] = ["emergency", "pedestrian", "blocked", "normal"];
+const QUEUE_THRESHOLD = 25;
+const FAMILIES: SyntheticScenarioFamily[] = [
+  "emergency",
+  "congestion",
+  "pedestrian",
+  "blocked",
+  "normal"
+];
 const DIRECTIONS: Direction[] = ["east", "north", "west", "south"];
 
 export function generateSyntheticScenarioDataset({
@@ -103,16 +116,17 @@ function buildScenarioCase({
   remainingSeconds: number;
 }): SyntheticScenarioCase {
   const signal = buildSignalSnapshot(direction, remainingSeconds, family === "normal");
+  const adjustedQueueBase = adjustQueueBaseForFamily(family, queueBase);
   const baseVehicle: SyntheticDetection = {
     type: "vehicle",
     lane: `${direction}_through_1`,
     direction,
-    count: queueBase,
+    count: adjustedQueueBase,
     confidence: 0.94,
     waitingSeconds: family === "normal" ? 12 : 45
   };
 
-  const familyDetails = buildFamilyDetails(family, direction, queueBase);
+  const familyDetails = buildFamilyDetails(family, direction, adjustedQueueBase);
 
   return {
     id,
@@ -170,6 +184,17 @@ function buildFamilyDetails(
     };
   }
 
+  if (family === "congestion") {
+    return {
+      detections: [],
+      expected: {
+        recommendation: "queue_relief",
+        mustIncludeReason: "queue_threshold_exceeded",
+        mustNotRecommend: ["normal_cycle", "pedestrian_priority"]
+      }
+    };
+  }
+
   if (family === "pedestrian") {
     return {
       detections: [
@@ -218,6 +243,16 @@ function buildFamilyDetails(
       mustNotRecommend: ["emergency_priority", "pedestrian_priority", "blocked_response"]
     }
   };
+}
+
+function adjustQueueBaseForFamily(
+  family: SyntheticScenarioFamily,
+  queueBase: number
+): number {
+  if (family === "congestion") return Math.max(queueBase, QUEUE_THRESHOLD + 7);
+  if (family === "pedestrian") return Math.min(queueBase, 8);
+  if (family === "normal") return Math.min(queueBase, 18);
+  return queueBase;
 }
 
 function createSeededRandom(seed: number) {

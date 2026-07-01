@@ -15,10 +15,11 @@ describe("synthetic live-input JSON dataset", () => {
     const dataset = buildSyntheticLiveInputJsonDataset({ caseCount: 100, seed: 404 });
 
     expect(dataset).toHaveLength(100);
-    expect(dataset.filter((item) => item.family === "emergency")).toHaveLength(25);
-    expect(dataset.filter((item) => item.family === "pedestrian")).toHaveLength(25);
-    expect(dataset.filter((item) => item.family === "blocked")).toHaveLength(25);
-    expect(dataset.filter((item) => item.family === "normal")).toHaveLength(25);
+    expect(dataset.filter((item) => item.family === "emergency")).toHaveLength(20);
+    expect(dataset.filter((item) => item.family === "congestion")).toHaveLength(20);
+    expect(dataset.filter((item) => item.family === "pedestrian")).toHaveLength(20);
+    expect(dataset.filter((item) => item.family === "blocked")).toHaveLength(20);
+    expect(dataset.filter((item) => item.family === "normal")).toHaveLength(20);
 
     const emergencyCase = dataset.find((item) => item.family === "emergency");
     expect(emergencyCase).toBeTruthy();
@@ -44,10 +45,11 @@ describe("synthetic live-input JSON dataset", () => {
     expect(report.passedCases).toBe(100);
     expect(report.failedCases).toBe(0);
     expect(report.passRatePercent).toBe(100);
-    expect(report.byFamily.emergency).toEqual({ total: 25, passed: 25, failed: 0 });
-    expect(report.byFamily.pedestrian).toEqual({ total: 25, passed: 25, failed: 0 });
-    expect(report.byFamily.blocked).toEqual({ total: 25, passed: 25, failed: 0 });
-    expect(report.byFamily.normal).toEqual({ total: 25, passed: 25, failed: 0 });
+    expect(report.byFamily.emergency).toEqual({ total: 20, passed: 20, failed: 0 });
+    expect(report.byFamily.congestion).toEqual({ total: 20, passed: 20, failed: 0 });
+    expect(report.byFamily.pedestrian).toEqual({ total: 20, passed: 20, failed: 0 });
+    expect(report.byFamily.blocked).toEqual({ total: 20, passed: 20, failed: 0 });
+    expect(report.byFamily.normal).toEqual({ total: 20, passed: 20, failed: 0 });
   });
 
   test("exports generated live-input.v1 JSON cases with an evaluation summary", () => {
@@ -116,8 +118,13 @@ describe("synthetic live-input JSON dataset", () => {
     expect(artifact.evaluation.passedCases).toBe(1000);
     expect(artifact.evaluation.failedCases).toBe(0);
     expect(artifact.evaluation.byFamily.emergency).toEqual({
-      total: 250,
-      passed: 250,
+      total: 200,
+      passed: 200,
+      failed: 0
+    });
+    expect(artifact.evaluation.byFamily.congestion).toEqual({
+      total: 200,
+      passed: 200,
       failed: 0
     });
   });
@@ -162,5 +169,20 @@ describe("synthetic live-input JSON dataset", () => {
         }
       ])
     ).toBe("blocked_response");
+  });
+
+  test("recommends queue relief for high single-axis live-input replay detections", () => {
+    expect(
+      recommendFromLiveReplayInput([
+        {
+          type: "vehicle",
+          lane: "north_through_1",
+          direction: "north",
+          count: 34,
+          confidence: 0.94,
+          waitingSeconds: 90
+        }
+      ])
+    ).toBe("queue_relief");
   });
 });

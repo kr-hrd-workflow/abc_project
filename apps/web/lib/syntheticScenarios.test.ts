@@ -13,10 +13,12 @@ describe("generateSyntheticScenarioDataset", () => {
   });
 
   test("covers the core scenario families used by recommendation evaluation", () => {
-    const dataset = generateSyntheticScenarioDataset({ caseCount: 16, seed: 7 });
+    const dataset = generateSyntheticScenarioDataset({ caseCount: 20, seed: 7 });
     const families = new Set(dataset.map((scenario) => scenario.family));
 
-    expect(families).toEqual(new Set(["emergency", "pedestrian", "blocked", "normal"]));
+    expect(families).toEqual(
+      new Set(["emergency", "congestion", "pedestrian", "blocked", "normal"])
+    );
   });
 
   test("emergency cases include emergency detections and expected priority recommendation", () => {
@@ -48,5 +50,16 @@ describe("generateSyntheticScenarioDataset", () => {
     expect(normal).toBeTruthy();
     expect(normal?.expected.recommendation).toBe("normal_cycle");
     expect(normal?.expected.mustIncludeReason).toBe("normal_flow");
+  });
+
+  test("congestion cases encode queue relief expectations", () => {
+    const dataset = generateSyntheticScenarioDataset({ caseCount: 10, seed: 9 });
+    const congestion = dataset.find((scenario) => scenario.family === "congestion");
+
+    expect(congestion).toBeTruthy();
+    expect(congestion?.detections.some((detection) => detection.count > 25)).toBe(true);
+    expect(congestion?.expected.recommendation).toBe("queue_relief");
+    expect(congestion?.expected.mustIncludeReason).toBe("queue_threshold_exceeded");
+    expect(congestion?.expected.mustNotRecommend).toContain("normal_cycle");
   });
 });

@@ -92,6 +92,7 @@ export type SyntheticEvaluationReportSummaryOptions = {
 
 const SCENARIO_FAMILY_ORDER: SyntheticScenarioFamily[] = [
   "emergency",
+  "congestion",
   "pedestrian",
   "blocked",
   "normal"

@@ -100,6 +100,7 @@ export const LIVE_INPUT_JSON_EXPORT_SUITES: SyntheticLiveInputExportSuite[] = [
 
 const EMPTY_FAMILY_SUMMARY: Record<SyntheticScenarioFamily, SyntheticLiveInputFamilySummary> = {
   emergency: { total: 0, passed: 0, failed: 0 },
+  congestion: { total: 0, passed: 0, failed: 0 },
   pedestrian: { total: 0, passed: 0, failed: 0 },
   blocked: { total: 0, passed: 0, failed: 0 },
   normal: { total: 0, passed: 0, failed: 0 }
@@ -315,6 +316,15 @@ export function recommendFromLiveReplayInput(
   if (
     detections.some(
       (detection) =>
+        detection.type === "vehicle" &&
+        detection.count > POLICY_SCORING_CONSTANTS.queueThreshold
+    )
+  ) {
+    return "queue_relief";
+  }
+  if (
+    detections.some(
+      (detection) =>
         detection.type === "pedestrian" && (detection.waitingSeconds ?? 0) >= 60
     )
   ) {
@@ -448,6 +458,7 @@ function requireSyntheticLiveInputCase(
 function cloneFamilySummary() {
   return {
     emergency: { ...EMPTY_FAMILY_SUMMARY.emergency },
+    congestion: { ...EMPTY_FAMILY_SUMMARY.congestion },
     pedestrian: { ...EMPTY_FAMILY_SUMMARY.pedestrian },
     blocked: { ...EMPTY_FAMILY_SUMMARY.blocked },
     normal: { ...EMPTY_FAMILY_SUMMARY.normal }

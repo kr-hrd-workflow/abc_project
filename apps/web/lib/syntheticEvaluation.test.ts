@@ -19,6 +19,7 @@ describe("evaluateSyntheticReplayTimeline", () => {
     expect(report.passRate).toBe(1);
     expect(report.failures).toEqual([]);
     expect(report.byFamily.emergency.passed).toBeGreaterThan(0);
+    expect(report.byFamily.congestion.passed).toBeGreaterThan(0);
     expect(report.byFamily.blocked.passed).toBeGreaterThan(0);
   });
 
@@ -101,5 +102,16 @@ describe("evaluateSyntheticReplayTimeline", () => {
     };
 
     expect(recommendFromSyntheticFrame(unknownDirectionFrame)).toBe("safety_hold");
+  });
+
+  test("recommends queue relief for high single-axis vehicle pressure", () => {
+    const dataset = generateSyntheticScenarioDataset({ caseCount: 10, seed: 505 });
+    const congestionFrame = buildSyntheticReplayTimeline(dataset).find(
+      (frame) => frame.family === "congestion"
+    );
+
+    expect(congestionFrame).toBeTruthy();
+    expect(congestionFrame?.summary.maxQueue).toBeGreaterThan(25);
+    expect(recommendFromSyntheticFrame(congestionFrame!)).toBe("queue_relief");
   });
 });

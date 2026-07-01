@@ -2040,6 +2040,45 @@ Frontend/backend policy alignment evidence:
 
 Next active slice:
 
+- [x] Add congestion/queue-relief coverage to synthetic evaluation so the
+      benchmark measures the second project target, congestion mitigation,
+      instead of only emergency, pedestrian, blocked, and normal cases.
+
+Synthetic congestion evaluation evidence:
+
+- `generateSyntheticScenarioDataset()` now includes a `congestion` family
+  whose expected recommendation is `queue_relief` with reason
+  `queue_threshold_exceeded`.
+- Synthetic congestion cases keep a single-axis queue above the local backend
+  threshold, while pedestrian and normal synthetic cases clamp baseline queues
+  below that threshold so their expected outcomes stay distinct.
+- `recommendFromSyntheticFrame()` and `recommendFromLiveReplayInput()` now
+  return `queue_relief` for high single-axis vehicle pressure after safety and
+  emergency gates.
+- Synthetic evaluation reports and `live-input.v1` JSON exports now include
+  the `congestion` family in their family summaries.
+- TDD RED check:
+  - `npm --workspace apps/web run test -- syntheticScenarios.test.ts syntheticEvaluation.test.ts syntheticEvaluationReport.test.ts syntheticLiveInputDataset.test.ts`:
+    failed before implementation because `congestion` family summaries were
+    missing and high-queue replay detections returned `normal_cycle`.
+- Targeted GREEN check:
+  - `npm --workspace apps/web run test -- syntheticScenarios.test.ts syntheticEvaluation.test.ts syntheticEvaluationReport.test.ts syntheticLiveInputDataset.test.ts`:
+    24 passed.
+- Broader checks:
+  - `npm run test:web`: 61 files, 373 tests passed.
+  - `npm run build:web`: passed.
+  - `apps/api/.venv/bin/pytest apps/api/tests/test_recommendations.py -q`:
+    19 passed.
+- Playwright dashboard check with local web/API servers:
+  - desktop synthetic evaluation card visible, `congestion` row present,
+    horizontal overflow 0.
+  - mobile synthetic evaluation card visible, `congestion` row present,
+    horizontal overflow 0.
+  - `/api/traffic/cctv-flow` returned 503 in the local environment, but it did
+    not block the synthetic evaluation card proof.
+
+Next active slice:
+
 - [ ] Once an authorized CCTV frame/video and signal timing sample are
       available, POST the real `live-input.v1` envelope to
       `/api/real-sample-drop-in` and refresh the same demo evidence,
