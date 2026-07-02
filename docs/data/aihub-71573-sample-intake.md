@@ -152,6 +152,46 @@ A broader key-backed request without fixed `itstId` returned 100 rows, including
 `seoul-v2x-signal-live-cardinal-sample-10120.json`. The adapter can now build a
 `LiveSignalSnapshot` from this real cardinal sample.
 
+## Police CrossRoadInfo Metadata Adapter
+
+The public data portal application for `경찰청_교차로기반정보서비스` was approved
+for local development use on 2026-07-02. The working portal key row returned
+`NORMAL_SERVICE` for both:
+
+```text
+getCrossRoadInfoList
+getCrossRoadInfoDetail
+```
+
+The raw key-backed responses are stored outside git with credentials redacted:
+
+```text
+output/real-samples/public-data/police-crossroad-info-list-live-sample.json
+output/real-samples/public-data/police-crossroad-info-list-live-sample-provenance.json
+output/real-samples/public-data/police-crossroad-info-detail-live-sample.json
+output/real-samples/public-data/police-crossroad-info-detail-live-sample-provenance.json
+```
+
+`apps/web/lib/policeCrossroadInfoAdapter.ts` normalizes this response shape into:
+
+- intersection metadata from `REGION_CD`, `INT_NO`, `INT_NM`, `X_COORD`,
+  `Y_COORD`, and `UPD_DTIME`
+- signal-plan metadata from `MAP_NO`, `INT_MAINPHASE`, and non-empty
+  `A_RING_*_PHASE_CONF_CD` / `B_RING_*_PHASE_CONF_CD` values
+
+This evidence is exported as `police-crossroad-info-metadata.v1` through the
+real-sample intake package, demo evidence export, final readiness summary, and
+real-sample source schema endpoint.
+
+The adapter deliberately does not interpret the phase configuration code
+semantics. It preserves the codes as metadata only. This data does not prove:
+
+- live CCTV detections
+- emergency-vehicle telemetry
+- camera-to-approach direction calibration
+- the current active `live-input.v1` signal phase
+- direct signal-controller integration
+
 ## Freshness Guardrail
 
 `/api/real-sample-drop-in` and `npm run real-sample:check -- --offline` both

@@ -25,6 +25,7 @@ export type FinalLocalReadinessExport = {
     liveInputJson: string;
     guardrails: string;
     scorecardPolicies: number;
+    crossroadMetadata: string;
     sourceAdapterReplayStatus: "replay_input_ready";
   };
   blockers: string[];
@@ -79,6 +80,7 @@ export function buildFinalLocalReadinessExport({
         : "0/0",
       guardrails: `${demoEvidence.liveInputGuardrails.guardedCases} guarded / ${demoEvidence.liveInputGuardrails.missedCases} misses`,
       scorecardPolicies: scorecardContract.policyCount,
+      crossroadMetadata: `${demoEvidence.realSampleReadiness.crossroadMetadata.normalizedCounts.intersections} intersections / ${demoEvidence.realSampleReadiness.crossroadMetadata.normalizedCounts.signalPlans} signal plans`,
       sourceAdapterReplayStatus: demoEvidence.sourceAdapter.replayStatus
     },
     blockers: [

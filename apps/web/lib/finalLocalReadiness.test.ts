@@ -44,6 +44,7 @@ describe("final local readiness export", () => {
         liveInputJson: "10000/10000",
         guardrails: "6 guarded / 0 misses",
         scorecardPolicies: 6,
+        crossroadMetadata: "1 intersections / 2 signal plans",
         sourceAdapterReplayStatus: "replay_input_ready"
       },
       blockers: [

@@ -47,8 +47,26 @@ describe("real sample intake package", () => {
           purpose:
             "operator-verified mapping from cameraId to approach direction",
           mapsTo: "cameraFrames[].detections[].direction"
+        },
+        {
+          schemaVersion: "police-crossroad-info-metadata.v1",
+          purpose:
+            "intersection and signal-plan metadata from 경찰청_교차로기반정보서비스",
+          mapsTo: "evidence only; not live-input.v1 detections or currentPhase"
         }
       ],
+      metadataEvidence: {
+        policeCrossroadInfo: {
+          status: "metadata_available",
+          evidenceScope: "intersection_and_signal_plan_metadata",
+          limitations: [
+            "does not prove live CCTV detections",
+            "does not prove emergency vehicle telemetry",
+            "does not prove camera-to-approach direction calibration",
+            "does not directly select a live-input.v1 currentPhase"
+          ]
+        }
+      },
       envelopeRequirements: {
         schemaVersion: "live-input.v1",
         requiredTopLevelFields: [

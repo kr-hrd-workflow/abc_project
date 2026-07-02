@@ -24,7 +24,9 @@ describe("real sample source schema export", () => {
       "authorized-camera-detector-output.v1",
       "camera-approach-calibration.v1",
       "seoul-v2x-signal-response.v1",
-      "signal-snapshot-input.v1"
+      "signal-snapshot-input.v1",
+      "police-crossroad-info-list-response.v1",
+      "police-crossroad-info-detail-response.v1"
     ]);
     expect(
       artifact.sourceSchemas["authorized-camera-detector-output.v1"].required
@@ -55,11 +57,29 @@ describe("real sample source schema export", () => {
       artifact.sourceSchemas["signal-snapshot-input.v1"].properties.currentPhase
         .enum
     ).toContain("east_priority");
+    expect(
+      artifact.sourceSchemas["police-crossroad-info-list-response.v1"].items
+        .anyOf[1].required
+    ).toEqual([
+      "REGION_CD",
+      "INT_NO",
+      "INT_NM",
+      "X_COORD",
+      "Y_COORD",
+      "UPD_DTIME"
+    ]);
+    expect(
+      artifact.sourceSchemas["police-crossroad-info-detail-response.v1"].items
+        .anyOf[1].required
+    ).toEqual(["REGION_CD", "INT_NO", "INT_NM", "MAP_NO", "INT_MAINPHASE"]);
     expect(artifact.guardrailNotes).toContain(
       "source schemas describe file shape only; freshness, provenance, and policy guardrails still run through real-sample:check"
     );
     expect(artifact.guardrailNotes).toContain(
       "camera approach direction must come from camera-approach-calibration.v1, not from detector guesses"
+    );
+    expect(artifact.guardrailNotes).toContain(
+      "Police CrossRoadInfo responses provide intersection and signal-plan metadata only; they do not prove live detections, emergency telemetry, camera calibration, or currentPhase"
     );
 
     const serialized = JSON.stringify(artifact);

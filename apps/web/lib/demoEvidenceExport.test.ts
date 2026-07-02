@@ -77,6 +77,15 @@ describe("demo evidence export", () => {
         status: "mapping_required",
         blocker: "camera_approach_calibration_required"
       },
+      crossroadMetadata: {
+        status: "metadata_available",
+        evidenceScope: "intersection_and_signal_plan_metadata",
+        normalizedCounts: {
+          intersections: 1,
+          signalPlans: 2
+        },
+        blocker: null
+      },
       nextRequiredInputs: [
         "fresh camera frame captured within 30 seconds of receivedAt",
         "camera-to-approach direction calibration for detector labels"
@@ -93,6 +102,9 @@ describe("demo evidence export", () => {
     );
     expect(artifact.presentationClaims).toContain(
       "Backend policy scorecards cover safety gates, emergency clearance, queue relief, pedestrian efficiency, and normal-cycle decisions."
+    );
+    expect(artifact.presentationClaims).toContain(
+      "Police CrossRoadInfo metadata is normalized as intersection and signal-plan evidence, not as live detector or signal-control authority."
     );
 
     const serialized = JSON.stringify(artifact);

@@ -139,12 +139,73 @@ export function buildRealSampleSourceSchemaExport({
           controllerMode: { type: "string", enum: CONTROLLER_MODES },
           manualOverride: { type: "boolean" }
         }
+      },
+      "police-crossroad-info-list-response.v1": {
+        $schema: "https://json-schema.org/draft/2020-12/schema",
+        title: "Police CrossRoadInfo getCrossRoadInfoList response",
+        type: "array",
+        minItems: 2,
+        items: {
+          anyOf: [
+            buildPoliceCrossroadHeaderSchema(),
+            {
+              type: "object",
+              additionalProperties: true,
+              required: [
+                "REGION_CD",
+                "INT_NO",
+                "INT_NM",
+                "X_COORD",
+                "Y_COORD",
+                "UPD_DTIME"
+              ],
+              properties: {
+                REGION_CD: { type: "string", minLength: 1 },
+                INT_NO: { type: "string", minLength: 1 },
+                INT_NM: { type: "string", minLength: 1 },
+                X_COORD: { type: "string", minLength: 1 },
+                Y_COORD: { type: "string", minLength: 1 },
+                UPD_DTIME: { type: "string", minLength: 1 }
+              }
+            }
+          ]
+        }
+      },
+      "police-crossroad-info-detail-response.v1": {
+        $schema: "https://json-schema.org/draft/2020-12/schema",
+        title: "Police CrossRoadInfo getCrossRoadInfoDetail response",
+        type: "array",
+        minItems: 2,
+        items: {
+          anyOf: [
+            buildPoliceCrossroadHeaderSchema(),
+            {
+              type: "object",
+              additionalProperties: true,
+              required: [
+                "REGION_CD",
+                "INT_NO",
+                "INT_NM",
+                "MAP_NO",
+                "INT_MAINPHASE"
+              ],
+              properties: {
+                REGION_CD: { type: "string", minLength: 1 },
+                INT_NO: { type: "string", minLength: 1 },
+                INT_NM: { type: "string", minLength: 1 },
+                MAP_NO: { type: "string", minLength: 1 },
+                INT_MAINPHASE: { type: "string", minLength: 1 }
+              }
+            }
+          ]
+        }
       }
     },
     guardrailNotes: [
       "source schemas describe file shape only; freshness, provenance, and policy guardrails still run through real-sample:check",
       "camera approach direction must come from camera-approach-calibration.v1, not from detector guesses",
-      "T-DATA remaining-time rows do not prove nextPhase, controllerMode, or manualOverride"
+      "T-DATA remaining-time rows do not prove nextPhase, controllerMode, or manualOverride",
+      "Police CrossRoadInfo responses provide intersection and signal-plan metadata only; they do not prove live detections, emergency telemetry, camera calibration, or currentPhase"
     ]
   } as const;
 }
@@ -174,6 +235,21 @@ function buildSeoulV2xMessageSchema() {
       },
       wtStsgRmdrCs: {
         anyOf: [{ type: "number" }, { type: "string" }, { type: "null" }]
+      }
+    }
+  } as const;
+}
+
+function buildPoliceCrossroadHeaderSchema() {
+  return {
+    type: "object",
+    additionalProperties: true,
+    required: ["resultCode", "resultMsg", "totalCount"],
+    properties: {
+      resultCode: { type: "string", minLength: 1 },
+      resultMsg: { type: "string", minLength: 1 },
+      totalCount: {
+        anyOf: [{ type: "number" }, { type: "string", minLength: 1 }]
       }
     }
   } as const;

@@ -12,6 +12,7 @@ import {
   type PolicyScorecardBackedPolicy,
   type PolicyScorecardRequiredEvidence
 } from "./policyScorecardContract";
+import { buildDefaultPoliceCrossroadInfoMetadataEvidence } from "./policeCrossroadInfoAdapter";
 
 export type DemoEvidenceExport = {
   source: "demo_evidence_export";
@@ -69,6 +70,15 @@ export type DemoEvidenceExport = {
       status: "mapping_required";
       blocker: "camera_approach_calibration_required";
     };
+    crossroadMetadata: {
+      status: "metadata_available";
+      evidenceScope: "intersection_and_signal_plan_metadata";
+      normalizedCounts: {
+        intersections: number;
+        signalPlans: number;
+      };
+      blocker: null;
+    };
     nextRequiredInputs: string[];
   };
   presentationClaims: string[];
@@ -82,6 +92,7 @@ export function buildDemoEvidenceExport({
   const benchmark = buildSyntheticBenchmarkExport().report;
   const guardrails = buildSyntheticLiveInputGuardrailReport();
   const sourceAdapter = buildSourceSpecificLiveInputExport();
+  const crossroadMetadata = buildDefaultPoliceCrossroadInfoMetadataEvidence();
   const liveInputJsonSuites = LIVE_INPUT_JSON_EXPORT_SUITES.map((suite) => {
     const report = buildSyntheticLiveInputEvaluationReport({
       caseCount: suite.caseCount,
@@ -153,6 +164,12 @@ export function buildDemoEvidenceExport({
         status: "mapping_required",
         blocker: "camera_approach_calibration_required"
       },
+      crossroadMetadata: {
+        status: crossroadMetadata.status,
+        evidenceScope: crossroadMetadata.evidenceScope,
+        normalizedCounts: crossroadMetadata.normalizedCounts,
+        blocker: null
+      },
       nextRequiredInputs: [
         "fresh camera frame captured within 30 seconds of receivedAt",
         "camera-to-approach direction calibration for detector labels"
@@ -166,6 +183,7 @@ export function buildDemoEvidenceExport({
       "Operator workflow status is derived from policy scorecards, not autonomous signal control.",
       "LLM explanations review local policy evidence and do not choose signal plans.",
       "Backend policy scorecards cover safety gates, emergency clearance, queue relief, pedestrian efficiency, and normal-cycle decisions.",
+      "Police CrossRoadInfo metadata is normalized as intersection and signal-plan evidence, not as live detector or signal-control authority.",
       "Real sample adapters are prepared with an AI-Hub historical sample and a key-backed Seoul V2X cardinal signal response, but live drop-in still requires fresh camera evidence and calibrated direction."
     ]
   };

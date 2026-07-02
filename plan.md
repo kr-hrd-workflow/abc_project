@@ -104,6 +104,11 @@ Current maintenance slice:
       `경찰청_교차로기반정보서비스`; verify the approval page and fetch
       key-backed `getCrossRoadInfoList` / `getCrossRoadInfoDetail` metadata
       samples after selecting the portal key row that returns `NORMAL_SERVICE`.
+- [x] Normalize the approved `경찰청_교차로기반정보서비스`
+      `getCrossRoadInfoList` / `getCrossRoadInfoDetail` samples into project
+      evidence as intersection and signal-plan metadata only, while preserving
+      the live drop-in blockers for fresh camera detector output, direction
+      calibration, and current signal timing.
 
 Maintenance evidence:
 
@@ -144,6 +149,12 @@ Maintenance evidence:
   HTTP 200 `NORMAL_SERVICE`, signal-plan metadata with `MAP_NO`,
   `INT_MAINPHASE`, and A/B ring phase configuration fields saved under ignored
   `output/real-samples/public-data/` with `serviceKey` redacted.
+- `apps/web/lib/policeCrossroadInfoAdapter.ts` now normalizes those list/detail
+  response shapes into `police-crossroad-info-metadata.v1` evidence and keeps
+  the limitations explicit: no live CCTV detections, no emergency telemetry, no
+  camera-to-approach calibration, and no direct `live-input.v1` `currentPhase`.
+- `npm --workspace apps/web run test -- policeCrossroadInfoAdapter.test.ts realSampleIntakePackage.test.ts demoEvidenceExport.test.ts finalLocalReadiness.test.ts realSampleSourceSchema.test.ts app/api/real-sample-intake-package/route.test.ts app/api/demo-evidence-export/route.test.ts app/api/final-local-readiness/route.test.ts app/api/real-sample-source-schema/route.test.ts`:
+  11 passed.
 - The portal key table also showed a `재발급` row that still returned HTTP 401
   during this check, while the `신규발급` row returned `NORMAL_SERVICE`.
 - `npm --workspace apps/web run test -- seoulV2xSignalAdapter.test.ts realSampleDropIn.test.ts realSampleIntakePackage.test.ts demoEvidenceExport.test.ts finalLocalReadiness.test.ts app/api/real-sample-drop-in/route.test.ts app/api/real-sample-intake-package/route.test.ts app/api/demo-evidence-export/route.test.ts app/api/final-local-readiness/route.test.ts DashboardShell.test.tsx`:
