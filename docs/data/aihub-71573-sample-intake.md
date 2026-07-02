@@ -47,9 +47,23 @@ labels into:
 - a `live-input.v1` envelope only when external calibration supplies:
   - `approachDirection`
   - `signalSnapshot`
+- a calibrated `live-input.v1` envelope when an
+  `aihub-camera-approach-calibration.v1` mapping matches the sample
+  `locationId` and `cameraId`
 
 This avoids inventing direction or signal timing from image labels that do not
 contain those facts.
+
+If the calibration mapping does not contain the exact AI-Hub camera, the adapter
+throws:
+
+```text
+camera-to-approach calibration is required for <cameraId> at <locationId>
+```
+
+The code contract is now ready, but the actual field calibration evidence still
+has to come from an operator camera survey, road geometry review, or another
+trusted source.
 
 ## Next Data Need
 

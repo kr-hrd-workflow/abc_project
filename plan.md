@@ -67,6 +67,9 @@ Current maintenance slice:
 - [x] Align real-sample readiness, intake package, demo evidence export, final
       readiness, and health check status with the acquired AI-Hub/V2X adapter
       state instead of reporting every real-sample slot as missing.
+- [x] Add an AI-Hub camera-to-approach calibration contract so vehicle labels
+      can become `live-input.v1` detections only when the sample camera has a
+      matching operator/geometry direction mapping.
 
 Maintenance evidence:
 
@@ -78,7 +81,7 @@ Maintenance evidence:
 - `npm --workspace apps/web run test -- syntheticLiveInputDataset.test.ts realSampleDropIn.test.ts`:
   19 passed.
 - `npm --workspace apps/web run test -- aiHubVehicleSampleAdapter.test.ts`:
-  2 passed.
+  4 passed.
 - `npm --workspace apps/web run test -- seoulV2xSignalAdapter.test.ts`:
   3 passed.
 - `npm --workspace apps/web run test -- realSampleDropIn.test.ts realSampleIntakePackage.test.ts`:
@@ -119,6 +122,10 @@ Real sample intake evidence:
 - Historical AI-Hub frames remain valid detector evidence, but they now require
   manual review as live observations unless `cameraFrames[].capturedAt` is
   within 30 seconds of `receivedAt`.
+- AI-Hub vehicle labels can now be converted through
+  `buildAiHubVehicleLiveInputEnvelopeFromCalibration` only when an
+  `aihub-camera-approach-calibration.v1` mapping matches both `locationId` and
+  `cameraId`. This prevents the adapter from guessing an approach direction.
 - `/api/real-sample-drop-in`, `/api/real-sample-intake-package`,
   `/api/demo-evidence-export`, and `/api/final-local-readiness` now report
   `adapter_ready_waiting_for_live_signal_response`. This means the local

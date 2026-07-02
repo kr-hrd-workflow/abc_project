@@ -2,7 +2,8 @@ import { describe, expect, test } from "vitest";
 
 import {
   buildAiHubVehicleEvidence,
-  buildAiHubVehicleLiveInputEnvelope
+  buildAiHubVehicleLiveInputEnvelope,
+  buildAiHubVehicleLiveInputEnvelopeFromCalibration
 } from "./aiHubVehicleSampleAdapter";
 
 const AI_HUB_VEHICLE_LABEL = {
@@ -143,5 +144,71 @@ describe("AI-Hub vehicle sample adapter", () => {
         manualOverride: false
       }
     });
+  });
+
+  test("builds live-input.v1 from a matching camera approach calibration", () => {
+    const envelope = buildAiHubVehicleLiveInputEnvelopeFromCalibration(
+      AI_HUB_VEHICLE_LABEL,
+      {
+        calibration: {
+          source: "operator_camera_survey",
+          schemaVersion: "aihub-camera-approach-calibration.v1",
+          mappings: [
+            {
+              locationId: "cr06",
+              cameraId: "aihub-cr06-01",
+              approachDirection: "south",
+              evidence: "operator verified ho-gye intersection camera 01"
+            }
+          ]
+        },
+        receivedAt: "2026-07-02T01:55:00.000Z",
+        signalSnapshot: {
+          controllerId: "td-seoul-v2x-cr06",
+          capturedAt: "2026-07-02T01:54:52.000Z",
+          currentPhase: "south_priority",
+          remainingSeconds: 18,
+          nextPhase: "normal_cycle",
+          controllerMode: "adaptive",
+          manualOverride: false
+        }
+      }
+    );
+
+    expect(envelope.cameraFrames[0].detections[0]).toMatchObject({
+      direction: "south",
+      laneId: "south_aihub_cr06_01"
+    });
+  });
+
+  test("rejects live-input.v1 conversion when camera approach calibration is missing", () => {
+    expect(() =>
+      buildAiHubVehicleLiveInputEnvelopeFromCalibration(AI_HUB_VEHICLE_LABEL, {
+        calibration: {
+          source: "operator_camera_survey",
+          schemaVersion: "aihub-camera-approach-calibration.v1",
+          mappings: [
+            {
+              locationId: "other",
+              cameraId: "aihub-other-01",
+              approachDirection: "west",
+              evidence: "different camera"
+            }
+          ]
+        },
+        receivedAt: "2026-07-02T01:55:00.000Z",
+        signalSnapshot: {
+          controllerId: "td-seoul-v2x-cr06",
+          capturedAt: "2026-07-02T01:54:52.000Z",
+          currentPhase: "west_priority",
+          remainingSeconds: 18,
+          nextPhase: "normal_cycle",
+          controllerMode: "adaptive",
+          manualOverride: false
+        }
+      })
+    ).toThrow(
+      "camera-to-approach calibration is required for aihub-cr06-01 at cr06"
+    );
   });
 });

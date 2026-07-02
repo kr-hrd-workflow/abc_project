@@ -47,6 +47,23 @@ export type AiHubVehicleLiveInputOptions = {
   signalSnapshot: LiveSignalSnapshot;
 };
 
+export type AiHubCameraApproachCalibration = {
+  source: "operator_camera_survey";
+  schemaVersion: "aihub-camera-approach-calibration.v1";
+  mappings: {
+    locationId: string;
+    cameraId: string;
+    approachDirection: Direction;
+    evidence: string;
+  }[];
+};
+
+export type AiHubVehicleLiveInputCalibrationOptions = {
+  calibration: AiHubCameraApproachCalibration;
+  receivedAt: string;
+  signalSnapshot: LiveSignalSnapshot;
+};
+
 type AiHubVehicleAnnotation = {
   class_id?: unknown;
   type?: unknown;
@@ -123,6 +140,30 @@ export function buildAiHubVehicleLiveInputEnvelope(
         ]
       }
     ],
+    signalSnapshot: options.signalSnapshot
+  });
+}
+
+export function buildAiHubVehicleLiveInputEnvelopeFromCalibration(
+  input: unknown,
+  options: AiHubVehicleLiveInputCalibrationOptions
+): LiveInputEnvelope {
+  const evidence = buildAiHubVehicleEvidence(input);
+  const mapping = options.calibration.mappings.find(
+    (candidate) =>
+      candidate.locationId === evidence.sourceFrame.locationId &&
+      candidate.cameraId === evidence.sourceFrame.cameraId
+  );
+
+  if (!mapping) {
+    throw new Error(
+      `camera-to-approach calibration is required for ${evidence.sourceFrame.cameraId} at ${evidence.sourceFrame.locationId}`
+    );
+  }
+
+  return buildAiHubVehicleLiveInputEnvelope(input, {
+    approachDirection: mapping.approachDirection,
+    receivedAt: options.receivedAt,
     signalSnapshot: options.signalSnapshot
   });
 }
