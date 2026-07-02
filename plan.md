@@ -51,6 +51,10 @@ Current maintenance slice:
 - [x] Add policy contract checker tests to the root `npm run verify` path.
 - [x] Align `live-input.v1` unknown emergency direction handling with backend
       `safety_hold` behavior.
+- [x] Download an authorized AI-Hub 71573 light sample and add a vehicle-label
+      adapter that turns its CCTV frame/bbox evidence into a guarded
+      `live-input.v1` envelope only when approach direction and signal timing
+      calibration are supplied.
 
 Maintenance evidence:
 
@@ -61,6 +65,27 @@ Maintenance evidence:
   4 passed.
 - `npm --workspace apps/web run test -- syntheticLiveInputDataset.test.ts realSampleDropIn.test.ts`:
   19 passed.
+- `npm --workspace apps/web run test -- aiHubVehicleSampleAdapter.test.ts`:
+  2 passed.
+
+Real sample intake evidence:
+
+- Downloaded AI-Hub dataset 71573 `Sample.zip` light sample to the local
+  Downloads folder. The archive contains 1,394 jpg files and 1,394 json labels.
+- Extracted one vehicle-appearance sample frame locally under ignored
+  `output/real-samples/aihub-71573/`:
+  - `labels/C-221008_14_CR06_01_A0341.json`
+  - `images/C-221008_14_CR06_01_A0341.jpg`
+  - `provenance.json`
+- The extracted sample provides authorized CCTV frame and bbox label evidence
+  for `호계사거리`, but it does not include approach direction or live signal
+  phase/remaining-time data. The remaining blocker is therefore narrowed from
+  "no real sample" to "direction calibration plus signal timing sample needed."
+- Downloaded `경상남도_긴급차량 우선신호시스템 위치_20251231.csv`
+  from the public data portal and copied it to ignored
+  `output/real-samples/public-data/`. This provides 205 emergency-priority
+  infrastructure locations, useful as background/provenance evidence, but it
+  is not live emergency-vehicle telemetry or signal timing.
 
 ## Historical Plan: Synthetic Scenario Evaluation
 
