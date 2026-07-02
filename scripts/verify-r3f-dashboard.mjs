@@ -4136,12 +4136,12 @@ function addFinalAssertions() {
         typeof renderer.signal_state === "string" &&
         renderer.signal_state.includes("east:green") &&
         renderer.signal_state.includes("north:red") &&
-        renderer.scenario_id === "emergency" &&
+        renderer.scenario_id === "normal" &&
         renderer.queue_source === "frame" &&
         renderer.domProof?.sourceBadges?.signalState?.includes("east:green") &&
         renderer.domProof?.sourceBadges?.signalState?.includes("north:red") &&
         renderer.domProof?.sourceBadges?.queueSource?.includes("frame") &&
-        renderer.domProof?.sourceBadges?.scenarioId?.includes("emergency")
+        renderer.domProof?.sourceBadges?.scenarioId?.includes("normal")
     ),
     `signal_state=${renderer.signal_state ?? "missing"}, scenario_id=${renderer.scenario_id ?? "missing"}, queue_source=${renderer.queue_source ?? "missing"}, badges=${JSON.stringify(renderer.domProof?.sourceBadges ?? null)}`
   );
