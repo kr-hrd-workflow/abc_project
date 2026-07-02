@@ -2,11 +2,14 @@
 
 ## Current Review Gate: 2026-07-01
 
-Implementation is paused for project review because additional synthetic-only
-work is no longer the most meaningful path. The local dashboard, exports,
-guardrails, policy scorecards, and `live-input.v1` handoff surfaces are already
-rich enough for rehearsal. The unresolved blocker is an authorized real CCTV or
-detector sample plus a matching signal phase/remaining-time sample.
+Implementation is focused on real-sample readiness because additional
+synthetic-only work is no longer the most meaningful path. The local dashboard,
+exports, guardrails, policy scorecards, and `live-input.v1` handoff surfaces
+are already rich enough for rehearsal. The project now has an authorized
+historical AI-Hub CCTV frame/label sample and local adapters for AI-Hub labels
+and Seoul V2X signal timing. The unresolved blockers are a live API-key-backed
+signal response, a fresh authorized camera frame, and camera-to-approach
+direction calibration.
 
 Current branch management:
 
@@ -61,6 +64,9 @@ Current maintenance slice:
 - [x] Add a stale camera-frame guardrail so historical CCTV samples cannot be
       accepted as current live observations in `/api/real-sample-drop-in` or
       offline `real-sample:check`.
+- [x] Align real-sample readiness, intake package, demo evidence export, final
+      readiness, and health check status with the acquired AI-Hub/V2X adapter
+      state instead of reporting every real-sample slot as missing.
 
 Maintenance evidence:
 
@@ -78,6 +84,14 @@ Maintenance evidence:
 - `npm --workspace apps/web run test -- realSampleDropIn.test.ts realSampleIntakePackage.test.ts`:
   12 passed.
 - `node --test scripts/real-sample-drop-in-check.test.mjs`: 10 passed.
+- `npm --workspace apps/web run test -- realSampleDropIn.test.ts realSampleIntakePackage.test.ts demoEvidenceExport.test.ts finalLocalReadiness.test.ts app/api/real-sample-drop-in/route.test.ts app/api/real-sample-intake-package/route.test.ts app/api/final-local-readiness/route.test.ts`:
+  25 passed.
+- `node --test scripts/demo-health-check.test.mjs`: 2 passed.
+- `npm --workspace apps/web run test -- realSampleDropIn.test.ts realSampleIntakePackage.test.ts demoEvidenceExport.test.ts finalLocalReadiness.test.ts DashboardShell.test.tsx app/api/demo-evidence-export/route.test.ts app/api/real-sample-drop-in/route.test.ts app/api/real-sample-intake-package/route.test.ts app/api/final-local-readiness/route.test.ts`:
+  116 passed.
+- `npm run test:web`: 63 files, 384 tests passed.
+- `npm run build:web`: passed.
+- `git diff --check`: passed.
 
 Real sample intake evidence:
 
@@ -105,6 +119,14 @@ Real sample intake evidence:
 - Historical AI-Hub frames remain valid detector evidence, but they now require
   manual review as live observations unless `cameraFrames[].capturedAt` is
   within 30 seconds of `receivedAt`.
+- `/api/real-sample-drop-in`, `/api/real-sample-intake-package`,
+  `/api/demo-evidence-export`, and `/api/final-local-readiness` now report
+  `adapter_ready_waiting_for_live_signal_response`. This means the local
+  adapters and historical sample evidence are prepared, while live drop-in is
+  still blocked by:
+  - `live_signal_phase_remaining_time_required`
+  - `fresh_camera_frame_required_for_live_drop_in`
+  - camera-to-approach direction calibration for detector labels.
 
 ## Historical Plan: Synthetic Scenario Evaluation
 
@@ -1109,7 +1131,7 @@ Next active slice:
       authorized live CCTV frames or real signal samples are currently
       available.
 
-Real-sample readiness evidence:
+Historical real-sample readiness evidence before AI-Hub/V2X adapter alignment:
 
 - `GET /api/demo-evidence-export` now includes `realSampleReadiness`.
 - The readiness summary states:
@@ -1141,7 +1163,7 @@ Next active slice:
       be routed into the existing `live-input.v1` validation path without
       inventing live data.
 
-Real-sample drop-in evidence:
+Historical real-sample drop-in evidence before AI-Hub/V2X adapter alignment:
 
 - Added `apps/web/lib/realSampleDropIn.ts`.
 - Added `GET /api/real-sample-drop-in`.
@@ -1450,7 +1472,7 @@ Next active slice:
       docs so the remaining work is clearly separated from the blocker of
       missing authorized CCTV/signal samples.
 
-Final local readiness reconciliation evidence:
+Historical final local readiness reconciliation evidence before AI-Hub/V2X adapter alignment:
 
 - Added `apps/web/lib/finalLocalReadiness.ts`.
 - Added `GET /api/final-local-readiness`.
@@ -1502,7 +1524,7 @@ Next active slice:
       the exact `live-input.v1` submission fields, guardrails, prohibited
       inputs, and POST steps before a real sample is available.
 
-Real-sample intake package evidence:
+Historical real-sample intake package evidence before AI-Hub/V2X adapter alignment:
 
 - Added `apps/web/lib/realSampleIntakePackage.ts`.
 - Added `GET /api/real-sample-intake-package`.

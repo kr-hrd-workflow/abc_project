@@ -12,7 +12,7 @@ describe("real sample drop-in readiness", () => {
     expect(artifact).toEqual({
       source: "real_sample_drop_in_readiness",
       schemaVersion: "real-sample-drop-in.v1",
-      status: "waiting_for_authorized_samples",
+      status: "adapter_ready_waiting_for_live_signal_response",
       adapterBoundary: "live-input.v1",
       endpoint: "/api/real-sample-drop-in",
       sampleSlots: [
@@ -21,21 +21,21 @@ describe("real sample drop-in readiness", () => {
           required: true,
           acceptedFormats: ["image/jpeg", "image/png", "video/mp4"],
           mapsTo: "cameraFrames[].detections",
-          currentState: "missing"
+          currentState: "authorized_historical_sample_available"
         },
         {
           id: "signal_phase_remaining_time",
           required: true,
           acceptedFormats: ["application/json"],
           mapsTo: "signalSnapshot",
-          currentState: "missing"
+          currentState: "adapter_ready_live_key_required"
         },
         {
           id: "detector_output",
           required: true,
           acceptedFormats: ["application/json"],
           mapsTo: "live-input.v1 detections",
-          currentState: "fixture_only"
+          currentState: "label_adapter_ready"
         }
       ],
       validationFlow: [
@@ -47,8 +47,9 @@ describe("real sample drop-in readiness", () => {
         "refresh demo evidence export"
       ],
       blockers: [
-        "authorized CCTV frame or video sample is not available",
-        "signal phase and remaining-time sample is not available"
+        "live signal phase and remaining-time API response is not available",
+        "AI-Hub sample frame is historical and requires fresh camera evidence before live drop-in acceptance",
+        "camera-to-approach direction calibration is required before AI-Hub labels can become live-input.v1 detections"
       ]
     });
 

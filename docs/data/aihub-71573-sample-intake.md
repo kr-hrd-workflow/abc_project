@@ -108,6 +108,28 @@ cameraFrames[].capturedAt must be within 30 seconds of receivedAt
 This keeps historical AI-Hub frames useful as authorized detector evidence, but
 prevents them from being mistaken for current live CCTV truth.
 
+## Readiness Contract
+
+The real-sample readiness APIs now report:
+
+```text
+status=adapter_ready_waiting_for_live_signal_response
+```
+
+This means the project is no longer missing every authorized sample. It has:
+
+- an authorized historical AI-Hub CCTV frame and vehicle bbox label sample
+- a local AI-Hub label adapter for evidence summaries and guarded
+  `live-input.v1` conversion
+- a Seoul V2X remaining-time adapter based on the downloaded T-DATA service
+  guide fields
+
+The remaining blockers are narrower:
+
+- `live_signal_phase_remaining_time_required`
+- `fresh_camera_frame_required_for_live_drop_in`
+- camera-to-approach direction calibration for AI-Hub detector labels
+
 ## Related Public Data Sample
 
 The public data portal file

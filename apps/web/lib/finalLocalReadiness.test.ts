@@ -13,7 +13,7 @@ describe("final local readiness export", () => {
       schemaVersion: "final-local-readiness.v1",
       generatedAt: "2026-07-01T10:15:00.000Z",
       localRehearsalStatus: "ready_for_local_rehearsal",
-      realSampleStatus: "blocked_waiting_for_authorized_samples",
+      realSampleStatus: "adapter_ready_waiting_for_live_signal_response",
       decisionBoundary: "operator_decision_support_not_signal_control",
       adapterBoundary: "live-input.v1",
       healthCheck: {
@@ -46,16 +46,16 @@ describe("final local readiness export", () => {
         sourceAdapterReplayStatus: "replay_input_ready"
       },
       blockers: [
-        "authorized_frame_or_stream_access_required",
-        "seoul_v2x_or_signal_controller_sample_required"
+        "fresh_camera_frame_required_for_live_drop_in",
+        "live_signal_phase_remaining_time_required"
       ],
       nextRequiredInputs: [
-        "authorized CCTV frame or video sample",
-        "signal phase and remaining-time sample",
-        "detector output mapped through live-input.v1"
+        "T-DATA API key-backed signal phase and remaining-time response",
+        "fresh camera frame captured within 30 seconds of receivedAt",
+        "camera-to-approach direction calibration for detector labels"
       ],
       nextAction:
-        "Obtain authorized CCTV frame/video and signal timing samples, then POST a live-input.v1 envelope to /api/real-sample-drop-in."
+        "Fetch an API-key-backed Seoul V2X signal response, pair it with a fresh authorized camera frame, calibrate approach direction, then POST a live-input.v1 envelope to /api/real-sample-drop-in."
     });
 
     const serialized = JSON.stringify(artifact);

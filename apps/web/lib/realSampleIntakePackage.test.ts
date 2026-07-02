@@ -12,7 +12,7 @@ describe("real sample intake package", () => {
       source: "real_sample_intake_package",
       schemaVersion: "real-sample-intake-package.v1",
       generatedAt: "2026-07-01T10:30:00.000Z",
-      status: "waiting_for_authorized_samples",
+      status: "adapter_ready_waiting_for_live_signal_response",
       adapterBoundary: "live-input.v1",
       dropInEndpoint: "/api/real-sample-drop-in",
       readinessEndpoint: "/api/real-sample-drop-in",

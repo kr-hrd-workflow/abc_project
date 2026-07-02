@@ -108,7 +108,7 @@ describe("demo health check", () => {
           liveInputGuardrails: { guardedCases: 5, missedCases: 0 },
           sourceAdapter: { replayStatus: "replay_input_ready" },
           realSampleReadiness: {
-            status: "blocked_waiting_for_authorized_samples",
+            status: "adapter_ready_waiting_for_live_signal_response",
             adapterBoundary: "live-input.v1",
             dropInEndpoint: "/api/real-sample-drop-in"
           }
@@ -156,7 +156,7 @@ describe("demo health check", () => {
           source: "final_local_readiness_reconciliation",
           schemaVersion: "final-local-readiness.v1",
           localRehearsalStatus: "ready_for_local_rehearsal",
-          realSampleStatus: "blocked_waiting_for_authorized_samples",
+          realSampleStatus: "adapter_ready_waiting_for_live_signal_response",
           decisionBoundary: "operator_decision_support_not_signal_control",
           adapterBoundary: "live-input.v1",
           healthCheck: { expectedSummary: "15/15 checks passed" },
@@ -175,8 +175,8 @@ describe("demo health check", () => {
             sourceAdapterReplayStatus: "replay_input_ready"
           },
           blockers: [
-            "authorized_frame_or_stream_access_required",
-            "seoul_v2x_or_signal_controller_sample_required"
+            "fresh_camera_frame_required_for_live_drop_in",
+            "live_signal_phase_remaining_time_required"
           ]
         });
       }
@@ -201,7 +201,7 @@ describe("demo health check", () => {
         return jsonResponse(200, {
           source: "real_sample_intake_package",
           schemaVersion: "real-sample-intake-package.v1",
-          status: "waiting_for_authorized_samples",
+          status: "adapter_ready_waiting_for_live_signal_response",
           adapterBoundary: "live-input.v1",
           dropInEndpoint: "/api/real-sample-drop-in",
           schemaEndpoint: "/api/live-input-submission-schema",
@@ -269,7 +269,7 @@ describe("demo health check", () => {
         return jsonResponse(200, {
           source: "real_sample_drop_in_readiness",
           schemaVersion: "real-sample-drop-in.v1",
-          status: "waiting_for_authorized_samples",
+          status: "adapter_ready_waiting_for_live_signal_response",
           adapterBoundary: "live-input.v1",
           sampleSlots: [
             { id: "authorized_cctv_frame_or_video" },
@@ -378,7 +378,7 @@ describe("demo health check", () => {
           liveInputGuardrails: { guardedCases: 5, missedCases: 0 },
           sourceAdapter: { replayStatus: "replay_input_ready" },
           realSampleReadiness: {
-            status: "blocked_waiting_for_authorized_samples",
+            status: "adapter_ready_waiting_for_live_signal_response",
             adapterBoundary: "live-input.v1",
             dropInEndpoint: "/api/real-sample-drop-in"
           }
@@ -426,7 +426,7 @@ describe("demo health check", () => {
           source: "final_local_readiness_reconciliation",
           schemaVersion: "final-local-readiness.v1",
           localRehearsalStatus: "ready_for_local_rehearsal",
-          realSampleStatus: "blocked_waiting_for_authorized_samples",
+          realSampleStatus: "adapter_ready_waiting_for_live_signal_response",
           decisionBoundary: "operator_decision_support_not_signal_control",
           adapterBoundary: "live-input.v1",
           healthCheck: { expectedSummary: "15/15 checks passed" },
@@ -445,8 +445,8 @@ describe("demo health check", () => {
             sourceAdapterReplayStatus: "replay_input_ready"
           },
           blockers: [
-            "authorized_frame_or_stream_access_required",
-            "seoul_v2x_or_signal_controller_sample_required"
+            "fresh_camera_frame_required_for_live_drop_in",
+            "live_signal_phase_remaining_time_required"
           ]
         });
       }
@@ -471,7 +471,7 @@ describe("demo health check", () => {
         return jsonResponse(200, {
           source: "real_sample_intake_package",
           schemaVersion: "real-sample-intake-package.v1",
-          status: "waiting_for_authorized_samples",
+          status: "adapter_ready_waiting_for_live_signal_response",
           adapterBoundary: "live-input.v1",
           dropInEndpoint: "/api/real-sample-drop-in",
           schemaEndpoint: "/api/live-input-submission-schema",
@@ -539,7 +539,7 @@ describe("demo health check", () => {
         return jsonResponse(200, {
           source: "real_sample_drop_in_readiness",
           schemaVersion: "real-sample-drop-in.v1",
-          status: "waiting_for_authorized_samples",
+          status: "adapter_ready_waiting_for_live_signal_response",
           adapterBoundary: "live-input.v1",
           sampleSlots: [
             { id: "authorized_cctv_frame_or_video" },

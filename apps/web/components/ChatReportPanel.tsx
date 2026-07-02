@@ -831,8 +831,8 @@ function DemoEvidenceSummaryCard({
           <dt>Real sample</dt>
           <dd>
             {evidence.realSampleReadiness.status ===
-            "blocked_waiting_for_authorized_samples"
-              ? "real sample blocked"
+            "adapter_ready_waiting_for_live_signal_response"
+              ? "adapter ready, live signal pending"
               : evidence.realSampleReadiness.status}
           </dd>
         </div>

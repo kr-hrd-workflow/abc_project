@@ -10,7 +10,7 @@ describe("real sample drop-in route", () => {
     expect(response.headers.get("Cache-Control")).toBe("no-store");
     expect(body.source).toBe("real_sample_drop_in_readiness");
     expect(body.schemaVersion).toBe("real-sample-drop-in.v1");
-    expect(body.status).toBe("waiting_for_authorized_samples");
+    expect(body.status).toBe("adapter_ready_waiting_for_live_signal_response");
     expect(body.adapterBoundary).toBe("live-input.v1");
     expect(body.sampleSlots.map((slot: { id: string }) => slot.id)).toEqual([
       "authorized_cctv_frame_or_video",

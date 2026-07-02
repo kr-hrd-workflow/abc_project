@@ -61,22 +61,22 @@ describe("demo evidence export", () => {
       requiredEvidence: POLICY_SCORECARD_REQUIRED_EVIDENCE
     });
     expect(artifact.realSampleReadiness).toEqual({
-      status: "blocked_waiting_for_authorized_samples",
+      status: "adapter_ready_waiting_for_live_signal_response",
       adapterBoundary: "live-input.v1",
       fixtureReplayStatus: "replay_input_ready",
       dropInEndpoint: "/api/real-sample-drop-in",
       cctv: {
-        status: "metadata_only",
-        blocker: "authorized_frame_or_stream_access_required"
+        status: "authorized_historical_sample_available",
+        blocker: "fresh_camera_frame_required_for_live_drop_in"
       },
       signal: {
-        status: "blocked_without_api_key",
-        blocker: "seoul_v2x_or_signal_controller_sample_required"
+        status: "adapter_ready_live_key_required",
+        blocker: "live_signal_phase_remaining_time_required"
       },
       nextRequiredInputs: [
-        "authorized CCTV frame or video sample",
-        "signal phase and remaining-time sample",
-        "detector output mapped through live-input.v1"
+        "T-DATA API key-backed signal phase and remaining-time response",
+        "fresh camera frame captured within 30 seconds of receivedAt",
+        "camera-to-approach direction calibration for detector labels"
       ]
     });
     expect(artifact.presentationClaims).toContain(

@@ -95,7 +95,7 @@ export async function runDemoHealthCheck({
           payload.liveInputGuardrails?.missedCases !== 0 ||
           payload.sourceAdapter?.replayStatus !== "replay_input_ready" ||
           payload.realSampleReadiness?.status !==
-            "blocked_waiting_for_authorized_samples" ||
+            "adapter_ready_waiting_for_live_signal_response" ||
           payload.realSampleReadiness?.adapterBoundary !== "live-input.v1" ||
           payload.realSampleReadiness?.dropInEndpoint !== "/api/real-sample-drop-in"
         ) {
@@ -155,7 +155,8 @@ export async function runDemoHealthCheck({
           payload.source !== "final_local_readiness_reconciliation" ||
           payload.schemaVersion !== "final-local-readiness.v1" ||
           payload.localRehearsalStatus !== "ready_for_local_rehearsal" ||
-          payload.realSampleStatus !== "blocked_waiting_for_authorized_samples" ||
+          payload.realSampleStatus !==
+            "adapter_ready_waiting_for_live_signal_response" ||
           payload.decisionBoundary !== "operator_decision_support_not_signal_control" ||
           payload.adapterBoundary !== "live-input.v1" ||
           payload.healthCheck?.expectedSummary !== "15/15 checks passed" ||
@@ -169,8 +170,8 @@ export async function runDemoHealthCheck({
           payload.localEvidence?.liveInputJson !== "10000/10000" ||
           payload.localEvidence?.scorecardPolicies !== 6 ||
           !Array.isArray(payload.blockers) ||
-          !payload.blockers.includes("authorized_frame_or_stream_access_required") ||
-          !payload.blockers.includes("seoul_v2x_or_signal_controller_sample_required")
+          !payload.blockers.includes("fresh_camera_frame_required_for_live_drop_in") ||
+          !payload.blockers.includes("live_signal_phase_remaining_time_required")
         ) {
           throw new Error("unexpected final local readiness payload");
         }
@@ -222,7 +223,7 @@ export async function runDemoHealthCheck({
         if (
           payload.source !== "real_sample_intake_package" ||
           payload.schemaVersion !== "real-sample-intake-package.v1" ||
-          payload.status !== "waiting_for_authorized_samples" ||
+          payload.status !== "adapter_ready_waiting_for_live_signal_response" ||
           payload.adapterBoundary !== "live-input.v1" ||
           payload.dropInEndpoint !== "/api/real-sample-drop-in" ||
           payload.schemaEndpoint !== "/api/live-input-submission-schema" ||
@@ -292,7 +293,7 @@ export async function runDemoHealthCheck({
         if (
           payload.source !== "real_sample_drop_in_readiness" ||
           payload.schemaVersion !== "real-sample-drop-in.v1" ||
-          payload.status !== "waiting_for_authorized_samples" ||
+          payload.status !== "adapter_ready_waiting_for_live_signal_response" ||
           payload.adapterBoundary !== "live-input.v1" ||
           !slotIds.includes("authorized_cctv_frame_or_video") ||
           !slotIds.includes("signal_phase_remaining_time") ||

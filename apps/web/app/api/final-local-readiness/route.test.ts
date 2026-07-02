@@ -12,7 +12,7 @@ describe("final local readiness route", () => {
       source: "final_local_readiness_reconciliation",
       schemaVersion: "final-local-readiness.v1",
       localRehearsalStatus: "ready_for_local_rehearsal",
-      realSampleStatus: "blocked_waiting_for_authorized_samples",
+      realSampleStatus: "adapter_ready_waiting_for_live_signal_response",
       decisionBoundary: "operator_decision_support_not_signal_control",
       adapterBoundary: "live-input.v1"
     });
@@ -31,8 +31,8 @@ describe("final local readiness route", () => {
     expect(body.evidenceEndpoints).toContain("/api/real-sample-drop-in");
     expect(body.localEvidence.scorecardPolicies).toBe(6);
     expect(body.blockers).toEqual([
-      "authorized_frame_or_stream_access_required",
-      "seoul_v2x_or_signal_controller_sample_required"
+      "fresh_camera_frame_required_for_live_drop_in",
+      "live_signal_phase_remaining_time_required"
     ]);
   });
 });

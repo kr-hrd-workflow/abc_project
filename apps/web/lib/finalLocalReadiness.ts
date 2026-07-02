@@ -6,7 +6,7 @@ export type FinalLocalReadinessExport = {
   schemaVersion: "final-local-readiness.v1";
   generatedAt: string;
   localRehearsalStatus: "ready_for_local_rehearsal";
-  realSampleStatus: "blocked_waiting_for_authorized_samples";
+  realSampleStatus: "adapter_ready_waiting_for_live_signal_response";
   decisionBoundary: "operator_decision_support_not_signal_control";
   adapterBoundary: "live-input.v1";
   healthCheck: {
@@ -86,6 +86,6 @@ export function buildFinalLocalReadinessExport({
     ],
     nextRequiredInputs: demoEvidence.realSampleReadiness.nextRequiredInputs,
     nextAction:
-      "Obtain authorized CCTV frame/video and signal timing samples, then POST a live-input.v1 envelope to /api/real-sample-drop-in."
+      "Fetch an API-key-backed Seoul V2X signal response, pair it with a fresh authorized camera frame, calibrate approach direction, then POST a live-input.v1 envelope to /api/real-sample-drop-in."
   };
 }
