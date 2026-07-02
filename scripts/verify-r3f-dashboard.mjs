@@ -702,7 +702,11 @@ async function installApiRoutes(page, options = {}) {
     if (pathname === "/api/fixtures") body = payloads.fixtures;
     if (pathname === "/api/runtime/readiness") body = payloads.runtimeReadiness;
     if (pathname === "/api/traffic/cctv-flow") body = payloads.cctvFlow;
-    if (pathname === "/api/simulation/frame") body = payloads.frame;
+    if (pathname === "/api/simulation/frame")
+      body = {
+        ...payloads.frame,
+        scenario_id: url.searchParams.get("scenario_id") ?? "normal"
+      };
 
     if (body === null) {
       await route.fulfill({
