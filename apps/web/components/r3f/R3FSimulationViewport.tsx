@@ -41,7 +41,8 @@ export function R3FSimulationViewport({
   simulation,
   simulationFrame,
   simulationFrameEntries,
-  selectedScenarioId
+  selectedScenarioId,
+  scenePresentation
 }: SimulationViewportProps) {
   const staticFrameEntries = useMemo(
     () => buildStaticFrameEntries(simulationFrame),
@@ -65,8 +66,10 @@ export function R3FSimulationViewport({
   );
   const frameBound = frameSceneSnapshot.source !== null;
   const sceneSnapshot = frameBound ? frameSceneSnapshot : fallbackSceneSnapshot;
-  const stage6Presentation = useMemo(() => getStage6PresentationMode(), []);
-  const stage6QualityPreset = stage6Presentation.qualityPreset;
+  const urlPresentation = useMemo(() => getStage6PresentationMode(), []);
+  const stage6QualityPreset = urlPresentation.qualityPreset;
+  const weather = scenePresentation?.weather ?? urlPresentation.weather;
+  const timeOfDay = scenePresentation?.timeOfDay ?? urlPresentation.timeOfDay;
   const trafficRenderPlan = useMemo(
     () => buildTrafficDensityRenderPlan(sceneSnapshot, stage6QualityPreset),
     [sceneSnapshot, stage6QualityPreset]
@@ -86,11 +89,8 @@ export function R3FSimulationViewport({
   );
   const weatherFeatureState = useMemo(
     () =>
-      getStage6WeatherFeatureState(
-        stage6QualityPreset,
-        stage6Presentation.weather
-      ),
-    [stage6Presentation.weather, stage6QualityPreset]
+      getStage6WeatherFeatureState(stage6QualityPreset, weather),
+    [weather, stage6QualityPreset]
   );
   const corridorLengthMeters = getCorridorLengthDataAttribute();
   const visibleVehiclePartCount =
@@ -109,8 +109,8 @@ export function R3FSimulationViewport({
       data-r3f-photoreal-stage="5"
       data-r3f-finishing-stage="6"
       data-r3f-quality-preset={stage6QualityPreset.name}
-      data-r3f-weather={stage6Presentation.weather}
-      data-r3f-time-of-day={stage6Presentation.timeOfDay}
+      data-r3f-weather={weather}
+      data-r3f-time-of-day={timeOfDay}
       data-r3f-postfx-enabled={postFxState.enabled ? "true" : "false"}
       data-r3f-postfx-chain={postFxState.chainLabel}
       data-r3f-planar-reflection-enabled={
@@ -155,8 +155,9 @@ export function R3FSimulationViewport({
       <SimulationCanvas
         sceneSnapshot={sceneSnapshot}
         qualityPreset={stage6QualityPreset}
-        weather={stage6Presentation.weather}
-        timeOfDay={stage6Presentation.timeOfDay}
+        weather={weather}
+        timeOfDay={timeOfDay}
+        viewpoint={scenePresentation?.viewpoint}
       />
       <SimulationOverlays
         simulationSource={simulation.source}

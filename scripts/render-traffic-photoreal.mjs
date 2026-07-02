@@ -51,9 +51,9 @@ const r3fCanvasSelector =
 // a rebuild. Empty by default → committed production render.
 const extraQuery = process.env.TRAFFIC_PHOTOREAL_EXTRA_QUERY ?? "";
 
-// Base scene query — default ?photoreal=1 (committed production render). Override
-// with e.g. "?photobash=1" to render the plate-free decal-marking photobash scene.
-const baseQuery = process.env.TRAFFIC_PHOTOREAL_BASE_QUERY ?? "?photoreal=1";
+// Base scene query — default ?photobash=1 (plate-free decal-marking scene, now
+// the production default; ?photoreal=1 was retired 2026-07-02). Override via env.
+const baseQuery = process.env.TRAFFIC_PHOTOREAL_BASE_QUERY ?? "?photobash=1";
 const filePrefix = process.env.TRAFFIC_PHOTOREAL_FILE_PREFIX ?? "traffic-photoreal";
 
 const targets = [

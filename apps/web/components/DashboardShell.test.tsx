@@ -79,10 +79,21 @@ vi.mock("./r3f/WeatherAndAtmosphere", () => ({
 vi.mock("./r3f/RoadSurfaceLayer", () => ({
   RoadSurfaceLayer: () => null
 }));
+// MarkingDecalLayer loads marking textures via useTexture (drei hook), which
+// needs a real R3F Canvas context. Stub it for the same reason as RoadSurfaceLayer.
+vi.mock("./r3f/MarkingDecalLayer", () => ({
+  MarkingDecalLayer: () => null
+}));
 // BuildingLayer (P2b) loads facade textures via useTexture (drei hook), which
 // also requires a real R3F Canvas context. Stub it for the same reason.
 vi.mock("./r3f/BuildingLayer", () => ({
   BuildingLayer: () => null
+}));
+// LimitedOrbitControls wraps drei's OrbitControls, which calls useThree and thus
+// requires a real R3F Canvas context. Stub it — this suite renders SimulationScene
+// without a Canvas to assert CameraRig target application.
+vi.mock("./r3f/LimitedOrbitControls", () => ({
+  LimitedOrbitControls: () => null
 }));
 vi.mock("../lib/api", () => dashboardRouteApiMock);
 
@@ -402,6 +413,12 @@ function dashboardProps(overrides: Partial<Parameters<typeof DashboardShell>[0]>
     onGenerateReport: vi.fn(),
     onRefreshRecommendation: vi.fn(),
     onRunSimulation: vi.fn(),
+    scenePresentation: {
+      weather: "clear" as const,
+      timeOfDay: "day" as const,
+      viewpoint: "wide" as const
+    },
+    onScenePresentationChange: vi.fn(),
     selectedScenarioId: "emergency" as ScenarioId,
     scenarioOptions: SCENARIO_OPTIONS,
     scenarioLoading: false,
@@ -502,12 +519,20 @@ function frameEntry(
 }
 
 describe("DashboardShell", () => {
+  test("defaults to the normal scenario (the live SUMO scenario)", async () => {
+    mockDashboardRouteApi();
+    render(<DashboardRoute />);
+    await waitFor(() =>
+      expect(dashboardRouteApiMock.getIntersectionStatus).toHaveBeenCalledWith("normal")
+    );
+  });
+
   test("loads the dashboard with explicit fixture fallback when the frame route is missing", async () => {
     vi.stubEnv("NEXT_PUBLIC_R3F_SIMULATION_ENABLED", "true");
     mockWebGLSupport(true);
     mockDashboardRouteApi();
     dashboardRouteApiMock.getSimulationFrame.mockRejectedValue(
-      new Error("API request failed: 404 /api/simulation/frame?scenario_id=emergency")
+      new Error("API request failed: 404 /api/simulation/frame?scenario_id=normal")
     );
 
     render(<DashboardRoute />);
@@ -518,7 +543,7 @@ describe("DashboardShell", () => {
       { timeout: 3000 }
     );
 
-    expect(dashboardRouteApiMock.getSimulationFrame).toHaveBeenCalledWith("emergency");
+    expect(dashboardRouteApiMock.getSimulationFrame).toHaveBeenCalledWith("normal");
     expect(screen.queryByText("Dashboard API unavailable")).toBeNull();
     expect(viewport.getAttribute("data-r3f-snapshot-source")).toBe("simulation_snapshot_fixture");
     expect(viewport.getAttribute("data-r3f-frame-bound")).toBeNull();
@@ -559,7 +584,7 @@ describe("DashboardShell", () => {
     });
     expect(dashboardRouteApiMock.getSimulationFrame).toHaveBeenCalledTimes(2);
 
-    expect(dashboardRouteApiMock.getSimulationFrame.mock.calls[1][0]).toBe("emergency");
+    expect(dashboardRouteApiMock.getSimulationFrame.mock.calls[1][0]).toBe("normal");
 
     unmount();
     await act(async () => {
@@ -574,7 +599,7 @@ describe("DashboardShell", () => {
     mockWebGLSupport(true);
     mockDashboardRouteApi();
     dashboardRouteApiMock.getSimulationFrame.mockRejectedValue(
-      new Error("API request failed: 404 /api/simulation/frame?scenario_id=emergency")
+      new Error("API request failed: 404 /api/simulation/frame?scenario_id=normal")
     );
 
     render(<DashboardRoute />);
@@ -592,6 +617,10 @@ describe("DashboardShell", () => {
     vi.stubEnv("NEXT_PUBLIC_R3F_SIMULATION_ENABLED", "true");
     mockWebGLSupport(true);
     const workers = installWorkerMock();
+    const normalFrame: SimulationFrameSnapshot = {
+      ...frameSnapshot,
+      scenario_id: "normal"
+    };
     const pedestrianFrame: SimulationFrameSnapshot = {
       ...frameSnapshot,
       scenario_id: "pedestrian",
@@ -609,13 +638,13 @@ describe("DashboardShell", () => {
     mockDashboardRouteApi();
     dashboardRouteApiMock.getSimulationFrame.mockImplementation(
       async (scenarioId: ScenarioId) =>
-        scenarioId === "pedestrian" ? pedestrianFrame : frameSnapshot
+        scenarioId === "pedestrian" ? pedestrianFrame : normalFrame
     );
 
     render(<DashboardRoute />);
 
     const viewport = await screen.findByTestId("r3f-simulation-viewport");
-    expect(viewport.getAttribute("data-r3f-scenario-id")).toBe("emergency");
+    expect(viewport.getAttribute("data-r3f-scenario-id")).toBe("normal");
 
     await userEvent.click(screen.getByRole("button", { name: /보행자/ }));
 
@@ -625,7 +654,7 @@ describe("DashboardShell", () => {
 
     workers[0]?.emit({
       type: "simulation-frame-buffer",
-      frames: [frameEntry(frameSnapshot, 2000)]
+      frames: [frameEntry(normalFrame, 2000)]
     });
     await sleep(50);
 
@@ -636,14 +665,14 @@ describe("DashboardShell", () => {
   test("surfaces non-route simulation frame load errors", async () => {
     mockDashboardRouteApi();
     dashboardRouteApiMock.getSimulationFrame.mockRejectedValue(
-      new Error("API request failed: 500 /api/simulation/frame?scenario_id=emergency")
+      new Error("API request failed: 500 /api/simulation/frame?scenario_id=normal")
     );
 
     render(<DashboardRoute />);
 
     expect(await screen.findByText("Dashboard API unavailable")).toBeTruthy();
-    expect(dashboardRouteApiMock.getSimulationFrame).toHaveBeenCalledWith("emergency");
-    expect(screen.getByText("API request failed: 500 /api/simulation/frame?scenario_id=emergency")).toBeTruthy();
+    expect(dashboardRouteApiMock.getSimulationFrame).toHaveBeenCalledWith("normal");
+    expect(screen.getByText("API request failed: 500 /api/simulation/frame?scenario_id=normal")).toBeTruthy();
   });
 
   test("renders the B plus A spatial command cockpit structure", () => {
@@ -709,6 +738,40 @@ describe("DashboardShell", () => {
     expect(aiButton.getAttribute("aria-pressed")).toBe("false");
     expect(manualButton.getAttribute("aria-pressed")).toBe("true");
     expect(screen.getByText("관리자가 권고안을 검토하고 직접 실행 여부를 판단합니다.")).toBeTruthy();
+  });
+
+  test("scene controls fire onScenePresentationChange", async () => {
+    const user = userEvent.setup();
+    const onScenePresentationChange = vi.fn();
+    render(
+      <DashboardShell
+        {...dashboardProps({
+          scenePresentation: { weather: "clear", timeOfDay: "day", viewpoint: "wide" },
+          onScenePresentationChange
+        })}
+      />
+    );
+
+    await user.click(screen.getByRole("button", { name: /야간|Night/i }));
+    expect(onScenePresentationChange).toHaveBeenCalledWith({
+      weather: "clear",
+      timeOfDay: "night",
+      viewpoint: "wide"
+    });
+
+    await user.click(screen.getByRole("button", { name: /강우|Rain/i }));
+    expect(onScenePresentationChange).toHaveBeenCalledWith({
+      weather: "rain",
+      timeOfDay: "day",
+      viewpoint: "wide"
+    });
+
+    await user.click(screen.getByRole("button", { name: "CCTV" }));
+    expect(onScenePresentationChange).toHaveBeenCalledWith({
+      weather: "clear",
+      timeOfDay: "day",
+      viewpoint: "cctv"
+    });
   });
 
   test("shows operational details for automatic and manual modes", async () => {
@@ -1703,7 +1766,10 @@ describe("DashboardShell", () => {
     );
 
     try {
-      renderDashboard();
+      // Render the full route: its mount effect reads the verifier URL params
+      // into scenePresentation, the same path verify-r3f-dashboard.mjs drives.
+      mockDashboardRouteApi();
+      render(<DashboardRoute />);
 
       const viewport = await screen.findByTestId("r3f-simulation-viewport");
 
@@ -1712,6 +1778,34 @@ describe("DashboardShell", () => {
       expect(viewport.getAttribute("data-r3f-time-of-day")).toBe("night");
       expect(viewport.getAttribute("data-r3f-weather-particles-enabled")).toBe(
         "false"
+      );
+    } finally {
+      window.history.pushState(null, "", originalUrl);
+    }
+  });
+
+  test("reads r3fWeather=rain from the URL rather than the clear default", async () => {
+    // Guards against a `scenePresentation ?? url` regression masking the URL
+    // read: rain and enabled particles are both non-default, so this fails if
+    // the DEFAULT_SCENE_PRESENTATION (clear) ever wins over the URL override.
+    vi.stubEnv("NEXT_PUBLIC_R3F_SIMULATION_ENABLED", "true");
+    mockWebGLSupport(true);
+    const originalUrl = window.location.href;
+    window.history.pushState(
+      null,
+      "",
+      "/?r3fQuality=high&r3fWeather=rain&r3fTimeOfDay=day"
+    );
+
+    try {
+      mockDashboardRouteApi();
+      render(<DashboardRoute />);
+
+      const viewport = await screen.findByTestId("r3f-simulation-viewport");
+
+      expect(viewport.getAttribute("data-r3f-weather")).toBe("rain");
+      expect(viewport.getAttribute("data-r3f-weather-particles-enabled")).toBe(
+        "true"
       );
     } finally {
       window.history.pushState(null, "", originalUrl);

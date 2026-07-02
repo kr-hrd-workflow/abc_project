@@ -9069,6 +9069,7 @@ body {
 
 .launch-dashboard:is([data-layout="operations-cockpit"], [data-layout="spatial-command-hybrid"]) .dashboard-command-bar,
 .launch-dashboard:is([data-layout="operations-cockpit"], [data-layout="spatial-command-hybrid"]) .operation-mode-panel,
+.launch-dashboard:is([data-layout="operations-cockpit"], [data-layout="spatial-command-hybrid"]) .scene-controls-panel,
 .launch-dashboard:is([data-layout="operations-cockpit"], [data-layout="spatial-command-hybrid"]) .safety-command-banner,
 .launch-dashboard:is([data-layout="operations-cockpit"], [data-layout="spatial-command-hybrid"]) .response-focus-card,
 .launch-dashboard:is([data-layout="operations-cockpit"], [data-layout="spatial-command-hybrid"]) .scenario-rail,
@@ -9192,10 +9193,55 @@ body {
   align-items: stretch;
 }
 
+/* Scene controls sit on the second row beside the operator card (row 1 holds
+   city / mode / safety, matching the original 3-column layout). Ordering keeps
+   the DOM sequence intact while placing scene controls in the wide first
+   column so its three toggle groups have room. */
+.launch-dashboard:is([data-layout="operations-cockpit"], [data-layout="spatial-command-hybrid"]) .operation-row > .scene-controls-panel {
+  order: 1;
+}
+
+.launch-dashboard:is([data-layout="operations-cockpit"], [data-layout="spatial-command-hybrid"]) .operation-row > .operator-card {
+  order: 2;
+}
+
 .launch-dashboard:is([data-layout="operations-cockpit"], [data-layout="spatial-command-hybrid"]) .operation-mode-panel,
+.launch-dashboard:is([data-layout="operations-cockpit"], [data-layout="spatial-command-hybrid"]) .scene-controls-panel,
 .launch-dashboard:is([data-layout="operations-cockpit"], [data-layout="spatial-command-hybrid"]) .safety-command-banner,
 .launch-dashboard:is([data-layout="operations-cockpit"], [data-layout="spatial-command-hybrid"]) .operator-card {
   padding: 10px 12px;
+}
+
+/* Scene controls reuse the operation-mode-panel chrome. Their toggle groups
+   hold 2-3 buttons and have no sliding data-mode pill, so lay the buttons out
+   in auto columns, drop the 2-column sliding indicator, and give .active its
+   own pill fill. */
+.launch-dashboard:is([data-layout="operations-cockpit"], [data-layout="spatial-command-hybrid"]) .scene-controls-panel {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 10px;
+  align-items: center;
+}
+
+.launch-dashboard:is([data-layout="operations-cockpit"], [data-layout="spatial-command-hybrid"]) .scene-controls-panel .operation-toggle {
+  grid-template-columns: repeat(auto-fit, minmax(0, 1fr));
+  grid-auto-flow: column;
+  grid-auto-columns: minmax(0, 1fr);
+}
+
+.launch-dashboard:is([data-layout="operations-cockpit"], [data-layout="spatial-command-hybrid"]) .scene-controls-panel .operation-toggle::before {
+  content: none;
+}
+
+.launch-dashboard:is([data-layout="operations-cockpit"], [data-layout="spatial-command-hybrid"]) .scene-controls-panel .operation-toggle button {
+  text-align: center;
+}
+
+.launch-dashboard:is([data-layout="operations-cockpit"], [data-layout="spatial-command-hybrid"]) .scene-controls-panel .operation-toggle button.active {
+  border-color: rgba(98, 189, 177, 0.46);
+  background:
+    linear-gradient(135deg, rgba(98, 189, 177, 0.22), rgba(98, 189, 177, 0.08)),
+    rgba(8, 24, 24, 0.76);
 }
 
 .launch-dashboard:is([data-layout="operations-cockpit"], [data-layout="spatial-command-hybrid"]) .operation-mode-panel {
@@ -9822,8 +9868,15 @@ body {
     grid-template-columns: 1fr 1fr;
   }
 
-  .launch-dashboard:is([data-layout="operations-cockpit"], [data-layout="spatial-command-hybrid"]) .operation-mode-panel {
+  .launch-dashboard:is([data-layout="operations-cockpit"], [data-layout="spatial-command-hybrid"]) .operation-mode-panel,
+  .launch-dashboard:is([data-layout="operations-cockpit"], [data-layout="spatial-command-hybrid"]) .scene-controls-panel {
     grid-column: 1 / -1;
+  }
+
+  /* Reset the desktop row-2 reorder so the stacked layout keeps DOM order. */
+  .launch-dashboard:is([data-layout="operations-cockpit"], [data-layout="spatial-command-hybrid"]) .operation-row > .scene-controls-panel,
+  .launch-dashboard:is([data-layout="operations-cockpit"], [data-layout="spatial-command-hybrid"]) .operation-row > .operator-card {
+    order: 0;
   }
 
   .launch-dashboard:is([data-layout="operations-cockpit"], [data-layout="spatial-command-hybrid"]) .cockpit-grid {
@@ -9852,7 +9905,8 @@ body {
   .launch-dashboard:is([data-layout="operations-cockpit"], [data-layout="spatial-command-hybrid"]) .cockpit-grid,
   .launch-dashboard:is([data-layout="operations-cockpit"], [data-layout="spatial-command-hybrid"]) .cockpit-right,
   .launch-dashboard:is([data-layout="operations-cockpit"], [data-layout="spatial-command-hybrid"]) .scenario-rail,
-  .launch-dashboard:is([data-layout="operations-cockpit"], [data-layout="spatial-command-hybrid"]) .operation-mode-panel {
+  .launch-dashboard:is([data-layout="operations-cockpit"], [data-layout="spatial-command-hybrid"]) .operation-mode-panel,
+  .launch-dashboard:is([data-layout="operations-cockpit"], [data-layout="spatial-command-hybrid"]) .scene-controls-panel {
     grid-template-columns: 1fr;
   }
 

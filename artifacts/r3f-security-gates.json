@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-07-01T07:31:07.186Z",
+  "generated_at": "2026-07-02T21:02:13.052Z",
   "status": "passed",
   "results": [
     {
@@ -91,9 +91,9 @@
     {
       "name": "workspace_secret_scan",
       "status": "passed",
-      "scanned_files": 263,
+      "scanned_files": 254,
       "scanned_untracked_files": 0,
-      "tracked_files": 263,
+      "tracked_files": 254,
       "findings": []
     }
   ],

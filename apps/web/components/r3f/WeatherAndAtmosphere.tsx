@@ -178,11 +178,17 @@ function buildSignalWetRoadReflectionHighlights(
 export function WeatherAndAtmosphere({
   qualityPreset = getStage6QualityPreset("high"),
   weather = "rain",
-  signals = []
+  signals = [],
+  // sceneryless: mount only the weather treatment (rain streaks + wet-road
+  // glow), NOT the day scenery (scene background colour, fog, distant-city
+  // backdrop, depth haze). Night reuses this so rain reads as rain at night
+  // while the night IBL/neon backdrop stays owned by the building/sky layer.
+  sceneryless = false
 }: {
   qualityPreset?: Stage6QualityPreset;
   weather?: Stage6WeatherPresetName;
   signals?: readonly Stage6SignalAccentSignal[];
+  sceneryless?: boolean;
 }) {
   const reflectionFalloffTexture = useSoftReflectionTexture();
   const hazeFalloffTexture = useSoftHazeTexture();
@@ -197,51 +203,55 @@ export function WeatherAndAtmosphere({
 
   return (
     <group name="stage5-weather-and-atmosphere">
-      <color attach="background" args={[STAGE5_ATMOSPHERE.background]} />
-      <fog
-        attach="fog"
-        args={[
-          STAGE5_ATMOSPHERE.fog,
-          STAGE5_ATMOSPHERE.fogNear,
-          STAGE5_ATMOSPHERE.fogFar
-        ]}
-      />
-
-      <mesh
-        name={DISTANT_CITY_BACKDROP.id}
-        position={DISTANT_CITY_BACKDROP.position}
-        renderOrder={-1}
-      >
-        <planeGeometry args={DISTANT_CITY_BACKDROP.size} />
-        <meshBasicMaterial
-          color="#ffffff"
-          map={distantCityTexture}
-          transparent
-          opacity={DISTANT_CITY_BACKDROP.opacity}
-          depthWrite={false}
-          side={DoubleSide}
-        />
-      </mesh>
-
-      {HAZE_PLANES.map((haze) => (
-        <mesh
-          key={haze.id}
-          name={haze.id}
-          position={haze.position}
-          rotation={haze.rotation}
-          renderOrder={1}
-        >
-          <planeGeometry args={haze.size} />
-          <meshBasicMaterial
-            color={STAGE5_ATMOSPHERE.haze}
-            map={hazeFalloffTexture}
-            transparent
-            opacity={haze.opacity}
-            depthWrite={false}
-            side={DoubleSide}
+      {!sceneryless && (
+        <>
+          <color attach="background" args={[STAGE5_ATMOSPHERE.background]} />
+          <fog
+            attach="fog"
+            args={[
+              STAGE5_ATMOSPHERE.fog,
+              STAGE5_ATMOSPHERE.fogNear,
+              STAGE5_ATMOSPHERE.fogFar
+            ]}
           />
-        </mesh>
-      ))}
+
+          <mesh
+            name={DISTANT_CITY_BACKDROP.id}
+            position={DISTANT_CITY_BACKDROP.position}
+            renderOrder={-1}
+          >
+            <planeGeometry args={DISTANT_CITY_BACKDROP.size} />
+            <meshBasicMaterial
+              color="#ffffff"
+              map={distantCityTexture}
+              transparent
+              opacity={DISTANT_CITY_BACKDROP.opacity}
+              depthWrite={false}
+              side={DoubleSide}
+            />
+          </mesh>
+
+          {HAZE_PLANES.map((haze) => (
+            <mesh
+              key={haze.id}
+              name={haze.id}
+              position={haze.position}
+              rotation={haze.rotation}
+              renderOrder={1}
+            >
+              <planeGeometry args={haze.size} />
+              <meshBasicMaterial
+                color={STAGE5_ATMOSPHERE.haze}
+                map={hazeFalloffTexture}
+                transparent
+                opacity={haze.opacity}
+                depthWrite={false}
+                side={DoubleSide}
+              />
+            </mesh>
+          ))}
+        </>
+      )}
 
       <RainParticleLayer qualityPreset={qualityPreset} weather={weather} />
 

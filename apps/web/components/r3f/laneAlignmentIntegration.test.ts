@@ -7,10 +7,6 @@ import {
   parseLaneIndex,
   buildTrafficDensityRenderPlan
 } from "./TrafficDensityLayer";
-import {
-  applyCalibratedLaneOffset,
-  PLATE_VEHICLE_CALIBRATION
-} from "./plateVehicleCalibration";
 import { buildSceneSnapshot } from "./buildSceneSnapshot";
 import type { SimulationFrameSnapshot } from "../../lib/simulationSnapshot";
 
@@ -85,59 +81,22 @@ describe("SP1 lane alignment integration", () => {
   });
 });
 
-describe("SP4 per-viewpoint lateral calibration", () => {
-  it("identity calibration (offset=0, scale=1) is a no-op on getInboundLaneOffset", () => {
-    // The no-op calibration must preserve the raw lane offset exactly.
-    for (const direction of ["north", "south", "east", "west"] as const) {
-      const truth = INTERSECTION_TRUTH[direction];
-      for (let laneIndex = 0; laneIndex < truth.inboundLanes; laneIndex++) {
-        const raw = getInboundLaneOffset(direction, laneIndex, truth.inboundLanes);
-        const calibrated = applyCalibratedLaneOffset(raw, "wide", direction);
-        // Calibration table must be no-op at current values.
-        const cal = PLATE_VEHICLE_CALIBRATION.wide[direction];
-        const expected = cal.offset + cal.scale * raw;
-        expect(calibrated).toBeCloseTo(expected, 10);
-      }
-    }
-  });
-
-  it("non-zero offset shifts all lanes uniformly by the calibration amount", () => {
-    const raw = getInboundLaneOffset("north", 2, 5); // lane 2 of 5
-    // Simulate a +1.5m calibration offset.
-    const shiftedOffset = 1.5 + 1.0 * raw;
-    expect(shiftedOffset).toBeCloseTo(raw + 1.5, 10);
-  });
-
-  it("scale != 1 compresses / expands lanes proportionally", () => {
-    const raw = getInboundLaneOffset("south", 0, 5); // outermost lane
-    const compressed = 0 + 0.9 * raw;
-    expect(Math.abs(compressed)).toBeLessThan(Math.abs(raw));
-    const expanded = 0 + 1.1 * raw;
-    expect(Math.abs(expanded)).toBeGreaterThan(Math.abs(raw));
-  });
-
-  it("bus lane remains bus lane after calibration (buses stay on median lane)", () => {
-    // The bus lane (index 4 for north) is the innermost lane closest to the median.
-    // Any uniform offset or scale must not move the bus lane to a non-bus lane slot.
-    // The key property: after calibration, the bus lane still has the smallest
-    // absolute offset among all north inbound lanes (it's closest to center).
+describe("SP4 vehicles ride the raw metric lane grid (no per-viewpoint calibration)", () => {
+  it("median bus lane (index 4, north) has the smallest absolute raw offset among inbound lanes", () => {
+    // The bus lane sits closest to the median — no calibration pin needed, the
+    // raw getInboundLaneOffset geometry already places it innermost.
     const truth = INTERSECTION_TRUTH.north;
     const busLaneIndex = 4; // median bus lane
     const rawBus = getInboundLaneOffset("north", busLaneIndex, truth.inboundLanes);
-    // With current calibration values applied:
-    const cal = PLATE_VEHICLE_CALIBRATION.wide.north;
-    const calibratedBus = cal.offset + cal.scale * rawBus;
-    // For all other lanes, their calibrated offset should have larger absolute value.
     for (let i = 0; i < truth.inboundLanes - 1; i++) {
       const rawOther = getInboundLaneOffset("north", i, truth.inboundLanes);
-      const calibratedOther = cal.offset + cal.scale * rawOther;
-      expect(Math.abs(calibratedOther)).toBeGreaterThan(Math.abs(calibratedBus) - 1e-6);
+      expect(Math.abs(rawOther)).toBeGreaterThan(Math.abs(rawBus) - 1e-6);
     }
   });
 
-  it("buildTrafficDensityRenderPlan respects viewpoint param — positions shift by calibration", () => {
+  it("buildTrafficDensityRenderPlan places a vehicle on the raw getInboundLaneOffset lane center, independent of viewpoint", () => {
     // Build a SUMO north_in_2 vehicle and check that its x position equals the
-    // calibrated lane offset for 'wide' viewpoint.
+    // raw lane offset — identity calibration for every viewpoint.
     const frame: SimulationFrameSnapshot = {
       source: "sumo_traci",
       intersection_id: "INT-0001",
@@ -166,11 +125,9 @@ describe("SP4 per-viewpoint lateral calibration", () => {
     };
     const scene = buildSceneSnapshot(frame);
     const rawOffset = getInboundLaneOffset("north", 2, 5);
-    const cal = PLATE_VEHICLE_CALIBRATION.wide.north;
-    const expectedX = cal.offset + cal.scale * rawOffset;
 
     const plan = buildTrafficDensityRenderPlan(scene, undefined, "wide");
     expect(plan.preciseVehicles).toHaveLength(1);
-    expect(plan.preciseVehicles[0].position[0]).toBeCloseTo(expectedX, 5);
+    expect(plan.preciseVehicles[0].position[0]).toBeCloseTo(rawOffset, 5);
   });
 });

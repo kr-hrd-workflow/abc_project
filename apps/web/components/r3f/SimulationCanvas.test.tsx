@@ -19,6 +19,7 @@ import {
   STAGE5_NORMAL_DRAW_CALL_BUDGET,
   STAGE5_SHADOWS_ENABLED,
   STAGE5_TONE_MAPPING_EXPOSURE,
+  SimulationCanvas,
   buildStage5CanvasProof,
   configureStage5Renderer,
   markStage5CanvasCurrent,
@@ -345,14 +346,36 @@ describe("SimulationCanvas Stage 5 telemetry", () => {
 
     expect(getChildDisplayNames(scene)).toEqual([
       "Stage3CameraRig",
+      "LimitedOrbitControls", // orbit target re-seats on viewpoint change
       "SceneEnvironment",   // unified IBL + light rig (day: Sky + LightingRig + WeatherAndAtmosphere; night: neon IBL + lights)
-      "BuildingLayer",      // P2: 3D photoreal buildings + sky — replaces AI scene-plate (BackgroundPlateLayer retired)
-      "StaticRoadLayer",
+      "BuildingLayer",      // P2: 3D photoreal buildings + sky — no plate layer is mounted
+      "react.suspense",     // Suspense-wrapped RoadSurfaceLayer (asphalt texture)
+      "MarkingDecalLayer",  // metric marking decals (photobash default) replace flat vector markings
       "DynamicVehicleLayer",
       "DynamicPedestrianLayer",
       "SignalLayer",
       "ScenePostFX"         // single unified EffectComposer (day: ACES pipeline; night: Bloom-only)
     ]);
+  });
+
+  test("threads viewpoint down to SimulationScene", () => {
+    const sceneSnapshot = buildShadowCountSceneSnapshot({ vehicleCount: 2 });
+    // SimulationCanvas guards SimulationScene out of the tree under jsdom (it
+    // can't mount a real WebGL Canvas). We inspect the element tree without
+    // mounting, so neutralize that guard for this direct-call check.
+    const scene = withNonJsdomUserAgent(() => {
+      const tree = SimulationCanvas({
+        sceneSnapshot,
+        qualityPreset: getStage6QualityPreset("high"),
+        weather: "clear",
+        timeOfDay: "day",
+        viewpoint: "cctv"
+      });
+      return findElementByType(tree, SimulationScene);
+    });
+    expect(
+      (scene?.props as { viewpoint?: string } | undefined)?.viewpoint
+    ).toBe("cctv");
   });
 
   test("mounts the unified SceneEnvironment + ScenePostFX at night", () => {
@@ -392,8 +415,8 @@ describe("SimulationCanvas Stage 5 telemetry", () => {
   });
 
   test("mounts the 3D building layer (P2) for both day and night scenes", () => {
-    // P2: BackgroundPlateLayer is retired; BuildingLayerBoundary (displayName
-    // "BuildingLayer") is now the scene's building + sky provider.
+    // P2: no plate layer is mounted; BuildingLayerBoundary (displayName
+    // "BuildingLayer") is the scene's building + sky provider.
     const sceneSnapshot = buildShadowCountSceneSnapshot({ vehicleCount: 2 });
 
     for (const tod of ["day", "night"] as const) {
@@ -514,6 +537,40 @@ function buildDensitySegment(): SimulationDensitySegment {
     average_speed_mps: 2.2,
     source: "aggregate_density_proxy"
   };
+}
+
+function withNonJsdomUserAgent<T>(run: () => T): T {
+  // navigator.userAgent is a prototype getter; defineProperty shadows it with an
+  // own data property. delete removes that shadow to reveal the jsdom getter
+  // again — leaving isJsdomRuntime() intact for every other test.
+  Object.defineProperty(window.navigator, "userAgent", {
+    value: "test-runtime",
+    configurable: true
+  });
+  try {
+    return run();
+  } finally {
+    delete (window.navigator as { userAgent?: string }).userAgent;
+  }
+}
+
+function findElementByType(
+  node: ReactNode,
+  type: unknown
+): ReactElement | undefined {
+  let found: ReactElement | undefined;
+  Children.forEach(node, (child) => {
+    if (found || !isValidElement(child)) return;
+    if (child.type === type) {
+      found = child;
+      return;
+    }
+    found = findElementByType(
+      (child.props as { children?: ReactNode }).children,
+      type
+    );
+  });
+  return found;
 }
 
 function getChildDisplayNames(element: ReactElement<TestElementProps>) {

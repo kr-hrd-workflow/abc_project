@@ -702,7 +702,11 @@ async function installApiRoutes(page, options = {}) {
     if (pathname === "/api/fixtures") body = payloads.fixtures;
     if (pathname === "/api/runtime/readiness") body = payloads.runtimeReadiness;
     if (pathname === "/api/traffic/cctv-flow") body = payloads.cctvFlow;
-    if (pathname === "/api/simulation/frame") body = payloads.frame;
+    if (pathname === "/api/simulation/frame")
+      body = {
+        ...payloads.frame,
+        scenario_id: url.searchParams.get("scenario_id") ?? "normal"
+      };
 
     if (body === null) {
       await route.fulfill({
@@ -3239,7 +3243,13 @@ async function runBrowserVerification(baseUrl) {
       isMobile: true,
       deviceScaleFactor: 1
     });
-    await gotoDashboard(mobile.page, baseUrl);
+    await gotoDashboard(
+      mobile.page,
+      baseUrl,
+      buildStage6ScenarioQuery(
+        stage6ScenarioSpecs.find((spec) => spec.id === "rain/high")
+      )
+    );
     const mobileR3FReady = await waitForR3F(mobile.page);
     verifierProgress(`mobile R3F ready=${mobileR3FReady}`);
     await mobile.page
@@ -4126,12 +4136,12 @@ function addFinalAssertions() {
         typeof renderer.signal_state === "string" &&
         renderer.signal_state.includes("east:green") &&
         renderer.signal_state.includes("north:red") &&
-        renderer.scenario_id === "emergency" &&
+        renderer.scenario_id === "normal" &&
         renderer.queue_source === "frame" &&
         renderer.domProof?.sourceBadges?.signalState?.includes("east:green") &&
         renderer.domProof?.sourceBadges?.signalState?.includes("north:red") &&
         renderer.domProof?.sourceBadges?.queueSource?.includes("frame") &&
-        renderer.domProof?.sourceBadges?.scenarioId?.includes("emergency")
+        renderer.domProof?.sourceBadges?.scenarioId?.includes("normal")
     ),
     `signal_state=${renderer.signal_state ?? "missing"}, scenario_id=${renderer.scenario_id ?? "missing"}, queue_source=${renderer.queue_source ?? "missing"}, badges=${JSON.stringify(renderer.domProof?.sourceBadges ?? null)}`
   );
