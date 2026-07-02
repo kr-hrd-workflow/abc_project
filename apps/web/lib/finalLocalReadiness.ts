@@ -86,6 +86,6 @@ export function buildFinalLocalReadinessExport({
     ],
     nextRequiredInputs: demoEvidence.realSampleReadiness.nextRequiredInputs,
     nextAction:
-      "Fetch an API-key-backed Seoul V2X signal response, pair it with a fresh authorized camera frame, calibrate approach direction, then POST a live-input.v1 envelope to /api/real-sample-drop-in."
+      "Resolve T-DATA diagonal phase compatibility, pair the signal evidence with a fresh authorized camera frame, calibrate approach direction, then POST a live-input.v1 envelope to /api/real-sample-drop-in."
   };
 }

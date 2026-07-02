@@ -107,6 +107,23 @@ export function buildSeoulV2xSignalSnapshot(
   };
 }
 
+export function selectLatestSeoulV2xSignalMessage(
+  input: unknown
+): Record<string, unknown> {
+  const messages = requireArray(input, "Seoul V2X signal API response").map(
+    (message) => requireRecord(message, "Seoul V2X signal message")
+  );
+  if (messages.length === 0) {
+    throw new Error("Seoul V2X signal API response must not be empty");
+  }
+
+  return [...messages].sort(
+    (a, b) =>
+      requireFiniteNumber(b.trsmUtcTime, "trsmUtcTime") -
+      requireFiniteNumber(a.trsmUtcTime, "trsmUtcTime")
+  )[0];
+}
+
 function normalizeSeoulV2xMessage(input: unknown) {
   const raw = requireRecord(input, "Seoul V2X signal message");
 
@@ -166,6 +183,13 @@ function requireRecord(value: unknown, label: string): Record<string, unknown> {
   return value as Record<string, unknown>;
 }
 
+function requireArray(value: unknown, label: string): unknown[] {
+  if (!Array.isArray(value)) {
+    throw new Error(`${label} must be an array`);
+  }
+  return value;
+}
+
 function requireNonEmptyString(value: unknown, label: string): string {
   if (typeof value !== "string" || value.trim().length === 0) {
     throw new Error(`${label} must be a non-empty string`);
@@ -174,8 +198,10 @@ function requireNonEmptyString(value: unknown, label: string): string {
 }
 
 function requireFiniteNumber(value: unknown, label: string): number {
-  if (typeof value !== "number" || !Number.isFinite(value)) {
+  const numberValue =
+    typeof value === "number" ? value : Number(String(value).trim());
+  if (!Number.isFinite(numberValue)) {
     throw new Error(`${label} must be a finite number`);
   }
-  return value;
+  return numberValue;
 }

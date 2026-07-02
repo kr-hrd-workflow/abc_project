@@ -6,10 +6,11 @@ Implementation is focused on real-sample readiness because additional
 synthetic-only work is no longer the most meaningful path. The local dashboard,
 exports, guardrails, policy scorecards, and `live-input.v1` handoff surfaces
 are already rich enough for rehearsal. The project now has an authorized
-historical AI-Hub CCTV frame/label sample and local adapters for AI-Hub labels
-and Seoul V2X signal timing. The unresolved blockers are a live API-key-backed
-signal response, a fresh authorized camera frame, and camera-to-approach
-direction calibration.
+historical AI-Hub CCTV frame/label sample, a T-DATA key-backed live signal
+response sample, and local adapters for AI-Hub labels and Seoul V2X signal
+timing. The unresolved blockers are signal phase compatibility for the
+captured diagonal V2X phases, a fresh authorized camera frame, and
+camera-to-approach direction calibration.
 
 Current branch management:
 
@@ -70,6 +71,10 @@ Current maintenance slice:
 - [x] Add an AI-Hub camera-to-approach calibration contract so vehicle labels
       can become `live-input.v1` detections only when the sample camera has a
       matching operator/geometry direction mapping.
+- [x] Submit and approve the T-DATA development application for
+      `신호제어기 잔여시간 정보 서비스`, fetch a key-backed live response, and
+      update the Seoul V2X adapter so it can select the latest live response
+      row and handle numeric strings without inventing unsupported phases.
 
 Maintenance evidence:
 
@@ -83,7 +88,7 @@ Maintenance evidence:
 - `npm --workspace apps/web run test -- aiHubVehicleSampleAdapter.test.ts`:
   4 passed.
 - `npm --workspace apps/web run test -- seoulV2xSignalAdapter.test.ts`:
-  3 passed.
+  5 passed.
 - `npm --workspace apps/web run test -- realSampleDropIn.test.ts realSampleIntakePackage.test.ts`:
   12 passed.
 - `node --test scripts/real-sample-drop-in-check.test.mjs`: 10 passed.
@@ -92,7 +97,9 @@ Maintenance evidence:
 - `node --test scripts/demo-health-check.test.mjs`: 2 passed.
 - `npm --workspace apps/web run test -- realSampleDropIn.test.ts realSampleIntakePackage.test.ts demoEvidenceExport.test.ts finalLocalReadiness.test.ts DashboardShell.test.tsx app/api/demo-evidence-export/route.test.ts app/api/real-sample-drop-in/route.test.ts app/api/real-sample-intake-package/route.test.ts app/api/final-local-readiness/route.test.ts`:
   116 passed.
-- `npm run test:web`: 63 files, 384 tests passed.
+- `npm --workspace apps/web run test -- seoulV2xSignalAdapter.test.ts realSampleDropIn.test.ts demoEvidenceExport.test.ts finalLocalReadiness.test.ts app/api/final-local-readiness/route.test.ts`:
+  19 passed.
+- `npm run test:web`: 63 files, 388 tests passed.
 - `npm run build:web`: passed.
 - `git diff --check`: passed.
 
@@ -116,9 +123,19 @@ Real sample intake evidence:
   is not live emergency-vehicle telemetry or signal timing.
 - Downloaded `신호제어기 잔여시간 정보 서비스 설명서_v1.0.pdf` from the
   T-DATA V2X signal remaining-time page and converted it to ignored local text.
-  The adapter now supports T-DATA response objects, but a live API-key-backed
-  response was not fetched because the T-DATA page still showed a login link in
-  Chrome during the run.
+- Submitted and approved a T-DATA development application for
+  `신호제어기 잔여시간 정보 서비스` on 2026-07-02. A development API key was issued
+  in the account, but the key is not stored in the repository or output files.
+- Fetched a key-backed live response for `data_id=10120`, `itstId=23665` and
+  saved it under ignored `output/real-samples/public-data/`:
+  - `seoul-v2x-signal-live-sample-10120.json`
+  - `seoul-v2x-signal-live-sample-10120-provenance.json`
+- The captured T-DATA response is real and current, but the selected sample rows
+  expose diagonal straight-signal fields such as `seStsgRmdrCs` and
+  `nwStsgRmdrCs`. Current `live-input.v1` phases are cardinal only, so the
+  adapter summarizes the evidence and keeps `LiveSignalSnapshot` creation
+  blocked unless a cardinal straight-signal field is present or the phase model
+  is intentionally extended to 8 directions.
 - Historical AI-Hub frames remain valid detector evidence, but they now require
   manual review as live observations unless `cameraFrames[].capturedAt` is
   within 30 seconds of `receivedAt`.
@@ -131,7 +148,7 @@ Real sample intake evidence:
   `adapter_ready_waiting_for_live_signal_response`. This means the local
   adapters and historical sample evidence are prepared, while live drop-in is
   still blocked by:
-  - `live_signal_phase_remaining_time_required`
+  - signal phase compatibility for diagonal T-DATA V2X phases
   - `fresh_camera_frame_required_for_live_drop_in`
   - camera-to-approach direction calibration for detector labels.
 

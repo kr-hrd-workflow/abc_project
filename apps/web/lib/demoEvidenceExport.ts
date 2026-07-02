@@ -62,8 +62,8 @@ export type DemoEvidenceExport = {
       blocker: "fresh_camera_frame_required_for_live_drop_in";
     };
     signal: {
-      status: "adapter_ready_live_key_required";
-      blocker: "live_signal_phase_remaining_time_required";
+      status: "key_backed_live_sample_captured";
+      blocker: "signal_phase_model_compatibility_required";
     };
     nextRequiredInputs: string[];
   };
@@ -142,11 +142,11 @@ export function buildDemoEvidenceExport({
         blocker: "fresh_camera_frame_required_for_live_drop_in"
       },
       signal: {
-        status: "adapter_ready_live_key_required",
-        blocker: "live_signal_phase_remaining_time_required"
+        status: "key_backed_live_sample_captured",
+        blocker: "signal_phase_model_compatibility_required"
       },
       nextRequiredInputs: [
-        "T-DATA API key-backed signal phase and remaining-time response",
+        "cardinal signal phase sample or intentional 8-direction signal phase model support",
         "fresh camera frame captured within 30 seconds of receivedAt",
         "camera-to-approach direction calibration for detector labels"
       ]
@@ -159,7 +159,7 @@ export function buildDemoEvidenceExport({
       "Operator workflow status is derived from policy scorecards, not autonomous signal control.",
       "LLM explanations review local policy evidence and do not choose signal plans.",
       "Backend policy scorecards cover safety gates, emergency clearance, queue relief, pedestrian efficiency, and normal-cycle decisions.",
-      "Real sample adapters are prepared with an AI-Hub historical sample and Seoul V2X signal mapping, but live drop-in still requires fresh camera evidence, calibrated direction, and an API-key-backed signal response."
+      "Real sample adapters are prepared with an AI-Hub historical sample and a key-backed Seoul V2X signal response, but live drop-in still requires fresh camera evidence, calibrated direction, and compatible signal phase modeling."
     ]
   };
 }

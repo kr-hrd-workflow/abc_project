@@ -2,7 +2,8 @@ import { describe, expect, test } from "vitest";
 
 import {
   buildSeoulV2xSignalEvidence,
-  buildSeoulV2xSignalSnapshot
+  buildSeoulV2xSignalSnapshot,
+  selectLatestSeoulV2xSignalMessage
 } from "./seoulV2xSignalAdapter";
 
 const SEOUL_V2X_SAMPLE = {
@@ -21,6 +22,43 @@ const SEOUL_V2X_SAMPLE = {
   wtStsgRmdrCs: null,
   etPdsgRmdrCs: 94
 };
+
+const SEOUL_V2X_LIVE_API_RESPONSE = [
+  {
+    dataId: "SPAT-CIB1130047200-1782952627-45848",
+    trsmUtcTime: 1782961445714,
+    trsmYear: "2026",
+    trsmMt: "07",
+    trsmDy: 2,
+    trsmTm: "120405",
+    trsmMs: "714",
+    itstId: "23665",
+    eqmnId: "CIB1130047200",
+    ntStsgRmdrCs: null,
+    etStsgRmdrCs: null,
+    stStsgRmdrCs: null,
+    wtStsgRmdrCs: null,
+    seStsgRmdrCs: 55,
+    nwStsgRmdrCs: 55
+  },
+  {
+    dataId: "SPAT-CIB1130047200-1782952627-45853",
+    trsmUtcTime: 1782961446684,
+    trsmYear: "2026",
+    trsmMt: "07",
+    trsmDy: 2,
+    trsmTm: "120406",
+    trsmMs: "684",
+    itstId: "23665",
+    eqmnId: "CIB1130047200",
+    ntStsgRmdrCs: null,
+    etStsgRmdrCs: null,
+    stStsgRmdrCs: null,
+    wtStsgRmdrCs: null,
+    seStsgRmdrCs: 45,
+    nwStsgRmdrCs: 45
+  }
+];
 
 describe("Seoul V2X signal adapter", () => {
   test("summarizes signal timing evidence without requiring a detector sample", () => {
@@ -78,6 +116,34 @@ describe("Seoul V2X signal adapter", () => {
       stStsgRmdrCs: 0
     });
 
+    expect(evidence.replayReadiness).toEqual({
+      status: "needs_current_phase_candidate",
+      adapterBoundary: "live-input.v1",
+      missingInputs: ["cardinal_straight_signal_remaining_time"],
+      selectedCurrentPhase: null
+    });
+  });
+
+  test("selects the newest message from a T-DATA live API response array", () => {
+    const selected = selectLatestSeoulV2xSignalMessage(
+      SEOUL_V2X_LIVE_API_RESPONSE
+    );
+
+    expect(selected.dataId).toBe("SPAT-CIB1130047200-1782952627-45853");
+  });
+
+  test("summarizes a key-backed live response with numeric strings and unsupported diagonal phases", () => {
+    const evidence = buildSeoulV2xSignalEvidence(
+      selectLatestSeoulV2xSignalMessage(SEOUL_V2X_LIVE_API_RESPONSE)
+    );
+
+    expect(evidence.sourceMessage).toEqual({
+      dataId: "SPAT-CIB1130047200-1782952627-45853",
+      intersectionId: "23665",
+      controllerId: "CIB1130047200",
+      capturedAt: "2026-07-02T03:04:06.684Z"
+    });
+    expect(evidence.straightSignalCandidates).toEqual([]);
     expect(evidence.replayReadiness).toEqual({
       status: "needs_current_phase_candidate",
       adapterBoundary: "live-input.v1",

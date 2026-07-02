@@ -104,10 +104,30 @@ The adapter does not invent a next phase. `nextPhase`, `controllerMode`, and
 `manualOverride` must come from operator/source calibration when building the
 `LiveSignalSnapshot`.
 
-Current limitation: the T-DATA page showed a login link in Chrome during this
-run, and a live API-key-backed response was not fetched. The implementation is
-therefore based on the official page fields and downloaded guide, not a live
-production API response.
+On 2026-07-02, a T-DATA development application for data `10120` was submitted
+and approved in the logged-in account. A key-backed live response was fetched
+and stored outside git:
+
+```text
+output/real-samples/public-data/seoul-v2x-signal-live-sample-10120.json
+output/real-samples/public-data/seoul-v2x-signal-live-sample-10120-provenance.json
+```
+
+The API key is not stored. The captured response uses an array of messages, so
+`selectLatestSeoulV2xSignalMessage` picks the newest message by `trsmUtcTime`.
+
+Current limitation: the captured `itstId=23665` sample contains diagonal
+straight-signal fields such as `seStsgRmdrCs` and `nwStsgRmdrCs`, while
+`live-input.v1` currently models only cardinal phases:
+
+```text
+north_priority, east_priority, south_priority, west_priority, normal_cycle
+```
+
+The adapter therefore accepts and summarizes the key-backed response, but keeps
+it blocked from `LiveSignalSnapshot` creation until a cardinal straight-signal
+candidate is present or the project intentionally extends the phase model to
+8-direction signal phases.
 
 ## Freshness Guardrail
 
@@ -136,11 +156,11 @@ This means the project is no longer missing every authorized sample. It has:
 - a local AI-Hub label adapter for evidence summaries and guarded
   `live-input.v1` conversion
 - a Seoul V2X remaining-time adapter based on the downloaded T-DATA service
-  guide fields
+  guide fields and a key-backed live response sample
 
 The remaining blockers are narrower:
 
-- `live_signal_phase_remaining_time_required`
+- cardinal or intentionally modeled 8-direction signal phase compatibility
 - `fresh_camera_frame_required_for_live_drop_in`
 - camera-to-approach direction calibration for AI-Hub detector labels
 

@@ -47,15 +47,15 @@ describe("final local readiness export", () => {
       },
       blockers: [
         "fresh_camera_frame_required_for_live_drop_in",
-        "live_signal_phase_remaining_time_required"
+        "signal_phase_model_compatibility_required"
       ],
       nextRequiredInputs: [
-        "T-DATA API key-backed signal phase and remaining-time response",
+        "cardinal signal phase sample or intentional 8-direction signal phase model support",
         "fresh camera frame captured within 30 seconds of receivedAt",
         "camera-to-approach direction calibration for detector labels"
       ],
       nextAction:
-        "Fetch an API-key-backed Seoul V2X signal response, pair it with a fresh authorized camera frame, calibrate approach direction, then POST a live-input.v1 envelope to /api/real-sample-drop-in."
+        "Resolve T-DATA diagonal phase compatibility, pair the signal evidence with a fresh authorized camera frame, calibrate approach direction, then POST a live-input.v1 envelope to /api/real-sample-drop-in."
     });
 
     const serialized = JSON.stringify(artifact);

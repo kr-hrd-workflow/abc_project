@@ -176,7 +176,7 @@ describe("demo health check", () => {
           },
           blockers: [
             "fresh_camera_frame_required_for_live_drop_in",
-            "live_signal_phase_remaining_time_required"
+            "signal_phase_model_compatibility_required"
           ]
         });
       }
@@ -446,7 +446,7 @@ describe("demo health check", () => {
           },
           blockers: [
             "fresh_camera_frame_required_for_live_drop_in",
-            "live_signal_phase_remaining_time_required"
+            "signal_phase_model_compatibility_required"
           ]
         });
       }

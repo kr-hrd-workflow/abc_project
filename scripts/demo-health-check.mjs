@@ -171,7 +171,7 @@ export async function runDemoHealthCheck({
           payload.localEvidence?.scorecardPolicies !== 6 ||
           !Array.isArray(payload.blockers) ||
           !payload.blockers.includes("fresh_camera_frame_required_for_live_drop_in") ||
-          !payload.blockers.includes("live_signal_phase_remaining_time_required")
+          !payload.blockers.includes("signal_phase_model_compatibility_required")
         ) {
           throw new Error("unexpected final local readiness payload");
         }

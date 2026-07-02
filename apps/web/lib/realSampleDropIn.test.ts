@@ -47,7 +47,7 @@ describe("real sample drop-in readiness", () => {
         "refresh demo evidence export"
       ],
       blockers: [
-        "live signal phase and remaining-time API response is not available",
+        "captured T-DATA signal phase uses diagonal movement fields that need cardinal mapping or 8-direction phase support",
         "AI-Hub sample frame is historical and requires fresh camera evidence before live drop-in acceptance",
         "camera-to-approach direction calibration is required before AI-Hub labels can become live-input.v1 detections"
       ]
