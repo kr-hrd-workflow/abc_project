@@ -20,6 +20,18 @@ export type Stage6PresentationMode = {
   timeOfDay: Stage6TimeOfDay;
 };
 
+export type ScenePresentationState = {
+  weather: Stage6WeatherPresetName;
+  timeOfDay: Stage6TimeOfDay;
+  viewpoint: "wide" | "cctv";
+};
+
+export const DEFAULT_SCENE_PRESENTATION: ScenePresentationState = {
+  weather: "clear",
+  timeOfDay: "day",
+  viewpoint: "wide"
+};
+
 export const STAGE6_TEXTURE_MEMORY_ESTIMATE_MB = 12;
 
 export const STAGE6_QUALITY_PRESETS: Record<

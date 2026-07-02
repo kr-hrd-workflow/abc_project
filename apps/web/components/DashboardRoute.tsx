@@ -48,6 +48,11 @@ import type {
 } from "../lib/types";
 import { SCENARIO_OPTIONS } from "../lib/types";
 import { CITY_PROFILES, DEFAULT_CITY_ID } from "../lib/cities";
+import {
+  DEFAULT_SCENE_PRESENTATION,
+  getStage6PresentationMode,
+  type ScenePresentationState
+} from "./r3f/stage6Quality";
 
 const DEFAULT_SCENARIO_ID: ScenarioId = "normal";
 
@@ -79,6 +84,8 @@ export function DashboardRoute() {
     useState<ScenarioId>(DEFAULT_SCENARIO_ID);
   const [selectedCityId, setSelectedCityId] = useState<CityId>(DEFAULT_CITY_ID);
   const [scenarioLoading, setScenarioLoading] = useState(false);
+  const [scenePresentation, setScenePresentation] =
+    useState<ScenePresentationState>(DEFAULT_SCENE_PRESENTATION);
   const [simulationFrameEntries, setSimulationFrameEntries] = useState<
     SimulationFrameBufferEntry[]
   >([]);
@@ -176,6 +183,19 @@ export function DashboardRoute() {
 
   useEffect(() => {
     void loadDashboard(DEFAULT_SCENARIO_ID);
+  }, []);
+
+  // URL params are the INITIAL override (verify scripts drive scenarios via
+  // ?r3fWeather/?r3fTimeOfDay/?viewpoint); after mount the UI toggles own the
+  // state. useEffect (not useState initializer) keeps SSR hydration clean.
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const mode = getStage6PresentationMode(params);
+    setScenePresentation({
+      weather: mode.weather,
+      timeOfDay: mode.timeOfDay,
+      viewpoint: params.get("viewpoint") === "cctv" ? "cctv" : "wide"
+    });
   }, []);
 
   // Best-effort, off the critical path: a CCTV measurement can take ~30s and may
@@ -419,6 +439,8 @@ export function DashboardRoute() {
       scenarioLoading={scenarioLoading}
       selectedCityId={selectedCityId}
       cityProfiles={CITY_PROFILES}
+      scenePresentation={scenePresentation}
+      onScenePresentationChange={setScenePresentation}
       onCityChange={setSelectedCityId}
       onAskQuestion={handleAskQuestion}
       onGenerateReport={handleGenerateReport}

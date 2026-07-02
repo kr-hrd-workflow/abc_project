@@ -9,6 +9,7 @@ import type {
 } from "../lib/simulationSnapshot";
 import type { Locale } from "../lib/i18n";
 import { copy } from "../lib/i18n";
+import type { ScenePresentationState } from "./r3f/stage6Quality";
 import { SimulationViewport } from "./SimulationViewport";
 
 type DigitalTwinProps = {
@@ -20,6 +21,7 @@ type DigitalTwinProps = {
   selectedScenarioId: string;
   runtimeReadiness: RuntimeReadiness;
   locale: Locale;
+  scenePresentation?: ScenePresentationState;
   onRunSimulation: () => Promise<void>;
 };
 
@@ -32,6 +34,7 @@ export function DigitalTwin({
   selectedScenarioId,
   runtimeReadiness,
   locale,
+  scenePresentation,
   onRunSimulation
 }: DigitalTwinProps) {
   const t = copy[locale];
@@ -93,6 +96,7 @@ export function DigitalTwin({
         selectedScenarioId={selectedScenarioId}
         runtimeReadiness={runtimeReadiness}
         locale={locale}
+        scenePresentation={scenePresentation}
       />
 
       <div className="simulation-legend">

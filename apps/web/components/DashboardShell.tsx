@@ -26,6 +26,7 @@ import type { SimulationFrameSnapshot } from "../lib/simulationSnapshot";
 import type { SimulationFrameBufferEntry } from "../lib/simulationSnapshot";
 import type { Locale } from "../lib/i18n";
 import { copy } from "../lib/i18n";
+import type { ScenePresentationState } from "./r3f/stage6Quality";
 import { AnalysisIntakePanel } from "./AnalysisIntakePanel";
 import { ChatReportPanel } from "./ChatReportPanel";
 import { DigitalTwin } from "./DigitalTwin";
@@ -54,6 +55,8 @@ export type DashboardShellProps = {
   scenarioLoading: boolean;
   selectedCityId: CityId;
   cityProfiles: CityProfile[];
+  scenePresentation: ScenePresentationState;
+  onScenePresentationChange: (next: ScenePresentationState) => void;
   onCityChange: (cityId: CityId) => void;
   onAskQuestion: (question: string) => Promise<void>;
   onGenerateReport: () => Promise<void>;
@@ -84,6 +87,8 @@ export function DashboardShell({
   scenarioLoading,
   selectedCityId,
   cityProfiles,
+  scenePresentation,
+  onScenePresentationChange,
   onCityChange,
   onAskQuestion,
   onGenerateReport,
@@ -98,6 +103,7 @@ export function DashboardShell({
   const [locale, setLocale] = useState<Locale>("ko");
   const [operationMode, setOperationMode] = useState<"ai" | "manual">("ai");
   const t = copy[locale];
+  const p = scenePresentation;
   const selectedScenario = scenarioOptions.find(
     (option) => option.id === selectedScenarioId
   );
@@ -300,6 +306,74 @@ export function DashboardShell({
               </div>
             </div>
           </section>
+          <section
+            className="scene-controls-panel"
+            aria-label={locale === "ko" ? "화면 설정" : "Scene controls"}
+          >
+            <div
+              className="operation-toggle motion-toggle"
+              role="group"
+              aria-label={locale === "ko" ? "주야간" : "Time of day"}
+            >
+              {(["day", "night"] as const).map((tod) => (
+                <button
+                  key={tod}
+                  type="button"
+                  aria-pressed={p.timeOfDay === tod}
+                  className={`motion-pressable command-pressable${p.timeOfDay === tod ? " active" : ""}`}
+                  onClick={() => onScenePresentationChange({ ...p, timeOfDay: tod })}
+                >
+                  <strong>
+                    {tod === "day"
+                      ? locale === "ko" ? "주간" : "Day"
+                      : locale === "ko" ? "야간" : "Night"}
+                  </strong>
+                </button>
+              ))}
+            </div>
+            <div
+              className="operation-toggle motion-toggle"
+              role="group"
+              aria-label={locale === "ko" ? "날씨" : "Weather"}
+            >
+              {(["clear", "cloudy", "rain"] as const).map((w) => (
+                <button
+                  key={w}
+                  type="button"
+                  aria-pressed={p.weather === w}
+                  className={`motion-pressable command-pressable${p.weather === w ? " active" : ""}`}
+                  onClick={() => onScenePresentationChange({ ...p, weather: w })}
+                >
+                  <strong>
+                    {w === "clear"
+                      ? locale === "ko" ? "맑음" : "Clear"
+                      : w === "cloudy"
+                        ? locale === "ko" ? "흐림" : "Cloudy"
+                        : locale === "ko" ? "강우" : "Rain"}
+                  </strong>
+                </button>
+              ))}
+            </div>
+            <div
+              className="operation-toggle motion-toggle"
+              role="group"
+              aria-label={locale === "ko" ? "카메라" : "Camera"}
+            >
+              {(["wide", "cctv"] as const).map((vp) => (
+                <button
+                  key={vp}
+                  type="button"
+                  aria-pressed={p.viewpoint === vp}
+                  className={`motion-pressable command-pressable${p.viewpoint === vp ? " active" : ""}`}
+                  onClick={() => onScenePresentationChange({ ...p, viewpoint: vp })}
+                >
+                  <strong>
+                    {vp === "wide" ? (locale === "ko" ? "운영 와이드" : "Operator wide") : "CCTV"}
+                  </strong>
+                </button>
+              ))}
+            </div>
+          </section>
           <div className="safety-command-banner" role="status">
             <strong>Simulation only / No real signal control</strong>
             <span>{t.safetyCopy}</span>
@@ -335,6 +409,7 @@ export function DashboardShell({
             selectedScenarioId={selectedScenarioId}
             runtimeReadiness={runtimeReadiness}
             locale={locale}
+            scenePresentation={scenePresentation}
             onRunSimulation={onRunSimulation}
           />
         </section>

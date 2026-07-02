@@ -413,6 +413,12 @@ function dashboardProps(overrides: Partial<Parameters<typeof DashboardShell>[0]>
     onGenerateReport: vi.fn(),
     onRefreshRecommendation: vi.fn(),
     onRunSimulation: vi.fn(),
+    scenePresentation: {
+      weather: "clear" as const,
+      timeOfDay: "day" as const,
+      viewpoint: "wide" as const
+    },
+    onScenePresentationChange: vi.fn(),
     selectedScenarioId: "emergency" as ScenarioId,
     scenarioOptions: SCENARIO_OPTIONS,
     scenarioLoading: false,
@@ -732,6 +738,40 @@ describe("DashboardShell", () => {
     expect(aiButton.getAttribute("aria-pressed")).toBe("false");
     expect(manualButton.getAttribute("aria-pressed")).toBe("true");
     expect(screen.getByText("관리자가 권고안을 검토하고 직접 실행 여부를 판단합니다.")).toBeTruthy();
+  });
+
+  test("scene controls fire onScenePresentationChange", async () => {
+    const user = userEvent.setup();
+    const onScenePresentationChange = vi.fn();
+    render(
+      <DashboardShell
+        {...dashboardProps({
+          scenePresentation: { weather: "clear", timeOfDay: "day", viewpoint: "wide" },
+          onScenePresentationChange
+        })}
+      />
+    );
+
+    await user.click(screen.getByRole("button", { name: /야간|Night/i }));
+    expect(onScenePresentationChange).toHaveBeenCalledWith({
+      weather: "clear",
+      timeOfDay: "night",
+      viewpoint: "wide"
+    });
+
+    await user.click(screen.getByRole("button", { name: /강우|Rain/i }));
+    expect(onScenePresentationChange).toHaveBeenCalledWith({
+      weather: "rain",
+      timeOfDay: "day",
+      viewpoint: "wide"
+    });
+
+    await user.click(screen.getByRole("button", { name: "CCTV" }));
+    expect(onScenePresentationChange).toHaveBeenCalledWith({
+      weather: "clear",
+      timeOfDay: "day",
+      viewpoint: "cctv"
+    });
   });
 
   test("shows operational details for automatic and manual modes", async () => {
@@ -1726,7 +1766,10 @@ describe("DashboardShell", () => {
     );
 
     try {
-      renderDashboard();
+      // Render the full route: its mount effect reads the verifier URL params
+      // into scenePresentation, the same path verify-r3f-dashboard.mjs drives.
+      mockDashboardRouteApi();
+      render(<DashboardRoute />);
 
       const viewport = await screen.findByTestId("r3f-simulation-viewport");
 

@@ -16,6 +16,7 @@ import type {
 } from "../lib/simulationSnapshot";
 import type { Locale } from "../lib/i18n";
 import { copy, formatDirection, formatEventType } from "../lib/i18n";
+import type { ScenePresentationState } from "./r3f/stage6Quality";
 
 export type SimulationViewportProps = {
   status: IntersectionStatus;
@@ -26,6 +27,7 @@ export type SimulationViewportProps = {
   selectedScenarioId?: string;
   runtimeReadiness: RuntimeReadiness;
   locale: Locale;
+  scenePresentation?: ScenePresentationState;
 };
 
 type SimulationViewportFallbackProps = SimulationViewportProps & {
