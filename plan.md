@@ -55,6 +55,9 @@ Current maintenance slice:
       adapter that turns its CCTV frame/bbox evidence into a guarded
       `live-input.v1` envelope only when approach direction and signal timing
       calibration are supplied.
+- [x] Download the Seoul/T-DATA V2X signal remaining-time service guide and add
+      a signal adapter that maps cardinal straight-signal remaining-time fields
+      into a guarded `live-input.v1.signalSnapshot`.
 
 Maintenance evidence:
 
@@ -67,6 +70,8 @@ Maintenance evidence:
   19 passed.
 - `npm --workspace apps/web run test -- aiHubVehicleSampleAdapter.test.ts`:
   2 passed.
+- `npm --workspace apps/web run test -- seoulV2xSignalAdapter.test.ts`:
+  3 passed.
 
 Real sample intake evidence:
 
@@ -86,6 +91,11 @@ Real sample intake evidence:
   `output/real-samples/public-data/`. This provides 205 emergency-priority
   infrastructure locations, useful as background/provenance evidence, but it
   is not live emergency-vehicle telemetry or signal timing.
+- Downloaded `신호제어기 잔여시간 정보 서비스 설명서_v1.0.pdf` from the
+  T-DATA V2X signal remaining-time page and converted it to ignored local text.
+  The adapter now supports T-DATA response objects, but a live API-key-backed
+  response was not fetched because the T-DATA page still showed a login link in
+  Chrome during the run.
 
 ## Historical Plan: Synthetic Scenario Evaluation
 

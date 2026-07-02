@@ -53,6 +53,44 @@ The next required sample is signal timing, preferably from Seoul/T-DATA V2X
 signal remaining-time data or another authorized controller sample that can
 populate `live-input.v1.signalSnapshot`.
 
+## Seoul V2X Signal Timing Adapter
+
+The T-DATA service guide was downloaded to ignored local output:
+
+```text
+output/real-samples/public-data/seoul-v2x-signal-remaining-time-service-guide-v1.0.pdf
+output/real-samples/public-data/seoul-v2x-signal-remaining-time-service-guide-v1.0.txt
+```
+
+The public T-DATA page exposes this endpoint:
+
+```text
+http://t-data.seoul.go.kr/apig/apiman-gateway/tapi/v2xSignalPhaseTimingInformation/1.0
+```
+
+The adapter in `apps/web/lib/seoulV2xSignalAdapter.ts` maps a T-DATA response
+object into a `live-input.v1` `signalSnapshot` by using the strongest cardinal
+straight-signal remaining-time field:
+
+```text
+ntStsgRmdrCs -> north_priority
+etStsgRmdrCs -> east_priority
+stStsgRmdrCs -> south_priority
+wtStsgRmdrCs -> west_priority
+```
+
+T-DATA describes these values as remaining time in 1/10 seconds, so the adapter
+converts them to integer seconds using ceiling division by 10.
+
+The adapter does not invent a next phase. `nextPhase`, `controllerMode`, and
+`manualOverride` must come from operator/source calibration when building the
+`LiveSignalSnapshot`.
+
+Current limitation: the T-DATA page showed a login link in Chrome during this
+run, and a live API-key-backed response was not fetched. The implementation is
+therefore based on the official page fields and downloaded guide, not a live
+production API response.
+
 ## Related Public Data Sample
 
 The public data portal file
