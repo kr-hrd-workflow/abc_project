@@ -80,12 +80,16 @@ Current maintenance slice:
 - [x] Add an authorized camera detector output adapter contract so a fresh
       detector frame can become `live-input.v1` only when a matching
       camera-to-approach calibration and signal snapshot are supplied.
+- [x] Add a local file builder that converts
+      `authorized-camera-detector-output.v1`,
+      `camera-approach-calibration.v1`, and a `LiveSignalSnapshot` JSON file
+      into a `live-input.v1` envelope for `real-sample:check`.
 
 Maintenance evidence:
 
 - `node --test scripts/policy-scorecard-contract-check.test.mjs`: 4 passed.
 - `npm run policy-contract:check`: `policy scorecard contract aligned`.
-- `npm run test:package-scripts`: 1 passed.
+- `npm run test:package-scripts`: 2 passed.
 - `npm --workspace apps/web run test -- liveInputContract.test.ts liveInputSubmissionSchema.test.ts`:
   4 passed.
 - `npm --workspace apps/web run test -- syntheticLiveInputDataset.test.ts realSampleDropIn.test.ts`:
@@ -110,6 +114,9 @@ Maintenance evidence:
   4 passed.
 - `npm --workspace apps/web run test -- realSampleIntakePackage.test.ts app/api/real-sample-intake-package/route.test.ts app/api/final-local-readiness/route.test.ts finalLocalReadiness.test.ts`:
   4 passed.
+- `node --test scripts/build-camera-detector-live-input.test.mjs scripts/package-scripts.test.mjs`:
+  4 passed.
+- `npm run test:real-sample-build`: 2 passed.
 - `npm run test:web`: 64 files, 392 tests passed.
 - `npm run build:web`: passed.
 - `git diff --check`: passed.
@@ -167,6 +174,10 @@ Real sample intake evidence:
   when a matching `camera-approach-calibration.v1` mapping supplies the
   operator-verified approach direction. The adapter-created envelope is covered
   by `validateRealSampleDropInEnvelope` when paired with a fresh signal snapshot.
+- `npm run real-sample:build-camera-envelope -- <detector-output.json> <camera-calibration.json> <signal-snapshot.json> <live-input-envelope.json>`
+  now builds the same `live-input.v1` envelope from local files, so an
+  authorized sample provider can immediately run the existing offline and local
+  drop-in checks after supplying fresh detector output and calibration.
 - `/api/real-sample-drop-in`, `/api/real-sample-intake-package`,
   `/api/demo-evidence-export`, and `/api/final-local-readiness` now report
   `signal_ready_waiting_for_fresh_camera_and_calibration`. This means the local

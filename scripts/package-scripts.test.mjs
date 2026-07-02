@@ -20,4 +20,17 @@ describe("root package scripts", () => {
       "policy contract drift should be checked before web tests and build"
     );
   });
+
+  test("exposes camera detector live-input builder scripts", async () => {
+    const packageJson = JSON.parse(await readFile("package.json", "utf8"));
+
+    assert.equal(
+      packageJson.scripts["real-sample:build-camera-envelope"],
+      "node scripts/build-camera-detector-live-input.mjs"
+    );
+    assert.equal(
+      packageJson.scripts["test:real-sample-build"],
+      "node --test scripts/build-camera-detector-live-input.test.mjs"
+    );
+  });
 });

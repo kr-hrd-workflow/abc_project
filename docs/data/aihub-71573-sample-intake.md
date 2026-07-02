@@ -181,6 +181,24 @@ with:
 camera-to-approach calibration is required for <cameraId> at <intersectionId>
 ```
 
+The same conversion is also exposed as a local file builder:
+
+```bash
+npm run real-sample:build-camera-envelope -- \
+  <detector-output.json> \
+  <camera-calibration.json> \
+  <signal-snapshot.json> \
+  <live-input-envelope.json>
+```
+
+The builder writes a `live-input.v1` envelope, then the existing validation
+commands should be run:
+
+```bash
+npm run real-sample:check -- --offline <live-input-envelope.json>
+npm run real-sample:check -- <live-input-envelope.json>
+```
+
 ## Readiness Contract
 
 The real-sample readiness APIs now report:
