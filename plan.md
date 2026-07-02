@@ -101,9 +101,9 @@ Current maintenance slice:
       real ServiceKey and does not replace fresh camera detector output or
       camera-to-approach calibration.
 - [x] Submit and approve a 공공데이터포털 development application for
-      `경찰청_교차로기반정보서비스`; verify the approval page, then record that
-      immediate key-backed calls still return HTTP 401 pending API gateway
-      authorization/activation.
+      `경찰청_교차로기반정보서비스`; verify the approval page and fetch
+      key-backed `getCrossRoadInfoList` / `getCrossRoadInfoDetail` metadata
+      samples after selecting the portal key row that returns `NORMAL_SERVICE`.
 
 Maintenance evidence:
 
@@ -137,10 +137,15 @@ Maintenance evidence:
 - 공공데이터포털 `경찰청_교차로기반정보서비스` approval page:
   `처리상태=승인`, 활용기간 `2026-07-02 ~ 2028-07-02`; issued ServiceKey was
   observed in the browser but not printed or stored.
-- Key-backed `getCrossRoadInfoList` and `getCrossRoadInfoDetail` calls
-  immediately after approval: HTTP 401 `Unauthorized` for JSON, XML, and
-  default-format variants. Ignored local response/provenance files were written
-  under `output/real-samples/public-data/` with `serviceKey` redacted.
+- Key-backed `getCrossRoadInfoList` call using the working portal key row:
+  HTTP 200 `NORMAL_SERVICE`, one `시청` intersection metadata row saved under
+  ignored `output/real-samples/public-data/` with `serviceKey` redacted.
+- Key-backed `getCrossRoadInfoDetail` call using the working portal key row:
+  HTTP 200 `NORMAL_SERVICE`, signal-plan metadata with `MAP_NO`,
+  `INT_MAINPHASE`, and A/B ring phase configuration fields saved under ignored
+  `output/real-samples/public-data/` with `serviceKey` redacted.
+- The portal key table also showed a `재발급` row that still returned HTTP 401
+  during this check, while the `신규발급` row returned `NORMAL_SERVICE`.
 - `npm --workspace apps/web run test -- seoulV2xSignalAdapter.test.ts realSampleDropIn.test.ts realSampleIntakePackage.test.ts demoEvidenceExport.test.ts finalLocalReadiness.test.ts app/api/real-sample-drop-in/route.test.ts app/api/real-sample-intake-package/route.test.ts app/api/demo-evidence-export/route.test.ts app/api/final-local-readiness/route.test.ts DashboardShell.test.tsx`:
   122 passed.
 - `npm --workspace apps/web run test -- authorizedCameraDetectorAdapter.test.ts realSampleIntakePackage.test.ts`:

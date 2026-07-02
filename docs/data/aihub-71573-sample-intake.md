@@ -320,8 +320,10 @@ account. The approval page showed `처리상태=승인` and an availability wind
 from 2026-07-02 to 2028-07-02. The issued key is not stored in git or local
 output provenance.
 
-Immediately after approval, key-backed attempts for both operations were saved
-outside git:
+After the portal key page showed both `신규발급` and `재발급` rows, the
+`신규발급` row key was the one that returned `NORMAL_SERVICE`; the `재발급`
+row still returned HTTP 401 during this check. The working-key samples for both
+operations were saved outside git:
 
 ```text
 output/real-samples/public-data/police-crossroad-info-list-live-sample.json
@@ -330,9 +332,10 @@ output/real-samples/public-data/police-crossroad-info-detail-live-sample.json
 output/real-samples/public-data/police-crossroad-info-detail-live-sample-provenance.json
 ```
 
-Both operations still returned HTTP 401 `Unauthorized` immediately after
-approval, including XML/default-format retries. This means the account approval
-is verified, but a successful live metadata sample is still pending API gateway
-key activation or a provider-side authorization refresh. The provenance files
-redact the key and keep the same truth boundary: this source can only support
-intersection and signal-plan metadata, not live detector truth.
+`getCrossRoadInfoList` returned a normal response with one `시청` intersection
+metadata row, including `REGION_CD`, `INT_NO`, `INT_NM`, `X_COORD`, `Y_COORD`,
+and `UPD_DTIME`. `getCrossRoadInfoDetail` returned normal signal-plan metadata
+with `MAP_NO`, `INT_MAINPHASE`, and A/B ring phase configuration code fields.
+The provenance files redact the key and keep the same truth boundary: this
+source can only support intersection and signal-plan metadata, not live detector
+truth.
