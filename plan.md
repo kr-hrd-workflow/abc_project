@@ -58,6 +58,9 @@ Current maintenance slice:
 - [x] Download the Seoul/T-DATA V2X signal remaining-time service guide and add
       a signal adapter that maps cardinal straight-signal remaining-time fields
       into a guarded `live-input.v1.signalSnapshot`.
+- [x] Add a stale camera-frame guardrail so historical CCTV samples cannot be
+      accepted as current live observations in `/api/real-sample-drop-in` or
+      offline `real-sample:check`.
 
 Maintenance evidence:
 
@@ -72,6 +75,9 @@ Maintenance evidence:
   2 passed.
 - `npm --workspace apps/web run test -- seoulV2xSignalAdapter.test.ts`:
   3 passed.
+- `npm --workspace apps/web run test -- realSampleDropIn.test.ts realSampleIntakePackage.test.ts`:
+  12 passed.
+- `node --test scripts/real-sample-drop-in-check.test.mjs`: 10 passed.
 
 Real sample intake evidence:
 
@@ -96,6 +102,9 @@ Real sample intake evidence:
   The adapter now supports T-DATA response objects, but a live API-key-backed
   response was not fetched because the T-DATA page still showed a login link in
   Chrome during the run.
+- Historical AI-Hub frames remain valid detector evidence, but they now require
+  manual review as live observations unless `cameraFrames[].capturedAt` is
+  within 30 seconds of `receivedAt`.
 
 ## Historical Plan: Synthetic Scenario Evaluation
 

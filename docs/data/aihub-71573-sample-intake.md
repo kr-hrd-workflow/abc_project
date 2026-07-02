@@ -33,6 +33,10 @@ output/real-samples/aihub-71573/images/C-221008_14_CR06_01_A0341.jpg
 - It does not include signal phase or signal remaining time.
 - It does not prove live CCTV stream access.
 - It does not prove a real signal-controller integration.
+- Because the sample frame is historical, it should not be submitted as a live
+  observation with a current `receivedAt` timestamp. The real-sample drop-in
+  guardrail now routes camera frames older than 30 seconds to manual review with
+  `fresh_camera_frame`.
 
 ## Adapter Boundary
 
@@ -90,6 +94,19 @@ Current limitation: the T-DATA page showed a login link in Chrome during this
 run, and a live API-key-backed response was not fetched. The implementation is
 therefore based on the official page fields and downloaded guide, not a live
 production API response.
+
+## Freshness Guardrail
+
+`/api/real-sample-drop-in` and `npm run real-sample:check -- --offline` both
+require fresh observations before accepting a replay-ready sample:
+
+```text
+signalSnapshot.capturedAt must be within 30 seconds of receivedAt
+cameraFrames[].capturedAt must be within 30 seconds of receivedAt
+```
+
+This keeps historical AI-Hub frames useful as authorized detector evidence, but
+prevents them from being mistaken for current live CCTV truth.
 
 ## Related Public Data Sample
 

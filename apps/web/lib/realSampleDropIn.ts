@@ -6,6 +6,8 @@ import { POLICY_SCORING_CONSTANTS } from "./policyScorecardContract";
 import { recommendFromLiveReplayInput } from "./syntheticLiveInputDataset";
 import type { SyntheticExpectedOutcome } from "./syntheticScenarios";
 
+const STALE_SAMPLE_THRESHOLD_MS = 30_000;
+
 export type RealSampleDropInReadiness = {
   source: "real_sample_drop_in_readiness";
   schemaVersion: "real-sample-drop-in.v1";
@@ -130,6 +132,28 @@ export function validateRealSampleDropInEnvelope(
     if (isSignalSnapshotStale(envelope)) {
       const requiredInputs = ["fresh_signal_snapshot"];
       const validationErrors = ["signal snapshot older than 30 seconds"];
+      return {
+        source: "real_sample_drop_in_validation",
+        schemaVersion: "real-sample-drop-in.v1",
+        accepted: false,
+        adapterBoundary: "live-input.v1",
+        replayStatus: "replay_input_ready",
+        recommendation: null,
+        operatorWorkflowStatus: "manual_review_required",
+        operatorWorkflow: buildOperatorWorkflowSummary({
+          status: "manual_review_required",
+          recommendation: null,
+          requiredInputs,
+          validationErrors
+        }),
+        requiredInputs,
+        validationErrors
+      };
+    }
+
+    if (hasStaleCameraFrame(envelope)) {
+      const requiredInputs = ["fresh_camera_frame"];
+      const validationErrors = ["camera frame older than 30 seconds"];
       return {
         source: "real_sample_drop_in_validation",
         schemaVersion: "real-sample-drop-in.v1",
@@ -344,7 +368,18 @@ function isSignalSnapshotStale(
   const receivedAt = Date.parse(envelope.receivedAt);
   const capturedAt = Date.parse(envelope.signalSnapshot.capturedAt);
 
-  return receivedAt - capturedAt > 30_000;
+  return receivedAt - capturedAt > STALE_SAMPLE_THRESHOLD_MS;
+}
+
+function hasStaleCameraFrame(
+  envelope: ReturnType<typeof normalizeLiveInputEnvelope>
+) {
+  const receivedAt = Date.parse(envelope.receivedAt);
+
+  return envelope.cameraFrames.some((frame) => {
+    const capturedAt = Date.parse(frame.capturedAt);
+    return receivedAt - capturedAt > STALE_SAMPLE_THRESHOLD_MS;
+  });
 }
 
 function getProhibitedSampleIdentifierError(

@@ -3,7 +3,7 @@ import { pathToFileURL } from "node:url";
 
 const DEFAULT_ENDPOINT_URL = "http://localhost:3000/api/real-sample-drop-in";
 const LOW_CONFIDENCE_THRESHOLD = 0.5;
-const STALE_SIGNAL_THRESHOLD_MS = 30_000;
+const STALE_SAMPLE_THRESHOLD_MS = 30_000;
 const QUEUE_THRESHOLD = 25;
 
 export async function checkRealSampleDropInFile({
@@ -333,6 +333,10 @@ function addOfflinePolicyGuardrailErrors(envelope, errors) {
     errors.push("signal snapshot older than 30 seconds");
   }
 
+  if (hasOfflineStaleCameraFrame(envelope)) {
+    errors.push("camera frame older than 30 seconds");
+  }
+
   if (hasOfflineConflictingQueueAxes(detections)) {
     errors.push("conflicting_queue_axes");
   }
@@ -356,7 +360,30 @@ function isOfflineSignalSnapshotStale(envelope) {
   return (
     Number.isFinite(receivedAt) &&
     Number.isFinite(capturedAt) &&
-    receivedAt - capturedAt > STALE_SIGNAL_THRESHOLD_MS
+    receivedAt - capturedAt > STALE_SAMPLE_THRESHOLD_MS
+  );
+}
+
+function hasOfflineStaleCameraFrame(envelope) {
+  if (typeof envelope?.receivedAt !== "string") {
+    return false;
+  }
+
+  const frames = Array.isArray(envelope.cameraFrames) ? envelope.cameraFrames : [];
+  const receivedAt = Date.parse(envelope.receivedAt);
+
+  return (
+    Number.isFinite(receivedAt) &&
+    frames.some((frame) => {
+      if (typeof frame?.capturedAt !== "string") {
+        return false;
+      }
+      const capturedAt = Date.parse(frame.capturedAt);
+      return (
+        Number.isFinite(capturedAt) &&
+        receivedAt - capturedAt > STALE_SAMPLE_THRESHOLD_MS
+      );
+    })
   );
 }
 
@@ -465,6 +492,9 @@ function inferOfflineRequiredInputs(errors) {
   if (errors.includes("signal snapshot older than 30 seconds")) {
     return ["fresh_signal_snapshot"];
   }
+  if (errors.includes("camera frame older than 30 seconds")) {
+    return ["fresh_camera_frame"];
+  }
   if (errors.includes("conflicting_queue_axes")) {
     return ["signal_phase.remaining_seconds"];
   }
@@ -495,6 +525,7 @@ function areReplayReadyGuardrailErrors(errors) {
     [
       "detection confidence below 0.5",
       "signal snapshot older than 30 seconds",
+      "camera frame older than 30 seconds",
       "conflicting_queue_axes",
       "emergency priority conflicts with waiting pedestrian",
       "fixture_or_synthetic_sample_not_allowed",

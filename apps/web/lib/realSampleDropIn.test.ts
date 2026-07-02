@@ -170,6 +170,36 @@ describe("real sample drop-in readiness", () => {
     });
   });
 
+  test("requires manual review for stale camera frames", () => {
+    const staleFrameEnvelope = buildLiveInputEnvelope();
+    staleFrameEnvelope.receivedAt = "2026-07-01T09:10:40.000Z";
+    staleFrameEnvelope.cameraFrames[0].capturedAt = "2026-07-01T09:10:00.000Z";
+    staleFrameEnvelope.signalSnapshot.capturedAt = "2026-07-01T09:10:39.000Z";
+
+    const result = validateRealSampleDropInEnvelope(staleFrameEnvelope);
+
+    expect(result).toEqual({
+      source: "real_sample_drop_in_validation",
+      schemaVersion: "real-sample-drop-in.v1",
+      accepted: false,
+      adapterBoundary: "live-input.v1",
+      replayStatus: "replay_input_ready",
+      recommendation: null,
+      operatorWorkflowStatus: "manual_review_required",
+      operatorWorkflow: {
+        source: "policy_scorecard",
+        contractEndpoint: "/api/policy-scorecard-contract",
+        status: "manual_review_required",
+        selectedPolicy: "safety_hold",
+        confidence: "low",
+        requiredInputs: ["fresh_camera_frame"],
+        blockedReasons: ["camera frame older than 30 seconds"]
+      },
+      requiredInputs: ["fresh_camera_frame"],
+      validationErrors: ["camera frame older than 30 seconds"]
+    });
+  });
+
   test("keeps emergency recommendation visible while requiring conflict review", () => {
     const conflictEnvelope = buildLiveInputEnvelope();
     conflictEnvelope.cameraFrames[0].detections.push({

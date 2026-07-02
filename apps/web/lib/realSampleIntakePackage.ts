@@ -79,6 +79,7 @@ export function buildRealSampleIntakePackage({
       "reject invalid live-input.v1 envelope",
       "manual review when sample identifiers indicate fixture, synthetic, placeholder, mock, example, or demo data",
       "manual review when signal snapshot older than 30 seconds",
+      "manual review when camera frame older than 30 seconds",
       "manual review when any detection confidence is below 0.5",
       "manual review when vehicle queues exceed threshold on conflicting movement axes",
       "operator conflict review when emergency priority conflicts with a long-waiting pedestrian"

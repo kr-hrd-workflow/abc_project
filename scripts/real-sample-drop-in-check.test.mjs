@@ -204,6 +204,7 @@ describe("real sample drop-in file check", () => {
   test("routes stale signal snapshots to manual review offline", async () => {
     const staleEnvelope = buildAuthorizedEnvelope();
     staleEnvelope.receivedAt = "2026-07-01T09:10:40.000Z";
+    staleEnvelope.cameraFrames[0].capturedAt = "2026-07-01T09:10:39.000Z";
     staleEnvelope.signalSnapshot.capturedAt = "2026-07-01T09:10:00.000Z";
 
     const result = await checkRealSampleDropInFile({
@@ -218,6 +219,27 @@ describe("real sample drop-in file check", () => {
     assert.deepEqual(result.summary.requiredInputs, ["fresh_signal_snapshot"]);
     assert.deepEqual(result.summary.validationErrors, [
       "signal snapshot older than 30 seconds"
+    ]);
+  });
+
+  test("routes stale camera frames to manual review offline", async () => {
+    const staleEnvelope = buildAuthorizedEnvelope();
+    staleEnvelope.receivedAt = "2026-07-01T09:10:40.000Z";
+    staleEnvelope.cameraFrames[0].capturedAt = "2026-07-01T09:10:00.000Z";
+    staleEnvelope.signalSnapshot.capturedAt = "2026-07-01T09:10:39.000Z";
+
+    const result = await checkRealSampleDropInFile({
+      filePath: "stale-camera-sample.json",
+      offline: true,
+      readFile: async () => JSON.stringify(staleEnvelope)
+    });
+
+    assert.equal(result.exitCode, 1);
+    assert.equal(result.summary.validationMode, "offline_shape_check");
+    assert.equal(result.summary.accepted, false);
+    assert.deepEqual(result.summary.requiredInputs, ["fresh_camera_frame"]);
+    assert.deepEqual(result.summary.validationErrors, [
+      "camera frame older than 30 seconds"
     ]);
   });
 
