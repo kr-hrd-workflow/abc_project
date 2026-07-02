@@ -346,7 +346,7 @@ describe("SimulationCanvas Stage 5 telemetry", () => {
     expect(getChildDisplayNames(scene)).toEqual([
       "Stage3CameraRig",
       "SceneEnvironment",   // unified IBL + light rig (day: Sky + LightingRig + WeatherAndAtmosphere; night: neon IBL + lights)
-      "BuildingLayer",      // P2: 3D photoreal buildings + sky — replaces AI scene-plate (BackgroundPlateLayer retired)
+      "BuildingLayer",      // P2: 3D photoreal buildings + sky — no plate layer is mounted
       "StaticRoadLayer",
       "DynamicVehicleLayer",
       "DynamicPedestrianLayer",
@@ -392,8 +392,8 @@ describe("SimulationCanvas Stage 5 telemetry", () => {
   });
 
   test("mounts the 3D building layer (P2) for both day and night scenes", () => {
-    // P2: BackgroundPlateLayer is retired; BuildingLayerBoundary (displayName
-    // "BuildingLayer") is now the scene's building + sky provider.
+    // P2: no plate layer is mounted; BuildingLayerBoundary (displayName
+    // "BuildingLayer") is the scene's building + sky provider.
     const sceneSnapshot = buildShadowCountSceneSnapshot({ vehicleCount: 2 });
 
     for (const tod of ["day", "night"] as const) {

@@ -221,9 +221,9 @@ function SceneFinishing({
 SceneFinishing.displayName = "ScenePostFX";
 
 // P2: 3D photoreal building layer replaces the AI scene-plate as the source of
-// buildings, sky, and horizon.  BackgroundPlateLayer is retained in the repo as
-// a reference asset but is no longer mounted.  True 3D geometry means vehicles
-// are occluded by buildings via the depth buffer (no more depth-only proxy boxes).
+// buildings, sky, and horizon.  The plate system was deleted 2026-07-02.
+// True 3D geometry means vehicles are occluded by buildings via the depth
+// buffer (no more depth-only proxy boxes).
 function BuildingLayerBoundary({
   timeOfDay,
   qualityPreset
