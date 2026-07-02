@@ -49,7 +49,7 @@ import type {
 import { SCENARIO_OPTIONS } from "../lib/types";
 import { CITY_PROFILES, DEFAULT_CITY_ID } from "../lib/cities";
 
-const DEFAULT_SCENARIO_ID: ScenarioId = "emergency";
+const DEFAULT_SCENARIO_ID: ScenarioId = "normal";
 
 type DashboardData = {
   status: IntersectionStatus;

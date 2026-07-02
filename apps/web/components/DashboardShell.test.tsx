@@ -513,12 +513,20 @@ function frameEntry(
 }
 
 describe("DashboardShell", () => {
+  test("defaults to the normal scenario (the live SUMO scenario)", async () => {
+    mockDashboardRouteApi();
+    render(<DashboardRoute />);
+    await waitFor(() =>
+      expect(dashboardRouteApiMock.getIntersectionStatus).toHaveBeenCalledWith("normal")
+    );
+  });
+
   test("loads the dashboard with explicit fixture fallback when the frame route is missing", async () => {
     vi.stubEnv("NEXT_PUBLIC_R3F_SIMULATION_ENABLED", "true");
     mockWebGLSupport(true);
     mockDashboardRouteApi();
     dashboardRouteApiMock.getSimulationFrame.mockRejectedValue(
-      new Error("API request failed: 404 /api/simulation/frame?scenario_id=emergency")
+      new Error("API request failed: 404 /api/simulation/frame?scenario_id=normal")
     );
 
     render(<DashboardRoute />);
@@ -529,7 +537,7 @@ describe("DashboardShell", () => {
       { timeout: 3000 }
     );
 
-    expect(dashboardRouteApiMock.getSimulationFrame).toHaveBeenCalledWith("emergency");
+    expect(dashboardRouteApiMock.getSimulationFrame).toHaveBeenCalledWith("normal");
     expect(screen.queryByText("Dashboard API unavailable")).toBeNull();
     expect(viewport.getAttribute("data-r3f-snapshot-source")).toBe("simulation_snapshot_fixture");
     expect(viewport.getAttribute("data-r3f-frame-bound")).toBeNull();
@@ -570,7 +578,7 @@ describe("DashboardShell", () => {
     });
     expect(dashboardRouteApiMock.getSimulationFrame).toHaveBeenCalledTimes(2);
 
-    expect(dashboardRouteApiMock.getSimulationFrame.mock.calls[1][0]).toBe("emergency");
+    expect(dashboardRouteApiMock.getSimulationFrame.mock.calls[1][0]).toBe("normal");
 
     unmount();
     await act(async () => {
@@ -585,7 +593,7 @@ describe("DashboardShell", () => {
     mockWebGLSupport(true);
     mockDashboardRouteApi();
     dashboardRouteApiMock.getSimulationFrame.mockRejectedValue(
-      new Error("API request failed: 404 /api/simulation/frame?scenario_id=emergency")
+      new Error("API request failed: 404 /api/simulation/frame?scenario_id=normal")
     );
 
     render(<DashboardRoute />);
@@ -603,6 +611,10 @@ describe("DashboardShell", () => {
     vi.stubEnv("NEXT_PUBLIC_R3F_SIMULATION_ENABLED", "true");
     mockWebGLSupport(true);
     const workers = installWorkerMock();
+    const normalFrame: SimulationFrameSnapshot = {
+      ...frameSnapshot,
+      scenario_id: "normal"
+    };
     const pedestrianFrame: SimulationFrameSnapshot = {
       ...frameSnapshot,
       scenario_id: "pedestrian",
@@ -620,13 +632,13 @@ describe("DashboardShell", () => {
     mockDashboardRouteApi();
     dashboardRouteApiMock.getSimulationFrame.mockImplementation(
       async (scenarioId: ScenarioId) =>
-        scenarioId === "pedestrian" ? pedestrianFrame : frameSnapshot
+        scenarioId === "pedestrian" ? pedestrianFrame : normalFrame
     );
 
     render(<DashboardRoute />);
 
     const viewport = await screen.findByTestId("r3f-simulation-viewport");
-    expect(viewport.getAttribute("data-r3f-scenario-id")).toBe("emergency");
+    expect(viewport.getAttribute("data-r3f-scenario-id")).toBe("normal");
 
     await userEvent.click(screen.getByRole("button", { name: /보행자/ }));
 
@@ -636,7 +648,7 @@ describe("DashboardShell", () => {
 
     workers[0]?.emit({
       type: "simulation-frame-buffer",
-      frames: [frameEntry(frameSnapshot, 2000)]
+      frames: [frameEntry(normalFrame, 2000)]
     });
     await sleep(50);
 
@@ -647,14 +659,14 @@ describe("DashboardShell", () => {
   test("surfaces non-route simulation frame load errors", async () => {
     mockDashboardRouteApi();
     dashboardRouteApiMock.getSimulationFrame.mockRejectedValue(
-      new Error("API request failed: 500 /api/simulation/frame?scenario_id=emergency")
+      new Error("API request failed: 500 /api/simulation/frame?scenario_id=normal")
     );
 
     render(<DashboardRoute />);
 
     expect(await screen.findByText("Dashboard API unavailable")).toBeTruthy();
-    expect(dashboardRouteApiMock.getSimulationFrame).toHaveBeenCalledWith("emergency");
-    expect(screen.getByText("API request failed: 500 /api/simulation/frame?scenario_id=emergency")).toBeTruthy();
+    expect(dashboardRouteApiMock.getSimulationFrame).toHaveBeenCalledWith("normal");
+    expect(screen.getByText("API request failed: 500 /api/simulation/frame?scenario_id=normal")).toBeTruthy();
   });
 
   test("renders the B plus A spatial command cockpit structure", () => {

@@ -243,17 +243,28 @@ traffic signal control.
 
 ### SUMO operating mode
 
-The committed code default is `fixture` — deterministic, offline, and the path
-CI and the regression suite run on. Do not flip this committed default to live.
+The committed library default (no `.env` present) is `fixture` — deterministic,
+offline, and the path CI and the regression suite run on. Do not flip this
+committed code default to live.
 
-To run live, set the mode in the environment:
+The checked-in `.env` / `.env.example` used for local development now default
+to live SUMO:
 
 ```dotenv
 SUMO_SIMULATION_MODE=sumo_traci
 ```
 
 Live mode needs the `sumo` binary plus `traci`; the `apps/api[simulation]` extra
-ships `.venv/bin/sumo` with the `apps/api` venv.
+ships `.venv/bin/sumo` with the `apps/api` venv. Runtime failures still fall
+back automatically (`sumo_last_good`, then `simulation_snapshot_fixture`) — see
+below. Fixture mode remains the option for CI or any host without a SUMO
+binary: set `SUMO_SIMULATION_MODE=fixture` in your local `.env` to opt back
+out of live SUMO.
+
+The dashboard's R3F 3D viewport also needs
+`NEXT_PUBLIC_R3F_SIMULATION_ENABLED=true` (set by default in `.env` /
+`.env.example`); without it the viewport falls back to the 2D/legacy
+presentation.
 
 Hybrid scenarios: in live mode only the `normal` scenario is served by live SUMO
 (busy 강남대로 with buses confined to the median bus lane). The `emergency`,
