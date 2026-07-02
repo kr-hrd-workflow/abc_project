@@ -3243,7 +3243,13 @@ async function runBrowserVerification(baseUrl) {
       isMobile: true,
       deviceScaleFactor: 1
     });
-    await gotoDashboard(mobile.page, baseUrl);
+    await gotoDashboard(
+      mobile.page,
+      baseUrl,
+      buildStage6ScenarioQuery(
+        stage6ScenarioSpecs.find((spec) => spec.id === "rain/high")
+      )
+    );
     const mobileR3FReady = await waitForR3F(mobile.page);
     verifierProgress(`mobile R3F ready=${mobileR3FReady}`);
     await mobile.page

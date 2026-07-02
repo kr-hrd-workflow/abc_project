@@ -1784,6 +1784,34 @@ describe("DashboardShell", () => {
     }
   });
 
+  test("reads r3fWeather=rain from the URL rather than the clear default", async () => {
+    // Guards against a `scenePresentation ?? url` regression masking the URL
+    // read: rain and enabled particles are both non-default, so this fails if
+    // the DEFAULT_SCENE_PRESENTATION (clear) ever wins over the URL override.
+    vi.stubEnv("NEXT_PUBLIC_R3F_SIMULATION_ENABLED", "true");
+    mockWebGLSupport(true);
+    const originalUrl = window.location.href;
+    window.history.pushState(
+      null,
+      "",
+      "/?r3fQuality=high&r3fWeather=rain&r3fTimeOfDay=day"
+    );
+
+    try {
+      mockDashboardRouteApi();
+      render(<DashboardRoute />);
+
+      const viewport = await screen.findByTestId("r3f-simulation-viewport");
+
+      expect(viewport.getAttribute("data-r3f-weather")).toBe("rain");
+      expect(viewport.getAttribute("data-r3f-weather-particles-enabled")).toBe(
+        "true"
+      );
+    } finally {
+      window.history.pushState(null, "", originalUrl);
+    }
+  });
+
   test("exposes stale live-frame telemetry without hiding safety overlays", async () => {
     vi.stubEnv("NEXT_PUBLIC_R3F_SIMULATION_ENABLED", "true");
     mockWebGLSupport(true);
