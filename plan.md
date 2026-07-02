@@ -100,6 +100,10 @@ Current maintenance slice:
       classify it as signal-plan/intersection metadata that still requires a
       real ServiceKey and does not replace fresh camera detector output or
       camera-to-approach calibration.
+- [x] Submit and approve a 공공데이터포털 development application for
+      `경찰청_교차로기반정보서비스`; verify the approval page, then record that
+      immediate key-backed calls still return HTTP 401 pending API gateway
+      authorization/activation.
 
 Maintenance evidence:
 
@@ -130,6 +134,13 @@ Maintenance evidence:
 - `curl ...CrossRoadInfoService/getCrossRoadInfoDetail?serviceKey=test...`:
   returned `Unauthorized`, confirming a real ServiceKey is required for
   경찰청 교차로기반정보서비스 live samples.
+- 공공데이터포털 `경찰청_교차로기반정보서비스` approval page:
+  `처리상태=승인`, 활용기간 `2026-07-02 ~ 2028-07-02`; issued ServiceKey was
+  observed in the browser but not printed or stored.
+- Key-backed `getCrossRoadInfoList` and `getCrossRoadInfoDetail` calls
+  immediately after approval: HTTP 401 `Unauthorized` for JSON, XML, and
+  default-format variants. Ignored local response/provenance files were written
+  under `output/real-samples/public-data/` with `serviceKey` redacted.
 - `npm --workspace apps/web run test -- seoulV2xSignalAdapter.test.ts realSampleDropIn.test.ts realSampleIntakePackage.test.ts demoEvidenceExport.test.ts finalLocalReadiness.test.ts app/api/real-sample-drop-in/route.test.ts app/api/real-sample-intake-package/route.test.ts app/api/demo-evidence-export/route.test.ts app/api/final-local-readiness/route.test.ts DashboardShell.test.tsx`:
   122 passed.
 - `npm --workspace apps/web run test -- authorizedCameraDetectorAdapter.test.ts realSampleIntakePackage.test.ts`:

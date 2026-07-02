@@ -313,3 +313,26 @@ detector output, emergency vehicle telemetry, or operator-verified
 camera-to-approach calibration. A `serviceKey=test` request returned
 `Unauthorized`, so a real 공공데이터포털 ServiceKey or 활용신청 is required
 before collecting live response samples.
+
+On 2026-07-02, a 공공데이터포털 development application for
+`경찰청_교차로기반정보서비스` was submitted and approved in the logged-in
+account. The approval page showed `처리상태=승인` and an availability window
+from 2026-07-02 to 2028-07-02. The issued key is not stored in git or local
+output provenance.
+
+Immediately after approval, key-backed attempts for both operations were saved
+outside git:
+
+```text
+output/real-samples/public-data/police-crossroad-info-list-live-sample.json
+output/real-samples/public-data/police-crossroad-info-list-live-sample-provenance.json
+output/real-samples/public-data/police-crossroad-info-detail-live-sample.json
+output/real-samples/public-data/police-crossroad-info-detail-live-sample-provenance.json
+```
+
+Both operations still returned HTTP 401 `Unauthorized` immediately after
+approval, including XML/default-format retries. This means the account approval
+is verified, but a successful live metadata sample is still pending API gateway
+key activation or a provider-side authorization refresh. The provenance files
+redact the key and keep the same truth boundary: this source can only support
+intersection and signal-plan metadata, not live detector truth.
