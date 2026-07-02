@@ -40,5 +40,13 @@ describe("root package scripts", () => {
       packageJson.scripts["test:real-sample-signal-build"],
       "node --test scripts/build-seoul-v2x-signal-snapshot.test.mjs"
     );
+    assert.equal(
+      packageJson.scripts["real-sample:prepare-live-input"],
+      "node scripts/prepare-real-sample-live-input.mjs"
+    );
+    assert.equal(
+      packageJson.scripts["test:real-sample-prepare"],
+      "node --test scripts/prepare-real-sample-live-input.test.mjs"
+    );
   });
 });

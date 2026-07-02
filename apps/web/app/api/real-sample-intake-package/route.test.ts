@@ -21,6 +21,8 @@ describe("real sample intake package route", () => {
         "npm run real-sample:check -- <live-input-envelope.json>",
       offlineCliCommand:
         "npm run real-sample:check -- --offline <live-input-envelope.json>",
+      prepareLiveInputCommand:
+        "npm run real-sample:prepare-live-input -- <detector-output.json> <camera-calibration.json> <seoul-v2x-response.json> <signal-snapshot.json> <live-input-envelope.json> <nextPhase> <controllerMode> <manualOverride>",
       noPersistence: true
     });
     expect(body.sampleSlotIds).toEqual([
@@ -43,6 +45,9 @@ describe("real sample intake package route", () => {
     expect(body.prohibitedInputs).toContain("raw stream credentials");
     expect(body.submissionSteps).toContain(
       "run npm run real-sample:check -- --offline <live-input-envelope.json> for server-free shape, provenance, and guardrail checks"
+    );
+    expect(body.submissionSteps).toContain(
+      "or run npm run real-sample:prepare-live-input -- <detector-output.json> <camera-calibration.json> <seoul-v2x-response.json> <signal-snapshot.json> <live-input-envelope.json> <nextPhase> <controllerMode> <manualOverride> to build both files and run offline validation"
     );
     expect(body.submissionSteps).toContain(
       "run npm run real-sample:check -- <live-input-envelope.json> for the same local drop-in validation path"

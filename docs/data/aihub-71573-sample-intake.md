@@ -214,6 +214,27 @@ npm run real-sample:check -- --offline <live-input-envelope.json>
 npm run real-sample:check -- <live-input-envelope.json>
 ```
 
+When a fresh detector output, matching camera calibration, and Seoul V2X raw
+response are all available, the same preparation can be run as one local
+command:
+
+```bash
+npm run real-sample:prepare-live-input -- \
+  <detector-output.json> \
+  <camera-calibration.json> \
+  <seoul-v2x-response.json> \
+  <signal-snapshot.json> \
+  <live-input-envelope.json> \
+  <nextPhase> \
+  <controllerMode> \
+  <manualOverride>
+```
+
+This command builds the `signal-snapshot.json`, builds the
+`live-input-envelope.json`, and runs the offline `real-sample:check` guardrail
+path. It does not bypass the freshness, provenance, confidence, queue-conflict,
+or calibration checks.
+
 The source-side JSON contracts are exposed without sample data at:
 
 ```text
@@ -246,6 +267,8 @@ This means the project is no longer missing every authorized sample. It has:
   detections once a matching camera approach calibration is supplied
 - a source schema endpoint for the detector output, calibration, Seoul V2X raw
   response, and signal snapshot files used by the local builders
+- a single local prepare command that chains the signal snapshot builder,
+  camera detector envelope builder, and offline real-sample validation
 
 The remaining blockers are narrower:
 

@@ -89,6 +89,9 @@ Current maintenance slice:
       calibration supplies `nextPhase`, `controllerMode`, and `manualOverride`.
 - [x] Add a real-sample source schema endpoint so sample providers can inspect
       the source JSON contracts before building a `live-input.v1` envelope.
+- [x] Add a single real-sample prepare command that chains Seoul V2X signal
+      snapshot building, camera detector envelope building, and offline
+      `real-sample:check` validation.
 
 Maintenance evidence:
 
@@ -113,6 +116,9 @@ Maintenance evidence:
   116 passed.
 - `npm --workspace apps/web run test -- seoulV2xSignalAdapter.test.ts realSampleDropIn.test.ts demoEvidenceExport.test.ts finalLocalReadiness.test.ts app/api/final-local-readiness/route.test.ts`:
   19 passed.
+- `npm run test:real-sample-prepare`: 2 passed.
+- `npm --workspace apps/web run test -- realSampleIntakePackage.test.ts app/api/real-sample-intake-package/route.test.ts realSampleSourceSchema.test.ts app/api/real-sample-source-schema/route.test.ts`:
+  4 passed.
 - `npm --workspace apps/web run test -- seoulV2xSignalAdapter.test.ts realSampleDropIn.test.ts realSampleIntakePackage.test.ts demoEvidenceExport.test.ts finalLocalReadiness.test.ts app/api/real-sample-drop-in/route.test.ts app/api/real-sample-intake-package/route.test.ts app/api/demo-evidence-export/route.test.ts app/api/final-local-readiness/route.test.ts DashboardShell.test.tsx`:
   122 passed.
 - `npm --workspace apps/web run test -- authorizedCameraDetectorAdapter.test.ts realSampleIntakePackage.test.ts`:

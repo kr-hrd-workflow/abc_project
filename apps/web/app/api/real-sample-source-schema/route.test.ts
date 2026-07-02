@@ -19,6 +19,9 @@ describe("real sample source schema route", () => {
     expect(body.buildCommands.cameraEnvelope).toContain(
       "real-sample:build-camera-envelope"
     );
+    expect(body.buildCommands.prepareLiveInput).toContain(
+      "real-sample:prepare-live-input"
+    );
     expect(body.sourceSchemas).toHaveProperty(
       "authorized-camera-detector-output.v1"
     );
