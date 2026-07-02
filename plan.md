@@ -43,6 +43,10 @@ Next meaningful decision:
    the current state as local evaluation plus adapter readiness.
 3. If code work must continue before a sample, do only narrow maintenance that
    reduces backend/frontend policy-contract drift.
+4. If the user approves another 공공데이터포털 활용신청/API-key use, fetch
+   `경찰청_교차로기반정보서비스` `getCrossRoadInfoDetail` samples as
+   signal-plan metadata only. Do not treat them as camera detections or
+   camera-to-approach calibration.
 
 Current maintenance slice:
 
@@ -92,6 +96,10 @@ Current maintenance slice:
 - [x] Add a single real-sample prepare command that chains Seoul V2X signal
       snapshot building, camera detector envelope building, and offline
       `real-sample:check` validation.
+- [x] Download and inspect the `경찰청_교차로기반정보서비스` technical guide;
+      classify it as signal-plan/intersection metadata that still requires a
+      real ServiceKey and does not replace fresh camera detector output or
+      camera-to-approach calibration.
 
 Maintenance evidence:
 
@@ -119,6 +127,9 @@ Maintenance evidence:
 - `npm run test:real-sample-prepare`: 2 passed.
 - `npm --workspace apps/web run test -- realSampleIntakePackage.test.ts app/api/real-sample-intake-package/route.test.ts realSampleSourceSchema.test.ts app/api/real-sample-source-schema/route.test.ts`:
   4 passed.
+- `curl ...CrossRoadInfoService/getCrossRoadInfoDetail?serviceKey=test...`:
+  returned `Unauthorized`, confirming a real ServiceKey is required for
+  경찰청 교차로기반정보서비스 live samples.
 - `npm --workspace apps/web run test -- seoulV2xSignalAdapter.test.ts realSampleDropIn.test.ts realSampleIntakePackage.test.ts demoEvidenceExport.test.ts finalLocalReadiness.test.ts app/api/real-sample-drop-in/route.test.ts app/api/real-sample-intake-package/route.test.ts app/api/demo-evidence-export/route.test.ts app/api/final-local-readiness/route.test.ts DashboardShell.test.tsx`:
   122 passed.
 - `npm --workspace apps/web run test -- authorizedCameraDetectorAdapter.test.ts realSampleIntakePackage.test.ts`:

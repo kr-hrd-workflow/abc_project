@@ -289,3 +289,27 @@ This CSV contains emergency-priority signal-system installation locations. It is
 useful as real infrastructure provenance for the emergency-priority problem, but
 it is not emergency vehicle telemetry and it does not provide signal phase or
 remaining-time samples.
+
+The public data portal technical guide for
+`경찰청_교차로기반정보서비스` was also downloaded to ignored local output:
+
+```text
+output/real-samples/public-data/police-intersection-base-info-service-guide-20230925.docx
+output/real-samples/public-data/police-intersection-base-info-service-guide-20230925.txt
+```
+
+This API is a candidate source for intersection and signal-plan metadata. The
+guide documents:
+
+- `getCrossRoadInfoList`, returning `REGION_CD`, `INT_NO`, `INT_NM`,
+  `X_COORD`, `Y_COORD`, and `UPD_DTIME`
+- `getCrossRoadInfoDetail`, returning `MAP_NO` and
+  `A_RING_*_PHASE_CONF_CD` / `B_RING_*_PHASE_CONF_CD`
+- phase direction codes where the first character indicates straight,
+  left-turn, or pedestrian movement, followed by entry/exit angles
+
+This data can strengthen signal-plan provenance, but it is not a camera frame,
+detector output, emergency vehicle telemetry, or operator-verified
+camera-to-approach calibration. A `serviceKey=test` request returned
+`Unauthorized`, so a real 공공데이터포털 ServiceKey or 활용신청 is required
+before collecting live response samples.
