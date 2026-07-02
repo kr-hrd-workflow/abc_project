@@ -77,6 +77,9 @@ Current maintenance slice:
 - [x] Fetch a broader key-backed T-DATA response, find a cardinal straight-signal
       row, and verify it can become a `LiveSignalSnapshot` without extending
       `live-input.v1` to diagonal phases.
+- [x] Add an authorized camera detector output adapter contract so a fresh
+      detector frame can become `live-input.v1` only when a matching
+      camera-to-approach calibration and signal snapshot are supplied.
 
 Maintenance evidence:
 
@@ -103,7 +106,11 @@ Maintenance evidence:
   19 passed.
 - `npm --workspace apps/web run test -- seoulV2xSignalAdapter.test.ts realSampleDropIn.test.ts realSampleIntakePackage.test.ts demoEvidenceExport.test.ts finalLocalReadiness.test.ts app/api/real-sample-drop-in/route.test.ts app/api/real-sample-intake-package/route.test.ts app/api/demo-evidence-export/route.test.ts app/api/final-local-readiness/route.test.ts DashboardShell.test.tsx`:
   122 passed.
-- `npm run test:web`: 63 files, 389 tests passed.
+- `npm --workspace apps/web run test -- authorizedCameraDetectorAdapter.test.ts realSampleIntakePackage.test.ts`:
+  4 passed.
+- `npm --workspace apps/web run test -- realSampleIntakePackage.test.ts app/api/real-sample-intake-package/route.test.ts app/api/final-local-readiness/route.test.ts finalLocalReadiness.test.ts`:
+  4 passed.
+- `npm run test:web`: 64 files, 392 tests passed.
 - `npm run build:web`: passed.
 - `git diff --check`: passed.
 
@@ -154,6 +161,12 @@ Real sample intake evidence:
   `buildAiHubVehicleLiveInputEnvelopeFromCalibration` only when an
   `aihub-camera-approach-calibration.v1` mapping matches both `locationId` and
   `cameraId`. This prevents the adapter from guessing an approach direction.
+- Fresh camera-side detector output now has a separate
+  `authorized-camera-detector-output.v1` adapter contract. It summarizes fresh
+  detector rows without guessing direction, and only builds `live-input.v1`
+  when a matching `camera-approach-calibration.v1` mapping supplies the
+  operator-verified approach direction. The adapter-created envelope is covered
+  by `validateRealSampleDropInEnvelope` when paired with a fresh signal snapshot.
 - `/api/real-sample-drop-in`, `/api/real-sample-intake-package`,
   `/api/demo-evidence-export`, and `/api/final-local-readiness` now report
   `signal_ready_waiting_for_fresh_camera_and_calibration`. This means the local

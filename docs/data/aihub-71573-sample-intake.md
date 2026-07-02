@@ -67,9 +67,13 @@ trusted source.
 
 ## Next Data Need
 
-The next required sample is signal timing, preferably from Seoul/T-DATA V2X
-signal remaining-time data or another authorized controller sample that can
-populate `live-input.v1.signalSnapshot`.
+The next required sample is a fresh authorized camera detector output plus a
+camera-to-approach calibration. Signal timing is now represented by a
+key-backed Seoul/T-DATA V2X cardinal sample, so the remaining live drop-in
+blocker is the camera side:
+
+- `authorized-camera-detector-output.v1` for a current frame and object counts
+- `camera-approach-calibration.v1` for the operator-verified direction mapping
 
 ## Seoul V2X Signal Timing Adapter
 
@@ -146,6 +150,37 @@ cameraFrames[].capturedAt must be within 30 seconds of receivedAt
 This keeps historical AI-Hub frames useful as authorized detector evidence, but
 prevents them from being mistaken for current live CCTV truth.
 
+## Authorized Camera Detector Adapter
+
+`apps/web/lib/authorizedCameraDetectorAdapter.ts` defines the next source
+contract for fresh camera-side input:
+
+```text
+authorized-camera-detector-output.v1
+```
+
+This source format supplies:
+
+- `intersectionId`
+- `cameraId`
+- `frameId`
+- `capturedAt`
+- detector rows with `objectId`, `classLabel`, `confidence`, and `count`
+
+The adapter intentionally does not accept direction from the detector output.
+It only builds a `live-input.v1` envelope when a matching
+`camera-approach-calibration.v1` mapping supplies the operator-verified
+approach direction for the exact `intersectionId` and `cameraId`.
+
+With a fresh detector output, matching calibration, and the T-DATA-backed
+`LiveSignalSnapshot`, the produced envelope is accepted by
+`validateRealSampleDropInEnvelope`. Without the calibration, conversion fails
+with:
+
+```text
+camera-to-approach calibration is required for <cameraId> at <intersectionId>
+```
+
 ## Readiness Contract
 
 The real-sample readiness APIs now report:
@@ -162,6 +197,8 @@ This means the project is no longer missing every authorized sample. It has:
 - a Seoul V2X remaining-time adapter based on the downloaded T-DATA service
   guide fields and key-backed live response samples, including a cardinal
   signal row that can populate `live-input.v1.signalSnapshot`
+- an authorized camera detector output adapter contract for fresh frame
+  detections once a matching camera approach calibration is supplied
 
 The remaining blockers are narrower:
 

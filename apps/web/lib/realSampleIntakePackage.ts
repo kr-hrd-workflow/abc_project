@@ -14,6 +14,13 @@ export type RealSampleIntakePackage = {
   offlineCliCommand: "npm run real-sample:check -- --offline <live-input-envelope.json>";
   noPersistence: true;
   sampleSlotIds: string[];
+  sourceAdapterContracts: {
+    schemaVersion:
+      | "authorized-camera-detector-output.v1"
+      | "camera-approach-calibration.v1";
+    purpose: string;
+    mapsTo: string;
+  }[];
   envelopeRequirements: {
     schemaVersion: "live-input.v1";
     requiredTopLevelFields: string[];
@@ -48,6 +55,20 @@ export function buildRealSampleIntakePackage({
       "npm run real-sample:check -- --offline <live-input-envelope.json>",
     noPersistence: true,
     sampleSlotIds: readiness.sampleSlots.map((slot) => slot.id),
+    sourceAdapterContracts: [
+      {
+        schemaVersion: "authorized-camera-detector-output.v1",
+        purpose:
+          "fresh detector output before camera-to-approach calibration is applied",
+        mapsTo: "cameraFrames[].detections"
+      },
+      {
+        schemaVersion: "camera-approach-calibration.v1",
+        purpose:
+          "operator-verified mapping from cameraId to approach direction",
+        mapsTo: "cameraFrames[].detections[].direction"
+      }
+    ],
     envelopeRequirements: {
       schemaVersion: "live-input.v1",
       requiredTopLevelFields: [
@@ -93,7 +114,7 @@ export function buildRealSampleIntakePackage({
       "collect authorized CCTV frame/video and signal timing sample",
       "validate the envelope shape against /api/live-input-submission-schema",
       "run npm run real-sample:check -- --offline <live-input-envelope.json> for server-free shape, provenance, and guardrail checks",
-      "normalize detector and signal data into a live-input.v1 envelope",
+      "normalize authorized-camera-detector-output.v1, camera-approach-calibration.v1, and signal data into a live-input.v1 envelope",
       "run npm run real-sample:check -- <live-input-envelope.json> for the same local drop-in validation path",
       "POST the envelope JSON to /api/real-sample-drop-in",
       "inspect accepted, replayStatus, recommendation, operatorWorkflowStatus, requiredInputs, and validationErrors"
