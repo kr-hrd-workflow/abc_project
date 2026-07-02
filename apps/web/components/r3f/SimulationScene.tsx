@@ -13,7 +13,7 @@ import { NightVehicleTreatment } from "./NightVehicleTreatment";
 import { RoadSurfaceLayer } from "./RoadSurfaceLayer";
 import { SceneEnvironment } from "./SceneEnvironment";
 import { ScenePostFX } from "./ScenePostFX";
-import { SignalLayer } from "./SignalLayer";
+import { deriveSignalLightingPreset, SignalLayer } from "./SignalLayer";
 import { StructuralGuideLayer } from "./StructuralGuideLayer";
 import { WheelSprayLayer } from "./WheelSprayLayer";
 import type {
@@ -33,28 +33,30 @@ function resolveViewpoint(explicit?: SimulationViewpoint): SimulationViewpoint {
     : "wide";
 }
 
-// Guide mode: ?guide=1 — suppresses plate, vehicles, PostFX and renders a flat
-// structural guide (road layout + lane markings + building massing) for use as
-// imagegen conditioning input. Normal scene is completely unaffected.
+// Guide mode: ?guide=1 — suppresses buildings, vehicles, PostFX and renders a
+// flat structural guide (road layout + lane markings + building massing) for use
+// as imagegen conditioning input. The default scene is unaffected.
 function resolveGuideMode(): boolean {
   if (typeof window === "undefined") return false;
   return new URLSearchParams(window.location.search).get("guide") === "1";
 }
 
-// Photobash view: ?photobash=1 — NO plate. Renders the textured asphalt road
-// (vector markings suppressed) + MarkingDecalLayer textured marking decals (which
-// reuse the same metric marking specs, so they are structurally aligned with the
-// lanes/vehicles) + live vehicles, signals, lighting, and post-FX. Gated exactly
-// like ?guide=1, so the default scene is completely unaffected.
-function resolvePhotobashMode(): boolean {
+// ?roadonly=1 — imagegen base tooling: strips buildings, vehicles, signals and
+// post-FX, leaving only the metric road + lane decals as a clean alignment
+// anchor for image generation. Kept for the facade/backdrop regen workflows.
+function resolveRoadOnlyMode(): boolean {
   if (typeof window === "undefined") return false;
-  return new URLSearchParams(window.location.search).get("photobash") === "1";
+  return new URLSearchParams(window.location.search).get("roadonly") === "1";
 }
 
+// The default scene IS the photobash composition (promoted 2026-07-02; the
+// former vector-marking stage5 branch and the ?photoreal plate branch were
+// retired — see apps/web/AGENTS.md locked decisions). ?photobash=1 is accepted
+// as a no-op alias for old bookmarks and render tooling.
 export function SimulationScene({
   sceneSnapshot,
   qualityPreset = getStage6QualityPreset("high"),
-  weather = "rain",
+  weather = "clear",
   timeOfDay = "day",
   viewpoint
 }: {
@@ -65,24 +67,13 @@ export function SimulationScene({
   viewpoint?: SimulationViewpoint;
 }) {
   const isNight = timeOfDay === "night";
-  // The CCTV viewpoint swaps to the low oblique camera + its matching plate so
-  // traffic signals read at a glance (signal-control purpose). "wide" keeps the
-  // default high operator view.
   const activeViewpoint = resolveViewpoint(viewpoint);
-  const cameraPreset = activeViewpoint === "cctv" ? "operatorCctv" : undefined;
+  const cameraPreset =
+    activeViewpoint === "cctv" ? "operatorCctv" : "operatorWide";
 
-  // Guide mode (?guide=1): suppress buildings, vehicles, PostFX; render flat
-  // structural guide. Camera stays aligned with the 3D scene camera via the
-  // same viewpoint/cameraPreset path so the guide matches the live scene frame.
-  const isGuide = resolveGuideMode();
-
-  // Photobash mode (?photobash=1): plate-free textured-asphalt road + decal
-  // markings + live vehicles/signals. See resolvePhotobashMode.
-  const isPhotobash = resolvePhotobashMode();
-
-  if (isGuide) {
-    // Use "nightAerialProof" for wide (= STAGE5_CAMERA, exact plate-camera match)
-    // and "operatorCctv" for cctv. No plate, no vehicles, no PostFX.
+  if (resolveGuideMode()) {
+    // "nightAerialProof" for wide (= STAGE5_CAMERA, exact guide-camera match)
+    // and "operatorCctv" for cctv. No vehicles, no PostFX.
     const guideCameraPreset =
       activeViewpoint === "cctv" ? "operatorCctv" : "nightAerialProof";
     return (
@@ -93,78 +84,50 @@ export function SimulationScene({
     );
   }
 
-  if (isPhotobash) {
-    // Plate-free photobash scene: textured asphalt road with its flat vector
-    // markings SUPPRESSED, and MarkingDecalLayer's textured marking decals on top
-    // (same metric specs → structurally aligned with the lanes the vehicles use).
-    // No PhotorealPlate. Vehicles, signals, lighting, and post-FX mirror the
-    // default scene.
-    //
-    // ?roadonly=1 strips buildings, vehicles, signals and post-FX, leaving only
-    // the metric road + lane decals. This is the clean base fed to imagegen for a
-    // photoreal "plate B": no building boxes in the input → imagegen invents real
-    // Gangnam buildings freely while the road geometry stays the alignment anchor.
-    const isRoadOnly =
-      typeof window !== "undefined" &&
-      new URLSearchParams(window.location.search).get("roadonly") === "1";
-    return (
-      <group name="photobash-scene">
-        <CameraRig preset="operatorWide" weather={weather} timeOfDay={timeOfDay} />
-        <LimitedOrbitControls />
-        <SceneLighting
-          isNight={isNight}
-          sceneSnapshot={sceneSnapshot}
-          qualityPreset={qualityPreset}
-          weather={weather}
-          timeOfDay={timeOfDay}
-          suppressAtmosphericScenery={isRoadOnly}
-        />
-        {!isRoadOnly && (
-          <BuildingLayerBoundary timeOfDay={timeOfDay} qualityPreset={qualityPreset} />
-        )}
-        <Suspense fallback={null}>
-          <RoadSurfaceLayer isNight={isNight} suppressVectorMarkings />
-        </Suspense>
-        <MarkingDecalLayer />
-        {!isRoadOnly && (
-          <DynamicVehicleLayerWithWeather
-            isNight={isNight}
-            timeOfDay={timeOfDay}
-            sceneSnapshot={sceneSnapshot}
-            qualityPreset={qualityPreset}
-            viewpoint="wide"
-          />
-        )}
-        {!isRoadOnly && <SignalLayer signals={sceneSnapshot.signals} />}
-        {!isRoadOnly && (
-          <SceneFinishing isNight={isNight} qualityPreset={qualityPreset} />
-        )}
-      </group>
-    );
-  }
-
+  const isRoadOnly = resolveRoadOnlyMode();
   return (
-    <group name={`smart-intersection-stage5-${sceneSnapshot.trafficDensityMode}`}>
-      <CameraRig weather={weather} timeOfDay={timeOfDay} preset={cameraPreset} />
+    <group name="photobash-scene">
+      <CameraRig
+        key={cameraPreset}
+        preset={cameraPreset}
+        weather={weather}
+        timeOfDay={timeOfDay}
+      />
+      <LimitedOrbitControls key={`orbit-${cameraPreset}`} />
       <SceneLighting
         isNight={isNight}
         sceneSnapshot={sceneSnapshot}
         qualityPreset={qualityPreset}
         weather={weather}
         timeOfDay={timeOfDay}
+        suppressAtmosphericScenery={isRoadOnly}
       />
-      <BuildingLayerBoundary timeOfDay={timeOfDay} qualityPreset={qualityPreset} />
-      <StaticRoadLayerWithDetails isNight={isNight} qualityPreset={qualityPreset} />
-      <DynamicVehicleLayerWithWeather
-        isNight={isNight}
-        timeOfDay={timeOfDay}
-        sceneSnapshot={sceneSnapshot}
-        qualityPreset={qualityPreset}
-        viewpoint={activeViewpoint}
-      />
-      <DynamicPedestrianLayer sceneSnapshot={sceneSnapshot} />
-      <SignalLayer signals={sceneSnapshot.signals} />
-      <SceneFinishing isNight={isNight} qualityPreset={qualityPreset} />
+      {!isRoadOnly && (
+        <BuildingLayerBoundary timeOfDay={timeOfDay} qualityPreset={qualityPreset} />
+      )}
+      <Suspense fallback={null}>
+        <RoadSurfaceLayer isNight={isNight} suppressVectorMarkings />
+      </Suspense>
+      <MarkingDecalLayer />
+      {!isRoadOnly && (
+        <DynamicVehicleLayerWithWeather
+          isNight={isNight}
+          timeOfDay={timeOfDay}
+          sceneSnapshot={sceneSnapshot}
+          qualityPreset={qualityPreset}
+          viewpoint={activeViewpoint}
+        />
+      )}
+      {!isRoadOnly && <DynamicPedestrianLayer sceneSnapshot={sceneSnapshot} />}
+      {!isRoadOnly && (
+        <SignalLayer
+          signals={sceneSnapshot.signals}
+          lightingPreset={deriveSignalLightingPreset(weather, timeOfDay)}
+        />
+      )}
+      {!isRoadOnly && (
+        <SceneFinishing isNight={isNight} qualityPreset={qualityPreset} />
+      )}
     </group>
   );
 }
@@ -239,26 +202,6 @@ function BuildingLayerBoundary({
 }
 
 BuildingLayerBoundary.displayName = "BuildingLayer";
-
-function StaticRoadLayerWithDetails({
-  isNight
-}: {
-  isNight: boolean;
-  qualityPreset: Stage6QualityPreset;
-}) {
-  // R1: Render the polished production road from geometry so SUMO vehicles
-  // always sit on metrically-accurate lane lines. The plate continues to supply
-  // buildings/skyline; the rendered road sits on top and covers the central road
-  // region. Far-end overlap with plate buildings is the lead's follow-up.
-  // Wrapped in Suspense because RoadSurfaceLayer uses useTexture (asphalt.webp).
-  return (
-    <Suspense fallback={null}>
-      <RoadSurfaceLayer isNight={isNight} />
-    </Suspense>
-  );
-}
-
-StaticRoadLayerWithDetails.displayName = "StaticRoadLayer";
 
 function DynamicVehicleLayerWithWeather({
   isNight,

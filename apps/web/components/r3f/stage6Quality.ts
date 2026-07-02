@@ -123,7 +123,7 @@ function getStage6WeatherPreset(
     return key;
   }
 
-  return "rain";
+  return "clear";
 }
 
 function getStage6TimeOfDay(input: string | null | undefined): Stage6TimeOfDay {

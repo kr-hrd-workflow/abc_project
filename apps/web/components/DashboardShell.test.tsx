@@ -79,10 +79,21 @@ vi.mock("./r3f/WeatherAndAtmosphere", () => ({
 vi.mock("./r3f/RoadSurfaceLayer", () => ({
   RoadSurfaceLayer: () => null
 }));
+// MarkingDecalLayer loads marking textures via useTexture (drei hook), which
+// needs a real R3F Canvas context. Stub it for the same reason as RoadSurfaceLayer.
+vi.mock("./r3f/MarkingDecalLayer", () => ({
+  MarkingDecalLayer: () => null
+}));
 // BuildingLayer (P2b) loads facade textures via useTexture (drei hook), which
 // also requires a real R3F Canvas context. Stub it for the same reason.
 vi.mock("./r3f/BuildingLayer", () => ({
   BuildingLayer: () => null
+}));
+// LimitedOrbitControls wraps drei's OrbitControls, which calls useThree and thus
+// requires a real R3F Canvas context. Stub it — this suite renders SimulationScene
+// without a Canvas to assert CameraRig target application.
+vi.mock("./r3f/LimitedOrbitControls", () => ({
+  LimitedOrbitControls: () => null
 }));
 vi.mock("../lib/api", () => dashboardRouteApiMock);
 

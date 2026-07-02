@@ -345,9 +345,11 @@ describe("SimulationCanvas Stage 5 telemetry", () => {
 
     expect(getChildDisplayNames(scene)).toEqual([
       "Stage3CameraRig",
+      "LimitedOrbitControls", // orbit target re-seats on viewpoint change
       "SceneEnvironment",   // unified IBL + light rig (day: Sky + LightingRig + WeatherAndAtmosphere; night: neon IBL + lights)
       "BuildingLayer",      // P2: 3D photoreal buildings + sky — no plate layer is mounted
-      "StaticRoadLayer",
+      "react.suspense",     // Suspense-wrapped RoadSurfaceLayer (asphalt texture)
+      "MarkingDecalLayer",  // metric marking decals (photobash default) replace flat vector markings
       "DynamicVehicleLayer",
       "DynamicPedestrianLayer",
       "SignalLayer",
