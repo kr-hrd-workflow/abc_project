@@ -783,6 +783,9 @@ function DemoEvidenceSummaryCard({
           <a href="/api/live-input-submission-schema">
             Submission Schema
           </a>
+          <a href="/api/real-sample-source-schema">
+            Source Schemas
+          </a>
           <a href="/api/llm-explanation-contract">
             LLM Contract
           </a>
@@ -794,7 +797,7 @@ function DemoEvidenceSummaryCard({
       <dl>
         <div>
           <dt>Health</dt>
-          <dd>Health 15/15</dd>
+          <dd>Health 16/16</dd>
         </div>
         <div>
           <dt>Benchmark</dt>

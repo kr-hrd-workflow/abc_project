@@ -2400,7 +2400,7 @@ describe("DashboardShell", () => {
     });
 
     expect(within(card).getByText("Demo Evidence")).toBeTruthy();
-    expect(within(card).getByText("Health 15/15")).toBeTruthy();
+    expect(within(card).getByText("Health 16/16")).toBeTruthy();
     expect(within(card).getByText("5,000/5,000 benchmark")).toBeTruthy();
     expect(within(card).getByText("10,000/10,000 live-input JSON")).toBeTruthy();
     expect(within(card).getByText("6 guarded / 0 misses")).toBeTruthy();
@@ -2425,6 +2425,9 @@ describe("DashboardShell", () => {
     expect(
       within(card).getByRole("link", { name: "Submission Schema" })
     ).toHaveProperty("pathname", "/api/live-input-submission-schema");
+    expect(
+      within(card).getByRole("link", { name: "Source Schemas" })
+    ).toHaveProperty("pathname", "/api/real-sample-source-schema");
     expect(within(card).getByRole("link", { name: "LLM Contract" })).toHaveProperty(
       "pathname",
       "/api/llm-explanation-contract"

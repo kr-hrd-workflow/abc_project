@@ -129,6 +129,8 @@ Maintenance evidence:
   2 passed.
 - `npm --workspace apps/web run test -- finalLocalReadiness.test.ts app/api/final-local-readiness/route.test.ts`:
   2 passed.
+- `npm --workspace apps/web run test -- DashboardShell.test.tsx -t "downloadable demo evidence"`:
+  1 passed, 89 skipped.
 - `npm run test:web`: 66 files, 394 tests passed.
 - `npm run build:web`: passed.
 - `git diff --check`: passed.
