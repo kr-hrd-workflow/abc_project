@@ -214,6 +214,18 @@ npm run real-sample:check -- --offline <live-input-envelope.json>
 npm run real-sample:check -- <live-input-envelope.json>
 ```
 
+The source-side JSON contracts are exposed without sample data at:
+
+```text
+/api/real-sample-source-schema
+```
+
+This endpoint describes the accepted shapes for
+`authorized-camera-detector-output.v1`, `camera-approach-calibration.v1`,
+Seoul V2X raw responses, and `signal-snapshot-input.v1`. It does not replace
+`real-sample:check`; freshness, provenance, and policy guardrails still run
+through the drop-in validation path.
+
 ## Readiness Contract
 
 The real-sample readiness APIs now report:
@@ -232,6 +244,8 @@ This means the project is no longer missing every authorized sample. It has:
   signal row that can populate `live-input.v1.signalSnapshot`
 - an authorized camera detector output adapter contract for fresh frame
   detections once a matching camera approach calibration is supplied
+- a source schema endpoint for the detector output, calibration, Seoul V2X raw
+  response, and signal snapshot files used by the local builders
 
 The remaining blockers are narrower:
 

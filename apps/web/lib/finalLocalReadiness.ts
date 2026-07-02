@@ -10,7 +10,7 @@ export type FinalLocalReadinessExport = {
   decisionBoundary: "operator_decision_support_not_signal_control";
   adapterBoundary: "live-input.v1";
   healthCheck: {
-    expectedSummary: "15/15 checks passed";
+    expectedSummary: "16/16 checks passed";
     command: "npm run demo:health";
   };
   realSampleCheck: {
@@ -50,7 +50,7 @@ export function buildFinalLocalReadinessExport({
     decisionBoundary: scorecardContract.decisionBoundary,
     adapterBoundary: demoEvidence.realSampleReadiness.adapterBoundary,
     healthCheck: {
-      expectedSummary: "15/15 checks passed",
+      expectedSummary: "16/16 checks passed",
       command: "npm run demo:health"
     },
     realSampleCheck: {
@@ -65,6 +65,7 @@ export function buildFinalLocalReadinessExport({
       demoEvidence.operatorWorkflow.contractEndpoint,
       demoEvidence.operatorWorkflow.llmExplanationContractEndpoint,
       "/api/live-input-submission-schema",
+      "/api/real-sample-source-schema",
       "/api/real-sample-intake-package",
       demoEvidence.realSampleReadiness.dropInEndpoint,
       "/api/live-input-fixture",

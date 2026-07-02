@@ -53,7 +53,7 @@ Do not claim:
    API: all tests pass
    Web: all tests pass
    Build: compiled successfully
-   Demo health check: 15/15 checks passed
+   Demo health check: 16/16 checks passed
    ```
 
 3. Open the dashboard with `localhost`, not `127.0.0.1`.
@@ -319,6 +319,7 @@ http://localhost:3000/api/demo-evidence-export
 http://localhost:3000/api/final-local-readiness
 http://localhost:3000/api/real-sample-intake-package
 http://localhost:3000/api/live-input-submission-schema
+http://localhost:3000/api/real-sample-source-schema
 http://localhost:3000/api/llm-explanation-contract
 http://localhost:3000/api/policy-scorecard-contract
 http://localhost:3000/api/real-sample-drop-in
@@ -332,7 +333,7 @@ status coverage.
 Dashboard shortcut:
 
 - Show the `Demo Evidence` card inside the report panel.
-- Point out `Health 15/15`, `5,000/5,000 benchmark`,
+- Point out `Health 16/16`, `5,000/5,000 benchmark`,
   `10,000/10,000 live-input JSON`, `6 guarded / 0 misses`, and
   `6 scorecard policies`.
 - Point out `source adapter replay ready`.
@@ -388,6 +389,9 @@ Dashboard shortcut:
 - Open `/api/live-input-submission-schema` when the sample provider needs the
   machine-readable replay-ready JSON Schema before POSTing an authorized
   envelope.
+- Open `/api/real-sample-source-schema` when the sample provider needs the
+  source-side JSON Schema for detector output, camera calibration, Seoul V2X
+  raw response, and signal snapshot builder inputs.
 - Open `/api/policy-scorecard-contract` when you need to show the inspectable
   local contract directly: policy names, required evidence fields, supported
   operator statuses, decision order, scoring constants, and the

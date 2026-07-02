@@ -87,6 +87,8 @@ Current maintenance slice:
 - [x] Add a local T-DATA signal snapshot builder that converts a Seoul V2X raw
       response file into `LiveSignalSnapshot` only when operator/source
       calibration supplies `nextPhase`, `controllerMode`, and `manualOverride`.
+- [x] Add a real-sample source schema endpoint so sample providers can inspect
+      the source JSON contracts before building a `live-input.v1` envelope.
 
 Maintenance evidence:
 
@@ -123,7 +125,11 @@ Maintenance evidence:
 - `node --test scripts/build-seoul-v2x-signal-snapshot.test.mjs scripts/package-scripts.test.mjs`:
   5 passed.
 - `npm run test:real-sample-signal-build`: 3 passed.
-- `npm run test:web`: 64 files, 392 tests passed.
+- `npm --workspace apps/web run test -- realSampleSourceSchema.test.ts app/api/real-sample-source-schema/route.test.ts`:
+  2 passed.
+- `npm --workspace apps/web run test -- finalLocalReadiness.test.ts app/api/final-local-readiness/route.test.ts`:
+  2 passed.
+- `npm run test:web`: 66 files, 394 tests passed.
 - `npm run build:web`: passed.
 - `git diff --check`: passed.
 
@@ -187,6 +193,10 @@ Real sample intake evidence:
 - `npm run real-sample:build-signal-snapshot -- <seoul-v2x-response.json> <signal-snapshot.json> <nextPhase> <controllerMode> <manualOverride>`
   now builds the `LiveSignalSnapshot` input from a Seoul V2X raw response file
   without inventing source fields that T-DATA does not prove.
+- `/api/real-sample-source-schema` now exposes source JSON schema contracts for
+  detector output, camera approach calibration, Seoul V2X raw response, and
+  signal snapshot files. `npm run demo:health` now checks this endpoint, so the
+  presenter-facing health count is `16/16`.
 - `/api/real-sample-drop-in`, `/api/real-sample-intake-package`,
   `/api/demo-evidence-export`, and `/api/final-local-readiness` now report
   `signal_ready_waiting_for_fresh_camera_and_calibration`. This means the local

@@ -159,12 +159,13 @@ export async function runDemoHealthCheck({
             "signal_ready_waiting_for_fresh_camera_and_calibration" ||
           payload.decisionBoundary !== "operator_decision_support_not_signal_control" ||
           payload.adapterBoundary !== "live-input.v1" ||
-          payload.healthCheck?.expectedSummary !== "15/15 checks passed" ||
+          payload.healthCheck?.expectedSummary !== "16/16 checks passed" ||
           !Array.isArray(payload.evidenceEndpoints) ||
           !payload.evidenceEndpoints.includes("/api/demo-evidence-export") ||
           !payload.evidenceEndpoints.includes("/api/policy-scorecard-contract") ||
           !payload.evidenceEndpoints.includes("/api/llm-explanation-contract") ||
           !payload.evidenceEndpoints.includes("/api/live-input-submission-schema") ||
+          !payload.evidenceEndpoints.includes("/api/real-sample-source-schema") ||
           !payload.evidenceEndpoints.includes("/api/real-sample-drop-in") ||
           payload.localEvidence?.syntheticBenchmark !== "5000/5000" ||
           payload.localEvidence?.liveInputJson !== "10000/10000" ||
@@ -227,6 +228,7 @@ export async function runDemoHealthCheck({
           payload.adapterBoundary !== "live-input.v1" ||
           payload.dropInEndpoint !== "/api/real-sample-drop-in" ||
           payload.schemaEndpoint !== "/api/live-input-submission-schema" ||
+          payload.sourceSchemaEndpoint !== "/api/real-sample-source-schema" ||
           payload.finalReadinessEndpoint !== "/api/final-local-readiness" ||
           payload.noPersistence !== true ||
           !Array.isArray(payload.sampleSlotIds) ||
@@ -275,6 +277,42 @@ export async function runDemoHealthCheck({
           throw new Error("unexpected live-input submission schema payload");
         }
         return "live-input.v1 submission schema ready";
+      }
+    )
+  );
+
+  checks.push(
+    await runCheck(
+      "real sample source schema",
+      `${normalizedWebBaseUrl}/api/real-sample-source-schema`,
+      fetchImpl,
+      timeoutMs,
+      async (response) => {
+        const payload = await expectJson(response);
+        if (
+          payload.source !== "real_sample_source_schema" ||
+          payload.schemaVersion !== "real-sample-source-schema.v1" ||
+          payload.adapterBoundary !== "live-input.v1" ||
+          typeof payload.buildCommands?.signalSnapshot !== "string" ||
+          !payload.buildCommands.signalSnapshot.includes(
+            "real-sample:build-signal-snapshot"
+          ) ||
+          typeof payload.buildCommands?.cameraEnvelope !== "string" ||
+          !payload.buildCommands.cameraEnvelope.includes(
+            "real-sample:build-camera-envelope"
+          ) ||
+          !payload.sourceSchemas?.["authorized-camera-detector-output.v1"] ||
+          !payload.sourceSchemas?.["camera-approach-calibration.v1"] ||
+          !payload.sourceSchemas?.["seoul-v2x-signal-response.v1"] ||
+          !payload.sourceSchemas?.["signal-snapshot-input.v1"] ||
+          !Array.isArray(payload.guardrailNotes) ||
+          !payload.guardrailNotes.includes(
+            "source schemas describe file shape only; freshness, provenance, and policy guardrails still run through real-sample:check"
+          )
+        ) {
+          throw new Error("unexpected real sample source schema payload");
+        }
+        return "real-sample source schema ready";
       }
     )
   );

@@ -17,7 +17,7 @@ describe("final local readiness export", () => {
       decisionBoundary: "operator_decision_support_not_signal_control",
       adapterBoundary: "live-input.v1",
       healthCheck: {
-        expectedSummary: "15/15 checks passed",
+        expectedSummary: "16/16 checks passed",
         command: "npm run demo:health"
       },
       realSampleCheck: {
@@ -32,6 +32,7 @@ describe("final local readiness export", () => {
         "/api/policy-scorecard-contract",
         "/api/llm-explanation-contract",
         "/api/live-input-submission-schema",
+        "/api/real-sample-source-schema",
         "/api/real-sample-intake-package",
         "/api/real-sample-drop-in",
         "/api/live-input-fixture",

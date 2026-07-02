@@ -16,7 +16,7 @@ describe("final local readiness route", () => {
       decisionBoundary: "operator_decision_support_not_signal_control",
       adapterBoundary: "live-input.v1"
     });
-    expect(body.healthCheck.expectedSummary).toBe("15/15 checks passed");
+    expect(body.healthCheck.expectedSummary).toBe("16/16 checks passed");
     expect(body.realSampleCheck).toEqual({
       command: "npm run real-sample:check -- <live-input-envelope.json>",
       offlineCommand:
@@ -28,6 +28,7 @@ describe("final local readiness route", () => {
     expect(body.evidenceEndpoints).toContain("/api/policy-scorecard-contract");
     expect(body.evidenceEndpoints).toContain("/api/llm-explanation-contract");
     expect(body.evidenceEndpoints).toContain("/api/live-input-submission-schema");
+    expect(body.evidenceEndpoints).toContain("/api/real-sample-source-schema");
     expect(body.evidenceEndpoints).toContain("/api/real-sample-drop-in");
     expect(body.localEvidence.scorecardPolicies).toBe(6);
     expect(body.blockers).toEqual([

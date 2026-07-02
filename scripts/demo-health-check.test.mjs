@@ -159,12 +159,13 @@ describe("demo health check", () => {
           realSampleStatus: "signal_ready_waiting_for_fresh_camera_and_calibration",
           decisionBoundary: "operator_decision_support_not_signal_control",
           adapterBoundary: "live-input.v1",
-          healthCheck: { expectedSummary: "15/15 checks passed" },
+          healthCheck: { expectedSummary: "16/16 checks passed" },
           evidenceEndpoints: [
             "/api/demo-evidence-export",
             "/api/policy-scorecard-contract",
             "/api/llm-explanation-contract",
             "/api/live-input-submission-schema",
+            "/api/real-sample-source-schema",
             "/api/real-sample-drop-in"
           ],
           localEvidence: {
@@ -205,6 +206,7 @@ describe("demo health check", () => {
           adapterBoundary: "live-input.v1",
           dropInEndpoint: "/api/real-sample-drop-in",
           schemaEndpoint: "/api/live-input-submission-schema",
+          sourceSchemaEndpoint: "/api/real-sample-source-schema",
           finalReadinessEndpoint: "/api/final-local-readiness",
           noPersistence: true,
           sampleSlotIds: [
@@ -244,6 +246,26 @@ describe("demo health check", () => {
           },
           guardrailNotes: [
             "schema requires a signal snapshot because /api/real-sample-drop-in validates replay-ready submissions"
+          ]
+        });
+      }
+      if (url === "http://web.local/api/real-sample-source-schema") {
+        return jsonResponse(200, {
+          source: "real_sample_source_schema",
+          schemaVersion: "real-sample-source-schema.v1",
+          adapterBoundary: "live-input.v1",
+          buildCommands: {
+            signalSnapshot: "npm run real-sample:build-signal-snapshot -- ...",
+            cameraEnvelope: "npm run real-sample:build-camera-envelope -- ..."
+          },
+          sourceSchemas: {
+            "authorized-camera-detector-output.v1": {},
+            "camera-approach-calibration.v1": {},
+            "seoul-v2x-signal-response.v1": {},
+            "signal-snapshot-input.v1": {}
+          },
+          guardrailNotes: [
+            "source schemas describe file shape only; freshness, provenance, and policy guardrails still run through real-sample:check"
           ]
         });
       }
@@ -311,7 +333,7 @@ describe("demo health check", () => {
     });
 
     assert.equal(result.passed, true);
-    assert.equal(result.checks.length, 15);
+    assert.equal(result.checks.length, 16);
     assert.deepEqual(
       result.checks.map((check) => check.name),
       [
@@ -324,6 +346,7 @@ describe("demo health check", () => {
         "llm explanation contract",
         "real sample intake package",
         "live input submission schema",
+        "real sample source schema",
         "real sample drop-in readiness",
         "real sample drop-in validation",
         "synthetic benchmark export",
@@ -332,7 +355,7 @@ describe("demo health check", () => {
         "openai readiness"
       ]
     );
-    assert.equal(calls.length, 15);
+    assert.equal(calls.length, 16);
     const validationCallIndex = calls.indexOf("http://web.local/api/real-sample-drop-in");
     assert.ok(validationCallIndex >= 0);
   });
@@ -429,12 +452,13 @@ describe("demo health check", () => {
           realSampleStatus: "signal_ready_waiting_for_fresh_camera_and_calibration",
           decisionBoundary: "operator_decision_support_not_signal_control",
           adapterBoundary: "live-input.v1",
-          healthCheck: { expectedSummary: "15/15 checks passed" },
+          healthCheck: { expectedSummary: "16/16 checks passed" },
           evidenceEndpoints: [
             "/api/demo-evidence-export",
             "/api/policy-scorecard-contract",
             "/api/llm-explanation-contract",
             "/api/live-input-submission-schema",
+            "/api/real-sample-source-schema",
             "/api/real-sample-drop-in"
           ],
           localEvidence: {
@@ -475,6 +499,7 @@ describe("demo health check", () => {
           adapterBoundary: "live-input.v1",
           dropInEndpoint: "/api/real-sample-drop-in",
           schemaEndpoint: "/api/live-input-submission-schema",
+          sourceSchemaEndpoint: "/api/real-sample-source-schema",
           finalReadinessEndpoint: "/api/final-local-readiness",
           noPersistence: true,
           sampleSlotIds: [
@@ -514,6 +539,26 @@ describe("demo health check", () => {
           },
           guardrailNotes: [
             "schema requires a signal snapshot because /api/real-sample-drop-in validates replay-ready submissions"
+          ]
+        });
+      }
+      if (url.endsWith("/api/real-sample-source-schema")) {
+        return jsonResponse(200, {
+          source: "real_sample_source_schema",
+          schemaVersion: "real-sample-source-schema.v1",
+          adapterBoundary: "live-input.v1",
+          buildCommands: {
+            signalSnapshot: "npm run real-sample:build-signal-snapshot -- ...",
+            cameraEnvelope: "npm run real-sample:build-camera-envelope -- ..."
+          },
+          sourceSchemas: {
+            "authorized-camera-detector-output.v1": {},
+            "camera-approach-calibration.v1": {},
+            "seoul-v2x-signal-response.v1": {},
+            "signal-snapshot-input.v1": {}
+          },
+          guardrailNotes: [
+            "source schemas describe file shape only; freshness, provenance, and policy guardrails still run through real-sample:check"
           ]
         });
       }
@@ -587,7 +632,7 @@ describe("demo health check", () => {
       result.checks.find((check) => check.name === "openai readiness")?.detail ?? "",
       /restart the API/i
     );
-    assert.match(result.summary, /11\/15 checks passed/);
+    assert.match(result.summary, /12\/16 checks passed/);
     assert.doesNotMatch(JSON.stringify(result), new RegExp(["sk", "proj"].join("-")));
   });
 });

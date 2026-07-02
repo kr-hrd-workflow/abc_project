@@ -9,6 +9,7 @@ export type RealSampleIntakePackage = {
   dropInEndpoint: "/api/real-sample-drop-in";
   readinessEndpoint: "/api/real-sample-drop-in";
   schemaEndpoint: "/api/live-input-submission-schema";
+  sourceSchemaEndpoint: "/api/real-sample-source-schema";
   finalReadinessEndpoint: "/api/final-local-readiness";
   localCliCommand: "npm run real-sample:check -- <live-input-envelope.json>";
   offlineCliCommand: "npm run real-sample:check -- --offline <live-input-envelope.json>";
@@ -50,6 +51,7 @@ export function buildRealSampleIntakePackage({
     dropInEndpoint: readiness.endpoint,
     readinessEndpoint: readiness.endpoint,
     schemaEndpoint: "/api/live-input-submission-schema",
+    sourceSchemaEndpoint: "/api/real-sample-source-schema",
     finalReadinessEndpoint: "/api/final-local-readiness",
     localCliCommand:
       "npm run real-sample:check -- <live-input-envelope.json>",

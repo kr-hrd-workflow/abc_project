@@ -15,6 +15,7 @@ describe("real sample intake package route", () => {
       adapterBoundary: "live-input.v1",
       dropInEndpoint: "/api/real-sample-drop-in",
       schemaEndpoint: "/api/live-input-submission-schema",
+      sourceSchemaEndpoint: "/api/real-sample-source-schema",
       finalReadinessEndpoint: "/api/final-local-readiness",
       localCliCommand:
         "npm run real-sample:check -- <live-input-envelope.json>",
