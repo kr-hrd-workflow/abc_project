@@ -11,7 +11,7 @@ const STALE_SAMPLE_THRESHOLD_MS = 30_000;
 export type RealSampleDropInReadiness = {
   source: "real_sample_drop_in_readiness";
   schemaVersion: "real-sample-drop-in.v1";
-  status: "adapter_ready_waiting_for_live_signal_response";
+  status: "signal_ready_waiting_for_fresh_camera_and_calibration";
   adapterBoundary: "live-input.v1";
   endpoint: "/api/real-sample-drop-in";
   sampleSlots: {
@@ -24,7 +24,7 @@ export type RealSampleDropInReadiness = {
     mapsTo: string;
     currentState:
       | "authorized_historical_sample_available"
-      | "adapter_ready_live_key_required"
+      | "key_backed_cardinal_sample_ready"
       | "label_adapter_ready";
   }[];
   validationFlow: string[];
@@ -61,7 +61,7 @@ export function buildRealSampleDropInReadiness(): RealSampleDropInReadiness {
   return {
     source: "real_sample_drop_in_readiness",
     schemaVersion: "real-sample-drop-in.v1",
-    status: "adapter_ready_waiting_for_live_signal_response",
+    status: "signal_ready_waiting_for_fresh_camera_and_calibration",
     adapterBoundary: "live-input.v1",
     endpoint: "/api/real-sample-drop-in",
     sampleSlots: [
@@ -77,7 +77,7 @@ export function buildRealSampleDropInReadiness(): RealSampleDropInReadiness {
         required: true,
         acceptedFormats: ["application/json"],
         mapsTo: "signalSnapshot",
-        currentState: "adapter_ready_live_key_required"
+        currentState: "key_backed_cardinal_sample_ready"
       },
       {
         id: "detector_output",
@@ -96,7 +96,6 @@ export function buildRealSampleDropInReadiness(): RealSampleDropInReadiness {
       "refresh demo evidence export"
     ],
     blockers: [
-      "captured T-DATA signal phase uses diagonal movement fields that need cardinal mapping or 8-direction phase support",
       "AI-Hub sample frame is historical and requires fresh camera evidence before live drop-in acceptance",
       "camera-to-approach direction calibration is required before AI-Hub labels can become live-input.v1 detections"
     ]

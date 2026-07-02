@@ -111,23 +111,27 @@ and stored outside git:
 ```text
 output/real-samples/public-data/seoul-v2x-signal-live-sample-10120.json
 output/real-samples/public-data/seoul-v2x-signal-live-sample-10120-provenance.json
+output/real-samples/public-data/seoul-v2x-signal-live-broad-sample-10120.json
+output/real-samples/public-data/seoul-v2x-signal-live-broad-sample-10120-provenance.json
+output/real-samples/public-data/seoul-v2x-signal-live-cardinal-sample-10120.json
+output/real-samples/public-data/seoul-v2x-signal-live-cardinal-sample-10120-provenance.json
 ```
 
 The API key is not stored. The captured response uses an array of messages, so
 `selectLatestSeoulV2xSignalMessage` picks the newest message by `trsmUtcTime`.
 
-Current limitation: the captured `itstId=23665` sample contains diagonal
-straight-signal fields such as `seStsgRmdrCs` and `nwStsgRmdrCs`, while
-`live-input.v1` currently models only cardinal phases:
+The first `itstId=23665` sample contained diagonal straight-signal fields such
+as `seStsgRmdrCs` and `nwStsgRmdrCs`, while `live-input.v1` currently models
+only cardinal phases:
 
 ```text
 north_priority, east_priority, south_priority, west_priority, normal_cycle
 ```
 
-The adapter therefore accepts and summarizes the key-backed response, but keeps
-it blocked from `LiveSignalSnapshot` creation until a cardinal straight-signal
-candidate is present or the project intentionally extends the phase model to
-8-direction signal phases.
+A broader key-backed request without fixed `itstId` returned 100 rows, including
+82 rows with cardinal straight-signal fields. One cardinal row was saved as
+`seoul-v2x-signal-live-cardinal-sample-10120.json`. The adapter can now build a
+`LiveSignalSnapshot` from this real cardinal sample.
 
 ## Freshness Guardrail
 
@@ -147,7 +151,7 @@ prevents them from being mistaken for current live CCTV truth.
 The real-sample readiness APIs now report:
 
 ```text
-status=adapter_ready_waiting_for_live_signal_response
+status=signal_ready_waiting_for_fresh_camera_and_calibration
 ```
 
 This means the project is no longer missing every authorized sample. It has:
@@ -156,13 +160,13 @@ This means the project is no longer missing every authorized sample. It has:
 - a local AI-Hub label adapter for evidence summaries and guarded
   `live-input.v1` conversion
 - a Seoul V2X remaining-time adapter based on the downloaded T-DATA service
-  guide fields and a key-backed live response sample
+  guide fields and key-backed live response samples, including a cardinal
+  signal row that can populate `live-input.v1.signalSnapshot`
 
 The remaining blockers are narrower:
 
-- cardinal or intentionally modeled 8-direction signal phase compatibility
 - `fresh_camera_frame_required_for_live_drop_in`
-- camera-to-approach direction calibration for AI-Hub detector labels
+- `camera_approach_calibration_required`
 
 ## Related Public Data Sample
 

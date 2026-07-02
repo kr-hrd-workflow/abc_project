@@ -61,7 +61,7 @@ describe("demo evidence export", () => {
       requiredEvidence: POLICY_SCORECARD_REQUIRED_EVIDENCE
     });
     expect(artifact.realSampleReadiness).toEqual({
-      status: "adapter_ready_waiting_for_live_signal_response",
+      status: "signal_ready_waiting_for_fresh_camera_and_calibration",
       adapterBoundary: "live-input.v1",
       fixtureReplayStatus: "replay_input_ready",
       dropInEndpoint: "/api/real-sample-drop-in",
@@ -70,11 +70,14 @@ describe("demo evidence export", () => {
         blocker: "fresh_camera_frame_required_for_live_drop_in"
       },
       signal: {
-        status: "key_backed_live_sample_captured",
-        blocker: "signal_phase_model_compatibility_required"
+        status: "key_backed_cardinal_sample_ready",
+        blocker: null
+      },
+      calibration: {
+        status: "mapping_required",
+        blocker: "camera_approach_calibration_required"
       },
       nextRequiredInputs: [
-        "cardinal signal phase sample or intentional 8-direction signal phase model support",
         "fresh camera frame captured within 30 seconds of receivedAt",
         "camera-to-approach direction calibration for detector labels"
       ]

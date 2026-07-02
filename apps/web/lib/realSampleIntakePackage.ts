@@ -4,7 +4,7 @@ export type RealSampleIntakePackage = {
   source: "real_sample_intake_package";
   schemaVersion: "real-sample-intake-package.v1";
   generatedAt: string;
-  status: "adapter_ready_waiting_for_live_signal_response";
+  status: "signal_ready_waiting_for_fresh_camera_and_calibration";
   adapterBoundary: "live-input.v1";
   dropInEndpoint: "/api/real-sample-drop-in";
   readinessEndpoint: "/api/real-sample-drop-in";

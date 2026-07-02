@@ -27,7 +27,7 @@ describe("demo evidence export route", () => {
       "manual_review_required"
     ]);
     expect(body.realSampleReadiness).toMatchObject({
-      status: "adapter_ready_waiting_for_live_signal_response",
+      status: "signal_ready_waiting_for_fresh_camera_and_calibration",
       adapterBoundary: "live-input.v1",
       fixtureReplayStatus: "replay_input_ready",
       dropInEndpoint: "/api/real-sample-drop-in"

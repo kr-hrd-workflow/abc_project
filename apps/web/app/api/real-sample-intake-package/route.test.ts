@@ -11,7 +11,7 @@ describe("real sample intake package route", () => {
     expect(body).toMatchObject({
       source: "real_sample_intake_package",
       schemaVersion: "real-sample-intake-package.v1",
-      status: "adapter_ready_waiting_for_live_signal_response",
+      status: "signal_ready_waiting_for_fresh_camera_and_calibration",
       adapterBoundary: "live-input.v1",
       dropInEndpoint: "/api/real-sample-drop-in",
       schemaEndpoint: "/api/live-input-submission-schema",

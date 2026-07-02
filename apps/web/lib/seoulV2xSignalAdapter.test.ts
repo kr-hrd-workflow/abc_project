@@ -60,6 +60,22 @@ const SEOUL_V2X_LIVE_API_RESPONSE = [
   }
 ];
 
+const SEOUL_V2X_CARDINAL_LIVE_SAMPLE = {
+  dataId: "SPAT-CIB1000020300-1782956865-28319",
+  trsmUtcTime: 1782962312146,
+  trsmYear: "2026",
+  trsmMt: "07",
+  trsmDy: 2,
+  trsmTm: "121832",
+  trsmMs: "146",
+  itstId: "4765",
+  eqmnId: "CIB1000020300",
+  ntStsgRmdrCs: null,
+  etStsgRmdrCs: 1120,
+  stStsgRmdrCs: null,
+  wtStsgRmdrCs: 1120
+};
+
 describe("Seoul V2X signal adapter", () => {
   test("summarizes signal timing evidence without requiring a detector sample", () => {
     const evidence = buildSeoulV2xSignalEvidence(SEOUL_V2X_SAMPLE);
@@ -149,6 +165,24 @@ describe("Seoul V2X signal adapter", () => {
       adapterBoundary: "live-input.v1",
       missingInputs: ["cardinal_straight_signal_remaining_time"],
       selectedCurrentPhase: null
+    });
+  });
+
+  test("builds a signal snapshot from a key-backed cardinal live sample", () => {
+    const signal = buildSeoulV2xSignalSnapshot(SEOUL_V2X_CARDINAL_LIVE_SAMPLE, {
+      controllerMode: "adaptive",
+      manualOverride: false,
+      nextPhase: "normal_cycle"
+    });
+
+    expect(signal).toEqual({
+      controllerId: "CIB1000020300",
+      capturedAt: "2026-07-02T03:18:32.146Z",
+      currentPhase: "east_priority",
+      remainingSeconds: 112,
+      nextPhase: "normal_cycle",
+      controllerMode: "adaptive",
+      manualOverride: false
     });
   });
 });

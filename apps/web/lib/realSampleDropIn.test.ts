@@ -12,7 +12,7 @@ describe("real sample drop-in readiness", () => {
     expect(artifact).toEqual({
       source: "real_sample_drop_in_readiness",
       schemaVersion: "real-sample-drop-in.v1",
-      status: "adapter_ready_waiting_for_live_signal_response",
+      status: "signal_ready_waiting_for_fresh_camera_and_calibration",
       adapterBoundary: "live-input.v1",
       endpoint: "/api/real-sample-drop-in",
       sampleSlots: [
@@ -28,7 +28,7 @@ describe("real sample drop-in readiness", () => {
           required: true,
           acceptedFormats: ["application/json"],
           mapsTo: "signalSnapshot",
-          currentState: "adapter_ready_live_key_required"
+          currentState: "key_backed_cardinal_sample_ready"
         },
         {
           id: "detector_output",
@@ -47,7 +47,6 @@ describe("real sample drop-in readiness", () => {
         "refresh demo evidence export"
       ],
       blockers: [
-        "captured T-DATA signal phase uses diagonal movement fields that need cardinal mapping or 8-direction phase support",
         "AI-Hub sample frame is historical and requires fresh camera evidence before live drop-in acceptance",
         "camera-to-approach direction calibration is required before AI-Hub labels can become live-input.v1 detections"
       ]

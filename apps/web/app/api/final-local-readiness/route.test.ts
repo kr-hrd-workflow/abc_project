@@ -12,7 +12,7 @@ describe("final local readiness route", () => {
       source: "final_local_readiness_reconciliation",
       schemaVersion: "final-local-readiness.v1",
       localRehearsalStatus: "ready_for_local_rehearsal",
-      realSampleStatus: "adapter_ready_waiting_for_live_signal_response",
+      realSampleStatus: "signal_ready_waiting_for_fresh_camera_and_calibration",
       decisionBoundary: "operator_decision_support_not_signal_control",
       adapterBoundary: "live-input.v1"
     });
@@ -32,7 +32,7 @@ describe("final local readiness route", () => {
     expect(body.localEvidence.scorecardPolicies).toBe(6);
     expect(body.blockers).toEqual([
       "fresh_camera_frame_required_for_live_drop_in",
-      "signal_phase_model_compatibility_required"
+      "camera_approach_calibration_required"
     ]);
   });
 });

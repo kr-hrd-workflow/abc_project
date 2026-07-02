@@ -2407,7 +2407,7 @@ describe("DashboardShell", () => {
     expect(within(card).getByText("source adapter replay ready")).toBeTruthy();
     expect(within(card).getByText("6 scorecard policies")).toBeTruthy();
     expect(
-      within(card).getByText("adapter ready, live signal pending")
+      within(card).getByText("signal ready, camera pending")
     ).toBeTruthy();
     expect(within(card).getByText("live-input.v1 boundary ready")).toBeTruthy();
     expect(within(card).getByRole("link", { name: "Evidence JSON" })).toHaveProperty(

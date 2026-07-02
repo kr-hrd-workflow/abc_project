@@ -6,7 +6,7 @@ export type FinalLocalReadinessExport = {
   schemaVersion: "final-local-readiness.v1";
   generatedAt: string;
   localRehearsalStatus: "ready_for_local_rehearsal";
-  realSampleStatus: "adapter_ready_waiting_for_live_signal_response";
+  realSampleStatus: "signal_ready_waiting_for_fresh_camera_and_calibration";
   decisionBoundary: "operator_decision_support_not_signal_control";
   adapterBoundary: "live-input.v1";
   healthCheck: {
@@ -82,10 +82,10 @@ export function buildFinalLocalReadinessExport({
     },
     blockers: [
       demoEvidence.realSampleReadiness.cctv.blocker,
-      demoEvidence.realSampleReadiness.signal.blocker
+      demoEvidence.realSampleReadiness.calibration.blocker
     ],
     nextRequiredInputs: demoEvidence.realSampleReadiness.nextRequiredInputs,
     nextAction:
-      "Resolve T-DATA diagonal phase compatibility, pair the signal evidence with a fresh authorized camera frame, calibrate approach direction, then POST a live-input.v1 envelope to /api/real-sample-drop-in."
+      "Pair the key-backed cardinal signal evidence with a fresh authorized camera frame, calibrate approach direction, then POST a live-input.v1 envelope to /api/real-sample-drop-in."
   };
 }

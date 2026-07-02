@@ -13,7 +13,7 @@ describe("final local readiness export", () => {
       schemaVersion: "final-local-readiness.v1",
       generatedAt: "2026-07-01T10:15:00.000Z",
       localRehearsalStatus: "ready_for_local_rehearsal",
-      realSampleStatus: "adapter_ready_waiting_for_live_signal_response",
+      realSampleStatus: "signal_ready_waiting_for_fresh_camera_and_calibration",
       decisionBoundary: "operator_decision_support_not_signal_control",
       adapterBoundary: "live-input.v1",
       healthCheck: {
@@ -47,15 +47,14 @@ describe("final local readiness export", () => {
       },
       blockers: [
         "fresh_camera_frame_required_for_live_drop_in",
-        "signal_phase_model_compatibility_required"
+        "camera_approach_calibration_required"
       ],
       nextRequiredInputs: [
-        "cardinal signal phase sample or intentional 8-direction signal phase model support",
         "fresh camera frame captured within 30 seconds of receivedAt",
         "camera-to-approach direction calibration for detector labels"
       ],
       nextAction:
-        "Resolve T-DATA diagonal phase compatibility, pair the signal evidence with a fresh authorized camera frame, calibrate approach direction, then POST a live-input.v1 envelope to /api/real-sample-drop-in."
+        "Pair the key-backed cardinal signal evidence with a fresh authorized camera frame, calibrate approach direction, then POST a live-input.v1 envelope to /api/real-sample-drop-in."
     });
 
     const serialized = JSON.stringify(artifact);

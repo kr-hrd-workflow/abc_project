@@ -53,7 +53,7 @@ export type DemoEvidenceExport = {
     requiredEvidence: PolicyScorecardRequiredEvidence[];
   };
   realSampleReadiness: {
-    status: "adapter_ready_waiting_for_live_signal_response";
+    status: "signal_ready_waiting_for_fresh_camera_and_calibration";
     adapterBoundary: "live-input.v1";
     fixtureReplayStatus: "replay_input_ready";
     dropInEndpoint: "/api/real-sample-drop-in";
@@ -62,8 +62,12 @@ export type DemoEvidenceExport = {
       blocker: "fresh_camera_frame_required_for_live_drop_in";
     };
     signal: {
-      status: "key_backed_live_sample_captured";
-      blocker: "signal_phase_model_compatibility_required";
+      status: "key_backed_cardinal_sample_ready";
+      blocker: null;
+    };
+    calibration: {
+      status: "mapping_required";
+      blocker: "camera_approach_calibration_required";
     };
     nextRequiredInputs: string[];
   };
@@ -133,7 +137,7 @@ export function buildDemoEvidenceExport({
       requiredEvidence: [...POLICY_SCORECARD_REQUIRED_EVIDENCE]
     },
     realSampleReadiness: {
-      status: "adapter_ready_waiting_for_live_signal_response",
+      status: "signal_ready_waiting_for_fresh_camera_and_calibration",
       adapterBoundary: "live-input.v1",
       fixtureReplayStatus: sourceAdapter.replaySummary.status,
       dropInEndpoint: "/api/real-sample-drop-in",
@@ -142,11 +146,14 @@ export function buildDemoEvidenceExport({
         blocker: "fresh_camera_frame_required_for_live_drop_in"
       },
       signal: {
-        status: "key_backed_live_sample_captured",
-        blocker: "signal_phase_model_compatibility_required"
+        status: "key_backed_cardinal_sample_ready",
+        blocker: null
+      },
+      calibration: {
+        status: "mapping_required",
+        blocker: "camera_approach_calibration_required"
       },
       nextRequiredInputs: [
-        "cardinal signal phase sample or intentional 8-direction signal phase model support",
         "fresh camera frame captured within 30 seconds of receivedAt",
         "camera-to-approach direction calibration for detector labels"
       ]
@@ -159,7 +166,7 @@ export function buildDemoEvidenceExport({
       "Operator workflow status is derived from policy scorecards, not autonomous signal control.",
       "LLM explanations review local policy evidence and do not choose signal plans.",
       "Backend policy scorecards cover safety gates, emergency clearance, queue relief, pedestrian efficiency, and normal-cycle decisions.",
-      "Real sample adapters are prepared with an AI-Hub historical sample and a key-backed Seoul V2X signal response, but live drop-in still requires fresh camera evidence, calibrated direction, and compatible signal phase modeling."
+      "Real sample adapters are prepared with an AI-Hub historical sample and a key-backed Seoul V2X cardinal signal response, but live drop-in still requires fresh camera evidence and calibrated direction."
     ]
   };
 }

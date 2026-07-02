@@ -6,10 +6,9 @@ Implementation is focused on real-sample readiness because additional
 synthetic-only work is no longer the most meaningful path. The local dashboard,
 exports, guardrails, policy scorecards, and `live-input.v1` handoff surfaces
 are already rich enough for rehearsal. The project now has an authorized
-historical AI-Hub CCTV frame/label sample, a T-DATA key-backed live signal
-response sample, and local adapters for AI-Hub labels and Seoul V2X signal
-timing. The unresolved blockers are signal phase compatibility for the
-captured diagonal V2X phases, a fresh authorized camera frame, and
+historical AI-Hub CCTV frame/label sample, a T-DATA key-backed live cardinal
+signal response sample, and local adapters for AI-Hub labels and Seoul V2X
+signal timing. The unresolved blockers are a fresh authorized camera frame and
 camera-to-approach direction calibration.
 
 Current branch management:
@@ -75,6 +74,9 @@ Current maintenance slice:
       `신호제어기 잔여시간 정보 서비스`, fetch a key-backed live response, and
       update the Seoul V2X adapter so it can select the latest live response
       row and handle numeric strings without inventing unsupported phases.
+- [x] Fetch a broader key-backed T-DATA response, find a cardinal straight-signal
+      row, and verify it can become a `LiveSignalSnapshot` without extending
+      `live-input.v1` to diagonal phases.
 
 Maintenance evidence:
 
@@ -99,7 +101,9 @@ Maintenance evidence:
   116 passed.
 - `npm --workspace apps/web run test -- seoulV2xSignalAdapter.test.ts realSampleDropIn.test.ts demoEvidenceExport.test.ts finalLocalReadiness.test.ts app/api/final-local-readiness/route.test.ts`:
   19 passed.
-- `npm run test:web`: 63 files, 388 tests passed.
+- `npm --workspace apps/web run test -- seoulV2xSignalAdapter.test.ts realSampleDropIn.test.ts realSampleIntakePackage.test.ts demoEvidenceExport.test.ts finalLocalReadiness.test.ts app/api/real-sample-drop-in/route.test.ts app/api/real-sample-intake-package/route.test.ts app/api/demo-evidence-export/route.test.ts app/api/final-local-readiness/route.test.ts DashboardShell.test.tsx`:
+  122 passed.
+- `npm run test:web`: 63 files, 389 tests passed.
 - `npm run build:web`: passed.
 - `git diff --check`: passed.
 
@@ -130,12 +134,19 @@ Real sample intake evidence:
   saved it under ignored `output/real-samples/public-data/`:
   - `seoul-v2x-signal-live-sample-10120.json`
   - `seoul-v2x-signal-live-sample-10120-provenance.json`
-- The captured T-DATA response is real and current, but the selected sample rows
-  expose diagonal straight-signal fields such as `seStsgRmdrCs` and
-  `nwStsgRmdrCs`. Current `live-input.v1` phases are cardinal only, so the
-  adapter summarizes the evidence and keeps `LiveSignalSnapshot` creation
-  blocked unless a cardinal straight-signal field is present or the phase model
-  is intentionally extended to 8 directions.
+- The initial fixed-`itstId` response exposed diagonal straight-signal fields
+  such as `seStsgRmdrCs` and `nwStsgRmdrCs`. Current `live-input.v1` phases are
+  cardinal only, so the adapter summarizes that evidence without inventing a
+  compatible phase.
+- Fetched a broader key-backed T-DATA response without fixed `itstId`; 82 of
+  100 rows had cardinal straight-signal fields. Saved ignored samples:
+  - `seoul-v2x-signal-live-broad-sample-10120.json`
+  - `seoul-v2x-signal-live-broad-sample-10120-provenance.json`
+  - `seoul-v2x-signal-live-cardinal-sample-10120.json`
+  - `seoul-v2x-signal-live-cardinal-sample-10120-provenance.json`
+- The cardinal sample row has `itstId=4765`, `eqmnId=CIB1000020300`, and
+  `etStsgRmdrCs=1120` / `wtStsgRmdrCs=1120`. The adapter converts it to
+  `east_priority` with `remainingSeconds=112`.
 - Historical AI-Hub frames remain valid detector evidence, but they now require
   manual review as live observations unless `cameraFrames[].capturedAt` is
   within 30 seconds of `receivedAt`.
@@ -145,12 +156,11 @@ Real sample intake evidence:
   `cameraId`. This prevents the adapter from guessing an approach direction.
 - `/api/real-sample-drop-in`, `/api/real-sample-intake-package`,
   `/api/demo-evidence-export`, and `/api/final-local-readiness` now report
-  `adapter_ready_waiting_for_live_signal_response`. This means the local
-  adapters and historical sample evidence are prepared, while live drop-in is
-  still blocked by:
-  - signal phase compatibility for diagonal T-DATA V2X phases
+  `signal_ready_waiting_for_fresh_camera_and_calibration`. This means the local
+  signal evidence is now key-backed and cardinal-compatible, while live drop-in
+  is still blocked by:
   - `fresh_camera_frame_required_for_live_drop_in`
-  - camera-to-approach direction calibration for detector labels.
+  - `camera_approach_calibration_required`
 
 ## Historical Plan: Synthetic Scenario Evaluation
 

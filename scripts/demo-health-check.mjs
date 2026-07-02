@@ -95,7 +95,7 @@ export async function runDemoHealthCheck({
           payload.liveInputGuardrails?.missedCases !== 0 ||
           payload.sourceAdapter?.replayStatus !== "replay_input_ready" ||
           payload.realSampleReadiness?.status !==
-            "adapter_ready_waiting_for_live_signal_response" ||
+            "signal_ready_waiting_for_fresh_camera_and_calibration" ||
           payload.realSampleReadiness?.adapterBoundary !== "live-input.v1" ||
           payload.realSampleReadiness?.dropInEndpoint !== "/api/real-sample-drop-in"
         ) {
@@ -156,7 +156,7 @@ export async function runDemoHealthCheck({
           payload.schemaVersion !== "final-local-readiness.v1" ||
           payload.localRehearsalStatus !== "ready_for_local_rehearsal" ||
           payload.realSampleStatus !==
-            "adapter_ready_waiting_for_live_signal_response" ||
+            "signal_ready_waiting_for_fresh_camera_and_calibration" ||
           payload.decisionBoundary !== "operator_decision_support_not_signal_control" ||
           payload.adapterBoundary !== "live-input.v1" ||
           payload.healthCheck?.expectedSummary !== "15/15 checks passed" ||
@@ -171,7 +171,7 @@ export async function runDemoHealthCheck({
           payload.localEvidence?.scorecardPolicies !== 6 ||
           !Array.isArray(payload.blockers) ||
           !payload.blockers.includes("fresh_camera_frame_required_for_live_drop_in") ||
-          !payload.blockers.includes("signal_phase_model_compatibility_required")
+          !payload.blockers.includes("camera_approach_calibration_required")
         ) {
           throw new Error("unexpected final local readiness payload");
         }
@@ -223,7 +223,7 @@ export async function runDemoHealthCheck({
         if (
           payload.source !== "real_sample_intake_package" ||
           payload.schemaVersion !== "real-sample-intake-package.v1" ||
-          payload.status !== "adapter_ready_waiting_for_live_signal_response" ||
+          payload.status !== "signal_ready_waiting_for_fresh_camera_and_calibration" ||
           payload.adapterBoundary !== "live-input.v1" ||
           payload.dropInEndpoint !== "/api/real-sample-drop-in" ||
           payload.schemaEndpoint !== "/api/live-input-submission-schema" ||
@@ -293,7 +293,7 @@ export async function runDemoHealthCheck({
         if (
           payload.source !== "real_sample_drop_in_readiness" ||
           payload.schemaVersion !== "real-sample-drop-in.v1" ||
-          payload.status !== "adapter_ready_waiting_for_live_signal_response" ||
+          payload.status !== "signal_ready_waiting_for_fresh_camera_and_calibration" ||
           payload.adapterBoundary !== "live-input.v1" ||
           !slotIds.includes("authorized_cctv_frame_or_video") ||
           !slotIds.includes("signal_phase_remaining_time") ||
