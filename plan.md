@@ -109,6 +109,10 @@ Current maintenance slice:
       evidence as intersection and signal-plan metadata only, while preserving
       the live drop-in blockers for fresh camera detector output, direction
       calibration, and current signal timing.
+- [x] Fetch a fresh Gyeonggi traffic CCTV HLS segment, extract a JPEG frame,
+      install the approved local YOLO/OpenCV vision runtime, run YOLO on the
+      extracted frame, and save an `authorized-camera-detector-output.v1`
+      sample while preserving the camera-to-approach calibration blocker.
 
 Maintenance evidence:
 
@@ -155,6 +159,32 @@ Maintenance evidence:
   camera-to-approach calibration, and no direct `live-input.v1` `currentPhase`.
 - `npm --workspace apps/web run test -- policeCrossroadInfoAdapter.test.ts realSampleIntakePackage.test.ts demoEvidenceExport.test.ts finalLocalReadiness.test.ts realSampleSourceSchema.test.ts app/api/real-sample-intake-package/route.test.ts app/api/demo-evidence-export/route.test.ts app/api/final-local-readiness/route.test.ts app/api/real-sample-source-schema/route.test.ts`:
   11 passed.
+- Gyeonggi traffic CCTV `getCctvInfoList` call returned 3,311 CCTV rows. The
+  direct `cctvImg` JPEG URLs sampled returned HTTP 401, but the HLS `liveUrl`
+  returned a current `playlist.m3u8` and MPEG transport stream segment.
+- `/Applications/Shotcut.app/Contents/MacOS/ffmpeg` extracted a `1280x720`
+  JPEG frame from the saved HLS segment:
+  `output/real-samples/public-data/gyeonggi-cctv/gyeonggi-cctv-live-frame.jpg`.
+- `apps/api/.venv/bin/python -m pip install -e "apps/api[vision]"`: installed
+  the local vision runtime (`cv2`, `ultralytics`, `torch`).
+- `apps/api/models/yolov8n.pt`: downloaded local YOLOv8n model weights outside
+  git.
+- `npm run runtime:readiness:strict -- --section vision`: `vision ready=True`.
+- Local PyTorch reports Apple MPS available and CUDA unavailable, so this
+  single-frame YOLO path does not require external GPU right now. Reconsider
+  Colab/external GPU for batch video, multi-camera, or larger-model inference.
+- `VISION_ANALYSIS_MODE=opencv_yolo YOLO_MODEL_PATH=models/yolov8n.pt ... OpenCVYoloFrameAnalyzer`:
+  detected one `car` in the Gyeonggi live frame with confidence
+  `0.3071170151233673`, mapped to one `vehicle`.
+- `npm run real-sample:build-yolo-detector-output -- output/real-samples/public-data/gyeonggi-cctv/gyeonggi-cctv-live-frame.jpg output/real-samples/public-data/gyeonggi-cctv/gyeonggi-cctv-yolo-detector-output.json gyeonggi-cctv-61860 gyeonggi-cctv-61860 2026-07-02T16:35:48.659+09:00 apps/api/models/yolov8n.pt 0.25`:
+  wrote an `authorized-camera-detector-output.v1` sample with one vehicle
+  detection.
+- `node --test scripts/build-yolo-detector-output.test.mjs scripts/package-scripts.test.mjs`:
+  4 passed.
+- `npm --workspace apps/web run test -- realSampleIntakePackage.test.ts authorizedCameraDetectorAdapter.test.ts app/api/real-sample-intake-package/route.test.ts`:
+  5 passed.
+- `apps/api/.venv/bin/python -m pytest apps/api/tests/test_adapters.py -q`:
+  6 passed.
 - The portal key table also showed a `재발급` row that still returned HTTP 401
   during this check, while the `신규발급` row returned `NORMAL_SERVICE`.
 - `npm --workspace apps/web run test -- seoulV2xSignalAdapter.test.ts realSampleDropIn.test.ts realSampleIntakePackage.test.ts demoEvidenceExport.test.ts finalLocalReadiness.test.ts app/api/real-sample-drop-in/route.test.ts app/api/real-sample-intake-package/route.test.ts app/api/demo-evidence-export/route.test.ts app/api/final-local-readiness/route.test.ts DashboardShell.test.tsx`:

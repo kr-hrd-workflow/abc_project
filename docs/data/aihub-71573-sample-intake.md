@@ -254,6 +254,67 @@ npm run real-sample:check -- --offline <live-input-envelope.json>
 npm run real-sample:check -- <live-input-envelope.json>
 ```
 
+## Gyeonggi Live CCTV Frame And YOLO Detector Output
+
+On 2026-07-02, the Gyeonggi traffic information CCTV list API returned live CCTV
+metadata and HLS URLs. The direct `cctvImg` JPEG URLs returned HTTP 401 during
+sampling, but the HLS `liveUrl` returned a current playlist and MPEG transport
+stream segment.
+
+The local ignored evidence bundle is:
+
+```text
+output/real-samples/public-data/gyeonggi-cctv/gyeonggi-cctv-live-segment.ts
+output/real-samples/public-data/gyeonggi-cctv/gyeonggi-cctv-live-frame.jpg
+output/real-samples/public-data/gyeonggi-cctv/gyeonggi-cctv-live-segment-provenance.json
+output/real-samples/public-data/gyeonggi-cctv/gyeonggi-cctv-yolo-detector-output.json
+```
+
+The frame was extracted from the HLS segment using:
+
+```text
+/Applications/Shotcut.app/Contents/MacOS/ffmpeg
+```
+
+The extracted frame is `1280x720`. Local vision runtime setup was re-enabled by
+installing the API `vision` extra and downloading `yolov8n.pt` to the ignored
+model path:
+
+```text
+apps/api/models/yolov8n.pt
+```
+
+`npm run runtime:readiness:strict -- --section vision` now reports
+`vision ready=True`. PyTorch reports Apple MPS availability on this machine, so
+this single-frame YOLO run does not currently require Colab or another external
+GPU. If future work needs batch video inference, multi-camera processing, or a
+larger model, external GPU execution should be reconsidered.
+
+The new local builder converts an extracted frame into
+`authorized-camera-detector-output.v1`:
+
+```bash
+npm run real-sample:build-yolo-detector-output -- \
+  <frame-image.jpg> \
+  <detector-output.json> \
+  <intersectionId> \
+  <cameraId> \
+  <capturedAt> \
+  [modelPath] \
+  [confidenceThreshold]
+```
+
+For the captured Gyeonggi frame, YOLO detected one vehicle with confidence
+`0.3071170151233673`, producing:
+
+```text
+output/real-samples/public-data/gyeonggi-cctv/gyeonggi-cctv-yolo-detector-output.json
+```
+
+This is now fresh camera-side detector evidence, but it still does not prove
+camera-to-approach direction. A matching `camera-approach-calibration.v1` file
+is still required before building a replay-ready `live-input.v1` envelope.
+
 When a fresh detector output, matching camera calibration, and Seoul V2X raw
 response are all available, the same preparation can be run as one local
 command:
@@ -298,6 +359,7 @@ status=signal_ready_waiting_for_fresh_camera_and_calibration
 This means the project is no longer missing every authorized sample. It has:
 
 - an authorized historical AI-Hub CCTV frame and vehicle bbox label sample
+- a fresh Gyeonggi live CCTV HLS frame and local YOLO detector output sample
 - a local AI-Hub label adapter for evidence summaries and guarded
   `live-input.v1` conversion
 - a Seoul V2X remaining-time adapter based on the downloaded T-DATA service
@@ -312,7 +374,6 @@ This means the project is no longer missing every authorized sample. It has:
 
 The remaining blockers are narrower:
 
-- `fresh_camera_frame_required_for_live_drop_in`
 - `camera_approach_calibration_required`
 
 ## Related Public Data Sample

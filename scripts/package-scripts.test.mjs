@@ -48,5 +48,13 @@ describe("root package scripts", () => {
       packageJson.scripts["test:real-sample-prepare"],
       "node --test scripts/prepare-real-sample-live-input.test.mjs"
     );
+    assert.equal(
+      packageJson.scripts["real-sample:build-yolo-detector-output"],
+      "node scripts/build-yolo-detector-output.mjs"
+    );
+    assert.equal(
+      packageJson.scripts["test:real-sample-yolo-detector"],
+      "node --test scripts/build-yolo-detector-output.test.mjs"
+    );
   });
 });

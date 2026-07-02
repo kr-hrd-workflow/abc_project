@@ -25,6 +25,8 @@ describe("real sample intake package", () => {
         "npm run real-sample:check -- --offline <live-input-envelope.json>",
       cameraDetectorBuildCommand:
         "npm run real-sample:build-camera-envelope -- <detector-output.json> <camera-calibration.json> <signal-snapshot.json> <live-input-envelope.json>",
+      yoloDetectorBuildCommand:
+        "npm run real-sample:build-yolo-detector-output -- <frame-image.jpg> <detector-output.json> <intersectionId> <cameraId> <capturedAt> [modelPath] [confidenceThreshold]",
       signalSnapshotBuildCommand:
         "npm run real-sample:build-signal-snapshot -- <seoul-v2x-response.json> <signal-snapshot.json> <nextPhase> <controllerMode> <manualOverride>",
       prepareLiveInputCommand:
@@ -110,6 +112,7 @@ describe("real sample intake package", () => {
       ],
       submissionSteps: [
         "collect authorized CCTV frame/video and signal timing sample",
+        "build detector output from a frame with npm run real-sample:build-yolo-detector-output -- <frame-image.jpg> <detector-output.json> <intersectionId> <cameraId> <capturedAt> [modelPath] [confidenceThreshold]",
         "validate the envelope shape against /api/live-input-submission-schema",
         "build a signal snapshot with npm run real-sample:build-signal-snapshot -- <seoul-v2x-response.json> <signal-snapshot.json> <nextPhase> <controllerMode> <manualOverride>",
         "build a live-input.v1 envelope with npm run real-sample:build-camera-envelope -- <detector-output.json> <camera-calibration.json> <signal-snapshot.json> <live-input-envelope.json>",
