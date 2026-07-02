@@ -108,6 +108,21 @@ The adapter does not invent a next phase. `nextPhase`, `controllerMode`, and
 `manualOverride` must come from operator/source calibration when building the
 `LiveSignalSnapshot`.
 
+The same conversion is exposed as a local file builder:
+
+```bash
+npm run real-sample:build-signal-snapshot -- \
+  <seoul-v2x-response.json> \
+  <signal-snapshot.json> \
+  <nextPhase> \
+  <controllerMode> \
+  <manualOverride>
+```
+
+Those last three values are required on purpose. T-DATA remaining-time rows do
+not prove the next phase, controller mode, or manual override state by
+themselves, so the builder will not invent defaults for them.
+
 On 2026-07-02, a T-DATA development application for data `10120` was submitted
 and approved in the logged-in account. A key-backed live response was fetched
 and stored outside git:

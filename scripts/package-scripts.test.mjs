@@ -32,5 +32,13 @@ describe("root package scripts", () => {
       packageJson.scripts["test:real-sample-build"],
       "node --test scripts/build-camera-detector-live-input.test.mjs"
     );
+    assert.equal(
+      packageJson.scripts["real-sample:build-signal-snapshot"],
+      "node scripts/build-seoul-v2x-signal-snapshot.mjs"
+    );
+    assert.equal(
+      packageJson.scripts["test:real-sample-signal-build"],
+      "node --test scripts/build-seoul-v2x-signal-snapshot.test.mjs"
+    );
   });
 });

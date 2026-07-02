@@ -84,6 +84,9 @@ Current maintenance slice:
       `authorized-camera-detector-output.v1`,
       `camera-approach-calibration.v1`, and a `LiveSignalSnapshot` JSON file
       into a `live-input.v1` envelope for `real-sample:check`.
+- [x] Add a local T-DATA signal snapshot builder that converts a Seoul V2X raw
+      response file into `LiveSignalSnapshot` only when operator/source
+      calibration supplies `nextPhase`, `controllerMode`, and `manualOverride`.
 
 Maintenance evidence:
 
@@ -117,6 +120,9 @@ Maintenance evidence:
 - `node --test scripts/build-camera-detector-live-input.test.mjs scripts/package-scripts.test.mjs`:
   4 passed.
 - `npm run test:real-sample-build`: 2 passed.
+- `node --test scripts/build-seoul-v2x-signal-snapshot.test.mjs scripts/package-scripts.test.mjs`:
+  5 passed.
+- `npm run test:real-sample-signal-build`: 3 passed.
 - `npm run test:web`: 64 files, 392 tests passed.
 - `npm run build:web`: passed.
 - `git diff --check`: passed.
@@ -178,6 +184,9 @@ Real sample intake evidence:
   now builds the same `live-input.v1` envelope from local files, so an
   authorized sample provider can immediately run the existing offline and local
   drop-in checks after supplying fresh detector output and calibration.
+- `npm run real-sample:build-signal-snapshot -- <seoul-v2x-response.json> <signal-snapshot.json> <nextPhase> <controllerMode> <manualOverride>`
+  now builds the `LiveSignalSnapshot` input from a Seoul V2X raw response file
+  without inventing source fields that T-DATA does not prove.
 - `/api/real-sample-drop-in`, `/api/real-sample-intake-package`,
   `/api/demo-evidence-export`, and `/api/final-local-readiness` now report
   `signal_ready_waiting_for_fresh_camera_and_calibration`. This means the local

@@ -24,6 +24,8 @@ describe("real sample intake package", () => {
         "npm run real-sample:check -- --offline <live-input-envelope.json>",
       cameraDetectorBuildCommand:
         "npm run real-sample:build-camera-envelope -- <detector-output.json> <camera-calibration.json> <signal-snapshot.json> <live-input-envelope.json>",
+      signalSnapshotBuildCommand:
+        "npm run real-sample:build-signal-snapshot -- <seoul-v2x-response.json> <signal-snapshot.json> <nextPhase> <controllerMode> <manualOverride>",
       noPersistence: true,
       sampleSlotIds: [
         "authorized_cctv_frame_or_video",
@@ -88,6 +90,7 @@ describe("real sample intake package", () => {
       submissionSteps: [
         "collect authorized CCTV frame/video and signal timing sample",
         "validate the envelope shape against /api/live-input-submission-schema",
+        "build a signal snapshot with npm run real-sample:build-signal-snapshot -- <seoul-v2x-response.json> <signal-snapshot.json> <nextPhase> <controllerMode> <manualOverride>",
         "build a live-input.v1 envelope with npm run real-sample:build-camera-envelope -- <detector-output.json> <camera-calibration.json> <signal-snapshot.json> <live-input-envelope.json>",
         "run npm run real-sample:check -- --offline <live-input-envelope.json> for server-free shape, provenance, and guardrail checks",
         "normalize authorized-camera-detector-output.v1, camera-approach-calibration.v1, and signal data into a live-input.v1 envelope",
