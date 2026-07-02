@@ -56,5 +56,13 @@ describe("root package scripts", () => {
       packageJson.scripts["test:real-sample-yolo-detector"],
       "node --test scripts/build-yolo-detector-output.test.mjs"
     );
+    assert.equal(
+      packageJson.scripts["real-sample:build-camera-calibration"],
+      "node scripts/build-camera-approach-calibration.mjs"
+    );
+    assert.equal(
+      packageJson.scripts["test:real-sample-camera-calibration"],
+      "node --test scripts/build-camera-approach-calibration.test.mjs"
+    );
   });
 });

@@ -67,12 +67,11 @@ trusted source.
 
 ## Next Data Need
 
-The next required sample is a fresh authorized camera detector output plus a
-camera-to-approach calibration. Signal timing is now represented by a
-key-backed Seoul/T-DATA V2X cardinal sample, so the remaining live drop-in
-blocker is the camera side:
+The next required input is a camera-to-approach calibration for the fresh
+Gyeonggi detector output. Signal timing is now represented by a key-backed
+Seoul/T-DATA V2X cardinal sample, and the camera side now has a fresh HLS frame
+plus YOLO detector output. The remaining live drop-in blocker is:
 
-- `authorized-camera-detector-output.v1` for a current frame and object counts
 - `camera-approach-calibration.v1` for the operator-verified direction mapping
 
 ## Seoul V2X Signal Timing Adapter
@@ -314,6 +313,35 @@ output/real-samples/public-data/gyeonggi-cctv/gyeonggi-cctv-yolo-detector-output
 This is now fresh camera-side detector evidence, but it still does not prove
 camera-to-approach direction. A matching `camera-approach-calibration.v1` file
 is still required before building a replay-ready `live-input.v1` envelope.
+
+The local calibration builder is available, but must only be run after
+operator/map review supplies an explicit direction for the exact intersection
+and camera:
+
+```bash
+npm run real-sample:build-camera-calibration -- \
+  <camera-calibration.json> \
+  <intersectionId> \
+  <cameraId> \
+  <approachDirection> \
+  <evidence>
+```
+
+The builder accepts only `north`, `south`, `east`, or `west` for
+`approachDirection`. It does not infer direction from the detector box position,
+the YOLO class label, or the CCTV frame alone.
+
+For `gyeonggi-cctv-61860`, the current review packet is intentionally kept as a
+non-calibration artifact because the evidence is not enough to truthfully set
+the approach direction:
+
+```text
+output/real-samples/public-data/gyeonggi-cctv/calibration-review/
+```
+
+The CCTV coordinate is near `도곡로` / `삼성로`, and cropped review images were
+created for operator inspection. That narrows the map review, but it is not a
+trusted direction mapping by itself.
 
 When a fresh detector output, matching camera calibration, and Seoul V2X raw
 response are all available, the same preparation can be run as one local

@@ -7,9 +7,9 @@ synthetic-only work is no longer the most meaningful path. The local dashboard,
 exports, guardrails, policy scorecards, and `live-input.v1` handoff surfaces
 are already rich enough for rehearsal. The project now has an authorized
 historical AI-Hub CCTV frame/label sample, a T-DATA key-backed live cardinal
-signal response sample, and local adapters for AI-Hub labels and Seoul V2X
-signal timing. The unresolved blockers are a fresh authorized camera frame and
-camera-to-approach direction calibration.
+signal response sample, a fresh Gyeonggi HLS CCTV frame, and a local YOLO
+detector output sample. The unresolved blocker is camera-to-approach direction
+calibration for the exact camera.
 
 Current branch management:
 
@@ -47,6 +47,10 @@ Next meaningful decision:
    `경찰청_교차로기반정보서비스` `getCrossRoadInfoDetail` samples as
    signal-plan metadata only. Do not treat them as camera detections or
    camera-to-approach calibration.
+5. If an operator/map reviewer can confirm the Gyeonggi camera approach
+   direction, build `camera-approach-calibration.v1` with
+   `npm run real-sample:build-camera-calibration -- ...`; otherwise keep the
+   sample blocked instead of guessing.
 
 Current maintenance slice:
 
@@ -113,6 +117,10 @@ Current maintenance slice:
       install the approved local YOLO/OpenCV vision runtime, run YOLO on the
       extracted frame, and save an `authorized-camera-detector-output.v1`
       sample while preserving the camera-to-approach calibration blocker.
+- [x] Inspect the Gyeonggi CCTV location and frame for approach-calibration
+      evidence, then add a local calibration builder that requires explicit
+      operator/map-reviewed direction evidence instead of inferring direction
+      from the frame or YOLO output.
 
 Maintenance evidence:
 
@@ -179,10 +187,21 @@ Maintenance evidence:
 - `npm run real-sample:build-yolo-detector-output -- output/real-samples/public-data/gyeonggi-cctv/gyeonggi-cctv-live-frame.jpg output/real-samples/public-data/gyeonggi-cctv/gyeonggi-cctv-yolo-detector-output.json gyeonggi-cctv-61860 gyeonggi-cctv-61860 2026-07-02T16:35:48.659+09:00 apps/api/models/yolov8n.pt 0.25`:
   wrote an `authorized-camera-detector-output.v1` sample with one vehicle
   detection.
+- GITS/OSM review placed CCTV `gyeonggi-cctv-61860` near `도곡로` / `삼성로`.
+  Local review crops were created under ignored
+  `output/real-samples/public-data/gyeonggi-cctv/calibration-review/`, but this
+  evidence is not enough to assign an operator-trusted approach direction.
+- `npm run real-sample:build-camera-calibration -- <camera-calibration.json> <intersectionId> <cameraId> <approachDirection> <evidence>`
+  now writes `camera-approach-calibration.v1` only when a caller supplies an
+  explicit `north`, `south`, `east`, or `west` direction plus evidence text.
 - `node --test scripts/build-yolo-detector-output.test.mjs scripts/package-scripts.test.mjs`:
+  4 passed.
+- `node --test scripts/build-camera-approach-calibration.test.mjs scripts/package-scripts.test.mjs`:
   4 passed.
 - `npm --workspace apps/web run test -- realSampleIntakePackage.test.ts authorizedCameraDetectorAdapter.test.ts app/api/real-sample-intake-package/route.test.ts`:
   5 passed.
+- `npm --workspace apps/web run test -- realSampleIntakePackage.test.ts app/api/real-sample-intake-package/route.test.ts`:
+  2 passed.
 - `apps/api/.venv/bin/python -m pytest apps/api/tests/test_adapters.py -q`:
   6 passed.
 - The portal key table also showed a `재발급` row that still returned HTTP 401
