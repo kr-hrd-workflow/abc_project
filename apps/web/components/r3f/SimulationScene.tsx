@@ -10,8 +10,6 @@ import { DynamicVehicleLayer } from "./DynamicVehicleLayer";
 import { LimitedOrbitControls } from "./LimitedOrbitControls";
 import { MarkingDecalLayer } from "./MarkingDecalLayer";
 import { NightVehicleTreatment } from "./NightVehicleTreatment";
-import { PhotorealPlate } from "./PhotorealPlate";
-import { getCmpAGlobalXShiftMeters } from "./plateVehicleCalibration";
 import { RoadSurfaceLayer } from "./RoadSurfaceLayer";
 import { SceneEnvironment } from "./SceneEnvironment";
 import { ScenePostFX } from "./ScenePostFX";
@@ -43,64 +41,15 @@ function resolveGuideMode(): boolean {
   return new URLSearchParams(window.location.search).get("guide") === "1";
 }
 
-// Production photoreal view: ?photoreal=1 — mounts the fixed photoreal empty-road
-// 강남역 plate as the full-canvas screen-space backdrop and composites the live
-// SUMO vehicles, pedestrians, and signals on top at the operator-wide camera,
-// with the 3D buildings and 3D road SUPPRESSED (metric building footprints stay
-// on as depth-only occluders). It is a supported, opt-in mode gated exactly like
-// ?guide=1, so the default scene is completely unaffected.
-function resolvePhotorealMode(): boolean {
-  if (typeof window === "undefined") return false;
-  return new URLSearchParams(window.location.search).get("photoreal") === "1";
-}
-
 // Photobash view: ?photobash=1 — NO plate. Renders the textured asphalt road
 // (vector markings suppressed) + MarkingDecalLayer textured marking decals (which
 // reuse the same metric marking specs, so they are structurally aligned with the
 // lanes/vehicles) + live vehicles, signals, lighting, and post-FX. Gated exactly
-// like ?guide=1 / ?photoreal=1, so the default and photoreal scenes are unaffected.
+// like ?guide=1, so the default scene is completely unaffected.
 function resolvePhotobashMode(): boolean {
   if (typeof window === "undefined") return false;
   return new URLSearchParams(window.location.search).get("photobash") === "1";
 }
-
-// DIAGNOSTIC COMPARISON (?cmp=A|B) — experimental, only meaningful with
-// ?photoreal=1. Absent ?cmp the default is the v5 plate (overlay OFF); these are
-// roadlock-plate diagnostics layered on top of resolvePlateChoice.
-//   A = plain-asphalt plate (no painted lanes) + R3F markings overlay ON  → a
-//       single, non-doubled lane set with vehicles centred in it.
-//   B = roadlock plate's painted lanes + R3F markings overlay OFF + URL-driven
-//       per-approach vehicle lateral calibration (?calB=, see
-//       plateVehicleCalibration) so live vehicles seat on the plate's lanes.
-function resolveCmpMode(): "A" | "B" | null {
-  if (typeof window === "undefined") return null;
-  const v = new URLSearchParams(window.location.search).get("cmp");
-  return v === "A" || v === "B" ? v : null;
-}
-
-// PLATE CHOICE (?photoreal=1) — the dense-canyon cover-v5 road-lock plate is the
-// PRODUCTION DEFAULT. The v5 plate already carries its own painted lanes + 4-way
-// crosswalks, so the R3F lane-markings overlay is OFF for it (the plate supplies
-// the road). ?plate=roadlock is the escape hatch back to the legacy geometry-locked
-// plate (which DOES get the R3F overlay).
-//
-// ⚠️ LOCKED DECISION — do NOT turn the R3F overlay ON for v5. v5's baked lanes are
-// offset from the metric projection, so overlaying the metric R3F lanes DOUBLES
-// them (render-verified 2026-06-30; see the SimulationScenePhotoreal guardrail test
-// and apps/web/AGENTS.md). roadlock is geometry-locked so its overlay lands clean.
-function resolvePlateChoice(): "v5" | "roadlock" {
-  if (typeof window === "undefined") return "v5";
-  return new URLSearchParams(window.location.search).get("plate") === "roadlock"
-    ? "roadlock"
-    : "v5";
-}
-
-// DIAGNOSTIC (?cmp=A): the markings overlay + vehicles are registered onto the
-// plain plate via a SINGLE GLOBAL +X group translate (the dx8.5 mechanism) — one
-// <group> wraps the R3F markings and the live vehicles so they move TOGETHER by
-// getCmpAGlobalXShiftMeters() metres in world X (default 8.5, tunable via
-// ?cmpAdx= without a rebuild). N/S arms shift laterally; E/W arms shift along
-// their travel axis. No per-corridor offset, no west rotation, no far-extension.
 
 export function SimulationScene({
   sceneSnapshot,
@@ -127,108 +76,9 @@ export function SimulationScene({
   // same viewpoint/cameraPreset path so the guide matches the live scene frame.
   const isGuide = resolveGuideMode();
 
-  // Production photoreal view (?photoreal=1): photoreal plate backdrop + live
-  // vehicles, pedestrians, and signals composited on top. Buildings + 3D road
-  // suppressed. The camera is pinned to the operator-wide day/clear rig because
-  // rain/night would add a shake offset (CameraRig) that misregisters the fixed
-  // screen-space plate; lighting, plate, vehicles, and signals still follow the
-  // real timeOfDay so day and night both read correctly. Post-FX mirrors the
-  // normal scene (day: ACES pipeline; night: Bloom-only).
-  const isPhotoreal = resolvePhotorealMode();
   // Photobash mode (?photobash=1): plate-free textured-asphalt road + decal
   // markings + live vehicles/signals. See resolvePhotobashMode.
   const isPhotobash = resolvePhotobashMode();
-  const cmpMode = resolveCmpMode();
-  const plateChoice = resolvePlateChoice();
-
-  if (isPhotoreal) {
-    // Plate precedence: cmp=A → plain diagnostic plate; cmp=B → roadlock (its
-    // calibration diagnostic); ?plate=roadlock → roadlock escape hatch; otherwise
-    // the v5 production default.
-    const useRoadlock = plateChoice === "roadlock" || cmpMode === "B";
-    const plateVariant =
-      cmpMode === "A" ? "plain" : useRoadlock ? "roadlock" : "v5";
-    // R3F lane-markings overlay is ON only for the geometry-locked plates: the
-    // plain cmp=A plate and the roadlock plate (when not the cmp=B calibration
-    // diagnostic). The v5 default keeps it OFF — overlaying its baked lanes with
-    // the metric R3F lanes DOUBLES them (render-verified). ⚠️ DO NOT flip v5 ON;
-    // the SimulationScenePhotoreal guardrail test pins this.
-    const showR3fMarkings =
-      cmpMode === "A" || (plateVariant === "roadlock" && cmpMode !== "B");
-    // cmp=A is a clean road-registration diagnostic: hide the heavy 3D scene
-    // except the plate + R3F markings + live vehicles + signals (+ depth
-    // occluders). Pedestrians and the distant atmospheric scenery are suppressed
-    // (the scenery caused a light-leak); signals stay ON so live signal state
-    // reads against the plate. Committed photoreal + cmp=B keep everything.
-    const isCmpA = cmpMode === "A";
-    return (
-      <group name="photoreal-production-scene">
-        <CameraRig preset="operatorWide" weather="clear" timeOfDay="day" />
-        <SceneLighting
-          isNight={isNight}
-          sceneSnapshot={sceneSnapshot}
-          qualityPreset={qualityPreset}
-          weather="clear"
-          timeOfDay={timeOfDay}
-          suppressAtmosphericScenery={isCmpA}
-        />
-        <PhotorealPlate timeOfDay={timeOfDay} variant={plateVariant} />
-        {/* Metric-exact road MARKINGS composited on the plate. The plate's
-            imagegen road grid is rotated/offset from the metric projection and
-            its lane spacing ≠ 3.6 m, so a screen-space plate offset/scale cannot
-            seat all four approaches. Drawing the geometry-derived lane lines,
-            중앙선, 정지선 and crosswalks on top makes the visible lanes metric-exact,
-            so the live vehicles (same getInboundLaneOffset SSOT) sit centred in
-            them. Asphalt stays from the plate (markingsOnly).
-            cmp=A (dx8.5): the markings + vehicles are wrapped in ONE group and
-            translated together by a single GLOBAL +X shift
-            (getCmpAGlobalXShiftMeters, default 8.5, ?cmpAdx=). Committed photoreal
-            + cmp=B render them flat (no shift). */}
-        {isCmpA && (
-          <group
-            name="cmp-a-dx85-shift"
-            position={[getCmpAGlobalXShiftMeters(), 0, 0]}
-          >
-            {showR3fMarkings && (
-              <Suspense fallback={null}>
-                <RoadSurfaceLayer isNight={isNight} markingsOnly cmpA />
-              </Suspense>
-            )}
-            <DynamicVehicleLayerWithWeather
-              isNight={isNight}
-              timeOfDay={timeOfDay}
-              sceneSnapshot={sceneSnapshot}
-              qualityPreset={qualityPreset}
-              viewpoint="wide"
-            />
-          </group>
-        )}
-        {!isCmpA && showR3fMarkings && (
-          <Suspense fallback={null}>
-            <RoadSurfaceLayer isNight={isNight} markingsOnly />
-          </Suspense>
-        )}
-        {!isCmpA && (
-          <DynamicVehicleLayerWithWeather
-            isNight={isNight}
-            timeOfDay={timeOfDay}
-            sceneSnapshot={sceneSnapshot}
-            qualityPreset={qualityPreset}
-            viewpoint="wide"
-          />
-        )}
-        {!isCmpA && <DynamicPedestrianLayer sceneSnapshot={sceneSnapshot} />}
-        {/* cmp=A keeps SIGNALS ON (live signal state is wanted back). The earlier
-            light-leak came from the distant backdrop (suppressAtmosphericScenery),
-            not the signal hardware, so signals render in cmp=A too. */}
-        <SignalLayer
-          signals={sceneSnapshot.signals}
-          lightingPreset={isNight ? "night" : "day"}
-        />
-        <SceneFinishing isNight={isNight} qualityPreset={qualityPreset} />
-      </group>
-    );
-  }
 
   if (isGuide) {
     // Use "nightAerialProof" for wide (= STAGE5_CAMERA, exact plate-camera match)
