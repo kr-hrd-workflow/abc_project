@@ -9193,6 +9193,18 @@ body {
   align-items: stretch;
 }
 
+/* Scene controls sit on the second row beside the operator card (row 1 holds
+   city / mode / safety, matching the original 3-column layout). Ordering keeps
+   the DOM sequence intact while placing scene controls in the wide first
+   column so its three toggle groups have room. */
+.launch-dashboard:is([data-layout="operations-cockpit"], [data-layout="spatial-command-hybrid"]) .operation-row > .scene-controls-panel {
+  order: 1;
+}
+
+.launch-dashboard:is([data-layout="operations-cockpit"], [data-layout="spatial-command-hybrid"]) .operation-row > .operator-card {
+  order: 2;
+}
+
 .launch-dashboard:is([data-layout="operations-cockpit"], [data-layout="spatial-command-hybrid"]) .operation-mode-panel,
 .launch-dashboard:is([data-layout="operations-cockpit"], [data-layout="spatial-command-hybrid"]) .scene-controls-panel,
 .launch-dashboard:is([data-layout="operations-cockpit"], [data-layout="spatial-command-hybrid"]) .safety-command-banner,
@@ -9208,7 +9220,7 @@ body {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 10px;
-  align-items: stretch;
+  align-items: center;
 }
 
 .launch-dashboard:is([data-layout="operations-cockpit"], [data-layout="spatial-command-hybrid"]) .scene-controls-panel .operation-toggle {
@@ -9859,6 +9871,12 @@ body {
   .launch-dashboard:is([data-layout="operations-cockpit"], [data-layout="spatial-command-hybrid"]) .operation-mode-panel,
   .launch-dashboard:is([data-layout="operations-cockpit"], [data-layout="spatial-command-hybrid"]) .scene-controls-panel {
     grid-column: 1 / -1;
+  }
+
+  /* Reset the desktop row-2 reorder so the stacked layout keeps DOM order. */
+  .launch-dashboard:is([data-layout="operations-cockpit"], [data-layout="spatial-command-hybrid"]) .operation-row > .scene-controls-panel,
+  .launch-dashboard:is([data-layout="operations-cockpit"], [data-layout="spatial-command-hybrid"]) .operation-row > .operator-card {
+    order: 0;
   }
 
   .launch-dashboard:is([data-layout="operations-cockpit"], [data-layout="spatial-command-hybrid"]) .cockpit-grid {
