@@ -67,7 +67,13 @@ function SceneEnvironmentComponent({
   suppressAtmosphericScenery = false
 }: SceneEnvironmentProps) {
   if (timeOfDay === "night") {
-    return <SceneNightEnvironment />;
+    return (
+      <SceneNightEnvironment
+        signals={signals}
+        qualityPreset={qualityPreset}
+        weather={weather}
+      />
+    );
   }
 
   return (
@@ -136,7 +142,15 @@ SceneDayEnvironment.displayName = "SceneDayEnvironment";
 // Night path (mirrors NightSeamlessLighting)
 // ---------------------------------------------------------------------------
 
-function SceneNightEnvironmentComponent() {
+function SceneNightEnvironmentComponent({
+  signals,
+  qualityPreset,
+  weather
+}: {
+  signals: SceneSnapshot["signals"];
+  qualityPreset: Stage6QualityPreset;
+  weather: Stage6WeatherPresetName;
+}) {
   const config = useMemo(() => resolveNightEnvConfig(), []);
 
   return (
@@ -170,11 +184,22 @@ function SceneNightEnvironmentComponent() {
         intensity={config.keyIntensity}
         position={[18, 42, -8]}
       />
+      {/* Rain must read as rain at night too: mount the weather treatment
+          (rain streaks + additive wet-road glow, toneMapped=false so it glows
+          under night Bloom) but sceneryless — the night IBL/neon backdrop and
+          building/sky layer own the background, so its day background/fog/
+          distant-city/haze are gated off (must NOT clobber the night backdrop). */}
+      <WeatherAndAtmosphere
+        weather={weather}
+        qualityPreset={qualityPreset}
+        signals={signals}
+        sceneryless
+      />
     </group>
   );
 }
 
-const SceneNightEnvironment = memo(SceneNightEnvironmentComponent);
+export const SceneNightEnvironment = memo(SceneNightEnvironmentComponent);
 SceneNightEnvironment.displayName = "SceneNightEnvironment";
 
 // ---------------------------------------------------------------------------
