@@ -1,22 +1,22 @@
 {
-  "baseline_id": "r3f-dashboard-visual-baseline-2026-07-01-hero-facade-full-massing",
+  "baseline_id": "r3f-dashboard-visual-baseline-2026-07-03-photobash-default-scene-completion",
   "source_artifact": "artifacts/r3f-dashboard-details.json",
   "desktop": {
     "canvas_metrics": {
       "width": 914,
       "height": 680,
       "sampled_pixels": 621520,
-      "non_background_ratio": 0.9533997296949415,
-      "bright_ratio": 0.46043248809370574,
-      "dark_ratio": 0.11269790191787875,
-      "warm_light_ratio": 0.000942849787617454,
-      "cool_light_ratio": 0.052630647444973616,
-      "marking_ratio": 0.49749324237353587,
-      "saturated_ratio": 0.261272364525679,
-      "color_bucket_count": 605,
-      "luminance_stddev": 72.8665918654261
+      "non_background_ratio": 0.9738769468400051,
+      "bright_ratio": 0.5305348178658772,
+      "dark_ratio": 0.06016861886986742,
+      "warm_light_ratio": 0.002028896897927661,
+      "cool_light_ratio": 0.05273844767666366,
+      "marking_ratio": 0.5858250740120994,
+      "saturated_ratio": 0.209579739992277,
+      "color_bucket_count": 591,
+      "luminance_stddev": 67.45888639811862
     }
   },
-  "generated_at": "2026-07-01T05:26:00.000Z",
-  "baseline_reason": "Extended hero-building zero-margin imagegen facade treatment from the 4 intersection corners to all 14 remaining avenue-frontage 'concrete pool' buildings (gangnam-n/s-west/east-commercial+fill, teheran-frontage-n1/s1, seocheo-w-mid/n1/s1/s2) — 70 more front/back/left/right/top photos replacing the shared 5-slot stretched facade-elev pool. Also fixed 4 pre-existing footprint overlaps (nw/ne/se/sw corners overlapping seocheo-n1/s1 and teheran-frontage-n1/s1 by 12-28m) by narrowing/repositioning the frontage buildings and cascading teheran-e1-near/frontage-n2/n3/e3 further out. Large histogram shift (far more window/AC-unit/signage detail across the skyline, less flat pool-color massing) - intentional, rebaselined 2026-07-01."
+  "generated_at": "2026-07-03T06:00:00.000Z",
+  "baseline_reason": "Re-baselined for the R3F default-scene completion branch (feat/r3f-default-scene-completion). The photobash composition is now the default scene: photobash promotion, live-SUMO default, day/night + clear/rain scene UI controls, and the marking-decal draw-call merge (790->6 draw calls). The prior 2026-07-01 hero-facade baseline still accepted these renders within threshold, but the desktop canvas histogram is recentered here to describe the promoted default scene as the new reference (thresholds unchanged in verify-r3f-visual-diff.mjs). day/night x clear/rain scenario renders reviewed via codex CLI -> PASS (rain-at-night shows wet-road treatment combined with night lighting; dark night building facades are the spec-deferred sub-project-C observation, geometry/silhouettes intact)."
 }
