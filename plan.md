@@ -132,8 +132,11 @@ Current maintenance slice:
       public candidate for the `인계사거리` same-intersection signal timing
       blocker, and record the key-gated probe result.
 - [x] Submit and approve the publicDataPk `15157604` development application,
-      then run redacted approved-key probes that currently return gateway
+      then run redacted approved-key probes that initially returned gateway
       HTTP 403 instead of a documented API response envelope.
+- [x] Retry publicDataPk `15157604` after propagation; confirm the API now
+      reaches the documented response envelope, then page through coverage and
+      rule it out for current Gyeonggi/Suwon/`인계사거리` signal timing.
 
 Maintenance evidence:
 
@@ -257,6 +260,14 @@ Maintenance evidence:
   and `type=json` / `_type=json` / no type variants all returned 403, so this
   is currently a gateway/access issue rather than evidence that `인계사거리` is
   absent.
+- A later approved-key retry reached the documented API envelope. Exact
+  `stdgCd=4111514100` calls for `crsrd_map_info` and `tl_drct_info` returned
+  HTTP 200 with `resultCode=K3`, `resultMsg=NODATA_ERROR`, and `totalCount=0`.
+- A paged approved-key coverage probe using 100 rows per page saved
+  `output/real-samples/public-data/national-traffic-signal/national-traffic-signal-coverage-probe.json`
+  outside git. `crsrd_map_info` returned 4,237 rows for 서울특별시, 울산광역시,
+  and 제주특별자치도 only. `tl_drct_info` returned 1,377 fetched rows for
+  서울특별시 and 울산광역시 only. No Gyeonggi/Suwon/`인계사거리` rows were found.
 - UTIC signal-open data was checked as a fallback, but its public reference
   describes Incheon/Daegu TOD and SIGNALMAP data collected daily or on change,
   not a Suwon `인계사거리` real-time remaining-time source.
@@ -364,9 +375,10 @@ Real sample intake evidence:
   - for replay-ready `인계사거리` evidence, same-intersection current signal
     timing is also required; the Seoul V2X cardinal sample proves the adapter
     path, not that exact Gyeonggi controller state
-  - the next concrete signal-data step is retrying publicDataPk `15157604`
-    after a propagation delay or checking with the portal/provider why the
-    approved development key still receives gateway HTTP 403
+  - publicDataPk `15157604` is no longer blocked by authentication, but current
+    coverage does not include Gyeonggi/Suwon/`인계사거리`; the next concrete
+    signal-data step is finding a Suwon/Gyeonggi-specific signal source or
+    obtaining a partner/controller sample
 
 ## Historical Plan: Synthetic Scenario Evaluation
 

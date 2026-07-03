@@ -10,11 +10,11 @@ same-intersection signal-timing blocker:
 https://www.data.go.kr/data/15157604/openapi.do
 ```
 
-This is the strongest public candidate found so far for pairing the Gyeonggi
+This was the strongest public candidate found so far for pairing the Gyeonggi
 `인계사거리` CCTV/ROI detector evidence with real signal status and remaining
-time. It is not yet accepted as project evidence because the approved
-development key still returns HTTP 403 from the gateway and the API has not yet
-proven that it contains the exact `인계사거리` intersection.
+time. After approved-key retries, the API is reachable, but current coverage
+does not include Gyeonggi/Suwon/`인계사거리`. It therefore cannot currently close
+the same-intersection signal-timing blocker for the Ingye sample.
 
 ## Why It Matters
 
@@ -126,7 +126,7 @@ output/real-samples/public-data/national-traffic-signal/national-traffic-signal-
 output/real-samples/public-data/national-traffic-signal/national-traffic-signal-direction-ingye-4111514100-provenance.json
 ```
 
-Both approved-key calls returned HTTP 403 with body:
+The first approved-key calls returned HTTP 403 with body:
 
 ```text
 Forbidden
@@ -140,9 +140,51 @@ type=json, _type=json, and no type parameter
 crsrd_map_info and tl_drct_info
 ```
 
-Because the response does not reach the API's documented `resultCode` /
-`resultMsg` envelope, this is currently classified as a gateway/access issue,
-not as evidence that `인계사거리` is absent from the dataset.
+Because that response did not reach the API's documented `resultCode` /
+`resultMsg` envelope, it was classified as a temporary gateway/access issue,
+not as evidence that `인계사거리` was absent from the dataset.
+
+After retrying, both exact `stdgCd=4111514100` calls reached the documented
+response envelope:
+
+```text
+HTTP 200
+resultCode: K3
+resultMsg: NODATA_ERROR
+totalCount: 0
+```
+
+The refreshed exact-response files remain in the same ignored output bundle.
+
+## Coverage Probe
+
+Because the exact `인계동` code returned no data, the approved key was also used
+to page through the unfiltered API responses at 100 rows per page. The redacted
+coverage report is:
+
+```text
+output/real-samples/public-data/national-traffic-signal/national-traffic-signal-coverage-probe.json
+```
+
+Coverage observed on 2026-07-03:
+
+```text
+crsrd_map_info:
+  resultCode: K0
+  totalCount: 4237
+  fetchedItemCount: 4237
+  local governments: 서울특별시 2777, 울산광역시 402, 제주특별자치도 1058
+
+tl_drct_info:
+  resultCode: K0
+  totalCount: 1382
+  fetchedItemCount: 1377
+  local governments: 서울특별시 978, 울산광역시 399
+```
+
+No Gyeonggi/Suwon/`인계사거리` rows were found in the paged coverage scan. Some
+name matches such as `경기고교앞` or `월드컵경기장` are Seoul/Jeju names and are
+not Gyeonggi-do coverage.
 
 ## Comparison With Other Signal Sources
 
@@ -170,22 +212,15 @@ program, but it does not expose a public API or prove coverage for
 
 The next useful external actions are:
 
-1. Retry the approved-key calls after a propagation delay.
-2. If 403 persists, contact the public data portal/provider or check whether
-   the API gateway requires an additional account/IP/operation setting not
-   exposed on the detail page.
-3. After the gateway reaches the documented response envelope:
+1. Do not build an `인계사거리` signal adapter from this API unless future
+   coverage adds Gyeonggi/Suwon rows.
+2. Search for a Suwon/Gyeonggi-specific traffic signal API, signal-controller
+   data-sharing channel, or navigation/V2X partner sample.
+3. If no same-intersection signal source can be obtained, keep the Ingye sample
+   classified as camera-side detector evidence only.
 
-1. Fetch `/crsrd_map_info` with `stdgCd=4111514100`.
-2. Search the returned `crsrdNm` values for `인계사거리` or nearby Suwon
-   intersections.
-3. If a matching `crsrdId` exists, fetch `/tl_drct_info` for the same
-   `stdgCd`.
-4. Confirm freshness through `totDt`.
-5. Only then design a small adapter from the key-backed response to
-   `LiveSignalSnapshot`.
-
-Until that key-backed check succeeds, `인계사거리` remains blocked by:
+Until same-intersection signal coverage or another trusted signal sample is
+available, `인계사거리` remains blocked by:
 
 ```text
 same_intersection_signal_timing_required

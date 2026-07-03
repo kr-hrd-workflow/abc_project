@@ -419,10 +419,11 @@ docs/data/national-traffic-signal-real-time-candidate.md
 That source is the 2026 nationwide traffic-signal real-time API from
 행정안전부/한국지역정보개발원. It exposes `crsrd_map_info` and `tl_drct_info`
 operations in Swagger. The development application was automatically approved
-on 2026-07-03, but both approved-key operations still returned HTTP 403
-`Forbidden` from the gateway during the first local probe. A key-backed
-`NORMAL_SERVICE` response is still required before claiming `인계사거리` signal
-timing coverage.
+on 2026-07-03. A retry reached the documented response envelope, but exact
+`stdgCd=4111514100` returned `K3` / `NODATA_ERROR`, and a paged coverage scan
+found only 서울특별시, 울산광역시, and 제주특별자치도 map data plus 서울특별시
+and 울산광역시 signal remaining-time data. It therefore does not currently prove
+`인계사거리` signal timing coverage.
 
 This keeps the project boundary honest: multi-direction CCTV frames need
 approach-specific crops or detector lane/track geometry before detections can
