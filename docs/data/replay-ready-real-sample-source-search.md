@@ -4,18 +4,19 @@
 
 Updated on 2026-07-03.
 
-The strongest replay-ready path is no longer `인계사거리`. The current best
-candidate is:
+The strongest replay-ready path is no longer `인계사거리`. After visual review,
+the current best candidate is:
 
 ```text
-Intersection: 서울특별시 선사사거리
-Camera: TOPIS CCTV camId=299, camName=선사사거리
-Signal candidate: 전국 통합데이터 교통안전 신호등 실시간 정보 crsrdId=1014
+Intersection: 서울특별시 시청
+Camera: TOPIS CCTV camId=190, camName=시청
+Signal candidate: 전국 통합데이터 교통안전 신호등 실시간 정보 crsrdId=2904
 ```
 
-This pair is promising because the public TOPIS CCTV page exposes a playable
-HLS stream for `선사사거리`, and the national traffic-signal coverage report
-already shows a 서울특별시 `선사사거리` row with `crsrdId=1014`.
+This pair is stronger than the earlier `선사사거리` candidate because the TOPIS
+`시청` frame visibly contains a multi-leg signalized intersection, crosswalks,
+vehicles, and pedestrians. The national traffic-signal coverage report also
+contains 서울특별시 `시청` rows, including `crsrdId=2904`.
 
 It is not yet a complete replay-ready sample because the current
 same-intersection signal-direction row still needs a valid approved key probe
@@ -38,6 +39,8 @@ Public page behavior inspected:
 Local candidate probes:
 
 ```text
+output/real-samples/public-data/seoul-topis-cctv/topis-cctv-190.raw.json
+output/real-samples/public-data/seoul-topis-cctv/topis-cctv-190.redacted.json
 output/real-samples/public-data/seoul-topis-cctv/topis-cctv-299.raw.json
 output/real-samples/public-data/seoul-topis-cctv/topis-cctv-299.redacted.json
 ```
@@ -48,6 +51,8 @@ The redacted file removes `hlsUrl`.
 Frame extraction:
 
 ```text
+output/real-samples/public-data/seoul-topis-cctv/topis-시청-190-live-frame.jpg
+output/real-samples/public-data/seoul-topis-cctv/topis-시청-190-live-frame-provenance.json
 output/real-samples/public-data/seoul-topis-cctv/topis-seonsa-cctv-299-live-frame.jpg
 output/real-samples/public-data/seoul-topis-cctv/topis-seonsa-cctv-299-live-frame-provenance.json
 ```
@@ -55,23 +60,29 @@ output/real-samples/public-data/seoul-topis-cctv/topis-seonsa-cctv-299-live-fram
 Detector output:
 
 ```text
+output/real-samples/public-data/seoul-topis-cctv/topis-cityhall-cctv-190-yolo-detector-output.json
 output/real-samples/public-data/seoul-topis-cctv/topis-seonsa-cctv-299-yolo-detector-output.json
 ```
 
-Observed detector result:
+Best observed detector result:
 
 ```text
 schemaVersion: authorized-camera-detector-output.v1
-intersectionId: seoul-topis-seonsa-1014
-cameraId: topis-cctv-299
-capturedAt: 2026-07-03T03:04:46.591Z
-detectionCount: 4
-classCounts: vehicle=4
+intersectionId: seoul-topis-cityhall-2904
+cameraId: topis-cctv-190
+capturedAt: 2026-07-03T04:55:20.271Z
+detectionCount: 9
+classCounts: vehicle=9
 ```
 
-The frame visually shows a real Seoul roadway CCTV view near `올림픽대로` /
-`구리화도TG` direction labels. This is real camera-side evidence, not synthetic
-or fixture data.
+The `시청` frame visually shows a real Seoul signalized intersection with
+crosswalks and multiple approach lanes. This is real camera-side evidence, not
+synthetic or fixture data.
+
+The earlier `선사사거리` frame remains useful as proof that TOPIS HLS can be
+captured, but it is weaker as a replay-ready intersection sample because the
+visible view is mostly a straight roadway corridor rather than an intersection
+decision scene.
 
 ## Signal-Side Evidence
 
@@ -94,13 +105,13 @@ Relevant row from that report:
 operation: crsrd_map_info
 stdgCd: 1100000000
 lclgvNm: 서울특별시
-crsrdId: 1014
-crsrdNm: 선사사거리
-totDt: 20260703050031
+crsrdId: 2904
+crsrdNm: 시청
+totDt: 20260703050032
 ```
 
 This proves that the national signal API contains a map/intersection metadata
-candidate for the same named intersection as TOPIS CCTV `camId=299`.
+candidate for the same named intersection as TOPIS CCTV `camId=190`.
 
 Current blocker:
 
@@ -109,7 +120,7 @@ same_intersection_signal_direction_row_required
 ```
 
 The project still needs a successful approved-key `tl_drct_info` probe for
-`crsrdId=1014` before building a `LiveSignalSnapshot`. A retry with a
+`crsrdId=2904` before building a `LiveSignalSnapshot`. A retry with a
 different previously provided public-data key returned HTTP 401, so that key is
 not authorized for publicDataPk `15157604`. The logged-in Chrome extension was
 temporarily unavailable during this pass, so the service-approved key could not
@@ -160,7 +171,7 @@ Status:
 - The page contains an HLS player and sample live HLS references.
 - It is potentially useful as another Seoul camera source.
 - TOPIS is currently better because it has searchable CCTV metadata and a
-  direct `선사사거리` match.
+  direct `시청` and `선사사거리` matches.
 
 ### Seoul TOPIS Open API Page
 
@@ -183,16 +194,16 @@ The shortest honest path to a complete `live-input.v1` real sample is:
 1. Reopen or recover the logged-in 공공데이터포털 development account page for
    publicDataPk `15157604`.
 2. Use the approved key only in memory to fetch `tl_drct_info` pages until
-   `crsrdId=1014` is found.
+   `crsrdId=2904` is found.
 3. Convert the matched row into a signal snapshot only after confirming field
    freshness and converting centiseconds to seconds.
 4. Add an operator/map-reviewed `camera-approach-calibration.v1` for TOPIS
-   `camId=299`; do not infer approach direction from the frame.
+   `camId=190`; do not infer approach direction from the frame.
 5. Build the final envelope:
 
    ```bash
    npm run real-sample:build-multi-camera-envelope -- \
-     output/real-samples/public-data/seoul-topis-cctv/topis-seonsa-cctv-299-yolo-detector-output.json \
+     output/real-samples/public-data/seoul-topis-cctv/topis-cityhall-cctv-190-yolo-detector-output.json \
      <camera-calibration.json> \
      <signal-snapshot.json> \
      <live-input-envelope.json>

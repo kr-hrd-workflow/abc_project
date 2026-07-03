@@ -14,13 +14,14 @@ direction calibration for the exact source view.
 Newest source-search pivot:
 
 - `인계사거리` is no longer the only target. Current best replay-ready candidate
-  is `서울특별시 선사사거리`.
-- TOPIS public CCTV `camId=299` / `선사사거리` has a playable HLS stream.
+  is `서울특별시 시청`.
+- TOPIS public CCTV `camId=190` / `시청` has a playable HLS stream and a clearer
+  signalized intersection view than the earlier `선사사거리` frame.
 - A fresh TOPIS frame and YOLO `authorized-camera-detector-output.v1` sample
   exist under ignored
   `output/real-samples/public-data/seoul-topis-cctv/`.
 - The national traffic-signal coverage report already contains
-  `서울특별시`, `crsrdId=1014`, `crsrdNm=선사사거리`; the remaining signal-side
+  `서울특별시`, `crsrdId=2904`, `crsrdNm=시청`; the remaining signal-side
   blocker is a successful approved-key `tl_drct_info` row for the same
   `crsrdId`.
 - Do not describe the TOPIS detector output as replay-ready until both
@@ -154,13 +155,14 @@ Current maintenance slice:
       reaches the documented response envelope, then page through coverage and
       rule it out for current Gyeonggi/Suwon/`인계사거리` signal timing.
 - [x] Search beyond `인계사거리` for a replay-ready real-sample path; identify
-      서울 `선사사거리` as a stronger same-name CCTV/signal candidate, extract a
-      fresh TOPIS CCTV frame, and produce YOLO detector output.
+      서울 `선사사거리` and then `시청` as same-name CCTV/signal candidates;
+      prefer `시청` because the frame clearly shows a signalized intersection,
+      then produce YOLO detector output.
 - [ ] Recover the approved publicDataPk `15157604` key path and fetch
-      `tl_drct_info` for `crsrdId=1014` / `선사사거리`.
+      `tl_drct_info` for `crsrdId=2904` / `시청`.
 - [ ] Add or reuse a national-traffic-signal snapshot builder only after a
       key-backed `tl_drct_info` row confirms field shape and freshness.
-- [ ] Build `camera-approach-calibration.v1` for TOPIS `camId=299` only with
+- [ ] Build `camera-approach-calibration.v1` for TOPIS `camId=190` only with
       operator/map-reviewed approach direction evidence.
 
 Maintenance evidence:
