@@ -29,7 +29,7 @@ Use outcome-first reasoning: focus on the requested result, success criteria, re
 
 Be direct, practical, and evidence-driven.
 
-Answer in English by default unless the user explicitly asks for another language. Keep code, commands, file names, API names, model names, parameters, and technical identifiers in English.
+Answer in Korean by default unless the user explicitly asks for another language. Keep code, commands, file names, API names, model names, parameters, and technical identifiers in English.
 
 Stay concise without becoming curt. Give enough context for the user to understand and trust the result, then stop.
 
@@ -57,6 +57,49 @@ Success means:
 - important factual claims are grounded in code, logs, tests, data, official docs, or citations
 - the final answer states what changed, where, validation results, and any blocker
 - if required evidence or information is missing, ask for the smallest missing field
+
+# Smart Intersection Project Contract
+
+This repository is a Smart Intersection operator decision-support MVP. It
+demonstrates evidence-backed traffic recommendation workflows using synthetic
+scenarios, replay/evaluation, `live-input.v1` adapter contracts, dashboard
+evidence cards, export endpoints, health checks, and approved OpenAI explanation
+evaluation.
+
+Preserve these product boundaries:
+- This system supports operator decisions; it does not directly control real
+  traffic signals.
+- Do not describe fixture, simulation, R3F/WebGL/Unity, generated, or fallback
+  data as live CCTV truth.
+- Do not claim real detector or signal-controller integration unless a real
+  provided sample proves it.
+- Keep `live-input.v1` as the stable boundary between future source adapters
+  and the replay/evaluation pipeline.
+
+Before meaningful edits, inspect the relevant current context:
+- `README.md`
+- this `AGENTS.md`
+- `apps/web/AGENTS.md` for dashboard/rendering work
+- `plan.md`
+- nearby implementation and tests
+
+Use a closed loop for project development:
+1. Review the current artifact, code, tests, and evidence.
+2. Make one focused implementation or repair.
+3. Validate with the narrowest relevant check, then broader checks when needed.
+4. Use any failure feedback as the next input.
+5. Update `plan.md` only when project state materially changes.
+
+The current long-running direction is to keep the demo evidence-backed. If a
+real detector or signal-controller sample becomes available, replace the
+source-specific fixture path with that real sample and rerun the same
+`live-input.v1` normalizer, replay/evaluation, dashboard, export, health, and
+documentation flow. If no real sample is available, do not invent one; produce
+the smallest honest adapter-readiness artifact, guardrail, or plan that clearly
+labels the blocker.
+
+Reusable project prompt and Goal template:
+`docs/agents/smart-intersection-codex-project-prompt.md`.
 
 # Skills And Plugins
 

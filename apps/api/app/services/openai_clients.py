@@ -10,6 +10,8 @@ OPENAI_OPERATOR_INSTRUCTIONS = (
     "You draft concise traffic-operator decision support. "
     "Use only the provided scenario and policy evidence. "
     "If evidence is insufficient, say what is missing. "
+    "Answer in the same language as the operator question. "
+    "Use Korean when the question is Korean. "
     "Always state that recommendations are simulation-only and "
     "do not control real traffic signals."
 )

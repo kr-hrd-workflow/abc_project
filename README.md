@@ -209,6 +209,25 @@ http://127.0.0.1:3000/dashboard
 
 ## 검증 명령
 
+렌더러(CCTV/3D/photoreal viewport) 결정을 보류한 상태에서 현재 로컬 MVP
+흐름만 확인할 때는 아래 세트를 사용합니다. 이 세트는 git 명령을 실행하지
+않고, R3F visual/performance gate도 제외합니다.
+
+```bash
+npm run test:api
+npm run test:web
+npm run build:web
+npm run runtime:readiness
+```
+
+2026-06-30 KST 로컬 재검증 결과:
+
+- `npm run test:api`: 143 passed, 2 skipped
+- `npm run test:web`: 35 files passed, 281 tests passed
+- `npm run build:web`: passed
+- `npm run runtime:readiness`: fixture simulation ready, pgvector ready,
+  OpenAI key missing, live vision dependency/model missing
+
 전체 검증:
 
 ```bash

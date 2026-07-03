@@ -2,6 +2,7 @@ from datetime import datetime
 from zoneinfo import ZoneInfo
 
 from sqlalchemy import desc, select
+from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
 from app.db import models
@@ -35,7 +36,14 @@ def ensure_intersection(
         created_at=datetime.now(SEOUL),
     )
     session.add(intersection)
-    session.flush()
+    try:
+        session.flush()
+    except IntegrityError:
+        session.rollback()
+        existing = session.get(models.Intersection, observation.intersection_id)
+        if existing is None:
+            raise
+        return existing
     return intersection
 
 
