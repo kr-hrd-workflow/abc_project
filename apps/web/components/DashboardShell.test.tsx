@@ -1905,8 +1905,21 @@ describe("DashboardShell", () => {
     expect(
       Number(viewport.getAttribute("data-r3f-visible-vehicle-count"))
     ).toBeGreaterThan(0);
-    expect(viewport.getAttribute("data-r3f-glb-vehicle-count")).toBe("5");
-    expect(viewport.getAttribute("data-r3f-street-shadow-count")).toBe("7");
+    // glb-vehicle-count now measures the live count of vehicles rendered as
+    // detailed GLB models (precise vehicles), not a static hero placement list.
+    // It is a subset of the visible vehicles and tracks mounted content.
+    const glbVehicleCount = Number(
+      viewport.getAttribute("data-r3f-glb-vehicle-count")
+    );
+    const visibleVehicleCount = Number(
+      viewport.getAttribute("data-r3f-visible-vehicle-count")
+    );
+    expect(glbVehicleCount).toBeGreaterThan(0);
+    expect(glbVehicleCount).toBeLessThanOrEqual(visibleVehicleCount);
+    // street-shadow-count now measures the mounted StreetFurnitureLayer contact shadows.
+    expect(
+      Number(viewport.getAttribute("data-r3f-street-shadow-count"))
+    ).toBeGreaterThanOrEqual(2);
     expect(viewport.getAttribute("data-r3f-vehicle-silhouette-part-count")).toBe("12");
   });
 

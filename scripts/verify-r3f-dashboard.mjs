@@ -2687,6 +2687,11 @@ function buildPhotorealismCheck(metrics, rendererProof) {
       rendererProof.streetFurnitureShadowCount >= 2 &&
       metrics.dark_ratio > 0.01 &&
       metrics.luminance_stddev > 22,
+    // glbVehicleCount + streetFurnitureShadowCount now measure MOUNTED content
+    // (vehicles rendered as detailed GLB models, and the StreetFurnitureLayer
+    // contact shadows), not static placement arrays for unmounted layers. The
+    // >=12 / >=2 / >=2 thresholds are kept — if live values ever fall short,
+    // dress the SCENE (more furniture / shadows), never lower the bar.
     detailed_vehicle_silhouettes:
       rendererProof.vehicleSilhouettePartCount >= 12 &&
       rendererProof.glbVehicleCount >= 2,

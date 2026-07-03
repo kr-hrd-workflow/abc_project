@@ -11,8 +11,10 @@ import { GroundDressingLayer } from "./GroundDressingLayer";
 import { LimitedOrbitControls } from "./LimitedOrbitControls";
 import { MarkingDecalLayer } from "./MarkingDecalLayer";
 import { NightVehicleTreatment } from "./NightVehicleTreatment";
+import { RoadDetailProps } from "./RoadDetailProps";
 import { RoadSurfaceLayer } from "./RoadSurfaceLayer";
 import { SceneEnvironment } from "./SceneEnvironment";
+import { StreetFurnitureLayer } from "./StreetFurnitureLayer";
 import { ScenePostFX } from "./ScenePostFX";
 import { deriveSignalLightingPreset, SignalLayer } from "./SignalLayer";
 import { StructuralGuideLayer } from "./StructuralGuideLayer";
@@ -105,6 +107,12 @@ export function SimulationScene({
       />
       {!isRoadOnly && (
         <BuildingLayerBoundary timeOfDay={timeOfDay} qualityPreset={qualityPreset} />
+      )}
+      {!isRoadOnly && (
+        <Suspense fallback={null}>
+          <StreetFurnitureLayer />
+          <RoadDetailProps />
+        </Suspense>
       )}
       <Suspense fallback={null}>
         <RoadSurfaceLayer isNight={isNight} suppressVectorMarkings />
