@@ -29,41 +29,6 @@ function htmlResponse(status, body) {
   };
 }
 
-function buildLiveInputEnvelope() {
-  return {
-    schemaVersion: "live-input.v1",
-    intersectionId: "INT-REAL-SAMPLE-0001",
-    receivedAt: "2026-07-01T09:10:01.000Z",
-    cameraFrames: [
-      {
-        cameraId: "authorized-cctv-east-01",
-        frameId: "authorized-frame-0001",
-        capturedAt: "2026-07-01T09:10:00.000Z",
-        detections: [
-          {
-            objectId: "det-emergency-001",
-            classLabel: "emergency_vehicle",
-            confidence: 0.96,
-            direction: "east",
-            laneId: "east_approach_1",
-            count: 1,
-            distanceMeters: 70
-          }
-        ]
-      }
-    ],
-    signalSnapshot: {
-      controllerId: "signal-controller-real-01",
-      capturedAt: "2026-07-01T09:10:00.000Z",
-      currentPhase: "east_priority",
-      remainingSeconds: 18,
-      nextPhase: "normal_cycle",
-      controllerMode: "adaptive",
-      manualOverride: false
-    }
-  };
-}
-
 describe("demo health check", () => {
   test("passes when dashboard, API, exports, and OpenAI readiness are available", async () => {
     const calls = [];
