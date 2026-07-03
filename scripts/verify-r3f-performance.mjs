@@ -10,7 +10,12 @@ const scriptDir = path.dirname(fileURLToPath(import.meta.url));
 const repoRoot = path.resolve(scriptDir, "..");
 const detailsPath = path.join(repoRoot, "artifacts", "r3f-dashboard-details.json");
 const maxPeakDrawCalls = 900;
-const maxHighPresetDrawCalls = 180;
+// Re-baselined 2026-07-03 with user approval — the hero-facade design (31 buildings x
+// per-face unique textures ≈ 155+ draw calls) made the pre-hero 180 budget structurally
+// impossible; real measured high-preset scene is 574 (first honest measurement after the
+// demand-frame sampling fix, commit 86847d2); 650 = 574 + headroom for the day-fill plan's
+// instanced additions. peak stays 900.
+const maxHighPresetDrawCalls = 650;
 const targetFrameTimeMsByQuality = {
   low: 40,
   medium: 28,

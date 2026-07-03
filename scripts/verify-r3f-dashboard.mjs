@@ -62,14 +62,23 @@ const manifestPath = path.join(
 
 const routePath = "/dashboard";
 const minVisibleVehicles = 80;
-const maxNormalDrawCalls = 180;
+// Re-baselined 2026-07-03 with user approval — the hero-facade design (31 buildings x
+// per-face unique textures ≈ 155+ draw calls) made the pre-hero 180 budget structurally
+// impossible; real measured high-preset scene is 574 (first honest measurement after the
+// demand-frame sampling fix, commit 86847d2); 650 = 574 + headroom for the day-fill plan's
+// instanced additions. peak stays 900.
+const maxNormalDrawCalls = 650;
 const maxPeakDrawCalls = 900;
 const maxShadowCasterCount = 18;
 const desktopMinFps = 60;
 const desktopMaxAverageFrameTimeMs = 16.7;
 const mobileMinFps = 30;
 const mobileMaxAverageFrameTimeMs = 33;
-const maxPayloadBytes = 25 * 1024 * 1024;
+// Re-baselined 2026-07-03 with user approval — hero facade textures (previously
+// unregistered/uncounted, recompressed 23->9.8 MB in d837752) are now registered, so the
+// gate finally sees the true payload (~32 MB). Same budget as verify-r3f-assets.mjs; this
+// is a second call site over the identical manifest-derived payload calculation.
+const maxPayloadBytes = 35 * 1024 * 1024;
 const compositionGridColumns = 5;
 const compositionGridRows = 5;
 const minReadableSceneCoverage = 0.5;
@@ -3850,7 +3859,7 @@ function addFinalAssertions() {
     `draw calls ${renderer.drawCalls ?? "missing"} via ${renderer.drawCallSource ?? "missing"}`
   );
   addAssertion(
-    "normal draw calls under 180",
+    "normal draw calls under 650",
     Number.isFinite(renderer.drawCalls) &&
       renderer.drawCalls > 0 &&
       renderer.drawCalls <= maxNormalDrawCalls,
@@ -4245,7 +4254,7 @@ function addFinalAssertions() {
     `glbVehicleCount=${renderer.glbVehicleCount ?? "missing"}, vehicleSilhouettePartCount=${renderer.vehicleSilhouettePartCount ?? "missing"}, streetFurnitureShadowCount=${renderer.streetFurnitureShadowCount ?? "missing"}`
   );
   addAssertion(
-    "payload under 25MB",
+    "payload under 35MB",
     details.payload?.bytes < maxPayloadBytes,
     `${formatBytes(details.payload?.bytes ?? 0)} / ${formatBytes(maxPayloadBytes)}`
   );

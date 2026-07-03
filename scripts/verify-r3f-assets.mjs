@@ -99,7 +99,10 @@ const proofArtifactPaths = [
 const stage6GeneratedAssetIds = new Set([
   "sprites/stage6_weather_material_source_atlas"
 ]);
-const firstPassPayloadLimitBytes = 25 * 1024 * 1024;
+// Re-baselined 2026-07-03 with user approval — hero facade textures (previously
+// unregistered/uncounted, recompressed 23->9.8 MB in d837752) are now registered, so the
+// gate finally sees the true payload (~32 MB).
+const firstPassPayloadLimitBytes = 35 * 1024 * 1024;
 const nearVehicleTriangleFloor = 600;
 const lodRank = new Map([
   ["hero", 0],
