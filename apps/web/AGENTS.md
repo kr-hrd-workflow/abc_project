@@ -6,9 +6,12 @@ This version has breaking changes — APIs, conventions, and file structure may 
 
 # Locked rendering decisions — do not "fix" these
 
-- **The photoreal plate branch is retired.** The dashboard renderer uses the
-  default `photobash-scene`; `?photoreal=1` must remain a no-op alias that does
-  not mount `PhotorealPlate`. Do not restore `BackgroundPlateLayer`,
-  `PhotorealPlate`, or the plate camera/proxy/manifest calibration stack unless
-  the human explicitly reopens that renderer direction. The current contract is
-  pinned by `components/r3f/SimulationScene.test.tsx`.
+- **The default scene is the photobash composition: metric marking DECALS
+  (`MarkingDecalLayer`), NOT the flat vector markings, and NOT an imagegen
+  plate.** The monolithic-plate approach (`?photoreal=1`, v5/roadlock plates)
+  was retired 2026-07-02 (spec:
+  `docs/superpowers/specs/2026-07-02-r3f-default-scene-completion-design.md`).
+  Vehicles ride the RAW metric lane grid (identity calibration — plate-era
+  per-approach offsets and the median-bus pin were compensations for off-metric
+  plates and were deleted with them). If vehicles look offset from lanes, fix
+  geometry/decals — do NOT reintroduce per-approach calibration tables.
