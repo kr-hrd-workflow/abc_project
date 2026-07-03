@@ -24,6 +24,9 @@ Newest source-search pivot:
   `서울특별시`, `crsrdId=2904`, `crsrdNm=시청`; the remaining signal-side
   blocker is a successful approved-key `tl_drct_info` row for the same
   `crsrdId`.
+- `npm run real-sample:build-national-signal-snapshot` is now available to
+  convert a key-backed `tl_drct_info` row into `LiveSignalSnapshot` once that
+  row is fetched.
 - Do not describe the TOPIS detector output as replay-ready until both
   `camera-approach-calibration.v1` and a fresh same-intersection signal snapshot
   are supplied.
@@ -160,8 +163,9 @@ Current maintenance slice:
       then produce YOLO detector output.
 - [ ] Recover the approved publicDataPk `15157604` key path and fetch
       `tl_drct_info` for `crsrdId=2904` / `시청`.
-- [ ] Add or reuse a national-traffic-signal snapshot builder only after a
-      key-backed `tl_drct_info` row confirms field shape and freshness.
+- [x] Add a national-traffic-signal snapshot builder so a key-backed
+      `tl_drct_info` row can become `LiveSignalSnapshot` without inventing
+      `nextPhase`, `controllerMode`, or `manualOverride`.
 - [ ] Build `camera-approach-calibration.v1` for TOPIS `camId=190` only with
       operator/map-reviewed approach direction evidence.
 

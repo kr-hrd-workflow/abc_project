@@ -27,6 +27,8 @@ export function buildRealSampleSourceSchemaExport({
     buildCommands: {
       signalSnapshot:
         "npm run real-sample:build-signal-snapshot -- <seoul-v2x-response.json> <signal-snapshot.json> <nextPhase> <controllerMode> <manualOverride>",
+      nationalSignalSnapshot:
+        "npm run real-sample:build-national-signal-snapshot -- <national-tl-drct-info-response.json> <signal-snapshot.json> <crsrdId> <nextPhase> <controllerMode> <manualOverride>",
       cameraEnvelope:
         "npm run real-sample:build-camera-envelope -- <detector-output.json> <camera-calibration.json> <signal-snapshot.json> <live-input-envelope.json>",
       prepareLiveInput:
@@ -115,6 +117,41 @@ export function buildRealSampleSourceSchemaExport({
           },
           buildSeoulV2xMessageSchema()
         ]
+      },
+      "national-traffic-signal-response.v1": {
+        $schema: "https://json-schema.org/draft/2020-12/schema",
+        title: "National traffic-signal tl_drct_info response",
+        type: "object",
+        additionalProperties: true,
+        required: ["response"],
+        properties: {
+          response: {
+            type: "object",
+            additionalProperties: true,
+            required: ["body"],
+            properties: {
+              body: {
+                type: "object",
+                additionalProperties: true,
+                required: ["items"],
+                properties: {
+                  items: {
+                    type: "object",
+                    additionalProperties: true,
+                    required: ["item"],
+                    properties: {
+                      item: {
+                        type: "array",
+                        minItems: 1,
+                        items: buildNationalTrafficSignalRowSchema()
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
       },
       "signal-snapshot-input.v1": {
         $schema: "https://json-schema.org/draft/2020-12/schema",
@@ -205,6 +242,7 @@ export function buildRealSampleSourceSchemaExport({
       "source schemas describe file shape only; freshness, provenance, and policy guardrails still run through real-sample:check",
       "camera approach direction must come from camera-approach-calibration.v1, not from detector guesses",
       "T-DATA remaining-time rows do not prove nextPhase, controllerMode, or manualOverride",
+      "National traffic signal rows can build signal snapshots only after a key-backed tl_drct_info row proves same-intersection coverage",
       "Police CrossRoadInfo responses provide intersection and signal-plan metadata only; they do not prove live detections, emergency telemetry, camera calibration, or currentPhase"
     ]
   } as const;
@@ -234,6 +272,35 @@ function buildSeoulV2xMessageSchema() {
         anyOf: [{ type: "number" }, { type: "string" }, { type: "null" }]
       },
       wtStsgRmdrCs: {
+        anyOf: [{ type: "number" }, { type: "string" }, { type: "null" }]
+      }
+    }
+  } as const;
+}
+
+function buildNationalTrafficSignalRowSchema() {
+  return {
+    type: "object",
+    additionalProperties: true,
+    required: ["stdgCd", "lclgvNm", "crsrdId", "totDt"],
+    properties: {
+      stdgCd: { type: "string", minLength: 1 },
+      lclgvNm: { type: "string", minLength: 1 },
+      crsrdId: { type: "string", minLength: 1 },
+      crsrdNm: {
+        anyOf: [{ type: "string" }, { type: "null" }]
+      },
+      totDt: { type: "string", minLength: 14 },
+      ntStsgRmndCs: {
+        anyOf: [{ type: "number" }, { type: "string" }, { type: "null" }]
+      },
+      etStsgRmndCs: {
+        anyOf: [{ type: "number" }, { type: "string" }, { type: "null" }]
+      },
+      stStsgRmndCs: {
+        anyOf: [{ type: "number" }, { type: "string" }, { type: "null" }]
+      },
+      wtStsgRmndCs: {
         anyOf: [{ type: "number" }, { type: "string" }, { type: "null" }]
       }
     }

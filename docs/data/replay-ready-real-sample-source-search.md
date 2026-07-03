@@ -122,9 +122,22 @@ same_intersection_signal_direction_row_required
 The project still needs a successful approved-key `tl_drct_info` probe for
 `crsrdId=2904` before building a `LiveSignalSnapshot`. A retry with a
 different previously provided public-data key returned HTTP 401, so that key is
-not authorized for publicDataPk `15157604`. The logged-in Chrome extension was
-temporarily unavailable during this pass, so the service-approved key could not
-be recovered automatically.
+not authorized for publicDataPk `15157604`. Chrome, the Codex Chrome Extension,
+and the native host were installed and enabled, but extension communication
+still failed after opening a fresh Chrome window, so the service-approved key
+could not be recovered automatically in this pass.
+
+The local conversion path is now ready once that key-backed row is available:
+
+```bash
+npm run real-sample:build-national-signal-snapshot -- \
+  <national-tl-drct-info-response.json> \
+  <signal-snapshot.json> \
+  2904 \
+  <nextPhase> \
+  <controllerMode> \
+  <manualOverride>
+```
 
 ## Other Sources Checked
 
@@ -195,8 +208,21 @@ The shortest honest path to a complete `live-input.v1` real sample is:
    publicDataPk `15157604`.
 2. Use the approved key only in memory to fetch `tl_drct_info` pages until
    `crsrdId=2904` is found.
-3. Convert the matched row into a signal snapshot only after confirming field
-   freshness and converting centiseconds to seconds.
+3. Convert the matched row into a signal snapshot with:
+
+   ```bash
+   npm run real-sample:build-national-signal-snapshot -- \
+     <national-tl-drct-info-response.json> \
+     <signal-snapshot.json> \
+     2904 \
+     <nextPhase> \
+     <controllerMode> \
+     <manualOverride>
+   ```
+
+   This builder converts national API centiseconds to seconds and still
+   requires operator-supplied `nextPhase`, `controllerMode`, and
+   `manualOverride`.
 4. Add an operator/map-reviewed `camera-approach-calibration.v1` for TOPIS
    `camId=190`; do not infer approach direction from the frame.
 5. Build the final envelope:

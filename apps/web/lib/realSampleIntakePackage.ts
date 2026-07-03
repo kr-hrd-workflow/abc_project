@@ -20,6 +20,7 @@ export type RealSampleIntakePackage = {
   cameraCalibrationBuildCommand: "npm run real-sample:build-camera-calibration -- <camera-calibration.json> <intersectionId> <cameraId> <approachDirection> <evidence>";
   cameraRoiFrameBuildCommand: "npm run real-sample:build-camera-roi-frame -- <frame-image.jpg> <roi-output.jpg> <x> <y> <width> <height>";
   signalSnapshotBuildCommand: "npm run real-sample:build-signal-snapshot -- <seoul-v2x-response.json> <signal-snapshot.json> <nextPhase> <controllerMode> <manualOverride>";
+  nationalSignalSnapshotBuildCommand: "npm run real-sample:build-national-signal-snapshot -- <national-tl-drct-info-response.json> <signal-snapshot.json> <crsrdId> <nextPhase> <controllerMode> <manualOverride>";
   prepareLiveInputCommand: "npm run real-sample:prepare-live-input -- <detector-output.json> <camera-calibration.json> <seoul-v2x-response.json> <signal-snapshot.json> <live-input-envelope.json> <nextPhase> <controllerMode> <manualOverride>";
   noPersistence: true;
   sampleSlotIds: string[];
@@ -27,6 +28,7 @@ export type RealSampleIntakePackage = {
     schemaVersion:
       | "authorized-camera-detector-output.v1"
       | "camera-approach-calibration.v1"
+      | "national-traffic-signal.v1"
       | "police-crossroad-info-metadata.v1";
     purpose: string;
     mapsTo: string;
@@ -89,6 +91,8 @@ export function buildRealSampleIntakePackage({
       "npm run real-sample:build-camera-roi-frame -- <frame-image.jpg> <roi-output.jpg> <x> <y> <width> <height>",
     signalSnapshotBuildCommand:
       "npm run real-sample:build-signal-snapshot -- <seoul-v2x-response.json> <signal-snapshot.json> <nextPhase> <controllerMode> <manualOverride>",
+    nationalSignalSnapshotBuildCommand:
+      "npm run real-sample:build-national-signal-snapshot -- <national-tl-drct-info-response.json> <signal-snapshot.json> <crsrdId> <nextPhase> <controllerMode> <manualOverride>",
     prepareLiveInputCommand:
       "npm run real-sample:prepare-live-input -- <detector-output.json> <camera-calibration.json> <seoul-v2x-response.json> <signal-snapshot.json> <live-input-envelope.json> <nextPhase> <controllerMode> <manualOverride>",
     noPersistence: true,
@@ -105,6 +109,12 @@ export function buildRealSampleIntakePackage({
         purpose:
           "operator-verified mapping from cameraId to approach direction",
         mapsTo: "cameraFrames[].detections[].direction"
+      },
+      {
+        schemaVersion: "national-traffic-signal.v1",
+        purpose:
+          "same-intersection current signal remaining-time row from 전국 교통안전 신호등 실시간 정보",
+        mapsTo: "signalSnapshot after current-phase candidate selection"
       },
       {
         schemaVersion: "police-crossroad-info-metadata.v1",
@@ -168,6 +178,7 @@ export function buildRealSampleIntakePackage({
       "build camera calibration only after operator/map review with npm run real-sample:build-camera-calibration -- <camera-calibration.json> <intersectionId> <cameraId> <approachDirection> <evidence>",
       "validate the envelope shape against /api/live-input-submission-schema",
       "build a signal snapshot with npm run real-sample:build-signal-snapshot -- <seoul-v2x-response.json> <signal-snapshot.json> <nextPhase> <controllerMode> <manualOverride>",
+      "or build a national traffic signal snapshot with npm run real-sample:build-national-signal-snapshot -- <national-tl-drct-info-response.json> <signal-snapshot.json> <crsrdId> <nextPhase> <controllerMode> <manualOverride>",
       "build a live-input.v1 envelope with npm run real-sample:build-camera-envelope -- <detector-output.json> <camera-calibration.json> <signal-snapshot.json> <live-input-envelope.json>",
       "build a multi-camera live-input.v1 envelope from ROI detector outputs with npm run real-sample:build-multi-camera-envelope -- <detector-output-a.json,detector-output-b.json> <camera-calibration.json> <signal-snapshot.json> <live-input-envelope.json>",
       "or run npm run real-sample:prepare-live-input -- <detector-output.json> <camera-calibration.json> <seoul-v2x-response.json> <signal-snapshot.json> <live-input-envelope.json> <nextPhase> <controllerMode> <manualOverride> to build both files and run offline validation",

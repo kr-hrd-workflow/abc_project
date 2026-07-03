@@ -15,6 +15,8 @@ describe("real sample source schema export", () => {
     expect(artifact.buildCommands).toEqual({
       signalSnapshot:
         "npm run real-sample:build-signal-snapshot -- <seoul-v2x-response.json> <signal-snapshot.json> <nextPhase> <controllerMode> <manualOverride>",
+      nationalSignalSnapshot:
+        "npm run real-sample:build-national-signal-snapshot -- <national-tl-drct-info-response.json> <signal-snapshot.json> <crsrdId> <nextPhase> <controllerMode> <manualOverride>",
       cameraEnvelope:
         "npm run real-sample:build-camera-envelope -- <detector-output.json> <camera-calibration.json> <signal-snapshot.json> <live-input-envelope.json>",
       prepareLiveInput:
@@ -24,6 +26,7 @@ describe("real sample source schema export", () => {
       "authorized-camera-detector-output.v1",
       "camera-approach-calibration.v1",
       "seoul-v2x-signal-response.v1",
+      "national-traffic-signal-response.v1",
       "signal-snapshot-input.v1",
       "police-crossroad-info-list-response.v1",
       "police-crossroad-info-detail-response.v1"
@@ -54,6 +57,10 @@ describe("real sample source schema export", () => {
       anyOf: [{ type: "number" }, { type: "string", minLength: 1 }]
     });
     expect(
+      artifact.sourceSchemas["national-traffic-signal-response.v1"].properties
+        .response.properties.body.properties.items.properties.item.items.required
+    ).toContain("crsrdId");
+    expect(
       artifact.sourceSchemas["signal-snapshot-input.v1"].properties.currentPhase
         .enum
     ).toContain("east_priority");
@@ -80,6 +87,9 @@ describe("real sample source schema export", () => {
     );
     expect(artifact.guardrailNotes).toContain(
       "Police CrossRoadInfo responses provide intersection and signal-plan metadata only; they do not prove live detections, emergency telemetry, camera calibration, or currentPhase"
+    );
+    expect(artifact.guardrailNotes).toContain(
+      "National traffic signal rows can build signal snapshots only after a key-backed tl_drct_info row proves same-intersection coverage"
     );
 
     const serialized = JSON.stringify(artifact);

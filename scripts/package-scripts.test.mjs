@@ -41,6 +41,14 @@ describe("root package scripts", () => {
       "node --test scripts/build-seoul-v2x-signal-snapshot.test.mjs"
     );
     assert.equal(
+      packageJson.scripts["real-sample:build-national-signal-snapshot"],
+      "node scripts/build-national-traffic-signal-snapshot.mjs"
+    );
+    assert.equal(
+      packageJson.scripts["test:real-sample-national-signal-build"],
+      "node --test scripts/build-national-traffic-signal-snapshot.test.mjs"
+    );
+    assert.equal(
       packageJson.scripts["real-sample:prepare-live-input"],
       "node scripts/prepare-real-sample-live-input.mjs"
     );
