@@ -388,6 +388,27 @@ The ROI review artifact is:
 output/real-samples/public-data/gyeonggi-cctv-ingye-1771/calibration-review/ingye-1771-roi-calibration-candidate.json
 ```
 
+After operator/map review confirms the ROI directions, multiple ROI detector
+outputs for the same intersection can be combined into one `live-input.v1`
+envelope instead of forcing one direction onto the full CCTV frame:
+
+```bash
+npm run real-sample:build-multi-camera-envelope -- \
+  <detector-output-a.json,detector-output-b.json> \
+  <camera-calibration.json> \
+  <signal-snapshot.json> \
+  <live-input-envelope.json>
+```
+
+For `인계사거리`, those detector outputs should share the same
+`intersectionId` such as `gyeonggi-cctv-1771`, while using distinct ROI camera
+ids such as `gyeonggi-cctv-1771-seoul-roi` and
+`gyeonggi-cctv-1771-osan-roi`. The builder rejects mixed intersection ids and
+still requires a matching `camera-approach-calibration.v1` entry for each ROI
+camera id. It also still requires a current signal snapshot for the same
+intersection context before the resulting envelope can be treated as an
+accepted real sample.
+
 This keeps the project boundary honest: multi-direction CCTV frames need
 approach-specific crops or detector lane/track geometry before detections can
 be mapped into `live-input.v1.direction`.

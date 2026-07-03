@@ -72,5 +72,13 @@ describe("root package scripts", () => {
       packageJson.scripts["test:real-sample-camera-roi-frame"],
       "node --test scripts/build-camera-roi-frame.test.mjs"
     );
+    assert.equal(
+      packageJson.scripts["real-sample:build-multi-camera-envelope"],
+      "node scripts/build-multi-camera-detector-live-input.mjs"
+    );
+    assert.equal(
+      packageJson.scripts["test:real-sample-multi-camera-build"],
+      "node --test scripts/build-multi-camera-detector-live-input.test.mjs"
+    );
   });
 });

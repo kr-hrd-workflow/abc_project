@@ -125,6 +125,9 @@ Current maintenance slice:
       `1771` / `인계사거리`, extract a fresh frame, and add a reusable ROI
       frame builder so multi-direction CCTV views can be split before YOLO and
       calibration instead of forcing the whole frame into one direction.
+- [x] Add a multi-camera detector envelope builder so multiple calibrated ROI
+      detector outputs from the same intersection can become separate
+      `cameraFrames[]` in one `live-input.v1` envelope.
 
 Maintenance evidence:
 
@@ -217,6 +220,11 @@ Maintenance evidence:
 - `npm run test:real-sample-camera-roi-frame`: 2 passed.
 - `npm --workspace apps/web run test -- realSampleIntakePackage.test.ts authorizedCameraDetectorAdapter.test.ts app/api/real-sample-intake-package/route.test.ts`:
   5 passed.
+- `npm --workspace apps/web run test -- realSampleIntakePackage.test.ts app/api/real-sample-intake-package/route.test.ts`:
+  2 passed.
+- `node --test scripts/build-multi-camera-detector-live-input.test.mjs scripts/package-scripts.test.mjs`:
+  4 passed.
+- `npm run test:real-sample-multi-camera-build`: 2 passed.
 - `npm --workspace apps/web run test -- realSampleIntakePackage.test.ts app/api/real-sample-intake-package/route.test.ts`:
   2 passed.
 - `apps/api/.venv/bin/python -m pytest apps/api/tests/test_adapters.py -q`:
@@ -316,6 +324,9 @@ Real sample intake evidence:
   is still blocked by:
   - `fresh_camera_frame_required_for_live_drop_in`
   - `camera_approach_calibration_required`
+  - for replay-ready `인계사거리` evidence, same-intersection current signal
+    timing is also required; the Seoul V2X cardinal sample proves the adapter
+    path, not that exact Gyeonggi controller state
 
 ## Historical Plan: Synthetic Scenario Evaluation
 
