@@ -128,6 +128,9 @@ Current maintenance slice:
 - [x] Add a multi-camera detector envelope builder so multiple calibrated ROI
       detector outputs from the same intersection can become separate
       `cameraFrames[]` in one `live-input.v1` envelope.
+- [x] Identify the 2026 nationwide traffic-signal real-time API as the strongest
+      public candidate for the `인계사거리` same-intersection signal timing
+      blocker, and record the key-gated probe result.
 
 Maintenance evidence:
 
@@ -227,6 +230,25 @@ Maintenance evidence:
 - `npm run test:real-sample-multi-camera-build`: 2 passed.
 - `npm --workspace apps/web run test -- realSampleIntakePackage.test.ts app/api/real-sample-intake-package/route.test.ts`:
   2 passed.
+- `https://www.data.go.kr/data/15157604/openapi.do`: official public portal
+  page for `행정안전부 한국지역정보개발원_(전국 통합데이터) 교통안전 신호등 실시간 정보`,
+  registered 2026-03-12 and marked real-time, nationwide, free, and
+  auto-approved for development/operation accounts.
+- Embedded Swagger for public data `15157604` exposes
+  `https://apis.data.go.kr/B551982/rti/crsrd_map_info` and
+  `https://apis.data.go.kr/B551982/rti/tl_drct_info` with `serviceKey`,
+  `pageNo`, `numOfRows`, `type`, and `stdgCd` query parameters.
+- Local probes against the national traffic-signal candidate using
+  `serviceKey=test`, `type=json`, and `stdgCd=4111514100` returned
+  `Unauthorized` for both `crsrd_map_info` and `tl_drct_info`, so a
+  service-approved key is required before proving `인계사거리` coverage.
+- UTIC signal-open data was checked as a fallback, but its public reference
+  describes Incheon/Daegu TOD and SIGNALMAP data collected daily or on change,
+  not a Suwon `인계사거리` real-time remaining-time source.
+- Public news reports show Suwon started providing real-time signal information
+  to KakaoNavi for 20 Gwanggyo-area intersections in 2025, which supports the
+  plausibility of Suwon signal data infrastructure but does not expose a public
+  API or prove `인계사거리` coverage.
 - `apps/api/.venv/bin/python -m pytest apps/api/tests/test_adapters.py -q`:
   6 passed.
 - The portal key table also showed a `재발급` row that still returned HTTP 401
@@ -327,6 +349,8 @@ Real sample intake evidence:
   - for replay-ready `인계사거리` evidence, same-intersection current signal
     timing is also required; the Seoul V2X cardinal sample proves the adapter
     path, not that exact Gyeonggi controller state
+  - the next concrete signal-data step is applying for publicDataPk `15157604`
+    and fetching a key-backed `crsrd_map_info` sample for `stdgCd=4111514100`
 
 ## Historical Plan: Synthetic Scenario Evaluation
 

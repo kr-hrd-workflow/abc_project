@@ -409,6 +409,19 @@ camera id. It also still requires a current signal snapshot for the same
 intersection context before the resulting envelope can be treated as an
 accepted real sample.
 
+The strongest public candidate found for that missing same-intersection signal
+snapshot is now tracked separately:
+
+```text
+docs/data/national-traffic-signal-real-time-candidate.md
+```
+
+That source is the 2026 nationwide traffic-signal real-time API from
+행정안전부/한국지역정보개발원. It exposes `crsrd_map_info` and `tl_drct_info`
+operations in Swagger, but local `serviceKey=test` probes returned
+`Unauthorized`. A service-approved key-backed response is still required before
+claiming `인계사거리` signal timing coverage.
+
 This keeps the project boundary honest: multi-direction CCTV frames need
 approach-specific crops or detector lane/track geometry before detections can
 be mapped into `live-input.v1.direction`.
