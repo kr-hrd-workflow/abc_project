@@ -9,8 +9,7 @@ import {
   getRuntimeReadiness,
   isSimulationFrameRouteMissingError,
   normalizeApiBaseUrl,
-  recommendSignal,
-  recheckOpenAIExplanationEvaluation
+  recommendSignal
 } from "./api";
 
 afterEach(() => {
@@ -204,31 +203,6 @@ describe("API client", () => {
 
     expect(recommendation.status).toBe("fallback");
     expect(recommendation.safety_boundary).toContain("No real traffic signal control");
-  });
-
-  test("posts to the live OpenAI explanation recheck route", async () => {
-    const result = {
-      model: "gpt-5.5",
-      passed: true,
-      passed_criteria: 3,
-      total_criteria: 3,
-      response_text_present: true,
-      criteria: [
-        { name: "simulation_only_boundary", label: "Simulation-only boundary", passed: true }
-      ]
-    };
-    const fetchMock = vi.fn().mockResolvedValueOnce({
-      ok: true,
-      json: async () => result
-    });
-
-    vi.stubGlobal("fetch", fetchMock);
-
-    await expect(recheckOpenAIExplanationEvaluation()).resolves.toEqual(result);
-    expect(fetchMock).toHaveBeenCalledWith(
-      "http://127.0.0.1:8000/api/openai/explanation-evaluation/recheck",
-      expect.objectContaining({ method: "POST", cache: "no-store" })
-    );
   });
 });
 

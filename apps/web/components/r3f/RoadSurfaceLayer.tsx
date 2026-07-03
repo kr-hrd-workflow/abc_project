@@ -43,10 +43,6 @@ import {
   getApproachHasMedianBus,
   getApproachRoadWidthMeters
 } from "./intersectionTruth";
-import {
-  getCmpAWestRotationRad,
-  rotateAboutIntersectionCenter
-} from "./plateVehicleCalibration";
 
 // RoadSurfaceLayer — photoreal production road rendered from the geometry model.
 //
@@ -119,24 +115,6 @@ const CMP_A_FAR_EXTEND_M: Record<Direction, number> = {
 // Outward (away-from-junction) sign along each corridor's travel axis.
 function corridorOutwardSign(direction: Direction): 1 | -1 {
   return direction === "north" || direction === "west" ? -1 : 1;
-}
-
-// cmp=A WEST-only: rotate a west marking spec about the intersection centre
-// (origin) by the shared west yaw (getCmpAWestRotationRad) so the west markings
-// follow the plate's painted 서초대로 bearing. Applied AFTER the lateral shift /
-// far-extend, so the already-placed west marking pivots about the centre (the
-// near/junction end stays ~put, the far end swings). N/S/E specs pass through
-// untouched. Uses the SAME yaw + origin as the vehicle transform so west markings
-// and west vehicles stay co-aligned on the rotated lanes.
-function rotateWestSpecAboutCenter<
-  T extends { direction: Direction; position: Vector3Tuple; rotationY?: number }
->(spec: T): T {
-  if (spec.direction !== "west") return spec;
-  const yaw = getCmpAWestRotationRad();
-  if (!yaw) return spec;
-  const [x, y, z] = spec.position;
-  const [rx, rz] = rotateAboutIntersectionCenter(x, z, yaw);
-  return { ...spec, position: [rx, y, rz], rotationY: (spec.rotationY ?? 0) + yaw };
 }
 
 // Lengthen a full-corridor longitudinal solid line (중앙선 / 길가장자리 / bus
@@ -396,12 +374,18 @@ export type RoadSurfaceLayerProps = {
   // plain plate's carriageway (same SSOT the vehicles use) and extend the far end
   // to the visible plate-road extent. No effect on the committed road / photoreal.
   cmpA?: boolean;
+  // suppressVectorMarkings (?photobash=1): render ONLY the textured asphalt and
+  // skip every merged vector-marking mesh (lane lines, 중앙선, 정지선, crosswalks,
+  // arrows, bus legends). The photobash mode replaces those flat vector markings
+  // with MarkingDecalLayer's textured decals over this asphalt.
+  suppressVectorMarkings?: boolean;
 };
 
 export function RoadSurfaceLayer({
   isNight,
   markingsOnly = false,
-  cmpA = false
+  cmpA = false,
+  suppressVectorMarkings = false
 }: RoadSurfaceLayerProps) {
   const asphaltBase = useTexture(ASPHALT_PATH) as Texture;
 
@@ -430,29 +414,18 @@ export function RoadSurfaceLayer({
       mergeFlatMarkings(
         cmpA
           ? [...LANE_DIVIDER_MARKINGS, ...buildCmpADividerExtensionDashes()]
-              .map(rotateWestSpecAboutCenter)
           : LANE_DIVIDER_MARKINGS,
         0.014
       ),
     [cmpA]
   );
   const crosswalkGeometry = useMemo(
-    () =>
-      mergeFlatMarkings(
-        cmpA
-          ? CROSSWALK_STRIPES.map(rotateWestSpecAboutCenter)
-          : CROSSWALK_STRIPES,
-        0.016
-      ),
-    [cmpA]
+    () => mergeFlatMarkings(CROSSWALK_STRIPES, 0.016),
+    []
   );
   const arrowGeometry = useMemo(
     () =>
-      mergeLaneArrows(
-        cmpA
-          ? LANE_ARROW_DECALS.map(rotateWestSpecAboutCenter)
-          : undefined
-      ),
+      mergeLaneArrows(cmpA ? LANE_ARROW_DECALS : undefined),
     [cmpA]
   );
   // 중앙선 (yellow), 중앙버스전용차로선 (blue), and the white solid line set
@@ -461,9 +434,7 @@ export function RoadSurfaceLayer({
     () =>
       mergeFlatMarkings(
         cmpA
-          ? CENTER_LINE_MARKINGS.map((s) =>
-              rotateWestSpecAboutCenter(extendSolidLongitudinal(s))
-            )
+          ? CENTER_LINE_MARKINGS.map((s) => extendSolidLongitudinal(s))
           : CENTER_LINE_MARKINGS,
         0.011
       ),
@@ -487,7 +458,7 @@ export function RoadSurfaceLayer({
               ...STOP_LINE_MARKINGS,
               ...EDGE_LINE_MARKINGS.map((s) => extendSolidLongitudinal(s)),
               ...LANE_RESTRICT_MARKINGS
-            ].map(rotateWestSpecAboutCenter)
+            ]
           : [...STOP_LINE_MARKINGS, ...EDGE_LINE_MARKINGS, ...LANE_RESTRICT_MARKINGS],
         0.013
       ),
@@ -547,6 +518,10 @@ export function RoadSurfaceLayer({
         </>
       )}
 
+      {/* Vector markings — suppressed in suppressVectorMarkings (?photobash=1),
+          where MarkingDecalLayer's textured decals replace these flat planes. */}
+      {!suppressVectorMarkings && (
+        <>
       {/* 중앙선 — yellow double-solid centre line (merged) */}
       {centerLineGeometry && (
         <mesh geometry={centerLineGeometry}>
@@ -600,6 +575,8 @@ export function RoadSurfaceLayer({
             depthWrite={false}
           />
         </mesh>
+      )}
+        </>
       )}
     </group>
   );

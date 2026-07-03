@@ -20,7 +20,7 @@ import {
   publishR3FTelemetryEvent
 } from "../../lib/r3fTelemetry";
 import { STAGE5_SHADOWS_ENABLED } from "./shadowPolicy";
-import { SimulationScene } from "./SimulationScene";
+import { SimulationScene, type SimulationViewpoint } from "./SimulationScene";
 import { STAGE5_CAMERA, getStage5CameraForAspect } from "./roadGeometry";
 import type {
   Stage6QualityPreset,
@@ -101,12 +101,14 @@ export function SimulationCanvas({
   sceneSnapshot,
   qualityPreset = getStage6QualityPreset("high"),
   weather = "rain",
-  timeOfDay = "night"
+  timeOfDay = "night",
+  viewpoint
 }: {
   sceneSnapshot: SceneSnapshot;
   qualityPreset?: Stage6QualityPreset;
   weather?: Stage6WeatherPresetName;
   timeOfDay?: Stage6TimeOfDay;
+  viewpoint?: SimulationViewpoint;
 }) {
   const renderScene = !isJsdomRuntime();
 
@@ -141,6 +143,7 @@ export function SimulationCanvas({
           qualityPreset={qualityPreset}
           weather={weather}
           timeOfDay={timeOfDay}
+          viewpoint={viewpoint}
         />
       ) : null}
     </Canvas>

@@ -4,16 +4,26 @@ import { memo } from "react";
 
 import type { SceneSnapshot } from "./buildSceneSnapshot";
 import { SignalHardware } from "./SignalHardware";
+import type { Stage6TimeOfDay, Stage6WeatherPresetName } from "./stage6Quality";
 
-type SignalLayerLightingPreset = "day" | "cloudy" | "rain" | "night";
-const ACTIVE_SIGNAL_LAYER_LIGHTING_PRESET: SignalLayerLightingPreset = "rain";
+export type SignalLayerLightingPreset = "day" | "cloudy" | "rain" | "night";
+
+export function deriveSignalLightingPreset(
+  weather: Stage6WeatherPresetName,
+  timeOfDay: Stage6TimeOfDay
+): SignalLayerLightingPreset {
+  if (timeOfDay === "night") return "night";
+  if (weather === "rain") return "rain";
+  if (weather === "cloudy") return "cloudy";
+  return "day";
+}
 
 function SignalLayerComponent({
   signals,
-  lightingPreset = ACTIVE_SIGNAL_LAYER_LIGHTING_PRESET
+  lightingPreset
 }: {
   signals: SceneSnapshot["signals"];
-  lightingPreset?: SignalLayerLightingPreset;
+  lightingPreset: SignalLayerLightingPreset;
 }) {
   return (
     <group

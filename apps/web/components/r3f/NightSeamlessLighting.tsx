@@ -86,9 +86,9 @@ function NightNeonIBL({ config }: { config: NightLightingConfig }) {
 
     scene.environment = environmentTexture;
     writeEnvironmentIntensity(scene, config.environmentIntensity);
-    // Background is owned by BackgroundPlateLayer (the photoreal night plate).
+    // Background is owned by the 3D building/sky layer, not this IBL.
     // This IBL only drives lighting, never the visible backdrop, so it must not
-    // clobber the plate with a solid color.
+    // clobber the backdrop with a solid color.
     invalidate();
 
     return () => {

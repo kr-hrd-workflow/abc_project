@@ -71,8 +71,8 @@ export const CAMERA_RIG_PRESETS = {
   // operator-cctv plate was generated from (render-plate-guides.mjs renders the
   // structural guide at this rig preset, and the AI plate is derived from that
   // guide). The plate was generated at [34,18,40]/[-4,1,-12]; an interim change
-  // to the plateCameraCalibration values [38,20,44]/[-4,1,-14] pointed the guide
-  // at building massing (road not visible) and is reverted here.
+  // to [38,20,44]/[-4,1,-14] pointed the guide at building massing (road not
+  // visible) and is reverted here.
   operatorCctv: {
     name: "operatorCctv",
     position: [34, 18, 40],

@@ -35,7 +35,12 @@ const outputDir =
   path.join(repoRoot, "artifacts", "traffic-photoreal");
 
 const routePath = "/dashboard";
-const viewport = { width: 1440, height: 1000 };
+// Viewport is env-driven (default 1440×1000); bump for a high-res facade/quality
+// capture — the captured r3f canvas is ~0.63× the viewport width.
+const viewport = {
+  width: Number(process.env.TRAFFIC_PHOTOREAL_VIEWPORT_W ?? "1440") || 1440,
+  height: Number(process.env.TRAFFIC_PHOTOREAL_VIEWPORT_H ?? "1000") || 1000
+};
 // Higher-res capture for calibration measurement (env-driven; default 1 = prod).
 const deviceScaleFactor = Number(process.env.TRAFFIC_PHOTOREAL_DSF ?? "1") || 1;
 const r3fCanvasSelector =
@@ -46,12 +51,17 @@ const r3fCanvasSelector =
 // a rebuild. Empty by default → committed production render.
 const extraQuery = process.env.TRAFFIC_PHOTOREAL_EXTRA_QUERY ?? "";
 
+// Base scene query — default ?photobash=1 (plate-free decal-marking scene, now
+// the production default; ?photoreal=1 was retired 2026-07-02). Override via env.
+const baseQuery = process.env.TRAFFIC_PHOTOREAL_BASE_QUERY ?? "?photobash=1";
+const filePrefix = process.env.TRAFFIC_PHOTOREAL_FILE_PREFIX ?? "traffic-photoreal";
+
 const targets = [
-  { name: "day", query: `?photoreal=1${extraQuery}`, file: "traffic-photoreal-day.png" },
+  { name: "day", query: `${baseQuery}${extraQuery}`, file: `${filePrefix}-day.png` },
   {
     name: "night",
-    query: `?photoreal=1&timeofday=night${extraQuery}`,
-    file: "traffic-photoreal-night.png"
+    query: `${baseQuery}&timeofday=night${extraQuery}`,
+    file: `${filePrefix}-night.png`
   }
 ];
 

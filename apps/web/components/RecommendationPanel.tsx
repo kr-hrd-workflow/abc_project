@@ -22,10 +22,6 @@ export function RecommendationPanel({
   const [refreshError, setRefreshError] = useState(false);
   const actionLabel = formatRecommendationAction(recommendation, locale);
   const situationText = formatSituation(recommendation.evidence, locale);
-  const policyScorecard = getPolicyScorecard(recommendation.evidence);
-  const operatorWorkflow = policyScorecard
-    ? deriveOperatorWorkflow(policyScorecard)
-    : null;
 
   async function handleRefreshRecommendation() {
     setRefreshState("running");
@@ -100,45 +96,13 @@ export function RecommendationPanel({
 
       <div className="evidence-table">
         <h3>{t.evidence}</h3>
-        {getPrimitiveEvidenceEntries(recommendation.evidence).map(([key, value]) => (
+        {Object.entries(recommendation.evidence).map(([key, value]) => (
           <div key={key}>
             <span>{formatEvidenceKey(key, locale)}</span>
             <strong>{formatEvidenceValue(key, value, locale)}</strong>
           </div>
         ))}
       </div>
-
-      {policyScorecard ? (
-        <div className="evidence-table policy-scorecard">
-          <h3>{locale === "ko" ? "정책 스코어카드" : "Policy scorecard"}</h3>
-          <div>
-            <span>{locale === "ko" ? "선택 정책" : "Selected policy"}</span>
-            <strong>{policyScorecard.selected_policy}</strong>
-          </div>
-          <div>
-            <span>{locale === "ko" ? "신뢰도" : "Confidence"}</span>
-            <strong>{policyScorecard.confidence}</strong>
-          </div>
-          {operatorWorkflow ? (
-            <div>
-              <span>{locale === "ko" ? "운영자 검토 상태" : "Operator review status"}</span>
-              <strong>{formatOperatorWorkflowStatus(operatorWorkflow.status, locale)}</strong>
-            </div>
-          ) : null}
-          {policyScorecard.required_inputs.length > 0 ? (
-            <div>
-              <span>{locale === "ko" ? "필요 입력" : "Required inputs"}</span>
-              <strong>{policyScorecard.required_inputs.join(", ")}</strong>
-            </div>
-          ) : null}
-          {formatMetricEntries(policyScorecard.objective_metrics).map((metric) => (
-            <div key={metric}>
-              <span>{locale === "ko" ? "목표 지표" : "Objective metric"}</span>
-              <strong>{metric}</strong>
-            </div>
-          ))}
-        </div>
-      ) : null}
 
       <div className="safety-banner">
         <strong>{t.noRealControl}</strong>
@@ -159,11 +123,7 @@ function formatEvidenceKey(key: string, locale: Locale) {
   return labels[key]?.[locale] ?? key;
 }
 
-function formatEvidenceValue(
-  key: string,
-  value: string | number | boolean | null,
-  locale: Locale
-) {
+function formatEvidenceValue(key: string, value: string | number, locale: Locale) {
   if (key === "direction") return formatDirection(String(value), locale);
   if (key === "reason") return formatReason(String(value), locale);
   if (key === "estimated_arrival_seconds") {
@@ -254,112 +214,4 @@ function formatReason(reason: string, locale: Locale) {
 function getEvidenceDirection(recommendation: Pick<Recommendation, "evidence">) {
   const direction = recommendation.evidence.direction;
   return typeof direction === "string" ? direction : null;
-}
-
-type PolicyScorecard = {
-  selected_policy: string;
-  confidence: string;
-  required_inputs: string[];
-  blocked_reasons: string[];
-  objective_metrics: Record<string, string | number | boolean>;
-};
-
-function getPolicyScorecard(
-  evidence: Recommendation["evidence"]
-): PolicyScorecard | null {
-  const scorecard = evidence.policy_scorecard;
-  if (!scorecard || typeof scorecard !== "object" || Array.isArray(scorecard)) {
-    return null;
-  }
-
-  const selectedPolicy = scorecard.selected_policy;
-  const confidence = scorecard.confidence;
-  const requiredInputs = scorecard.required_inputs;
-  const blockedReasons = scorecard.blocked_reasons;
-  const objectiveMetrics = scorecard.objective_metrics;
-
-  if (typeof selectedPolicy !== "string" || typeof confidence !== "string") {
-    return null;
-  }
-
-  return {
-    selected_policy: selectedPolicy,
-    confidence,
-    required_inputs: Array.isArray(requiredInputs)
-      ? requiredInputs.filter((input): input is string => typeof input === "string")
-      : [],
-    blocked_reasons: Array.isArray(blockedReasons)
-      ? blockedReasons.filter((reason): reason is string => typeof reason === "string")
-      : [],
-    objective_metrics:
-      objectiveMetrics && typeof objectiveMetrics === "object" && !Array.isArray(objectiveMetrics)
-        ? Object.fromEntries(
-            Object.entries(objectiveMetrics).filter(
-              (entry): entry is [string, string | number | boolean] =>
-                isPrimitiveEvidenceValue(entry[1]) && entry[1] !== null
-            )
-          )
-        : {}
-  };
-}
-
-function isPrimitiveEvidenceValue(
-  value: Recommendation["evidence"][string]
-): value is string | number | boolean | null {
-  return (
-    value === null ||
-    typeof value === "string" ||
-    typeof value === "number" ||
-    typeof value === "boolean"
-  );
-}
-
-function getPrimitiveEvidenceEntries(evidence: Recommendation["evidence"]) {
-  const entries: [string, string | number | boolean | null][] = [];
-  for (const [key, value] of Object.entries(evidence)) {
-    if (isPrimitiveEvidenceValue(value)) {
-      entries.push([key, value]);
-    }
-  }
-  return entries;
-}
-
-function formatMetricEntries(metrics: PolicyScorecard["objective_metrics"]) {
-  return Object.entries(metrics).map(([key, value]) => `${key} ${value}`);
-}
-
-type OperatorWorkflowStatus =
-  | "approval_review_ready"
-  | "manual_review_required";
-
-function deriveOperatorWorkflow(scorecard: PolicyScorecard): {
-  status: OperatorWorkflowStatus;
-} {
-  if (
-    scorecard.confidence !== "high" ||
-    scorecard.required_inputs.length > 0 ||
-    scorecard.blocked_reasons.length > 0
-  ) {
-    return { status: "manual_review_required" };
-  }
-
-  return { status: "approval_review_ready" };
-}
-
-function formatOperatorWorkflowStatus(
-  status: OperatorWorkflowStatus,
-  locale: Locale
-) {
-  const labels: Record<OperatorWorkflowStatus, Record<Locale, string>> = {
-    approval_review_ready: {
-      ko: "승인 검토 준비",
-      en: "Ready for approval review"
-    },
-    manual_review_required: {
-      ko: "수동검토 필요",
-      en: "Manual review required"
-    }
-  };
-
-  return labels[status][locale];
 }

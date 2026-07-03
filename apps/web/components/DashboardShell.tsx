@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useRef, useState } from "react";
+import { useRef, useState } from "react";
 import { useGSAP } from "@gsap/react";
 import gsap from "gsap";
 
@@ -11,7 +11,6 @@ import type {
   ChatResponse,
   FixtureIngestResult,
   IntersectionStatus,
-  OpenAIExplanationEvaluationResult,
   Recommendation,
   Report,
   RuntimeReadiness,
@@ -25,15 +24,9 @@ import type {
 } from "../lib/types";
 import type { SimulationFrameSnapshot } from "../lib/simulationSnapshot";
 import type { SimulationFrameBufferEntry } from "../lib/simulationSnapshot";
-import { buildOpenAIExplanationEvaluationReport } from "../lib/openAIExplanationEvaluationReport";
-import {
-  buildSyntheticBenchmarkReport,
-  buildSyntheticEdgeCaseReport,
-  buildSyntheticEvaluationReport,
-  buildSyntheticFailureDemoReport
-} from "../lib/syntheticEvaluationReport";
 import type { Locale } from "../lib/i18n";
 import { copy } from "../lib/i18n";
+import type { ScenePresentationState } from "./r3f/stage6Quality";
 import { AnalysisIntakePanel } from "./AnalysisIntakePanel";
 import { ChatReportPanel } from "./ChatReportPanel";
 import { DigitalTwin } from "./DigitalTwin";
@@ -62,10 +55,11 @@ export type DashboardShellProps = {
   scenarioLoading: boolean;
   selectedCityId: CityId;
   cityProfiles: CityProfile[];
+  scenePresentation: ScenePresentationState;
+  onScenePresentationChange: (next: ScenePresentationState) => void;
   onCityChange: (cityId: CityId) => void;
   onAskQuestion: (question: string) => Promise<void>;
   onGenerateReport: () => Promise<void>;
-  onRecheckOpenAIExplanationEvaluation: () => Promise<OpenAIExplanationEvaluationResult>;
   onIngestFixture: (fixtureId: string) => Promise<FixtureIngestResult>;
   onAnalyzeUpload: (file: File) => Promise<UploadAnalysisResult>;
   onRefreshAnalysisJob: (jobId: string) => Promise<AnalysisJob>;
@@ -93,9 +87,11 @@ export function DashboardShell({
   scenarioLoading,
   selectedCityId,
   cityProfiles,
+  scenePresentation,
+  onScenePresentationChange,
+  onCityChange,
   onAskQuestion,
   onGenerateReport,
-  onRecheckOpenAIExplanationEvaluation,
   onIngestFixture,
   onAnalyzeUpload,
   onRefreshAnalysisJob,
@@ -106,28 +102,8 @@ export function DashboardShell({
   const shellRef = useRef<HTMLElement>(null);
   const [locale, setLocale] = useState<Locale>("ko");
   const [operationMode, setOperationMode] = useState<"ai" | "manual">("ai");
-  const syntheticEvaluationReport = useMemo(
-    () => buildSyntheticEvaluationReport({ caseCount: 100, seed: 404 }),
-    []
-  );
-  const syntheticFailureDemoReport = useMemo(
-    () => buildSyntheticFailureDemoReport({ caseCount: 8, seed: 606 }),
-    []
-  );
-  const syntheticBenchmarkReport = useMemo(
-    () =>
-      buildSyntheticBenchmarkReport({
-        caseCountPerSeed: 1000,
-        seeds: [101, 202, 303, 404, 505]
-      }),
-    []
-  );
-  const syntheticEdgeCaseReport = useMemo(() => buildSyntheticEdgeCaseReport(), []);
-  const openAIExplanationEvaluationReport = useMemo(
-    () => buildOpenAIExplanationEvaluationReport(),
-    []
-  );
   const t = copy[locale];
+  const p = scenePresentation;
   const selectedScenario = scenarioOptions.find(
     (option) => option.id === selectedScenarioId
   );
@@ -210,7 +186,7 @@ export function DashboardShell({
               <span>{t.appSubtitle}</span>
             </div>
           </div>
-          <section className="city-profile-card" aria-label={locale === "ko" ? "교차로 프로필" : "Intersection profile"}>
+          <section className="city-profile-card" aria-label={locale === "ko" ? "도시 프로필" : "City profile"}>
             <span>{locale === "ko" ? "선택된 교차로" : "Selected intersection"}</span>
             <strong>{cityIntersectionName}</strong>
             <small>
@@ -218,15 +194,15 @@ export function DashboardShell({
             </small>
             <em>{cityMobilityProfile}</em>
           </section>
-          <div className="incident-token" aria-label={locale === "ko" ? "현재 상황 코드" : "Current incident"}>
+          <div className="incident-token" aria-label="Current incident">
             <span>INC-2025-0516-0007</span>
-            <strong>{locale === "ko" ? "진행 중" : "Active"}</strong>
+            <strong>{locale === "ko" ? "Active" : "Active"}</strong>
           </div>
-          <div className="live-clock" aria-label={locale === "ko" ? "실시간 시각" : "Live clock"}>
-            <span>{locale === "ko" ? "실시간" : "Live"}</span>
-            <strong>{new Date(status.captured_at).toLocaleTimeString(locale === "ko" ? "ko-KR" : "en-GB")}</strong>
+          <div className="live-clock" aria-label="Live clock">
+            <span>Live</span>
+            <strong>{new Date(status.captured_at).toLocaleTimeString("en-GB")}</strong>
           </div>
-          <div className="status-strip" aria-label={locale === "ko" ? "대시보드 상태" : "Dashboard status"}>
+          <div className="status-strip" aria-label="Dashboard status">
             <div className="status-chip success">
               <span>
                 <strong>{t.analysisReady}</strong>
@@ -240,7 +216,7 @@ export function DashboardShell({
               </span>
             </div>
           </div>
-          <nav className="top-actions" aria-label={locale === "ko" ? "대시보드 작업" : "Dashboard actions"}>
+          <nav className="top-actions" aria-label="Dashboard actions">
             <a href="#events" className="icon-action alert-action motion-pressable command-pressable">
               <span aria-hidden="true" className="toolbar-icon bell" />
               <span>{t.alerts}</span>
@@ -258,6 +234,27 @@ export function DashboardShell({
         </div>
 
         <div className="dashboard-scenario-row operation-row motion-enter">
+          <section className="city-segment-control" aria-label={locale === "ko" ? "도시 선택" : "City selection"}>
+            {cityProfiles.map((city) => {
+              const selected = city.id === selectedCityId;
+              const cityLabel = locale === "ko" ? city.labelKo : city.labelEn;
+              const profile = locale === "ko" ? city.mobilityProfileKo : city.mobilityProfileEn;
+
+              return (
+                <button
+                  key={city.id}
+                  type="button"
+                  aria-pressed={selected}
+                  className={`motion-pressable command-pressable${selected ? " active" : ""}`}
+                  disabled={selected}
+                  onClick={() => onCityChange(city.id)}
+                >
+                  <strong>{cityLabel}</strong>
+                  <span>{profile}</span>
+                </button>
+              );
+            })}
+          </section>
           <section className="operation-mode-panel" aria-label={t.operationMode}>
             <div className="operation-copy">
               <strong>{t.operationMode}</strong>
@@ -279,7 +276,7 @@ export function DashboardShell({
                 onClick={() => setOperationMode("ai")}
               >
                 <strong>{t.aiAutomatic}</strong>
-                <small>{locale === "ko" ? "자동 준비" : "Autonomy guard"}</small>
+                <small>{locale === "ko" ? "AI Automatic" : "Autonomy guard"}</small>
               </button>
               <button
                 type="button"
@@ -289,7 +286,7 @@ export function DashboardShell({
                 onClick={() => setOperationMode("manual")}
               >
                 <strong>{t.adminManual}</strong>
-                <small>{locale === "ko" ? "직접 검토" : "Human approval"}</small>
+                <small>{locale === "ko" ? "Admin Manual" : "Human approval"}</small>
               </button>
             </div>
             <div
@@ -309,15 +306,83 @@ export function DashboardShell({
               </div>
             </div>
           </section>
+          <section
+            className="scene-controls-panel"
+            aria-label={locale === "ko" ? "화면 설정" : "Scene controls"}
+          >
+            <div
+              className="operation-toggle motion-toggle"
+              role="group"
+              aria-label={locale === "ko" ? "주야간" : "Time of day"}
+            >
+              {(["day", "night"] as const).map((tod) => (
+                <button
+                  key={tod}
+                  type="button"
+                  aria-pressed={p.timeOfDay === tod}
+                  className={`motion-pressable command-pressable${p.timeOfDay === tod ? " active" : ""}`}
+                  onClick={() => onScenePresentationChange({ ...p, timeOfDay: tod })}
+                >
+                  <strong>
+                    {tod === "day"
+                      ? locale === "ko" ? "주간" : "Day"
+                      : locale === "ko" ? "야간" : "Night"}
+                  </strong>
+                </button>
+              ))}
+            </div>
+            <div
+              className="operation-toggle motion-toggle"
+              role="group"
+              aria-label={locale === "ko" ? "날씨" : "Weather"}
+            >
+              {(["clear", "cloudy", "rain"] as const).map((w) => (
+                <button
+                  key={w}
+                  type="button"
+                  aria-pressed={p.weather === w}
+                  className={`motion-pressable command-pressable${p.weather === w ? " active" : ""}`}
+                  onClick={() => onScenePresentationChange({ ...p, weather: w })}
+                >
+                  <strong>
+                    {w === "clear"
+                      ? locale === "ko" ? "맑음" : "Clear"
+                      : w === "cloudy"
+                        ? locale === "ko" ? "흐림" : "Cloudy"
+                        : locale === "ko" ? "강우" : "Rain"}
+                  </strong>
+                </button>
+              ))}
+            </div>
+            <div
+              className="operation-toggle motion-toggle"
+              role="group"
+              aria-label={locale === "ko" ? "카메라" : "Camera"}
+            >
+              {(["wide", "cctv"] as const).map((vp) => (
+                <button
+                  key={vp}
+                  type="button"
+                  aria-pressed={p.viewpoint === vp}
+                  className={`motion-pressable command-pressable${p.viewpoint === vp ? " active" : ""}`}
+                  onClick={() => onScenePresentationChange({ ...p, viewpoint: vp })}
+                >
+                  <strong>
+                    {vp === "wide" ? (locale === "ko" ? "운영 와이드" : "Operator wide") : "CCTV"}
+                  </strong>
+                </button>
+              ))}
+            </div>
+          </section>
           <div className="safety-command-banner" role="status">
-            <strong>{locale === "ko" ? "시뮬레이션 전용 / 실제 신호 제어 없음" : "Simulation only / No real signal control"}</strong>
+            <strong>Simulation only / No real signal control</strong>
             <span>{t.safetyCopy}</span>
           </div>
           <div className="operator-card" aria-label={t.operator}>
             <span aria-hidden="true" className="operator-avatar" />
             <div>
               <strong>{t.operator}</strong>
-              <small>{locale === "ko" ? "교통운영센터" : "Operator A"}</small>
+              <small>Operator A</small>
             </div>
             <span aria-hidden="true" className="chevron" />
           </div>
@@ -325,51 +390,44 @@ export function DashboardShell({
       </header>
 
       <div className="dashboard-grid cockpit-grid">
-        <aside className="cockpit-left motion-enter" data-mobile-priority="incidents" aria-label={locale === "ko" ? "운영 상세 레일" : "Operational detail rail"}>
-          <div className="rail-kicker">{locale === "ko" ? "현장 증거" : "Live evidence rail"}</div>
+        <aside className="cockpit-left motion-enter" data-mobile-priority="incidents" aria-label="Operational detail rail">
+          <div className="rail-kicker">Live evidence rail</div>
           <EventTimeline events={events} locale={locale} />
         </aside>
         <section
           className="cockpit-center motion-enter"
-          aria-label={locale === "ko" ? "공간 관제 화면" : "Spatial command surface"}
+          aria-label="Spatial command surface"
           data-mobile-priority="map"
         >
-          <div className="spatial-command-kicker">{locale === "ko" ? "공간 관제" : "Spatial command"}</div>
+          <div className="spatial-command-kicker">Spatial command</div>
           <DigitalTwin
             status={status}
             events={events}
-            recommendation={recommendation}
             simulation={simulation}
             simulationFrame={simulationFrame}
             simulationFrameEntries={simulationFrameEntries}
             selectedScenarioId={selectedScenarioId}
             runtimeReadiness={runtimeReadiness}
             locale={locale}
+            scenePresentation={scenePresentation}
             onRunSimulation={onRunSimulation}
           />
         </section>
         <aside
           className="cockpit-right motion-enter"
-          aria-label={locale === "ko" ? "의사결정 레일" : "Command decision rail"}
+          aria-label="Command decision rail"
           data-mobile-priority="response"
         >
-          <div className="rail-kicker">{locale === "ko" ? "운영자 조치" : "Operator action stack"}</div>
+          <div className="rail-kicker">Operator action stack</div>
           <div className="response-plan-heading">
-            <span>{locale === "ko" ? "대응 계획" : "Response Plan"}</span>
-            <small>{locale === "ko" ? "대응 절차" : "Response stack"}</small>
+            <span>Response Plan</span>
+            <small>Response stack</small>
           </div>
           <div className="response-focus-card">
-            <span>{locale === "ko" ? "의사결정 초점" : "Decision focus"}</span>
+            <span>Decision focus</span>
             <strong>{locale === "ko" ? "권고안 검토" : "Recommendation review"}</strong>
             <small>{locale === "ko" ? "실행 전 승인 필요" : "Approval required before execution"}</small>
           </div>
-          <DecisionTraceCard
-            status={status}
-            events={events}
-            recommendation={recommendation}
-            simulation={simulation}
-            locale={locale}
-          />
           <RecommendationPanel
             recommendation={recommendation}
             locale={locale}
@@ -380,15 +438,9 @@ export function DashboardShell({
           <ChatReportPanel
             chat={chat}
             report={report}
-            syntheticEvaluationReport={syntheticEvaluationReport}
-            syntheticFailureDemoReport={syntheticFailureDemoReport}
-            syntheticBenchmarkReport={syntheticBenchmarkReport}
-            syntheticEdgeCaseReport={syntheticEdgeCaseReport}
-            openAIExplanationEvaluationReport={openAIExplanationEvaluationReport}
             locale={locale}
             onAskQuestion={onAskQuestion}
             onGenerateReport={onGenerateReport}
-            onRecheckOpenAIExplanationEvaluation={onRecheckOpenAIExplanationEvaluation}
           />
         </aside>
       </div>
@@ -396,7 +448,7 @@ export function DashboardShell({
       <section
         id="scenario-control"
         className="scenario-control scenario-rail motion-enter"
-        aria-label={locale === "ko" ? "시나리오 레일" : "Scenario Rail"}
+        aria-label="Scenario Rail"
       >
         <div className="scenario-control-copy">
           <strong>{selectedScenarioLabel ? selectedScenarioLabel : t.scenario}</strong>
@@ -436,8 +488,6 @@ export function DashboardShell({
         </div>
       </section>
 
-      <LiveInputSourcesPanel runtimeReadiness={runtimeReadiness} locale={locale} />
-
       <AnalysisIntakePanel
         fixtures={fixtures}
         latestFixtureIngest={latestFixtureIngest}
@@ -449,206 +499,4 @@ export function DashboardShell({
       />
     </main>
   );
-}
-
-function LiveInputSourcesPanel({
-  runtimeReadiness,
-  locale
-}: {
-  runtimeReadiness: RuntimeReadiness;
-  locale: Locale;
-}) {
-  const sources = [
-    {
-      label: locale === "ko" ? "CCTV 분석" : "CCTV analysis",
-      status: runtimeReadiness.vision.ready,
-      mode: runtimeReadiness.vision.mode,
-      detail:
-        runtimeReadiness.vision.mode === "fixture"
-          ? locale === "ko"
-            ? "fixture 기반 프레임 분석"
-            : "Fixture frame analysis"
-          : locale === "ko"
-            ? "실시간 영상 분석 준비"
-            : "Live video analysis ready"
-    },
-    {
-      label: locale === "ko" ? "신호/시뮬레이션" : "Signal/simulation",
-      status: runtimeReadiness.simulation.ready,
-      mode:
-        runtimeReadiness.simulation.mode === "fixture"
-          ? "SUMO fixture"
-          : runtimeReadiness.simulation.mode,
-      detail:
-        locale === "ko"
-          ? "신호 상태와 정책 평가 입력"
-          : "Signal state and policy evaluation input"
-    },
-    {
-      label: locale === "ko" ? "LLM 추천" : "LLM recommendation",
-      status: runtimeReadiness.openai.ready,
-      mode: runtimeReadiness.openai.mode,
-      detail:
-        runtimeReadiness.openai.ready
-          ? locale === "ko"
-            ? "추천 설명 생성 가능"
-            : "Recommendation explanation ready"
-          : locale === "ko"
-            ? `${runtimeReadiness.openai.missing[0] ?? "API key"} 필요`
-            : `${runtimeReadiness.openai.missing[0] ?? "API key"} required`
-    },
-    {
-      label: locale === "ko" ? "기록 저장" : "Evidence store",
-      status: runtimeReadiness.pgvector.ready,
-      mode: runtimeReadiness.pgvector.mode,
-      detail:
-        locale === "ko"
-          ? "이벤트/근거 검색 저장소"
-          : "Event and evidence retrieval store"
-    }
-  ];
-
-  return (
-    <section className="live-input-sources-panel motion-enter" aria-label="Live input sources">
-      <div className="live-input-sources-heading">
-        <div>
-          <span>Live Input Sources</span>
-          <h2>{locale === "ko" ? "실시간 연동 전 준비 상태" : "Pre-live integration readiness"}</h2>
-        </div>
-        <strong>{locale === "ko" ? "Local readiness" : "Local readiness"}</strong>
-      </div>
-      <div className="live-input-source-grid">
-        {sources.map((source) => (
-          <div key={source.label} className={source.status ? "ready" : "blocked"}>
-            <span>{source.label}</span>
-            <strong>{source.mode}</strong>
-            <small>{source.detail}</small>
-          </div>
-        ))}
-      </div>
-    </section>
-  );
-}
-
-function DecisionTraceCard({
-  status,
-  events,
-  recommendation,
-  simulation,
-  locale
-}: {
-  status: IntersectionStatus;
-  events: TrafficEvent[];
-  recommendation: Recommendation;
-  simulation: SimulationComparison;
-  locale: Locale;
-}) {
-  const latestEvent = events[0] ?? null;
-  const delayDelta =
-    simulation.recommended.total_delay_seconds - simulation.baseline.total_delay_seconds;
-  const rows = [
-    {
-      label: locale === "ko" ? "영상 감지" : "Vision detection",
-      value: latestEvent ? formatTraceEventType(latestEvent.event_type, locale) : "No event",
-      detail: latestEvent
-        ? `${latestEvent.severity.toUpperCase()} · ${latestEvent.object_count}`
-        : locale === "ko"
-          ? "감지 이벤트 대기"
-          : "Waiting for event"
-    },
-    {
-      label: locale === "ko" ? "신호 상태" : "Signal state",
-      value: status.signal_phase,
-      detail:
-        locale === "ko"
-          ? `cycle ${status.cycle_second}초`
-          : `cycle ${status.cycle_second}s`
-    },
-    {
-      label: locale === "ko" ? "정책 비교" : "Policy comparison",
-      value:
-        locale === "ko"
-          ? `${simulation.baseline.average_wait_seconds}초 → ${simulation.recommended.average_wait_seconds}초`
-          : `${simulation.baseline.average_wait_seconds}s → ${simulation.recommended.average_wait_seconds}s`,
-      detail:
-        locale === "ko"
-          ? `총 지연 ${formatTraceSignedNumber(delayDelta)}초`
-          : `Total delay ${formatTraceSignedNumber(delayDelta)}s`
-    },
-    {
-      label: locale === "ko" ? "LLM 설명" : "LLM explanation",
-      value: formatTraceRecommendationAction(recommendation.action, locale),
-      detail: locale === "ko" ? "운영자 승인 필요" : "Operator approval required"
-    }
-  ];
-
-  return (
-    <section className="decision-trace-card" aria-label="Decision trace">
-      <div className="decision-trace-heading">
-        <span>Decision Trace</span>
-        <strong>{locale === "ko" ? "권고안 생성 근거" : "Recommendation rationale"}</strong>
-      </div>
-      <ol>
-        {rows.map((row) => (
-          <li key={row.label}>
-            <span>{row.label}</span>
-            <strong>{row.value}</strong>
-            <small>{row.detail}</small>
-          </li>
-        ))}
-      </ol>
-    </section>
-  );
-}
-
-function formatTraceSignedNumber(value: number) {
-  const rounded = Number.isInteger(value) ? String(value) : value.toFixed(1);
-  if (value > 0) return `+${rounded}`;
-  return rounded;
-}
-
-function formatTraceEventType(eventType: string, locale: Locale) {
-  const labels: Record<string, Record<Locale, string>> = {
-    emergency_vehicle_approach: {
-      ko: "긴급차량 접근",
-      en: "Emergency approach"
-    },
-    queue_threshold_exceeded: {
-      ko: "대기열 증가",
-      en: "Queue increase"
-    },
-    pedestrian_waiting: {
-      ko: "보행자 대기",
-      en: "Pedestrian wait"
-    },
-    intersection_blocked: {
-      ko: "교차로 차단",
-      en: "Blocked intersection"
-    }
-  };
-
-  return labels[eventType]?.[locale] ?? eventType;
-}
-
-function formatTraceRecommendationAction(action: string, locale: Locale) {
-  const labels: Record<string, Record<Locale, string>> = {
-    emergency_priority: {
-      ko: "긴급차량 우선 권고",
-      en: "Emergency priority"
-    },
-    pedestrian_priority: {
-      ko: "보행자 우선 권고",
-      en: "Pedestrian priority"
-    },
-    normal_cycle: {
-      ko: "정상 신호 유지",
-      en: "Keep normal cycle"
-    },
-    blocked_response: {
-      ko: "차단 대응 권고",
-      en: "Blocked response"
-    }
-  };
-
-  return labels[action]?.[locale] ?? action;
 }

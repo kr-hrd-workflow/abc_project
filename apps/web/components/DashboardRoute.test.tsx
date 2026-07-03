@@ -23,7 +23,6 @@ vi.mock("../lib/api", () => ({
   getRuntimeReadiness: vi.fn().mockRejectedValue(new Error("not used")),
   ingestFixture: vi.fn(),
   recommendSignal: vi.fn().mockRejectedValue(new Error("not used")),
-  recheckOpenAIExplanationEvaluation: vi.fn(),
   simulateSignal: vi.fn().mockRejectedValue(new Error("not used"))
 }));
 
