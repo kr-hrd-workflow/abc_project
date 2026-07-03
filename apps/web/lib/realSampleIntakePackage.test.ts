@@ -29,6 +29,8 @@ describe("real sample intake package", () => {
         "npm run real-sample:build-yolo-detector-output -- <frame-image.jpg> <detector-output.json> <intersectionId> <cameraId> <capturedAt> [modelPath] [confidenceThreshold]",
       cameraCalibrationBuildCommand:
         "npm run real-sample:build-camera-calibration -- <camera-calibration.json> <intersectionId> <cameraId> <approachDirection> <evidence>",
+      cameraRoiFrameBuildCommand:
+        "npm run real-sample:build-camera-roi-frame -- <frame-image.jpg> <roi-output.jpg> <x> <y> <width> <height>",
       signalSnapshotBuildCommand:
         "npm run real-sample:build-signal-snapshot -- <seoul-v2x-response.json> <signal-snapshot.json> <nextPhase> <controllerMode> <manualOverride>",
       prepareLiveInputCommand:
@@ -114,6 +116,7 @@ describe("real sample intake package", () => {
       ],
       submissionSteps: [
         "collect authorized CCTV frame/video and signal timing sample",
+        "split multi-direction CCTV frames into approach-specific ROI frames with npm run real-sample:build-camera-roi-frame -- <frame-image.jpg> <roi-output.jpg> <x> <y> <width> <height>",
         "build detector output from a frame with npm run real-sample:build-yolo-detector-output -- <frame-image.jpg> <detector-output.json> <intersectionId> <cameraId> <capturedAt> [modelPath] [confidenceThreshold]",
         "build camera calibration only after operator/map review with npm run real-sample:build-camera-calibration -- <camera-calibration.json> <intersectionId> <cameraId> <approachDirection> <evidence>",
         "validate the envelope shape against /api/live-input-submission-schema",

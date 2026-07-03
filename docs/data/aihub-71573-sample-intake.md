@@ -343,6 +343,55 @@ The CCTV coordinate is near `도곡로` / `삼성로`, and cropped review images
 created for operator inspection. That narrows the map review, but it is not a
 trusted direction mapping by itself.
 
+## Ingye Intersection ROI Detector Sample
+
+On 2026-07-03, the same Gyeonggi CCTV API was used to probe additional urban
+intersection HLS feeds. `1771` / `인계사거리` produced a clearer fresh frame
+than the `은마아파트` sample. The ignored local bundle is:
+
+```text
+output/real-samples/public-data/gyeonggi-cctv-ingye-1771/ingye-live-segment.ts
+output/real-samples/public-data/gyeonggi-cctv-ingye-1771/ingye-live-frame.jpg
+output/real-samples/public-data/gyeonggi-cctv-ingye-1771/ingye-live-segment-provenance.json
+output/real-samples/public-data/gyeonggi-cctv-ingye-1771/ingye-yolo-detector-output.json
+output/real-samples/public-data/gyeonggi-cctv-ingye-1771/ingye-seoul-yolo-detector-output.json
+output/real-samples/public-data/gyeonggi-cctv-ingye-1771/ingye-osan-yolo-detector-output.json
+```
+
+The full-frame YOLO detector output found 24 vehicles. The frame visibly mixes
+opposing directions, with `서울` and `오산` overlays in the same camera view.
+Therefore the full frame must not be mapped to a single
+`camera-approach-calibration.v1` direction.
+
+The local ROI builder exposes the safer approach:
+
+```bash
+npm run real-sample:build-camera-roi-frame -- \
+  <frame-image.jpg> \
+  <roi-output.jpg> \
+  <x> \
+  <y> \
+  <width> \
+  <height>
+```
+
+For the current `인계사거리` frame:
+
+- the `서울` ROI detector output found 15 vehicles and 1 pedestrian
+- the `오산` ROI detector output found 18 vehicles
+- `서울` is a `north` candidate and `오산` is a `south` candidate, but both
+  remain operator-confirmation candidates, not final calibration
+
+The ROI review artifact is:
+
+```text
+output/real-samples/public-data/gyeonggi-cctv-ingye-1771/calibration-review/ingye-1771-roi-calibration-candidate.json
+```
+
+This keeps the project boundary honest: multi-direction CCTV frames need
+approach-specific crops or detector lane/track geometry before detections can
+be mapped into `live-input.v1.direction`.
+
 When a fresh detector output, matching camera calibration, and Seoul V2X raw
 response are all available, the same preparation can be run as one local
 command:

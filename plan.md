@@ -7,9 +7,9 @@ synthetic-only work is no longer the most meaningful path. The local dashboard,
 exports, guardrails, policy scorecards, and `live-input.v1` handoff surfaces
 are already rich enough for rehearsal. The project now has an authorized
 historical AI-Hub CCTV frame/label sample, a T-DATA key-backed live cardinal
-signal response sample, a fresh Gyeonggi HLS CCTV frame, and a local YOLO
-detector output sample. The unresolved blocker is camera-to-approach direction
-calibration for the exact camera.
+signal response sample, fresh Gyeonggi HLS CCTV frames, and local YOLO detector
+output samples. The unresolved blocker is operator-confirmed camera/ROI-to-approach
+direction calibration for the exact source view.
 
 Current branch management:
 
@@ -121,6 +121,10 @@ Current maintenance slice:
       evidence, then add a local calibration builder that requires explicit
       operator/map-reviewed direction evidence instead of inferring direction
       from the frame or YOLO output.
+- [x] Probe alternative Gyeonggi urban intersection HLS feeds, select
+      `1771` / `인계사거리`, extract a fresh frame, and add a reusable ROI
+      frame builder so multi-direction CCTV views can be split before YOLO and
+      calibration instead of forcing the whole frame into one direction.
 
 Maintenance evidence:
 
@@ -194,10 +198,23 @@ Maintenance evidence:
 - `npm run real-sample:build-camera-calibration -- <camera-calibration.json> <intersectionId> <cameraId> <approachDirection> <evidence>`
   now writes `camera-approach-calibration.v1` only when a caller supplies an
   explicit `north`, `south`, `east`, or `west` direction plus evidence text.
+- Additional Gyeonggi CCTV probing found accessible urban intersection frames,
+  including `1771` / `인계사거리`. The fresh frame is much clearer than the
+  `은마아파트` frame, but it contains both `서울` and `오산` directions, so the
+  full frame must not be treated as a single-direction camera.
+- `npm run real-sample:build-camera-roi-frame -- <frame-image.jpg> <roi-output.jpg> <x> <y> <width> <height>`
+  now creates approach-specific ROI frames before YOLO. For the current
+  `인계사거리` frame, the full-frame detector output found 24 vehicles, the
+  `서울` ROI found 15 vehicles and 1 pedestrian, and the `오산` ROI found 18
+  vehicles. The ROI direction candidates are `서울 -> north` and `오산 -> south`,
+  pending operator/map confirmation.
 - `node --test scripts/build-yolo-detector-output.test.mjs scripts/package-scripts.test.mjs`:
   4 passed.
 - `node --test scripts/build-camera-approach-calibration.test.mjs scripts/package-scripts.test.mjs`:
   4 passed.
+- `node --test scripts/build-camera-roi-frame.test.mjs scripts/package-scripts.test.mjs`:
+  4 passed.
+- `npm run test:real-sample-camera-roi-frame`: 2 passed.
 - `npm --workspace apps/web run test -- realSampleIntakePackage.test.ts authorizedCameraDetectorAdapter.test.ts app/api/real-sample-intake-package/route.test.ts`:
   5 passed.
 - `npm --workspace apps/web run test -- realSampleIntakePackage.test.ts app/api/real-sample-intake-package/route.test.ts`:
