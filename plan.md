@@ -33,6 +33,9 @@ Newest source-search pivot:
 - Do not describe the TOPIS detector output as replay-ready until both
   `camera-approach-calibration.v1` and a fresh same-intersection signal snapshot
   are supplied.
+- A TOPIS `camId=190` camera calibration review packet now exists under ignored
+  `output/real-samples/public-data/seoul-topis-cctv/`; it does not choose a
+  direction and still requires operator/map confirmation.
 
 Current branch management:
 
@@ -172,6 +175,9 @@ Current maintenance slice:
 - [x] Add a national-traffic-signal one-shot prepare command so a key-backed
       `tl_drct_info` row can be chained with detector output and
       camera-approach calibration into `live-input.v1` plus offline validation.
+- [x] Add a camera calibration review packet builder and generate a TOPIS
+      `camId=190` review packet that records the required operator/map decision
+      without guessing `approachDirection`.
 - [ ] Build `camera-approach-calibration.v1` for TOPIS `camId=190` only with
       operator/map-reviewed approach direction evidence.
 

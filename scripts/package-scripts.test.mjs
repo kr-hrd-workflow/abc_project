@@ -77,6 +77,14 @@ describe("root package scripts", () => {
       "node --test scripts/build-camera-approach-calibration.test.mjs"
     );
     assert.equal(
+      packageJson.scripts["real-sample:build-camera-calibration-review"],
+      "node scripts/build-camera-calibration-review-packet.mjs"
+    );
+    assert.equal(
+      packageJson.scripts["test:real-sample-camera-calibration-review"],
+      "node --test scripts/build-camera-calibration-review-packet.test.mjs"
+    );
+    assert.equal(
       packageJson.scripts["real-sample:build-camera-roi-frame"],
       "node scripts/build-camera-roi-frame.mjs"
     );

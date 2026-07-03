@@ -64,6 +64,18 @@ output/real-samples/public-data/seoul-topis-cctv/topis-cityhall-cctv-190-yolo-de
 output/real-samples/public-data/seoul-topis-cctv/topis-seonsa-cctv-299-yolo-detector-output.json
 ```
 
+Calibration review packet:
+
+```text
+output/real-samples/public-data/seoul-topis-cctv/topis-cityhall-cctv-190-calibration-review-packet.json
+```
+
+This packet is intentionally not a calibration file. It records the frame,
+detector output, allowed approach directions, and the exact
+`real-sample:build-camera-calibration` command template, while keeping
+`status=needs_operator_direction_confirmation` and omitting
+`approachDirection`.
+
 Best observed detector result:
 
 ```text
@@ -243,6 +255,21 @@ The shortest honest path to a complete `live-input.v1` real sample is:
    `manualOverride`.
 4. Add an operator/map-reviewed `camera-approach-calibration.v1` for TOPIS
    `camId=190`; do not infer approach direction from the frame.
+   The current review packet is:
+
+   ```text
+   output/real-samples/public-data/seoul-topis-cctv/topis-cityhall-cctv-190-calibration-review-packet.json
+   ```
+
+   To regenerate it:
+
+   ```bash
+   npm run real-sample:build-camera-calibration-review -- \
+     output/real-samples/public-data/seoul-topis-cctv/topis-cityhall-cctv-190-yolo-detector-output.json \
+     output/real-samples/public-data/seoul-topis-cctv/topis-시청-190-live-frame.jpg \
+     output/real-samples/public-data/seoul-topis-cctv/topis-cityhall-cctv-190-calibration-review-packet.json \
+     "<operator/map review context>"
+   ```
 5. Build the final envelope either as separate steps:
 
    ```bash

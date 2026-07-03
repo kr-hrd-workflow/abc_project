@@ -18,6 +18,7 @@ export type RealSampleIntakePackage = {
   multiCameraDetectorBuildCommand: "npm run real-sample:build-multi-camera-envelope -- <detector-output-a.json,detector-output-b.json> <camera-calibration.json> <signal-snapshot.json> <live-input-envelope.json>";
   yoloDetectorBuildCommand: "npm run real-sample:build-yolo-detector-output -- <frame-image.jpg> <detector-output.json> <intersectionId> <cameraId> <capturedAt> [modelPath] [confidenceThreshold]";
   cameraCalibrationBuildCommand: "npm run real-sample:build-camera-calibration -- <camera-calibration.json> <intersectionId> <cameraId> <approachDirection> <evidence>";
+  cameraCalibrationReviewBuildCommand: "npm run real-sample:build-camera-calibration-review -- <detector-output.json> <frame-image.jpg> <camera-calibration-review.json> <reviewContext>";
   cameraRoiFrameBuildCommand: "npm run real-sample:build-camera-roi-frame -- <frame-image.jpg> <roi-output.jpg> <x> <y> <width> <height>";
   signalSnapshotBuildCommand: "npm run real-sample:build-signal-snapshot -- <seoul-v2x-response.json> <signal-snapshot.json> <nextPhase> <controllerMode> <manualOverride>";
   nationalSignalSnapshotBuildCommand: "npm run real-sample:build-national-signal-snapshot -- <national-tl-drct-info-response.json> <signal-snapshot.json> <crsrdId> <nextPhase> <controllerMode> <manualOverride>";
@@ -88,6 +89,8 @@ export function buildRealSampleIntakePackage({
       "npm run real-sample:build-yolo-detector-output -- <frame-image.jpg> <detector-output.json> <intersectionId> <cameraId> <capturedAt> [modelPath] [confidenceThreshold]",
     cameraCalibrationBuildCommand:
       "npm run real-sample:build-camera-calibration -- <camera-calibration.json> <intersectionId> <cameraId> <approachDirection> <evidence>",
+    cameraCalibrationReviewBuildCommand:
+      "npm run real-sample:build-camera-calibration-review -- <detector-output.json> <frame-image.jpg> <camera-calibration-review.json> <reviewContext>",
     cameraRoiFrameBuildCommand:
       "npm run real-sample:build-camera-roi-frame -- <frame-image.jpg> <roi-output.jpg> <x> <y> <width> <height>",
     signalSnapshotBuildCommand:
@@ -178,6 +181,7 @@ export function buildRealSampleIntakePackage({
       "collect authorized CCTV frame/video and signal timing sample",
       "split multi-direction CCTV frames into approach-specific ROI frames with npm run real-sample:build-camera-roi-frame -- <frame-image.jpg> <roi-output.jpg> <x> <y> <width> <height>",
       "build detector output from a frame with npm run real-sample:build-yolo-detector-output -- <frame-image.jpg> <detector-output.json> <intersectionId> <cameraId> <capturedAt> [modelPath] [confidenceThreshold]",
+      "build a camera calibration review packet with npm run real-sample:build-camera-calibration-review -- <detector-output.json> <frame-image.jpg> <camera-calibration-review.json> <reviewContext> when approach direction still needs operator/map confirmation",
       "build camera calibration only after operator/map review with npm run real-sample:build-camera-calibration -- <camera-calibration.json> <intersectionId> <cameraId> <approachDirection> <evidence>",
       "validate the envelope shape against /api/live-input-submission-schema",
       "build a signal snapshot with npm run real-sample:build-signal-snapshot -- <seoul-v2x-response.json> <signal-snapshot.json> <nextPhase> <controllerMode> <manualOverride>",
