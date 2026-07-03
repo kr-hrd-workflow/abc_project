@@ -12,9 +12,9 @@ https://www.data.go.kr/data/15157604/openapi.do
 
 This is the strongest public candidate found so far for pairing the Gyeonggi
 `인계사거리` CCTV/ROI detector evidence with real signal status and remaining
-time. It is not yet accepted as project evidence because a key-backed response
-has not been fetched and the API has not yet proven that it contains the exact
-`인계사거리` intersection.
+time. It is not yet accepted as project evidence because the approved
+development key still returns HTTP 403 from the gateway and the API has not yet
+proven that it contains the exact `인계사거리` intersection.
 
 ## Why It Matters
 
@@ -101,6 +101,49 @@ Unauthorized
 This means the endpoint exists, but a service-approved key is required before
 the project can verify whether `인계사거리` is present.
 
+## Approved-Key Probe
+
+On 2026-07-03, a public data portal development application for publicDataPk
+`15157604` was submitted from the logged-in account and automatically approved.
+The portal detail page showed:
+
+```text
+처리상태: 승인
+활용기간: 2026-07-03 ~ 2028-07-03
+End Point: https://apis.data.go.kr/B551982/rti
+상세기능:
+  - /crsrd_map_info
+  - /tl_drct_info
+```
+
+The approved key was used only in-memory for local probes and was not written
+to repository files or output provenance. The redacted local probe bundle is:
+
+```text
+output/real-samples/public-data/national-traffic-signal/national-traffic-signal-map-ingye-4111514100.json
+output/real-samples/public-data/national-traffic-signal/national-traffic-signal-map-ingye-4111514100-provenance.json
+output/real-samples/public-data/national-traffic-signal/national-traffic-signal-direction-ingye-4111514100.json
+output/real-samples/public-data/national-traffic-signal/national-traffic-signal-direction-ingye-4111514100-provenance.json
+```
+
+Both approved-key calls returned HTTP 403 with body:
+
+```text
+Forbidden
+```
+
+The same result occurred across:
+
+```text
+https and http
+type=json, _type=json, and no type parameter
+crsrd_map_info and tl_drct_info
+```
+
+Because the response does not reach the API's documented `resultCode` /
+`resultMsg` envelope, this is currently classified as a gateway/access issue,
+not as evidence that `인계사거리` is absent from the dataset.
+
 ## Comparison With Other Signal Sources
 
 ### Seoul V2X
@@ -125,14 +168,13 @@ program, but it does not expose a public API or prove coverage for
 
 ## Next Action
 
-The next useful external action is to apply for:
+The next useful external actions are:
 
-```text
-행정안전부 한국지역정보개발원_(전국 통합데이터) 교통안전 신호등 실시간 정보
-publicDataPk: 15157604
-```
-
-After approval/key availability:
+1. Retry the approved-key calls after a propagation delay.
+2. If 403 persists, contact the public data portal/provider or check whether
+   the API gateway requires an additional account/IP/operation setting not
+   exposed on the detail page.
+3. After the gateway reaches the documented response envelope:
 
 1. Fetch `/crsrd_map_info` with `stdgCd=4111514100`.
 2. Search the returned `crsrdNm` values for `인계사거리` or nearby Suwon

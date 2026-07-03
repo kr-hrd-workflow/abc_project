@@ -418,9 +418,11 @@ docs/data/national-traffic-signal-real-time-candidate.md
 
 That source is the 2026 nationwide traffic-signal real-time API from
 행정안전부/한국지역정보개발원. It exposes `crsrd_map_info` and `tl_drct_info`
-operations in Swagger, but local `serviceKey=test` probes returned
-`Unauthorized`. A service-approved key-backed response is still required before
-claiming `인계사거리` signal timing coverage.
+operations in Swagger. The development application was automatically approved
+on 2026-07-03, but both approved-key operations still returned HTTP 403
+`Forbidden` from the gateway during the first local probe. A key-backed
+`NORMAL_SERVICE` response is still required before claiming `인계사거리` signal
+timing coverage.
 
 This keeps the project boundary honest: multi-direction CCTV frames need
 approach-specific crops or detector lane/track geometry before detections can

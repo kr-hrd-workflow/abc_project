@@ -131,6 +131,9 @@ Current maintenance slice:
 - [x] Identify the 2026 nationwide traffic-signal real-time API as the strongest
       public candidate for the `인계사거리` same-intersection signal timing
       blocker, and record the key-gated probe result.
+- [x] Submit and approve the publicDataPk `15157604` development application,
+      then run redacted approved-key probes that currently return gateway
+      HTTP 403 instead of a documented API response envelope.
 
 Maintenance evidence:
 
@@ -242,6 +245,18 @@ Maintenance evidence:
   `serviceKey=test`, `type=json`, and `stdgCd=4111514100` returned
   `Unauthorized` for both `crsrd_map_info` and `tl_drct_info`, so a
   service-approved key is required before proving `인계사거리` coverage.
+- On 2026-07-03, the logged-in public data portal account submitted and
+  received automatic approval for publicDataPk `15157604`; the detail page
+  showed `처리상태=승인`, 활용기간 `2026-07-03 ~ 2028-07-03`, endpoint
+  `https://apis.data.go.kr/B551982/rti`, and both approved operations
+  `/crsrd_map_info` / `/tl_drct_info`.
+- Approved-key probes for both operations with `stdgCd=4111514100` were saved
+  under ignored
+  `output/real-samples/public-data/national-traffic-signal/` with
+  `serviceKey` redacted. Both returned HTTP 403 body `Forbidden`; https/http
+  and `type=json` / `_type=json` / no type variants all returned 403, so this
+  is currently a gateway/access issue rather than evidence that `인계사거리` is
+  absent.
 - UTIC signal-open data was checked as a fallback, but its public reference
   describes Incheon/Daegu TOD and SIGNALMAP data collected daily or on change,
   not a Suwon `인계사거리` real-time remaining-time source.
@@ -349,8 +364,9 @@ Real sample intake evidence:
   - for replay-ready `인계사거리` evidence, same-intersection current signal
     timing is also required; the Seoul V2X cardinal sample proves the adapter
     path, not that exact Gyeonggi controller state
-  - the next concrete signal-data step is applying for publicDataPk `15157604`
-    and fetching a key-backed `crsrd_map_info` sample for `stdgCd=4111514100`
+  - the next concrete signal-data step is retrying publicDataPk `15157604`
+    after a propagation delay or checking with the portal/provider why the
+    approved development key still receives gateway HTTP 403
 
 ## Historical Plan: Synthetic Scenario Evaluation
 
