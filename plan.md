@@ -80,6 +80,9 @@ Next meaningful decision:
 
 Current maintenance slice:
 
+- [x] Remove the retired R3F photoreal/background plate branch files and update
+      `apps/web/AGENTS.md` so the active renderer contract points to
+      `SimulationScene.test.tsx` instead of stale plate guardrails.
 - [x] Add a backend/web policy scorecard contract drift checker.
 - [x] Verify the checker fails when web policy order or scoring constants drift.
 - [x] Verify the current backend constants and web contract are aligned.
