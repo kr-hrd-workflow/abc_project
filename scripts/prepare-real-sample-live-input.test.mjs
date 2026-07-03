@@ -1,7 +1,10 @@
 import assert from "node:assert/strict";
 import { describe, test } from "node:test";
 
-import { prepareRealSampleLiveInputFiles } from "./prepare-real-sample-live-input.mjs";
+import {
+  prepareNationalTrafficSignalLiveInputFiles,
+  prepareRealSampleLiveInputFiles
+} from "./prepare-real-sample-live-input.mjs";
 
 describe("real sample live-input prepare command", () => {
   test("builds signal snapshot, live-input envelope, and runs offline validation", async () => {
@@ -98,6 +101,84 @@ describe("real sample live-input prepare command", () => {
     assert.equal(writes.has("live-input.json"), false);
     assert.match(result.output, /cardinal straight signal remaining time is required/);
   });
+
+  test("builds live-input from a national tl_drct_info signal response", async () => {
+    const writes = new Map();
+    const result = await prepareNationalTrafficSignalLiveInputFiles({
+      detectorPath: "detector.json",
+      calibrationPath: "calibration.json",
+      nationalSignalResponsePath: "national-signal.json",
+      signalOutputPath: "signal-snapshot.json",
+      envelopeOutputPath: "live-input.json",
+      crsrdId: "2904",
+      nextPhase: "normal_cycle",
+      controllerMode: "adaptive",
+      manualOverride: false,
+      now: () => new Date("2026-07-03T02:47:05.000Z"),
+      readFile: async (filePath, encoding) => {
+        assert.equal(encoding, "utf8");
+        if (writes.has(filePath)) {
+          return writes.get(filePath);
+        }
+        if (filePath === "detector.json") {
+          return JSON.stringify({
+            ...buildDetectorOutput(),
+            intersectionId: "seoul-topis-cityhall-2904",
+            cameraId: "topis-cctv-190",
+            capturedAt: "2026-07-03T02:47:00.000Z"
+          });
+        }
+        if (filePath === "calibration.json") {
+          return JSON.stringify({
+            source: "operator_camera_survey",
+            schemaVersion: "camera-approach-calibration.v1",
+            mappings: [
+              {
+                intersectionId: "seoul-topis-cityhall-2904",
+                cameraId: "topis-cctv-190",
+                approachDirection: "north",
+                evidence:
+                  "operator/map review confirms TOPIS camId=190 covers the north approach"
+              }
+            ]
+          });
+        }
+        if (filePath === "national-signal.json") {
+          return JSON.stringify(buildNationalTrafficSignalResponse());
+        }
+        throw new Error(`unexpected read ${filePath}`);
+      },
+      writeFile: async (filePath, contents, encoding) => {
+        assert.equal(encoding, "utf8");
+        writes.set(filePath, contents);
+      }
+    });
+
+    assert.equal(result.exitCode, 0);
+    assert.deepEqual(result.summary, {
+      signalOutputPath: "signal-snapshot.json",
+      envelopeOutputPath: "live-input.json",
+      offlineAccepted: true,
+      currentPhase: "north_priority",
+      detectionCount: 2
+    });
+    assert.match(result.output, /signalSnapshot=signal-snapshot.json/);
+    assert.match(result.output, /liveInputEnvelope=live-input.json/);
+    assert.match(result.output, /offlineAccepted=true/);
+
+    assert.deepEqual(JSON.parse(writes.get("signal-snapshot.json")), {
+      controllerId: "national-traffic-signal:1100000000:2904",
+      capturedAt: "2026-07-03T02:47:01.000Z",
+      currentPhase: "north_priority",
+      remainingSeconds: 13,
+      nextPhase: "normal_cycle",
+      controllerMode: "adaptive",
+      manualOverride: false
+    });
+    const envelope = JSON.parse(writes.get("live-input.json"));
+    assert.equal(envelope.schemaVersion, "live-input.v1");
+    assert.equal(envelope.signalSnapshot.controllerId, "national-traffic-signal:1100000000:2904");
+  });
 });
 
 function buildSeoulV2xResponse() {
@@ -151,5 +232,27 @@ function buildCalibration() {
         evidence: "operator verified camera-cr06-01 faces eastbound approach"
       }
     ]
+  };
+}
+
+function buildNationalTrafficSignalResponse() {
+  return {
+    response: {
+      body: {
+        items: {
+          item: [
+            {
+              stdgCd: "1100000000",
+              lclgvNm: "서울특별시",
+              crsrdId: "2904",
+              crsrdNm: "시청",
+              totDt: "20260703114701",
+              ntStsgRmndCs: "1250",
+              stStsgRmndCs: 830
+            }
+          ]
+        }
+      }
+    }
   };
 }

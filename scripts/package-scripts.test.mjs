@@ -53,6 +53,10 @@ describe("root package scripts", () => {
       "node scripts/prepare-real-sample-live-input.mjs"
     );
     assert.equal(
+      packageJson.scripts["real-sample:prepare-national-live-input"],
+      "node scripts/prepare-real-sample-live-input.mjs --national"
+    );
+    assert.equal(
       packageJson.scripts["test:real-sample-prepare"],
       "node --test scripts/prepare-real-sample-live-input.test.mjs"
     );

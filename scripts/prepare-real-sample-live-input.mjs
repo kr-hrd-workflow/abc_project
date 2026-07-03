@@ -2,6 +2,7 @@ import { readFile, writeFile } from "node:fs/promises";
 import { pathToFileURL } from "node:url";
 
 import { buildCameraDetectorLiveInputFile } from "./build-camera-detector-live-input.mjs";
+import { buildNationalTrafficSignalSnapshotFile } from "./build-national-traffic-signal-snapshot.mjs";
 import { buildSeoulV2xSignalSnapshotFile } from "./build-seoul-v2x-signal-snapshot.mjs";
 import { checkRealSampleDropInFile } from "./real-sample-drop-in-check.mjs";
 
@@ -36,6 +37,92 @@ export async function prepareRealSampleLiveInputFiles({
     };
   }
 
+  return prepareWithSignalSnapshotBuilder({
+    detectorPath,
+    calibrationPath,
+    signalOutputPath,
+    envelopeOutputPath,
+    now,
+    readFile: readFileImpl,
+    writeFile: writeFileImpl,
+    buildSignalSnapshot: ({ writeFile }) =>
+      buildSeoulV2xSignalSnapshotFile({
+        responsePath: seoulV2xResponsePath,
+        outputPath: signalOutputPath,
+        nextPhase,
+        controllerMode,
+        manualOverride,
+        readFile: readFileImpl,
+        writeFile
+      })
+  });
+}
+
+export async function prepareNationalTrafficSignalLiveInputFiles({
+  detectorPath,
+  calibrationPath,
+  nationalSignalResponsePath,
+  signalOutputPath,
+  envelopeOutputPath,
+  crsrdId,
+  nextPhase,
+  controllerMode,
+  manualOverride,
+  now = () => new Date(),
+  readFile: readFileImpl = readFile,
+  writeFile: writeFileImpl = writeFile
+}) {
+  if (
+    !detectorPath ||
+    !calibrationPath ||
+    !nationalSignalResponsePath ||
+    !signalOutputPath ||
+    !envelopeOutputPath ||
+    !crsrdId ||
+    !nextPhase ||
+    !controllerMode ||
+    typeof manualOverride !== "boolean"
+  ) {
+    return {
+      exitCode: 2,
+      summary: null,
+      output:
+        "Usage: npm run real-sample:prepare-national-live-input -- <detector-output.json> <camera-calibration.json> <national-tl-drct-info-response.json> <signal-snapshot.json> <live-input-envelope.json> <crsrdId> <nextPhase> <controllerMode> <manualOverride>"
+    };
+  }
+
+  return prepareWithSignalSnapshotBuilder({
+    detectorPath,
+    calibrationPath,
+    signalOutputPath,
+    envelopeOutputPath,
+    now,
+    readFile: readFileImpl,
+    writeFile: writeFileImpl,
+    buildSignalSnapshot: ({ writeFile }) =>
+      buildNationalTrafficSignalSnapshotFile({
+        responsePath: nationalSignalResponsePath,
+        outputPath: signalOutputPath,
+        crsrdId,
+        nextPhase,
+        controllerMode,
+        manualOverride,
+        readFile: readFileImpl,
+        writeFile
+      })
+  });
+}
+
+async function prepareWithSignalSnapshotBuilder({
+  detectorPath,
+  calibrationPath,
+  signalOutputPath,
+  envelopeOutputPath,
+  buildSignalSnapshot,
+  now,
+  readFile: readFileImpl,
+  writeFile: writeFileImpl
+}) {
   const writes = new Map();
   const writeAndRemember = async (filePath, contents, encoding) => {
     writes.set(filePath, contents);
@@ -48,15 +135,7 @@ export async function prepareRealSampleLiveInputFiles({
     return readFileImpl(filePath, encoding);
   };
 
-  const signalResult = await buildSeoulV2xSignalSnapshotFile({
-    responsePath: seoulV2xResponsePath,
-    outputPath: signalOutputPath,
-    nextPhase,
-    controllerMode,
-    manualOverride,
-    readFile: readFileImpl,
-    writeFile: writeAndRemember
-  });
+  const signalResult = await buildSignalSnapshot({ writeFile: writeAndRemember });
   if (signalResult.exitCode !== 0) {
     return signalResult;
   }
@@ -113,6 +192,34 @@ function formatPrepareSummary(summary) {
 }
 
 if (import.meta.url === pathToFileURL(process.argv[1]).href) {
+  if (process.argv[2] === "--national") {
+    const [
+      detectorPath,
+      calibrationPath,
+      nationalSignalResponsePath,
+      signalOutputPath,
+      envelopeOutputPath,
+      crsrdId,
+      nextPhase,
+      controllerMode,
+      manualOverrideText
+    ] = process.argv.slice(3);
+    const result = await prepareNationalTrafficSignalLiveInputFiles({
+      detectorPath,
+      calibrationPath,
+      nationalSignalResponsePath,
+      signalOutputPath,
+      envelopeOutputPath,
+      crsrdId,
+      nextPhase,
+      controllerMode,
+      manualOverride: parseManualOverride(manualOverrideText)
+    });
+    const write = result.exitCode === 0 ? console.log : console.error;
+    write(result.output);
+    process.exit(result.exitCode);
+  }
+
   const [
     detectorPath,
     calibrationPath,

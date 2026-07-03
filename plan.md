@@ -27,6 +27,9 @@ Newest source-search pivot:
 - `npm run real-sample:build-national-signal-snapshot` is now available to
   convert a key-backed `tl_drct_info` row into `LiveSignalSnapshot` once that
   row is fetched.
+- `npm run real-sample:prepare-national-live-input` is now available to chain a
+  national `tl_drct_info` response, detector output, camera calibration,
+  envelope build, and offline validation without storing secrets.
 - Do not describe the TOPIS detector output as replay-ready until both
   `camera-approach-calibration.v1` and a fresh same-intersection signal snapshot
   are supplied.
@@ -166,6 +169,9 @@ Current maintenance slice:
 - [x] Add a national-traffic-signal snapshot builder so a key-backed
       `tl_drct_info` row can become `LiveSignalSnapshot` without inventing
       `nextPhase`, `controllerMode`, or `manualOverride`.
+- [x] Add a national-traffic-signal one-shot prepare command so a key-backed
+      `tl_drct_info` row can be chained with detector output and
+      camera-approach calibration into `live-input.v1` plus offline validation.
 - [ ] Build `camera-approach-calibration.v1` for TOPIS `camId=190` only with
       operator/map-reviewed approach direction evidence.
 

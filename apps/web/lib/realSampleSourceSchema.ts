@@ -32,7 +32,9 @@ export function buildRealSampleSourceSchemaExport({
       cameraEnvelope:
         "npm run real-sample:build-camera-envelope -- <detector-output.json> <camera-calibration.json> <signal-snapshot.json> <live-input-envelope.json>",
       prepareLiveInput:
-        "npm run real-sample:prepare-live-input -- <detector-output.json> <camera-calibration.json> <seoul-v2x-response.json> <signal-snapshot.json> <live-input-envelope.json> <nextPhase> <controllerMode> <manualOverride>"
+        "npm run real-sample:prepare-live-input -- <detector-output.json> <camera-calibration.json> <seoul-v2x-response.json> <signal-snapshot.json> <live-input-envelope.json> <nextPhase> <controllerMode> <manualOverride>",
+      prepareNationalLiveInput:
+        "npm run real-sample:prepare-national-live-input -- <detector-output.json> <camera-calibration.json> <national-tl-drct-info-response.json> <signal-snapshot.json> <live-input-envelope.json> <crsrdId> <nextPhase> <controllerMode> <manualOverride>"
     },
     sourceSchemas: {
       "authorized-camera-detector-output.v1": {

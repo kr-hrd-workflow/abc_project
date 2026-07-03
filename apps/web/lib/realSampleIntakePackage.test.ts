@@ -39,6 +39,8 @@ describe("real sample intake package", () => {
         "npm run real-sample:build-national-signal-snapshot -- <national-tl-drct-info-response.json> <signal-snapshot.json> <crsrdId> <nextPhase> <controllerMode> <manualOverride>",
       prepareLiveInputCommand:
         "npm run real-sample:prepare-live-input -- <detector-output.json> <camera-calibration.json> <seoul-v2x-response.json> <signal-snapshot.json> <live-input-envelope.json> <nextPhase> <controllerMode> <manualOverride>",
+      prepareNationalLiveInputCommand:
+        "npm run real-sample:prepare-national-live-input -- <detector-output.json> <camera-calibration.json> <national-tl-drct-info-response.json> <signal-snapshot.json> <live-input-envelope.json> <crsrdId> <nextPhase> <controllerMode> <manualOverride>",
       noPersistence: true,
       sampleSlotIds: [
         "authorized_cctv_frame_or_video",
@@ -135,6 +137,7 @@ describe("real sample intake package", () => {
         "build a live-input.v1 envelope with npm run real-sample:build-camera-envelope -- <detector-output.json> <camera-calibration.json> <signal-snapshot.json> <live-input-envelope.json>",
         "build a multi-camera live-input.v1 envelope from ROI detector outputs with npm run real-sample:build-multi-camera-envelope -- <detector-output-a.json,detector-output-b.json> <camera-calibration.json> <signal-snapshot.json> <live-input-envelope.json>",
         "or run npm run real-sample:prepare-live-input -- <detector-output.json> <camera-calibration.json> <seoul-v2x-response.json> <signal-snapshot.json> <live-input-envelope.json> <nextPhase> <controllerMode> <manualOverride> to build both files and run offline validation",
+        "or run npm run real-sample:prepare-national-live-input -- <detector-output.json> <camera-calibration.json> <national-tl-drct-info-response.json> <signal-snapshot.json> <live-input-envelope.json> <crsrdId> <nextPhase> <controllerMode> <manualOverride> to build both files and run offline validation from a national tl_drct_info row",
         "run npm run real-sample:check -- --offline <live-input-envelope.json> for server-free shape, provenance, and guardrail checks",
         "normalize authorized-camera-detector-output.v1, camera-approach-calibration.v1, and signal data into a live-input.v1 envelope",
         "run npm run real-sample:check -- <live-input-envelope.json> for the same local drop-in validation path",

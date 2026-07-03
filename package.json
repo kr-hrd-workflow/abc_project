@@ -18,6 +18,7 @@
     "real-sample:build-signal-snapshot": "node scripts/build-seoul-v2x-signal-snapshot.mjs",
     "real-sample:build-national-signal-snapshot": "node scripts/build-national-traffic-signal-snapshot.mjs",
     "real-sample:prepare-live-input": "node scripts/prepare-real-sample-live-input.mjs",
+    "real-sample:prepare-national-live-input": "node scripts/prepare-real-sample-live-input.mjs --national",
     "real-sample:check": "node scripts/real-sample-drop-in-check.mjs",
     "openai:smoke": "node scripts/run-api-python.mjs -m app.cli.openai_smoke",
     "demo:health": "node scripts/demo-health-check.mjs",

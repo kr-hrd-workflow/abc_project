@@ -139,6 +139,24 @@ npm run real-sample:build-national-signal-snapshot -- \
   <manualOverride>
 ```
 
+The one-shot local prepare path is also wired for the same source. Once the
+detector output, camera calibration, and approved-key `tl_drct_info` response
+are all available, this command builds the signal snapshot, builds the
+`live-input.v1` envelope, and runs offline validation:
+
+```bash
+npm run real-sample:prepare-national-live-input -- \
+  <detector-output.json> \
+  <camera-calibration.json> \
+  <national-tl-drct-info-response.json> \
+  <signal-snapshot.json> \
+  <live-input-envelope.json> \
+  2904 \
+  <nextPhase> \
+  <controllerMode> \
+  <manualOverride>
+```
+
 ## Other Sources Checked
 
 ### Gyeonggi GITS CCTV
@@ -225,7 +243,7 @@ The shortest honest path to a complete `live-input.v1` real sample is:
    `manualOverride`.
 4. Add an operator/map-reviewed `camera-approach-calibration.v1` for TOPIS
    `camId=190`; do not infer approach direction from the frame.
-5. Build the final envelope:
+5. Build the final envelope either as separate steps:
 
    ```bash
    npm run real-sample:build-multi-camera-envelope -- \
@@ -233,6 +251,21 @@ The shortest honest path to a complete `live-input.v1` real sample is:
      <camera-calibration.json> \
      <signal-snapshot.json> \
      <live-input-envelope.json>
+   ```
+
+   Or as a one-shot single-camera national signal prepare command:
+
+   ```bash
+   npm run real-sample:prepare-national-live-input -- \
+     output/real-samples/public-data/seoul-topis-cctv/topis-cityhall-cctv-190-yolo-detector-output.json \
+     <camera-calibration.json> \
+     <national-tl-drct-info-response.json> \
+     <signal-snapshot.json> \
+     <live-input-envelope.json> \
+     2904 \
+     <nextPhase> \
+     <controllerMode> \
+     <manualOverride>
    ```
 
 6. Validate:
