@@ -4,6 +4,8 @@ import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import vm from "node:vm";
 
+import { isRecord } from "./lib/util.mjs";
+
 const node = process.execPath;
 
 function runScript(script) {
@@ -41,6 +43,35 @@ function loadVerifierFunction(functionName) {
     context
   );
   return context.result;
+}
+
+function extractFunctionSource(source, functionName) {
+  const start = source.indexOf(`function ${functionName}`);
+  assert.notEqual(start, -1, `${functionName} is missing`);
+
+  let depth = 0;
+  let end = -1;
+  for (let index = source.indexOf("{", start); index < source.length; index += 1) {
+    const char = source[index];
+    if (char === "{") depth += 1;
+    if (char === "}") depth -= 1;
+    if (depth === 0) {
+      end = index + 1;
+      break;
+    }
+  }
+  assert.notEqual(end, -1, `${functionName} body is incomplete`);
+  return source.slice(start, end);
+}
+
+function loadVerifierFunctions(file, functionNames, extraContext = {}) {
+  const source = readFileSync(file, "utf8");
+  const context = { ...extraContext };
+  vm.createContext(context);
+  const bodies = functionNames.map((name) => extractFunctionSource(source, name)).join("\n");
+  const assignments = functionNames.map((name) => `${name} = ${name};`).join("\n");
+  vm.runInContext(`${bodies}\n${assignments}`, context);
+  return context;
 }
 
 describe("R3F readiness verifier gates", () => {
@@ -85,5 +116,25 @@ describe("R3F readiness verifier gates", () => {
 
     assert.equal(result.pbr_wet_asphalt, true);
     assert.equal(result.passed, true);
+  });
+
+  test("readPerformance floors drawCalls at the instrumented peak, not a demand-frame sample", () => {
+    const context = loadVerifierFunctions(
+      "scripts/verify-r3f-performance.mjs",
+      ["numberOrNull", "readPerformance"],
+      { isRecord }
+    );
+    // SimulationCanvas runs frameloop="demand": a proof publish can sample a
+    // near-empty frame (performance.drawCalls=1) while the instrumented peak
+    // for the same run is 574. readPerformance must never report less than
+    // the instrumented peak.
+    const details = {
+      performance: { drawCalls: 1 },
+      renderer: { peakDrawCalls: 574, drawCalls: 1 }
+    };
+
+    const result = context.readPerformance(details);
+
+    assert.equal(result.drawCalls, 574);
   });
 });

@@ -990,9 +990,12 @@ async function collectRendererProof(page) {
       Number(verifier.drawCallsLastFrame ?? 0),
       Number(verifier.drawCallsMaxFrame ?? 0)
     );
-    const drawCalls = Number.isFinite(Number(rendererInfoCalls))
-      ? Number(rendererInfoCalls)
-      : instrumentedDrawCalls;
+    // A demand-frameloop proof publish can sample a near-empty frame (calls=1).
+    // The instrumented per-frame max is the floor of truth: never report less.
+    const drawCalls = Math.max(
+      Number.isFinite(Number(rendererInfoCalls)) ? Number(rendererInfoCalls) : 0,
+      instrumentedDrawCalls
+    );
     const peakDrawCalls = Math.max(
       drawCalls,
       Number.isFinite(appProofPeakDrawCalls) ? appProofPeakDrawCalls : 0,

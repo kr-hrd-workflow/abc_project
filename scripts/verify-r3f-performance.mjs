@@ -49,8 +49,19 @@ function readPerformance(details) {
   const renderer = isRecord(details.renderer) ? details.renderer : {};
   const performance = isRecord(details.performance) ? details.performance : {};
 
+  // SimulationCanvas runs frameloop="demand": a proof publish can sample a
+  // near-empty frame (performance.drawCalls=1). renderer.peakDrawCalls folds
+  // the WebGL-instrumented per-frame max and is the floor of truth.
+  const drawCalls = numberOrNull(
+    Math.max(
+      Number(performance.drawCalls ?? 0),
+      Number(renderer.peakDrawCalls ?? 0),
+      Number(renderer.drawCalls ?? 0)
+    ) || null
+  );
+
   return {
-    drawCalls: numberOrNull(performance.drawCalls ?? renderer.drawCalls),
+    drawCalls,
     frameTimeMs: numberOrNull(performance.frameTimeMs),
     visibleVehicles: numberOrNull(
       performance.visibleVehicles ?? renderer.visibleVehicleCount
@@ -168,9 +179,9 @@ addCheck(
 addCheck(
   "draw calls stay under peak budget",
   performance.drawCalls !== null &&
-    performance.drawCalls > 0 &&
+    performance.drawCalls >= 50 &&
     performance.drawCalls <= maxPeakDrawCalls,
-  `drawCalls=${performance.drawCalls ?? "missing"} / ${maxPeakDrawCalls}`
+  `drawCalls=${performance.drawCalls ?? "missing"} / ${maxPeakDrawCalls} (floor 50: a real scene cannot render in fewer)`
 );
 if (details.qualityPreset === "high") {
   addCheck(
