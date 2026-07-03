@@ -1,14 +1,11 @@
-import { useEffect, useRef } from "react";
-import type { ThreeElements } from "@react-three/fiber";
-import { Object3D, type InstancedMesh } from "three";
-
 import {
   APPROACH_CORRIDORS,
   type BoxPrimitiveSpec,
+  CITY_GROUND_APRON,
   CURB_SEGMENTS,
   LANE_WIDTH_METERS,
   LANE_DIVIDER_MARKINGS,
-  type PlanePrimitiveSpec,
+  type PlaneBatchSpec,
   QUEUE_ZONES,
   ROAD_WIDTH_METERS,
   SIDEWALK_SLABS,
@@ -16,27 +13,10 @@ import {
 } from "./roadGeometry";
 import type { Vector3Tuple } from "./roadGeometry";
 import { useStage5RoadMaterials } from "./roadMaterials";
+import { InstancedBoxBatch, InstancedPlaneBatch } from "./instancedBatches";
 
-type RoadMaterialProps = ThreeElements["meshStandardMaterial"];
-type PlaneBatchSpec = {
-  id: string;
-  position: Vector3Tuple;
-  size: [number, number];
-  rotationY?: number;
-};
-
-const PLANE_ROTATION_X = -Math.PI / 2;
-const CITY_GROUND_HEIGHT = -0.012;
 const ROAD_OVERLAY_HEIGHT = 0.028;
 const EDGE_GRIME_HEIGHT = 0.032;
-
-const CITY_GROUND_APRON: PlaneBatchSpec[] = [
-  {
-    id: "stage5-wet-city-ground-apron",
-    position: [0, CITY_GROUND_HEIGHT, -18],
-    size: [260, 310]
-  }
-];
 
 const CORRIDOR_ROAD_PLANES: PlaneBatchSpec[] = APPROACH_CORRIDORS.map(
   (corridor) => ({
@@ -253,106 +233,3 @@ export function ApproachCorridors({ isNight = false }: { isNight?: boolean }) {
   );
 }
 
-function InstancedPlaneBatch({
-  name,
-  specs,
-  material,
-  renderOrder = 0,
-  receiveShadow = false
-}: {
-  name: string;
-  specs: readonly (PlaneBatchSpec | PlanePrimitiveSpec)[];
-  material: RoadMaterialProps;
-  renderOrder?: number;
-  receiveShadow?: boolean;
-}) {
-  const meshRef = useRef<InstancedMesh>(null);
-  const tempObjectRef = useRef(new Object3D());
-
-  useEffect(() => {
-    const mesh = meshRef.current;
-    if (!isThreeInstancedMesh(mesh)) return;
-
-    const tempObject = tempObjectRef.current;
-
-    specs.forEach((spec, index) => {
-      tempObject.position.set(...spec.position);
-      tempObject.rotation.set(PLANE_ROTATION_X, spec.rotationY ?? 0, 0);
-      tempObject.scale.set(spec.size[0], spec.size[1], 1);
-      tempObject.updateMatrix();
-      mesh.setMatrixAt(index, tempObject.matrix);
-    });
-
-    mesh.instanceMatrix.needsUpdate = true;
-  }, [specs]);
-
-  if (specs.length === 0) return null;
-
-  return (
-    <instancedMesh
-      ref={meshRef}
-      name={name}
-      args={[undefined, undefined, specs.length]}
-      frustumCulled={false}
-      renderOrder={renderOrder}
-      receiveShadow={receiveShadow}
-    >
-      <planeGeometry args={[1, 1]} />
-      <meshStandardMaterial {...material} />
-    </instancedMesh>
-  );
-}
-
-function InstancedBoxBatch({
-  name,
-  specs,
-  material,
-  castShadow = false,
-  receiveShadow = false
-}: {
-  name: string;
-  specs: readonly BoxPrimitiveSpec[];
-  material: RoadMaterialProps;
-  castShadow?: boolean;
-  receiveShadow?: boolean;
-}) {
-  const meshRef = useRef<InstancedMesh>(null);
-  const tempObjectRef = useRef(new Object3D());
-
-  useEffect(() => {
-    const mesh = meshRef.current;
-    if (!isThreeInstancedMesh(mesh)) return;
-
-    const tempObject = tempObjectRef.current;
-
-    specs.forEach((spec, index) => {
-      tempObject.position.set(...spec.position);
-      tempObject.rotation.set(0, 0, 0);
-      tempObject.scale.set(...spec.size);
-      tempObject.updateMatrix();
-      mesh.setMatrixAt(index, tempObject.matrix);
-    });
-
-    mesh.instanceMatrix.needsUpdate = true;
-  }, [specs]);
-
-  if (specs.length === 0) return null;
-
-  return (
-    <instancedMesh
-      ref={meshRef}
-      name={name}
-      args={[undefined, undefined, specs.length]}
-      castShadow={castShadow}
-      frustumCulled={false}
-      receiveShadow={receiveShadow}
-    >
-      <boxGeometry args={[1, 1, 1]} />
-      <meshStandardMaterial {...material} />
-    </instancedMesh>
-  );
-}
-
-function isThreeInstancedMesh(mesh: InstancedMesh | null): mesh is InstancedMesh {
-  return Boolean(mesh && typeof mesh.setMatrixAt === "function");
-}

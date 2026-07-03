@@ -350,6 +350,7 @@ describe("SimulationCanvas Stage 5 telemetry", () => {
       "SceneEnvironment",   // unified IBL + light rig (day: Sky + LightingRig + WeatherAndAtmosphere; night: neon IBL + lights)
       "BuildingLayer",      // P2: 3D photoreal buildings + sky — no plate layer is mounted
       "react.suspense",     // Suspense-wrapped RoadSurfaceLayer (asphalt texture)
+      "GroundDressingLayer", // continuous ground/sidewalks/curbs/apron under the road
       "MarkingDecalLayer",  // metric marking decals (photobash default) replace flat vector markings
       "DynamicVehicleLayer",
       "DynamicPedestrianLayer",

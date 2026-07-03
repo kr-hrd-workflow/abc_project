@@ -42,6 +42,15 @@ export type PlanePrimitiveSpec = {
   rotationY?: number;
 };
 
+// Looser plane spec for batches not tied to a single approach direction
+// (city-wide ground/apron planes) — same shape InstancedPlaneBatch consumes.
+export type PlaneBatchSpec = {
+  id: string;
+  position: Vector3Tuple;
+  size: [number, number];
+  rotationY?: number;
+};
+
 export type TurnArrowPartKind = "shaft" | "head_left" | "head_right";
 
 export type TurnArrowMarkingPart = PlanePrimitiveSpec & {
@@ -355,6 +364,16 @@ export const SIDEWALK_SLABS = APPROACH_CORRIDORS.flatMap((corridor) => {
     size: [corridor.lengthMeters, 0.09, SIDEWALK_WIDTH] as Vector3Tuple
   }));
 });
+
+const CITY_GROUND_HEIGHT = -0.012;
+
+export const CITY_GROUND_APRON: PlaneBatchSpec[] = [
+  {
+    id: "stage5-wet-city-ground-apron",
+    position: [0, CITY_GROUND_HEIGHT, -18],
+    size: [260, 310]
+  }
+];
 
 export const BUILDING_EDGE_BLOCKS = APPROACH_CORRIDORS.flatMap((corridor) => {
   const widthM = corridorWidth(corridor.direction);

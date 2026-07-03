@@ -97,6 +97,7 @@ describe("default scene (no URL params)", () => {
     expect(names).toContain("BuildingLayer");
     expect(names).toContain("DynamicPedestrianLayer");
     expect(names).toContain("SignalLayer");
+    expect(names).toContain("GroundDressingLayer");
     expect(names).not.toContain("StaticRoadLayer");
   });
 
@@ -121,6 +122,7 @@ describe("default scene (no URL params)", () => {
     expect(names).not.toContain("BuildingLayer");
     expect(names).not.toContain("DynamicVehicleLayer");
     expect(names).not.toContain("SignalLayer");
+    expect(names).not.toContain("GroundDressingLayer");
     setSearch("");
   });
 

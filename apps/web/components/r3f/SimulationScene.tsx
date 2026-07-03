@@ -7,6 +7,7 @@ import { BuildingLayer } from "./BuildingLayer";
 import { CameraRig } from "./CameraRig";
 import { DynamicPedestrianLayer } from "./DynamicPedestrianLayer";
 import { DynamicVehicleLayer } from "./DynamicVehicleLayer";
+import { GroundDressingLayer } from "./GroundDressingLayer";
 import { LimitedOrbitControls } from "./LimitedOrbitControls";
 import { MarkingDecalLayer } from "./MarkingDecalLayer";
 import { NightVehicleTreatment } from "./NightVehicleTreatment";
@@ -108,6 +109,7 @@ export function SimulationScene({
       <Suspense fallback={null}>
         <RoadSurfaceLayer isNight={isNight} suppressVectorMarkings />
       </Suspense>
+      {!isRoadOnly && <GroundDressingLayer isNight={isNight} />}
       <MarkingDecalLayer />
       {!isRoadOnly && (
         <DynamicVehicleLayerWithWeather
