@@ -3266,6 +3266,11 @@ async function runBrowserVerification(baseUrl) {
     details.renderer = {
       preCapture: desktopPreCaptureRendererProof
     };
+    // Same demand-frameloop settle the scenario captures use (e9e381d): the cold
+    // first-load desktop capture otherwise reads a transient frame before the
+    // DayIBL PMREM / camera fully settle, leaving the sky-dome periphery dark
+    // while the rest of the scene is daylight. Warm it up before reading pixels.
+    await settleR3FBeforeCapture(desktop.page);
     const desktopCanvasPng = await captureR3FCanvasPng(
       desktop.page,
       desktopCanvasScreenshotPath,

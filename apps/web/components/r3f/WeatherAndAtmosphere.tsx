@@ -54,6 +54,30 @@ export const STAGE5_ATMOSPHERE = {
   haze: "#5d7378"
 } as const;
 
+// Clear/cloudy daytime aerial perspective: a light sky-toned haze fog (matches
+// the GradientSky horizon + BuildingLayer's DISTANT_HAZE_TONE) with a pushed-out
+// near plane so the near/mid intersection stays crisp while the distant ring and
+// the far road/ground edges wash toward the sky — no dark navy cut-outs, no hard
+// white periphery edge — at high operator/CCTV orbit angles. Rain keeps the
+// darker STAGE5 mist above (weather === "rain"); night never mounts fog
+// (WeatherAndAtmosphere is sceneryless at night), so both stay untouched.
+export const DAY_HAZE_ATMOSPHERE = {
+  // Soft daytime haze tone (a blue-grey with body, matched to the GradientSky
+  // horizon + BuildingLayer DISTANT_HAZE_TONE) that the far field converges to.
+  // Deliberately NOT near-white: a blown-white periphery read as a blank void,
+  // and NOT dark: a dark tone read as navy cut-outs. Background carries the same
+  // tone so the frame corners — where the high camera looks past the far edge of
+  // the sky dome (clipped to the clear colour) — read as hazy sky.
+  background: "#b9c7d6",
+  fog: "#b9c7d6",
+  fogNear: 130,
+  fogFar: 340
+} as const;
+
+function resolveDayAtmosphere(weather: Stage6WeatherPresetName) {
+  return weather === "rain" ? STAGE5_ATMOSPHERE : DAY_HAZE_ATMOSPHERE;
+}
+
 const REFLECTION_TINTS = {
   streetlight: "#ffb24a",
   headlight: "#ffc65a",
@@ -183,13 +207,13 @@ export function WeatherAndAtmosphere({
     <group name="stage5-weather-and-atmosphere">
       {!sceneryless && (
         <>
-          <color attach="background" args={[STAGE5_ATMOSPHERE.background]} />
+          <color attach="background" args={[resolveDayAtmosphere(weather).background]} />
           <fog
             attach="fog"
             args={[
-              STAGE5_ATMOSPHERE.fog,
-              STAGE5_ATMOSPHERE.fogNear,
-              STAGE5_ATMOSPHERE.fogFar
+              resolveDayAtmosphere(weather).fog,
+              resolveDayAtmosphere(weather).fogNear,
+              resolveDayAtmosphere(weather).fogFar
             ]}
           />
 

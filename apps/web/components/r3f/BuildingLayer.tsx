@@ -163,6 +163,43 @@ export function getDistantTintColors(): string[] {
   return BUILDING_FOOTPRINTS.filter((f) => f.form === "distant").map((f) => f.tint);
 }
 
+// Daytime atmospheric-haze tone the distant ring lifts toward — a soft
+// blue-grey WITH BODY, matched to the GradientSky day horizon and the scene
+// haze fog (DAY_HAZE_ATMOSPHERE) so the far field melts seamlessly into the
+// sky. Aerial perspective: far structures wash toward this tone instead of
+// standing as dark navy cut-outs when a high operator/CCTV orbit looks over the
+// building ring into the sky (the raw footprint tints, ≈#3a4a5a, read as dark
+// boxes). Not near-white — a blown-white periphery reads as a blank void.
+export const DISTANT_HAZE_TONE = "#b9c7d6";
+// Blend factor toward the haze tone. High (mostly haze) so the boxes read as a
+// faint hazy skyline; the residual 18% keeps each side's raw variation.
+const DISTANT_HAZE_MIX = 0.82;
+
+/** Lerp two "#rrggbb" colours in sRGB space (matches how tints are authored). */
+function mixHex(a: string, b: string, t: number): string {
+  const pa = parseInt(a.slice(1), 16);
+  const pb = parseInt(b.slice(1), 16);
+  const lerp = (x: number, y: number) => Math.round(x + (y - x) * t);
+  const r = lerp((pa >> 16) & 255, (pb >> 16) & 255);
+  const g = lerp((pa >> 8) & 255, (pb >> 8) & 255);
+  const bl = lerp(pa & 255, pb & 255);
+  return `#${((1 << 24) | (r << 16) | (g << 8) | bl).toString(16).slice(1)}`;
+}
+
+/** One raw distant tint → its aerial-perspective haze tint. */
+export function distantHazeTint(rawTint: string): string {
+  return mixHex(rawTint, DISTANT_HAZE_TONE, DISTANT_HAZE_MIX);
+}
+
+/**
+ * Aerial-perspective haze tints for the distant ring, in footprint order. Baked
+ * as the far group's per-box vertex colours (day) so each distant box reads as
+ * a light hazy skyline that melts toward the sky rather than a dark navy slab.
+ */
+export function getDistantHazeTintColors(): string[] {
+  return getDistantTintColors().map(distantHazeTint);
+}
+
 // ── Building massing composition (pure, unit-tested) ──────────────────────────
 
 /** Merge/material group a sub-volume belongs to. */
@@ -569,9 +606,18 @@ function BuildingVolumeSet({ isNight }: { isNight: boolean }) {
             buildFlatColoredBox(vol.size, vol.center, vol.ledColor ?? "#ffffff")
           );
         } else if (vol.group === "far") {
-          // Per-side horizon tint baked as a vertex colour so the merged far
-          // group varies by side (day) with no extra draw call.
-          push(vol.group, buildFlatColoredBox(vol.size, vol.center, fp.tint));
+          // Aerial-perspective haze tint baked as a per-box vertex colour so the
+          // merged far group varies by side (day) and reads as a light hazy
+          // skyline — not a dark navy cut-out — with no extra draw call. Night
+          // keeps its flat dark tone (vertexColors off in buildGroupMaterials).
+          push(
+            vol.group,
+            buildFlatColoredBox(
+              vol.size,
+              vol.center,
+              isNight ? fp.tint : distantHazeTint(fp.tint)
+            )
+          );
         } else if (vol.group === "dark") {
           push(vol.group, buildPlainBox(vol.size, vol.center));
         } else if (vol.group === "concrete" && !isNight) {
@@ -829,12 +875,14 @@ function buildGroupMaterials(
     metalness: 0.16
   });
 
-  // Day: light base (#c9d2e0) so the per-box vertex tints (footprint.tint,
-  // baked in BuildingVolumeSet) read through the multiply and the horizon
-  // silhouette varies by side. Night keeps the flat dark tone + faint glow
-  // (vertexColors off) so the existing distant-skyline look is unchanged.
+  // Day: WHITE base so the per-box aerial-perspective haze tints
+  // (distantHazeTint, baked in BuildingVolumeSet) carry at full lightness — a
+  // coloured base would re-darken them via the vertex-colour multiply back into
+  // a dark navy cut-out. The haze tints already vary by side for silhouette.
+  // Night keeps the flat dark tone + faint glow (vertexColors off) so the
+  // existing distant-skyline look is unchanged.
   const far = new MeshStandardMaterial({
-    color: isNight ? "#0a0d16" : "#c9d2e0",
+    color: isNight ? "#0a0d16" : "#ffffff",
     roughness: 0.95,
     metalness: 0.02,
     vertexColors: !isNight
@@ -935,7 +983,11 @@ function GradientSky({ isNight }: { isNight: boolean }) {
   const material = useMemo(() => {
     const day = {
       uZenith: { value: hexToRgb("#3f74c4") },
-      uHorizon: { value: hexToRgb("#cdd9e8") },
+      // Horizon matched to the scene haze tone (DAY_HAZE_ATMOSPHERE /
+      // DISTANT_HAZE_TONE) so the sky-meets-city band is a soft daytime haze
+      // with body — not a blown-white sheet that reads as a blank void — and the
+      // hazed far field melts into it. Zenith stays blue so the sky gradates.
+      uHorizon: { value: hexToRgb("#b9c7d6") },
       uGround: { value: hexToRgb("#9aa6b4") },
       uClouds: { value: 0.55 },
       uCloudColor: { value: hexToRgb("#f2f5fa") }
