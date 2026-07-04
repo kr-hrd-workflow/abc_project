@@ -78,6 +78,11 @@ declare global {
     __r3fSimulationCanvasElement?: HTMLCanvasElement;
     __r3fSimulationMaxDrawCalls?: number;
     __r3fPublishSimulationCanvasProof?: () => Stage5CanvasProof;
+    // Forces one demand-mode render. The scene has no continuous useFrame, so
+    // under frameloop="demand" nothing redraws once the load burst settles; the
+    // draw-call verifier calls this to sample true STEADY-STATE frames (added
+    // 2026-07-04, see verify-r3f-dashboard.mjs measureSteadyStateDrawCalls).
+    __r3fSimulationInvalidate?: () => void;
     __r3fSimulationReadPixels?: () => {
       width: number;
       height: number;
@@ -290,7 +295,7 @@ function getCanvasAspect(renderer: WebGLRenderer) {
 const afterRenderProofCleanups = new WeakMap<WebGLRenderer, () => void>();
 
 function Stage5CanvasProofBridge() {
-  const { gl } = useThree();
+  const { gl, invalidate } = useThree();
 
   useEffect(() => {
     markStage5CanvasCurrent(gl);
@@ -300,19 +305,21 @@ function Stage5CanvasProofBridge() {
     const cleanupAfterRenderProof = installStage5AfterRenderProof(gl);
     const cleanupReadPixels = installStage5ReadPixels(gl);
     const cleanupManualPublish = installStage5ManualProofPublisher(gl);
+    const cleanupInvalidate = installStage5SimulationInvalidate(invalidate);
     const cleanupScheduledPublish = scheduleStage5CanvasProofPublish(gl);
 
     publishStage5CanvasProof(gl, getContextLossEventCount(gl));
 
     return () => {
       cleanupScheduledPublish();
+      cleanupInvalidate();
       cleanupManualPublish();
       cleanupReadPixels();
       cleanupAfterRenderProof();
       cleanupContextHandlers();
       clearStage5CanvasCurrent(gl);
     };
-  }, [gl]);
+  }, [gl, invalidate]);
 
   return null;
 }
@@ -413,6 +420,22 @@ function installStage5ManualProofPublisher(renderer: WebGLRenderer) {
   return () => {
     if (window.__r3fPublishSimulationCanvasProof === publishCurrentProof) {
       delete window.__r3fPublishSimulationCanvasProof;
+    }
+  };
+}
+
+// Exposes R3F's demand-mode invalidate so the draw-call verifier can force
+// post-settle renders and measure steady-state draw calls (2026-07-04).
+function installStage5SimulationInvalidate(invalidate: () => void) {
+  if (typeof window === "undefined") {
+    return noop;
+  }
+
+  window.__r3fSimulationInvalidate = invalidate;
+
+  return () => {
+    if (window.__r3fSimulationInvalidate === invalidate) {
+      delete window.__r3fSimulationInvalidate;
     }
   };
 }

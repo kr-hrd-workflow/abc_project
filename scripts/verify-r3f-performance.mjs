@@ -57,6 +57,7 @@ function readPerformance(details) {
   // SimulationCanvas runs frameloop="demand": a proof publish can sample a
   // near-empty frame (performance.drawCalls=1). renderer.peakDrawCalls folds
   // the WebGL-instrumented per-frame max and is the floor of truth.
+  // drawCalls = PEAK (session max, incl. capture-induced load transients) -> 900 peak.
   const drawCalls = numberOrNull(
     Math.max(
       Number(performance.drawCalls ?? 0),
@@ -64,9 +65,13 @@ function readPerformance(details) {
       Number(renderer.drawCalls ?? 0)
     ) || null
   );
+  // steadyDrawCalls = max over forced post-settle frames (transients excluded)
+  // -> 650 high/normal budget. Produced by verify-r3f-dashboard.mjs. 2026-07-04.
+  const steadyDrawCalls = numberOrNull(renderer.steadyMaxDrawCalls);
 
   return {
     drawCalls,
+    steadyDrawCalls,
     frameTimeMs: numberOrNull(performance.frameTimeMs),
     visibleVehicles: numberOrNull(
       performance.visibleVehicles ?? renderer.visibleVehicleCount
@@ -190,10 +195,15 @@ addCheck(
 );
 if (details.qualityPreset === "high") {
   addCheck(
+    // Reads STEADY-STATE draw calls, not the session peak: the peak folds in a
+    // pre-existing capture-induced cold shadow-map-regen transient that belongs
+    // in the 900 peak budget, not this 650 normal budget. Keeps the >=50 floor
+    // (a real scene cannot render in fewer; guards a missing/zero measurement). 2026-07-04.
     "high preset draw calls stay under normal budget",
-    performance.drawCalls !== null &&
-      performance.drawCalls <= maxHighPresetDrawCalls,
-    `qualityPreset=high drawCalls=${performance.drawCalls ?? "missing"} / ${maxHighPresetDrawCalls}`
+    performance.steadyDrawCalls !== null &&
+      performance.steadyDrawCalls >= 50 &&
+      performance.steadyDrawCalls <= maxHighPresetDrawCalls,
+    `qualityPreset=high steadyDrawCalls=${performance.steadyDrawCalls ?? "missing"} / ${maxHighPresetDrawCalls} (peak ${performance.drawCalls ?? "missing"} / ${maxPeakDrawCalls})`
   );
 }
 addCheck(
