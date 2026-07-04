@@ -5,6 +5,8 @@ import {
   EDGE_LINE_MARKINGS,
   STOP_LINE_MARKINGS,
   CROSSWALK_STRIPES,
+  MANHOLE_DECALS,
+  WEAR_PATCH_DECALS,
   MARKING_HEIGHT,
 } from "./roadGeometry";
 
@@ -14,7 +16,9 @@ export type MarkingTextureKey =
   | "center_yellow"
   | "bus_border"
   | "stop_bar"
-  | "crosswalk";
+  | "crosswalk"
+  | "manhole"
+  | "wear_patch";
 
 export type MarkingDecalDescriptor = {
   id: string;
@@ -39,6 +43,8 @@ const GROUPS: { specs: SpecLike[]; key: MarkingTextureKey; lift: number }[] = [
   { specs: BUS_LANE_BORDER_MARKINGS, key: "bus_border", lift: 0.003 },
   { specs: STOP_LINE_MARKINGS, key: "stop_bar", lift: 0.005 },
   { specs: CROSSWALK_STRIPES, key: "crosswalk", lift: 0.006 },
+  { specs: MANHOLE_DECALS, key: "manhole", lift: 0.007 },
+  { specs: WEAR_PATCH_DECALS, key: "wear_patch", lift: 0.008 },
 ];
 
 export function buildMarkingDecalDescriptors(): MarkingDecalDescriptor[] {

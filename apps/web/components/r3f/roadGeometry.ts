@@ -419,6 +419,36 @@ export const STAGE6E_CITY_EDGE_BLOCKS: CityEdgeBlockSpec[] =
 
 export const CROSSWALK_STRIPES: PlanePrimitiveSpec[] = buildCrosswalkStripes();
 
+// ── Road-surface detail decals (day-scene fill) ────────────────────────────────
+// Cast-iron manhole covers + worn-asphalt patches scattered on the approach
+// carriageways. Lateral offsets stay inside each road half-width (N/S/E = 18 m,
+// W = 14.4 m); longitudinal distances sit BEYOND the crosswalk (≈±20.75 m) and
+// stop bar (≈±24.6 m) so a cover never lands on a painted marking. y is set by
+// the decal builder's per-group lift, so only x/z matter here.
+export const MANHOLE_DECALS: PlanePrimitiveSpec[] = [
+  { id: "manhole-n-1", direction: "north", position: [-9, MARKING_HEIGHT, -30], size: [0.9, 0.9], rotationY: 0.3 },
+  { id: "manhole-n-2", direction: "north", position: [5.4, MARKING_HEIGHT, -45], size: [0.9, 0.9], rotationY: -0.6 },
+  { id: "manhole-n-3", direction: "north", position: [-3.6, MARKING_HEIGHT, -62], size: [0.9, 0.9], rotationY: 0.9 },
+  { id: "manhole-s-1", direction: "south", position: [7.2, MARKING_HEIGHT, 32], size: [0.9, 0.9], rotationY: 0.15 },
+  { id: "manhole-s-2", direction: "south", position: [-5.4, MARKING_HEIGHT, 50], size: [0.9, 0.9], rotationY: -0.45 },
+  { id: "manhole-s-3", direction: "south", position: [10.8, MARKING_HEIGHT, 70], size: [0.9, 0.9], rotationY: 0.75 },
+  { id: "manhole-e-1", direction: "east", position: [40, MARKING_HEIGHT, -7.2], size: [0.9, 0.9], rotationY: 0.5 },
+  { id: "manhole-e-2", direction: "east", position: [58, MARKING_HEIGHT, 5.4], size: [0.9, 0.9], rotationY: -0.2 },
+  { id: "manhole-w-1", direction: "west", position: [-38, MARKING_HEIGHT, 7.2], size: [0.9, 0.9], rotationY: 0.8 },
+  { id: "manhole-w-2", direction: "west", position: [-55, MARKING_HEIGHT, -5.4], size: [0.9, 0.9], rotationY: -0.7 }
+];
+
+export const WEAR_PATCH_DECALS: PlanePrimitiveSpec[] = [
+  { id: "wear-n-1", direction: "north", position: [-5.4, MARKING_HEIGHT, -40], size: [2.5, 3.5], rotationY: 0 },
+  { id: "wear-n-2", direction: "north", position: [7.2, MARKING_HEIGHT, -68], size: [2.5, 3.5], rotationY: 0 },
+  { id: "wear-s-1", direction: "south", position: [-7.2, MARKING_HEIGHT, 42], size: [2.5, 3.5], rotationY: 0 },
+  { id: "wear-s-2", direction: "south", position: [3.6, MARKING_HEIGHT, 60], size: [2.5, 3.5], rotationY: 0 },
+  { id: "wear-e-1", direction: "east", position: [48, MARKING_HEIGHT, 5.4], size: [3.5, 2.5], rotationY: 0 },
+  { id: "wear-e-2", direction: "east", position: [66, MARKING_HEIGHT, -7.2], size: [3.5, 2.5], rotationY: 0 },
+  { id: "wear-w-1", direction: "west", position: [-46, MARKING_HEIGHT, -7.2], size: [3.5, 2.5], rotationY: 0 },
+  { id: "wear-w-2", direction: "west", position: [-60, MARKING_HEIGHT, 5.4], size: [3.5, 2.5], rotationY: 0 }
+];
+
 // Arrow lateral offset: moved from ±LANE_WIDTH_METERS (±3.6 m, the busway
 // outer edge) to ±2.5 lanes (≈ ±9 m, a general through lane) so the arrows
 // sit on carriageway pavement rather than on the central median bus lane.

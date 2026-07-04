@@ -11,17 +11,19 @@ import {
 // Photoreal worn road-paint textures (codex imagegen, alpha where the paint is
 // worn through so the asphalt shows). Three colours cover the six marking kinds.
 const WHITE = "/simulation/r3f/assets/markings/white_paint.webp";
-const PLACEHOLDER_URLS: Record<MarkingTextureKey, string> = {
+export const PLACEHOLDER_URLS: Record<MarkingTextureKey, string> = {
   lane_dashed: WHITE,
   lane_solid: WHITE,
   center_yellow: "/simulation/r3f/assets/markings/yellow_paint.webp",
   bus_border: "/simulation/r3f/assets/markings/blue_paint.webp",
   stop_bar: WHITE,
   crosswalk: WHITE,
+  manhole: "/simulation/r3f/assets/textures/ground/manhole.webp",
+  wear_patch: "/simulation/r3f/assets/textures/ground/wear_patch.webp",
 };
 
 // Merge every decal sharing a texture into ONE geometry so the whole marking set
-// is 6 draw calls (one per texture key) instead of ~790 individual meshes — the
+// is one draw call per texture key instead of ~790 individual meshes — the
 // per-descriptor mesh count blew the 900 peak draw-call budget. Each plane bakes
 // the SAME transform the per-descriptor mesh used: rotation [-PI/2, rotationY, 0]
 // (XYZ Euler) then translate. In geometry space that is rotateY THEN rotateX
