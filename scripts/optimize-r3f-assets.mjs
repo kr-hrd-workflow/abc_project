@@ -14,7 +14,7 @@ const manifestPath = path.join(assetsRoot, "manifest.json");
 // Re-baselined 2026-07-03 with user approval — hero facade textures (previously
 // unregistered/uncounted, recompressed 23->9.8 MB in d837752) are now registered, so the
 // gate finally sees the true payload (~32 MB).
-const firstPassPayloadLimitBytes = 35 * 1024 * 1024;
+const firstPassPayloadLimitBytes = 45 * 1024 * 1024; // raised 35→45 MB 2026-07-04 with user approval (policy consistency with verify-r3f-assets)
 const stage6EFirstPassRuntimeAssetIds = new Set([
   "vehicles/bus_near",
   "vehicles/emergency_ambulance_medium",
