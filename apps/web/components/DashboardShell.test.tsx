@@ -1916,10 +1916,10 @@ describe("DashboardShell", () => {
     );
     expect(glbVehicleCount).toBeGreaterThan(0);
     expect(glbVehicleCount).toBeLessThanOrEqual(visibleVehicleCount);
-    // street-shadow-count now measures the mounted StreetFurnitureLayer contact shadows.
-    expect(
-      Number(viewport.getAttribute("data-r3f-street-shadow-count"))
-    ).toBeGreaterThanOrEqual(2);
+    // street-shadow-count now measures the mounted StreetFurnitureLayer contact
+    // shadows — STREET_FURNITURE_CONTACT_SHADOWS.length is a deterministic module
+    // constant (8 tree + 2 cafe = 10), so pin the exact value, not a loose bound.
+    expect(viewport.getAttribute("data-r3f-street-shadow-count")).toBe("10");
     expect(viewport.getAttribute("data-r3f-vehicle-silhouette-part-count")).toBe("12");
   });
 
