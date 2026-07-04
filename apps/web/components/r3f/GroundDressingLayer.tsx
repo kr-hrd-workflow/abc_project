@@ -88,14 +88,28 @@ export const CORNER_PLAZA_PLATES: {
   textureUrl: `${GROUND_TEXTURE_DIR}/corner_plaza_${id}.webp`
 }));
 
-// Textured periphery edge blocks: the >=70 m subset of the stage6e city-edge
-// segments. The <70 m segments flank the near corridors where the hero
-// buildings already stand, so filtering them out prevents double-rendered
-// buildings; the far subset gives the mid-distance streets a built edge that
-// continues past the frame. One instanced draw call, one shared strip texture.
-export const PERIPHERY_EDGE_BLOCKS = STAGE6E_CITY_EDGE_BLOCKS.filter(
-  (b) => Math.max(Math.abs(b.position[0]), Math.abs(b.position[2])) >= 70
-);
+// Textured periphery edge blocks: the laterally-clear subset of the stage6e
+// city-edge segments. Each segment's (x, z) is a fixed lateral offset from
+// its source corridor (near-corridor building line, e.g. x≈±29 beside a N/S
+// corridor) stepped along the corridor's own length — so `max(|x|,|z|)` (the
+// former filter) only measures distance along the corridor, not clearance
+// from it, and admitted segments that sat right next to a near corridor for
+// its whole length as gray monoliths. Lateral clearance is the MIN of the two
+// axes; keep a block only if it clears 45 m laterally, or is far enough along
+// either axis to sit beyond the near-corridor render range (>=260 m), which
+// still gives the far streets a built edge that continues past the frame.
+// (2026-07-05, fix(r3f): periphery edge blocks keep lateral clearance from
+// near corridors — see .superpowers/sdd/building-regression-diagnosis.md.)
+const PERIPHERY_LATERAL_CLEARANCE_METERS = 45;
+const PERIPHERY_FAR_RENDER_RANGE_METERS = 260;
+export const PERIPHERY_EDGE_BLOCKS = STAGE6E_CITY_EDGE_BLOCKS.filter((b) => {
+  const lateralClearance = Math.min(Math.abs(b.position[0]), Math.abs(b.position[2]));
+  const farAlongEitherAxis = Math.max(Math.abs(b.position[0]), Math.abs(b.position[2]));
+  return (
+    lateralClearance >= PERIPHERY_LATERAL_CLEARANCE_METERS ||
+    farAlongEitherAxis >= PERIPHERY_FAR_RENDER_RANGE_METERS
+  );
+});
 
 const EDGE_FACADE_TEXTURE_URL = `${GROUND_TEXTURE_DIR}/edge_facade_strip.webp`;
 

@@ -43,11 +43,25 @@ describe("GroundDressingLayer batches", () => {
     const names = GROUND_DRESSING_BATCHES.map((b) => b.name);
     expect(names).not.toContain("ground-dressing-city-apron");
   });
-  test("periphery edge blocks stay outside the hero-building zone (no double-rendered buildings)", () => {
+  // 2026-07-05 (fix(r3f): periphery edge blocks keep lateral clearance from
+  // near corridors) — the former `max(|x|,|z|) >= 70` test admitted segments
+  // laterally adjacent to a near corridor (e.g. x≈±29 flanking the N/S
+  // corridors) as long as they were far along the corridor's own length,
+  // which read as gray monoliths flanking the corridor. Lateral clearance is
+  // the min of the two axes (distance off the corridor's own axis), not the
+  // max: keep a block only if it clears 45m laterally, or is far enough along
+  // either axis (>=260m) to sit beyond the near-corridor render range.
+  test("periphery edge blocks stay laterally clear of the near corridors (no flanking monoliths)", () => {
     expect(PERIPHERY_EDGE_BLOCKS.length).toBeGreaterThanOrEqual(12);
     for (const b of PERIPHERY_EDGE_BLOCKS) {
-      expect(Math.max(Math.abs(b.position[0]), Math.abs(b.position[2]))).toBeGreaterThanOrEqual(70);
+      const lateralClearance = Math.min(Math.abs(b.position[0]), Math.abs(b.position[2]));
+      const farAlongEitherAxis = Math.max(Math.abs(b.position[0]), Math.abs(b.position[2]));
+      expect(lateralClearance >= 45 || farAlongEitherAxis >= 260).toBe(true);
     }
+    // Every approach direction still contributes at least one far city-edge
+    // block, so corridor ends keep reading as city rather than going empty.
+    const directions = new Set(PERIPHERY_EDGE_BLOCKS.map((b) => b.direction));
+    expect(directions).toEqual(new Set(["north", "south", "east", "west"]));
   });
   test("four corner plaza plates cover the diagonal corners", () => {
     expect(CORNER_PLAZA_PLATES).toHaveLength(4);
