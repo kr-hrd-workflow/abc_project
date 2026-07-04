@@ -10,7 +10,7 @@ import {
   selectCameraRigPreset
 } from "./CameraRig";
 import * as CanvasTextPlaneModule from "./CanvasTextPlane";
-import { getStage6EnvironmentPreset } from "./EnvironmentLayer";
+import { getStage6EnvironmentPreset } from "./SceneEnvironment";
 import * as ProceduralIntersectionModule from "./ProceduralIntersection";
 import {
   getRoadDetailPropAtlasContracts,

@@ -144,7 +144,6 @@ export function SimulationScene({
 
 // SceneEnvironment unifies day IBL + Sky + LightingRig + WeatherAndAtmosphere
 // (day) and night IBL + neon lights (night) into one timeOfDay-aware component.
-// Replaces the former split: EnvironmentLayer (day) vs NightSeamlessLighting (night).
 function SceneLighting({
   sceneSnapshot,
   qualityPreset,
