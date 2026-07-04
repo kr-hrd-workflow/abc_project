@@ -3139,6 +3139,28 @@ async function captureStage6ScenarioProofs(browser, baseUrl) {
   return proofs;
 }
 
+// 2026-07-05, demand-frameloop stale-framebuffer fix (see
+// .superpowers/sdd/building-regression-diagnosis.md): on frameloop="demand"
+// with a cold server, BuildingLayer's Suspense subtree can resolve+repaint
+// AFTER a scenario capture already read pixels, so the capture grabs a stale
+// frame (road/vehicles present, buildings not yet painted). Force a repaint
+// warm-up via the app's invalidate hook, then give texture Suspense a short
+// recheck window before reading pixels. Cheap variant: fixed 8-invalidate
+// double-rAF warm-up + one 2s recheck (no byte-stability comparison loop).
+async function settleR3FBeforeCapture(page) {
+  await page.evaluate(async () => {
+    const inv = window.__r3fSimulationInvalidate;
+    if (typeof inv !== "function") return;
+    const raf = () =>
+      new Promise((resolve) => requestAnimationFrame(() => requestAnimationFrame(resolve)));
+    for (let i = 0; i < 8; i += 1) {
+      inv();
+      await raf();
+    }
+  });
+  await page.waitForTimeout(2000);
+}
+
 async function captureStage6ScenarioProof(browser, baseUrl, spec) {
   const routedPage = await newRoutedPage(browser, desktopViewport, {
     mutatePayloads: (payloads) => applyScenarioDensity(payloads, spec.density)
@@ -3151,6 +3173,7 @@ async function captureStage6ScenarioProof(browser, baseUrl, spec) {
       await gotoDashboard(routedPage.page, baseUrl, buildStage6ScenarioQuery(spec));
       const r3fReady = await waitForR3F(routedPage.page);
       await routedPage.page.waitForTimeout(500);
+      await settleR3FBeforeCapture(routedPage.page);
       const canvasPng = await captureR3FCanvasPng(routedPage.page, canvasPath, {
         label: `${spec.id} R3F canvas`
       });
