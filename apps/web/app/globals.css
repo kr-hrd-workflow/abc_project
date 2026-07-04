@@ -9188,15 +9188,17 @@ body {
 
 .launch-dashboard:is([data-layout="operations-cockpit"], [data-layout="spatial-command-hybrid"]) .operation-row {
   display: grid;
-  grid-template-columns: minmax(420px, 1.25fr) minmax(300px, 0.8fr) minmax(180px, 0.45fr);
+  grid-template-columns: minmax(420px, 1.25fr) minmax(300px, 0.8fr);
   gap: 8px;
   align-items: stretch;
 }
 
-/* Scene controls sit on the second row beside the operator card (row 1 holds
-   city / mode / safety, matching the original 3-column layout). Ordering keeps
-   the DOM sequence intact while placing scene controls in the wide first
-   column so its three toggle groups have room. */
+/* Row 1 holds the 2 remaining order-0 items (mode, safety) exactly filling
+   the 2-column template (Seoul-only: the city selector that used to take the
+   3rd/narrow column is gone). Scene controls + operator card order onto row 2
+   beside each other. Ordering keeps the DOM sequence intact while placing
+   scene controls in the wide first column so its three toggle groups have
+   room. */
 .launch-dashboard:is([data-layout="operations-cockpit"], [data-layout="spatial-command-hybrid"]) .operation-row > .scene-controls-panel {
   order: 1;
 }
