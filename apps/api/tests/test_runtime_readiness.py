@@ -16,6 +16,7 @@ def test_runtime_readiness_reports_missing_optional_runtime_gates() -> None:
         sumo_simulation_mode="sumo_traci",
         sumo_binary="sumo",
         sumo_config_path="networks/intersection.sumocfg",
+        openai_api_key=None,
     )
 
     readiness = get_runtime_readiness(
