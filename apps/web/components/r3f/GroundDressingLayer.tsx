@@ -1,7 +1,7 @@
 "use client";
 
 import { memo, Suspense } from "react";
-import { CITY_GROUND_APRON, CURB_SEGMENTS, SIDEWALK_SLABS } from "./roadGeometry";
+import { CURB_SEGMENTS, SIDEWALK_SLABS } from "./roadGeometry";
 import { InstancedBoxBatch, InstancedPlaneBatch } from "./instancedBatches";
 import { useStage5RoadMaterials, type Stage5RoadMaterialSet } from "./roadMaterials";
 
@@ -23,12 +23,6 @@ export const GROUND_DRESSING_BATCHES = [
     ]
   },
   {
-    name: "ground-dressing-city-apron",
-    kind: "plane" as const,
-    materialKey: "cityGround" as const,
-    specs: CITY_GROUND_APRON
-  },
-  {
     name: "ground-dressing-sidewalk-slabs",
     kind: "box" as const,
     materialKey: "sidewalk" as const,
@@ -44,9 +38,17 @@ export const GROUND_DRESSING_BATCHES = [
 
 function GroundDressingContent() {
   const roadMaterials: Stage5RoadMaterialSet = useStage5RoadMaterials();
-  // Both plane batches (base plane + city apron) share the cityGround material
-  // and identical render props, so they draw as ONE InstancedMesh
-  // (2026-07-04 draw-call reduction). Box batches keep distinct materials.
+  // Only one plane batch remains (base plane); still filtered/flattened so
+  // adding a sibling plane batch back stays a one-line change. Box batches
+  // keep distinct materials.
+  //
+  // 2026-07-04: the former "city apron" plane (CITY_GROUND_APRON, a legacy
+  // wet-era darkening ring sitting only 12mm below the road surface at
+  // y=-0.012) was removed here: it z-fought with the road surface at far
+  // grazing angles (12mm is under depth-buffer precision at distance) and
+  // duplicated ground coverage the 720x720 base plane (y=-0.06) already
+  // provides. Codex A/B confirmed the base plane + sidewalks cover the
+  // ground equivalently with the apron gone (see prefix-b-report.md).
   const planeSpecs = GROUND_DRESSING_BATCHES.filter(
     (batch) => batch.kind === "plane"
   ).flatMap((batch) => batch.specs);
