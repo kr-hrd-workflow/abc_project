@@ -1,5 +1,5 @@
 import { describe, expect, test } from "vitest";
-import { GROUND_DRESSING_BATCHES } from "./GroundDressingLayer";
+import { CORNER_PLAZA_PLATES, GROUND_DRESSING_BATCHES } from "./GroundDressingLayer";
 import { CURB_SEGMENTS, SIDEWALK_SLABS } from "./roadGeometry";
 
 describe("GroundDressingLayer batches", () => {
@@ -7,9 +7,19 @@ describe("GroundDressingLayer batches", () => {
     const names = GROUND_DRESSING_BATCHES.map((b) => b.name);
     expect(names).toContain("ground-dressing-base-plane");
     expect(names).toContain("ground-dressing-sidewalk-slabs");
+    expect(names).toContain("ground-dressing-sidewalk-slabs-ew");
     expect(names).toContain("ground-dressing-curbs");
-    const sidewalks = GROUND_DRESSING_BATCHES.find((b) => b.name === "ground-dressing-sidewalk-slabs");
-    expect(sidewalks?.specs).toBe(SIDEWALK_SLABS);
+    // The two orientation batches must partition SIDEWALK_SLABS exactly (the
+    // NS/EW split exists so the paver atlas tiles square on both orientations).
+    const nsSlabs = GROUND_DRESSING_BATCHES.find(
+      (b) => b.name === "ground-dressing-sidewalk-slabs"
+    );
+    const ewSlabs = GROUND_DRESSING_BATCHES.find(
+      (b) => b.name === "ground-dressing-sidewalk-slabs-ew"
+    );
+    expect(new Set([...(nsSlabs?.specs ?? []), ...(ewSlabs?.specs ?? [])])).toEqual(
+      new Set(SIDEWALK_SLABS)
+    );
     const curbs = GROUND_DRESSING_BATCHES.find((b) => b.name === "ground-dressing-curbs");
     expect(curbs?.specs).toBe(CURB_SEGMENTS);
   });
@@ -28,5 +38,16 @@ describe("GroundDressingLayer batches", () => {
   test("no longer batches the legacy city-apron plane (removed to kill z-fighting)", () => {
     const names = GROUND_DRESSING_BATCHES.map((b) => b.name);
     expect(names).not.toContain("ground-dressing-city-apron");
+  });
+  test("four corner plaza plates cover the diagonal corners", () => {
+    expect(CORNER_PLAZA_PLATES).toHaveLength(4);
+    const quadrants = new Set(
+      CORNER_PLAZA_PLATES.map((p) => `${Math.sign(p.position[0])},${Math.sign(p.position[2])}`)
+    );
+    expect(quadrants.size).toBe(4);
+    for (const p of CORNER_PLAZA_PLATES) {
+      expect(Math.abs(p.position[0])).toBeGreaterThanOrEqual(15);
+      expect(Math.abs(p.position[2])).toBeGreaterThanOrEqual(15);
+    }
   });
 });

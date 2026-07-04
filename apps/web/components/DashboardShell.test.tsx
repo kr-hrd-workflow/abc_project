@@ -89,6 +89,12 @@ vi.mock("./r3f/MarkingDecalLayer", () => ({
 vi.mock("./r3f/BuildingLayer", () => ({
   BuildingLayer: () => null
 }));
+// GroundDressingLayer (Task 5) loads corner-plaza plate textures via useTexture
+// (drei hook), which also requires a real R3F Canvas context. Stub it for the
+// same reason.
+vi.mock("./r3f/GroundDressingLayer", () => ({
+  GroundDressingLayer: () => null
+}));
 // LimitedOrbitControls wraps drei's OrbitControls, which calls useThree and thus
 // requires a real R3F Canvas context. Stub it — this suite renders SimulationScene
 // without a Canvas to assert CameraRig target application.
@@ -526,7 +532,22 @@ const stage4RequiredAssetIds = [
   "textures/hero/teheran-frontage-s3_top",
   "textures/vehicle_paint_detail",
   "textures/vehicle_paint_normal",
-  "sprites/stage6_weather_material_source_atlas"
+  "sprites/stage6_weather_material_source_atlas",
+  // Task 5 day-scene ground fill: imagegen ground atlas + corner plaza plates,
+  // plus the 3 pre-existing (previously unregistered) imagegen marking paints.
+  "textures/ground/sidewalk_atlas_a",
+  "textures/ground/sidewalk_atlas_b",
+  "textures/ground/urban_ground",
+  "textures/ground/edge_facade_strip",
+  "textures/ground/manhole",
+  "textures/ground/wear_patch",
+  "textures/ground/corner_plaza_ne",
+  "textures/ground/corner_plaza_nw",
+  "textures/ground/corner_plaza_se",
+  "textures/ground/corner_plaza_sw",
+  "markings/white_paint",
+  "markings/yellow_paint",
+  "markings/blue_paint"
 ];
 
 const runtimeReadiness: RuntimeReadiness = {
@@ -1295,7 +1316,7 @@ describe("DashboardShell", () => {
       const asset = getR3FAssetEntry(assetId);
 
       expect(asset.id).toBe(assetId);
-      expect(asset.path).toMatch(/^\/simulation\/r3f\/assets\/(glb|textures|sprites)\//);
+      expect(asset.path).toMatch(/^\/simulation\/r3f\/assets\/(glb|textures|sprites|markings)\//);
       expect(asset.units).toBe("meters");
       expect(asset.source.length).toBeGreaterThan(0);
       expect(asset.license.length).toBeGreaterThan(0);

@@ -8,7 +8,8 @@ import {
   type PlaneBatchSpec,
   QUEUE_ZONES,
   ROAD_WIDTH_METERS,
-  SIDEWALK_SLABS,
+  SIDEWALK_SLABS_EW,
+  SIDEWALK_SLABS_NS,
   STAGE6E_CITY_EDGE_BLOCKS
 } from "./roadGeometry";
 import type { Vector3Tuple } from "./roadGeometry";
@@ -203,10 +204,18 @@ export function ApproachCorridors({ isNight = false }: { isNight?: boolean }) {
         castShadow
         receiveShadow
       />
+      {/* Split by orientation so the Task 5 paver atlas tiles square on both
+          slab directions (shared instanced UVs transpose u/v between NS/EW). */}
       <InstancedBoxBatch
         name="stage5-corridor-sidewalk-slabs"
-        specs={SIDEWALK_SLABS}
+        specs={SIDEWALK_SLABS_NS}
         material={roadMaterials.sidewalk}
+        receiveShadow
+      />
+      <InstancedBoxBatch
+        name="stage5-corridor-sidewalk-slabs-ew"
+        specs={SIDEWALK_SLABS_EW}
+        material={roadMaterials.sidewalkCross}
         receiveShadow
       />
       {/* The procedural city-edge building blocks are suppressed at night so

@@ -365,6 +365,18 @@ export const SIDEWALK_SLABS = APPROACH_CORRIDORS.flatMap((corridor) => {
   }));
 });
 
+// Orientation split for the Task 5 sidewalk paver atlas: the slabs share one
+// instanced unit-box geometry, so a single texture repeat cannot be square in
+// world space for both orientations (an EW slab transposes u/v vs an NS slab —
+// one of them would smear the paver atlas ~70:1). Consumers batch these two
+// groups with the sidewalk / sidewalkCross material pair (transposed repeats).
+export const SIDEWALK_SLABS_NS = SIDEWALK_SLABS.filter(
+  (slab) => slab.size[0] < slab.size[2]
+);
+export const SIDEWALK_SLABS_EW = SIDEWALK_SLABS.filter(
+  (slab) => slab.size[0] >= slab.size[2]
+);
+
 const CITY_GROUND_HEIGHT = -0.012;
 
 export const CITY_GROUND_APRON: PlaneBatchSpec[] = [

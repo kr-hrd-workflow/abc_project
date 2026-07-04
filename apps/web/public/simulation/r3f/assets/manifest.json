@@ -7856,5 +7856,515 @@
       "baseColor"
     ],
     "runtimeUsage": "Runtime baseColor facade texture mapped onto the top BoxGeometry face of hero building 'teheran-frontage-s3' in the R3F dashboard (apps/web/components/r3f/BuildingLayer.tsx + heroBuildingFacades.ts)."
+  },
+  "textures/ground/sidewalk_atlas_a": {
+    "id": "textures/ground/sidewalk_atlas_a",
+    "path": "/simulation/r3f/assets/textures/ground/sidewalk_atlas_a.webp",
+    "kind": "texture",
+    "source": "imagegen-generated-sidewalk-paver-texture",
+    "license": "Project-generated via imagegen; no real brands, logos, or store names; provenance in docs/compliance/r3f-asset-licenses.md",
+    "units": "meters",
+    "pbr": true,
+    "lod": "material",
+    "maxTextureSize": 1024,
+    "maxTriangles": 0,
+    "maxFileSizeBytes": 800000,
+    "realismStatus": "stage4_1_ready",
+    "visualRejectIfToyLike": true,
+    "authorship": "generated",
+    "compression": {
+      "status": "webp-runtime",
+      "geometry": "not-applicable",
+      "texture": "webp",
+      "evidence": "scripts/verify-r3f-assets.mjs"
+    },
+    "provenanceEvidencePath": "docs/compliance/r3f-asset-licenses.md",
+    "details": {
+      "dimensions": "1024x1024",
+      "fileSizeBytes": 320426,
+      "materialFeatures": [
+        "running-bond interlocking concrete pavers",
+        "warm grey/buff two-tone",
+        "dark grout seams",
+        "foot-traffic wear and stains",
+        "hairline cracks"
+      ],
+      "provenance": "Imagegen-generated seamless top-down photoreal Seoul sidewalk paver texture (1024x1024), tiled as the runtime sidewalk base-color map. No real brands, logos, or store names. Runtime proof must come from browser-rendered frames."
+    },
+    "pbrChannels": [
+      "baseColor"
+    ],
+    "runtimeUsage": "Tiling base-color map on the sidewalk slab material for photoreal Korean paver pavement."
+  },
+  "textures/ground/sidewalk_atlas_b": {
+    "id": "textures/ground/sidewalk_atlas_b",
+    "path": "/simulation/r3f/assets/textures/ground/sidewalk_atlas_b.webp",
+    "kind": "texture",
+    "source": "imagegen-generated-sidewalk-paver-texture",
+    "license": "Project-generated via imagegen; no real brands, logos, or store names; provenance in docs/compliance/r3f-asset-licenses.md",
+    "units": "meters",
+    "pbr": true,
+    "lod": "material",
+    "maxTextureSize": 1024,
+    "maxTriangles": 0,
+    "maxFileSizeBytes": 800000,
+    "realismStatus": "stage4_1_ready",
+    "visualRejectIfToyLike": true,
+    "authorship": "generated",
+    "compression": {
+      "status": "webp-runtime",
+      "geometry": "not-applicable",
+      "texture": "webp",
+      "evidence": "scripts/verify-r3f-assets.mjs"
+    },
+    "provenanceEvidencePath": "docs/compliance/r3f-asset-licenses.md",
+    "details": {
+      "dimensions": "1024x1024",
+      "fileSizeBytes": 340152,
+      "materialFeatures": [
+        "square granite/concrete slab grid",
+        "cooler grey stone tone",
+        "flush wide joints",
+        "fine stone speckle",
+        "occasional replacement slab"
+      ],
+      "provenance": "Imagegen-generated seamless top-down photoreal Seoul square-slab sidewalk texture (1024x1024), registered as a second tiling sidewalk variant for paving variety. No real brands, logos, or store names. Runtime proof must come from browser-rendered frames."
+    },
+    "pbrChannels": [
+      "baseColor"
+    ],
+    "runtimeUsage": "Alternate tiling base-color map for sidewalk paving variety across the day-scene ground fill."
+  },
+  "textures/ground/urban_ground": {
+    "id": "textures/ground/urban_ground",
+    "path": "/simulation/r3f/assets/textures/ground/urban_ground.webp",
+    "kind": "texture",
+    "source": "imagegen-generated-urban-ground-texture",
+    "license": "Project-generated via imagegen; no real brands, logos, or store names; provenance in docs/compliance/r3f-asset-licenses.md",
+    "units": "meters",
+    "pbr": true,
+    "lod": "material",
+    "maxTextureSize": 1024,
+    "maxTriangles": 0,
+    "maxFileSizeBytes": 800000,
+    "realismStatus": "stage4_1_ready",
+    "visualRejectIfToyLike": true,
+    "authorship": "generated",
+    "compression": {
+      "status": "webp-runtime",
+      "geometry": "not-applicable",
+      "texture": "webp",
+      "evidence": "scripts/verify-r3f-assets.mjs"
+    },
+    "provenanceEvidencePath": "docs/compliance/r3f-asset-licenses.md",
+    "details": {
+      "dimensions": "1024x1024",
+      "fileSizeBytes": 346222,
+      "materialFeatures": [
+        "worn grey asphalt-concrete blend",
+        "fine aggregate",
+        "patchy tone variation",
+        "faint tire scuffs and dust",
+        "small cracks and repair seams"
+      ],
+      "provenance": "Imagegen-generated seamless top-down photoreal urban ground texture (1024x1024), tiled as the runtime city-ground base-color map across the large ground plane. No real brands, logos, or store names. Runtime proof must come from browser-rendered frames."
+    },
+    "pbrChannels": [
+      "baseColor"
+    ],
+    "runtimeUsage": "Tiling base-color map on the city-ground base plane for weathered urban surface between road and buildings."
+  },
+  "textures/ground/edge_facade_strip": {
+    "id": "textures/ground/edge_facade_strip",
+    "path": "/simulation/r3f/assets/textures/ground/edge_facade_strip.webp",
+    "kind": "texture",
+    "source": "imagegen-generated-facade-base-strip-texture",
+    "license": "Project-generated via imagegen; no real brands, logos, or store names; provenance in docs/compliance/r3f-asset-licenses.md",
+    "units": "meters",
+    "pbr": true,
+    "lod": "material",
+    "maxTextureSize": 1024,
+    "maxTriangles": 0,
+    "maxFileSizeBytes": 800000,
+    "realismStatus": "stage4_1_ready",
+    "visualRejectIfToyLike": true,
+    "authorship": "generated",
+    "compression": {
+      "status": "webp-runtime",
+      "geometry": "not-applicable",
+      "texture": "webp",
+      "evidence": "scripts/verify-r3f-assets.mjs"
+    },
+    "provenanceEvidencePath": "docs/compliance/r3f-asset-licenses.md",
+    "details": {
+      "dimensions": "1024x1024",
+      "fileSizeBytes": 298570,
+      "materialFeatures": [
+        "dark concrete apron band",
+        "metal grate/gutter line",
+        "building-base tiling row",
+        "drainage channel",
+        "utility covers"
+      ],
+      "provenance": "Imagegen-generated horizontally-seamless top-down photoreal building-base transition strip (1024x1024), registered for the day-scene ground fill along building frontages. No real brands, logos, or store names. Runtime proof must come from browser-rendered frames."
+    },
+    "pbrChannels": [
+      "baseColor"
+    ],
+    "runtimeUsage": "Horizontally-tiling base-color strip map where building bases meet the sidewalk along the day-scene frontages."
+  },
+  "textures/ground/manhole": {
+    "id": "textures/ground/manhole",
+    "path": "/simulation/r3f/assets/textures/ground/manhole.webp",
+    "kind": "texture",
+    "source": "imagegen-generated-manhole-cover-texture",
+    "license": "Project-generated via imagegen; no real brands, logos, or store names; provenance in docs/compliance/r3f-asset-licenses.md",
+    "units": "meters",
+    "pbr": true,
+    "lod": "material",
+    "maxTextureSize": 1024,
+    "maxTriangles": 0,
+    "maxFileSizeBytes": 800000,
+    "realismStatus": "stage4_1_ready",
+    "visualRejectIfToyLike": true,
+    "authorship": "generated",
+    "compression": {
+      "status": "webp-runtime",
+      "geometry": "not-applicable",
+      "texture": "webp",
+      "evidence": "scripts/verify-r3f-assets.mjs"
+    },
+    "provenanceEvidencePath": "docs/compliance/r3f-asset-licenses.md",
+    "details": {
+      "dimensions": "1024x1024",
+      "fileSizeBytes": 337812,
+      "materialFeatures": [
+        "round cast-iron manhole cover",
+        "raised geometric relief pattern",
+        "rust and grime",
+        "recessed rim gap",
+        "grey asphalt surround"
+      ],
+      "provenance": "Imagegen-generated top-down photoreal Korean street manhole cover texture (1024x1024), registered as a ground detail for the day-scene fill. No real brands, logos, or store names. Runtime proof must come from browser-rendered frames."
+    },
+    "pbrChannels": [
+      "baseColor"
+    ],
+    "runtimeUsage": "Base-color ground-detail map for a cast-iron manhole cover set into the day-scene pavement."
+  },
+  "textures/ground/wear_patch": {
+    "id": "textures/ground/wear_patch",
+    "path": "/simulation/r3f/assets/textures/ground/wear_patch.webp",
+    "kind": "texture",
+    "source": "imagegen-generated-wear-patch-texture",
+    "license": "Project-generated via imagegen; no real brands, logos, or store names; provenance in docs/compliance/r3f-asset-licenses.md",
+    "units": "meters",
+    "pbr": true,
+    "lod": "material",
+    "maxTextureSize": 1024,
+    "maxTriangles": 0,
+    "maxFileSizeBytes": 800000,
+    "realismStatus": "stage4_1_ready",
+    "visualRejectIfToyLike": true,
+    "authorship": "generated",
+    "compression": {
+      "status": "webp-runtime",
+      "geometry": "not-applicable",
+      "texture": "webp",
+      "evidence": "scripts/verify-r3f-assets.mjs"
+    },
+    "provenanceEvidencePath": "docs/compliance/r3f-asset-licenses.md",
+    "details": {
+      "dimensions": "1024x1024",
+      "fileSizeBytes": 363880,
+      "materialFeatures": [
+        "irregular asphalt repair patch",
+        "ragged tar-sealed border seam",
+        "surface cracking",
+        "oil staining",
+        "tire scuffing"
+      ],
+      "provenance": "Imagegen-generated top-down photoreal asphalt wear/repair patch texture (1024x1024), registered as a scatterable ground detail for the day-scene fill. No real brands, logos, or store names. Runtime proof must come from browser-rendered frames."
+    },
+    "pbrChannels": [
+      "baseColor"
+    ],
+    "runtimeUsage": "Base-color ground-detail map for scattered asphalt repair/wear patches across the day-scene pavement."
+  },
+  "textures/ground/corner_plaza_ne": {
+    "id": "textures/ground/corner_plaza_ne",
+    "path": "/simulation/r3f/assets/textures/ground/corner_plaza_ne.webp",
+    "kind": "texture",
+    "source": "imagegen-generated-corner-plaza-plate-texture",
+    "license": "Project-generated via imagegen; no real brands, logos, or store names; provenance in docs/compliance/r3f-asset-licenses.md",
+    "units": "meters",
+    "pbr": true,
+    "lod": "material",
+    "maxTextureSize": 1024,
+    "maxTriangles": 0,
+    "maxFileSizeBytes": 800000,
+    "realismStatus": "stage4_1_ready",
+    "visualRejectIfToyLike": true,
+    "authorship": "generated",
+    "compression": {
+      "status": "webp-runtime",
+      "geometry": "not-applicable",
+      "texture": "webp",
+      "evidence": "scripts/verify-r3f-assets.mjs"
+    },
+    "provenanceEvidencePath": "docs/compliance/r3f-asset-licenses.md",
+    "details": {
+      "dimensions": "1024x1024",
+      "fileSizeBytes": 221504,
+      "materialFeatures": [
+        "interlocking grey sidewalk pavers",
+        "yellow tactile warning strip (truncated domes)",
+        "curb ramp to crosswalk on road-facing edges",
+        "small utility covers",
+        "tree-pit square"
+      ],
+      "provenance": "Imagegen-generated top-down ALBEDO-ONLY corner plaza plate for the north-east intersection corner (1024x1024) — no baked shadows or ambient occlusion, so scene lighting alone shades it. Yellow tactile paving + curb ramp baked along the two road-facing edges. No real brands, logos, or store names. Runtime proof must come from browser-rendered frames."
+    },
+    "pbrChannels": [
+      "baseColor"
+    ],
+    "runtimeUsage": "Albedo-only base-color ground plate for the north-east pedestrian corner plaza, tactile strip + curb ramp facing the crosswalk."
+  },
+  "textures/ground/corner_plaza_nw": {
+    "id": "textures/ground/corner_plaza_nw",
+    "path": "/simulation/r3f/assets/textures/ground/corner_plaza_nw.webp",
+    "kind": "texture",
+    "source": "imagegen-generated-corner-plaza-plate-texture",
+    "license": "Project-generated via imagegen; no real brands, logos, or store names; provenance in docs/compliance/r3f-asset-licenses.md",
+    "units": "meters",
+    "pbr": true,
+    "lod": "material",
+    "maxTextureSize": 1024,
+    "maxTriangles": 0,
+    "maxFileSizeBytes": 800000,
+    "realismStatus": "stage4_1_ready",
+    "visualRejectIfToyLike": true,
+    "authorship": "generated",
+    "compression": {
+      "status": "webp-runtime",
+      "geometry": "not-applicable",
+      "texture": "webp",
+      "evidence": "scripts/verify-r3f-assets.mjs"
+    },
+    "provenanceEvidencePath": "docs/compliance/r3f-asset-licenses.md",
+    "details": {
+      "dimensions": "1024x1024",
+      "fileSizeBytes": 200636,
+      "materialFeatures": [
+        "interlocking grey sidewalk pavers",
+        "yellow tactile warning strip (truncated domes)",
+        "curb ramp to crosswalk on road-facing edges",
+        "small utility covers",
+        "tree-pit square"
+      ],
+      "provenance": "Imagegen-generated top-down ALBEDO-ONLY corner plaza plate for the north-west intersection corner (1024x1024) — no baked shadows or ambient occlusion, so scene lighting alone shades it. Yellow tactile paving + curb ramp baked along the two road-facing edges. No real brands, logos, or store names. Runtime proof must come from browser-rendered frames."
+    },
+    "pbrChannels": [
+      "baseColor"
+    ],
+    "runtimeUsage": "Albedo-only base-color ground plate for the north-west pedestrian corner plaza, tactile strip + curb ramp facing the crosswalk."
+  },
+  "textures/ground/corner_plaza_se": {
+    "id": "textures/ground/corner_plaza_se",
+    "path": "/simulation/r3f/assets/textures/ground/corner_plaza_se.webp",
+    "kind": "texture",
+    "source": "imagegen-generated-corner-plaza-plate-texture",
+    "license": "Project-generated via imagegen; no real brands, logos, or store names; provenance in docs/compliance/r3f-asset-licenses.md",
+    "units": "meters",
+    "pbr": true,
+    "lod": "material",
+    "maxTextureSize": 1024,
+    "maxTriangles": 0,
+    "maxFileSizeBytes": 800000,
+    "realismStatus": "stage4_1_ready",
+    "visualRejectIfToyLike": true,
+    "authorship": "generated",
+    "compression": {
+      "status": "webp-runtime",
+      "geometry": "not-applicable",
+      "texture": "webp",
+      "evidence": "scripts/verify-r3f-assets.mjs"
+    },
+    "provenanceEvidencePath": "docs/compliance/r3f-asset-licenses.md",
+    "details": {
+      "dimensions": "1024x1024",
+      "fileSizeBytes": 222286,
+      "materialFeatures": [
+        "interlocking grey sidewalk pavers",
+        "yellow tactile warning strip (truncated domes)",
+        "curb ramp to crosswalk on road-facing edges",
+        "small utility covers",
+        "tree-pit square"
+      ],
+      "provenance": "Imagegen-generated top-down ALBEDO-ONLY corner plaza plate for the south-east intersection corner (1024x1024) — no baked shadows or ambient occlusion, so scene lighting alone shades it. Yellow tactile paving + curb ramp baked along the two road-facing edges. No real brands, logos, or store names. Runtime proof must come from browser-rendered frames."
+    },
+    "pbrChannels": [
+      "baseColor"
+    ],
+    "runtimeUsage": "Albedo-only base-color ground plate for the south-east pedestrian corner plaza, tactile strip + curb ramp facing the crosswalk."
+  },
+  "textures/ground/corner_plaza_sw": {
+    "id": "textures/ground/corner_plaza_sw",
+    "path": "/simulation/r3f/assets/textures/ground/corner_plaza_sw.webp",
+    "kind": "texture",
+    "source": "imagegen-generated-corner-plaza-plate-texture",
+    "license": "Project-generated via imagegen; no real brands, logos, or store names; provenance in docs/compliance/r3f-asset-licenses.md",
+    "units": "meters",
+    "pbr": true,
+    "lod": "material",
+    "maxTextureSize": 1024,
+    "maxTriangles": 0,
+    "maxFileSizeBytes": 800000,
+    "realismStatus": "stage4_1_ready",
+    "visualRejectIfToyLike": true,
+    "authorship": "generated",
+    "compression": {
+      "status": "webp-runtime",
+      "geometry": "not-applicable",
+      "texture": "webp",
+      "evidence": "scripts/verify-r3f-assets.mjs"
+    },
+    "provenanceEvidencePath": "docs/compliance/r3f-asset-licenses.md",
+    "details": {
+      "dimensions": "1024x1024",
+      "fileSizeBytes": 289224,
+      "materialFeatures": [
+        "interlocking grey sidewalk pavers",
+        "yellow tactile warning strip (truncated domes)",
+        "curb ramp to crosswalk on road-facing edges",
+        "small utility covers",
+        "tree-pit square"
+      ],
+      "provenance": "Imagegen-generated top-down ALBEDO-ONLY corner plaza plate for the south-west intersection corner (1024x1024) — no baked shadows or ambient occlusion, so scene lighting alone shades it. Yellow tactile paving + curb ramp baked along the two road-facing edges. No real brands, logos, or store names. Runtime proof must come from browser-rendered frames."
+    },
+    "pbrChannels": [
+      "baseColor"
+    ],
+    "runtimeUsage": "Albedo-only base-color ground plate for the south-west pedestrian corner plaza, tactile strip + curb ramp facing the crosswalk."
+  },
+  "markings/white_paint": {
+    "id": "markings/white_paint",
+    "path": "/simulation/r3f/assets/markings/white_paint.webp",
+    "kind": "decal",
+    "source": "imagegen-generated-road-marking-paint-texture",
+    "license": "Project-generated via imagegen; no real brands, logos, or store names; provenance in docs/compliance/r3f-asset-licenses.md",
+    "units": "meters",
+    "pbr": true,
+    "lod": "decal",
+    "maxTextureSize": 512,
+    "maxTriangles": 0,
+    "maxFileSizeBytes": 400000,
+    "realismStatus": "stage4_1_ready",
+    "visualRejectIfToyLike": true,
+    "authorship": "generated",
+    "compression": {
+      "status": "webp-runtime",
+      "geometry": "not-applicable",
+      "texture": "webp",
+      "evidence": "scripts/verify-r3f-assets.mjs"
+    },
+    "provenanceEvidencePath": "docs/compliance/r3f-asset-licenses.md",
+    "details": {
+      "dimensions": "512x512",
+      "fileSizeBytes": 129826,
+      "decalFeatures": [
+        "worn white road-paint marking",
+        "cracked and scuffed paint edges",
+        "alpha breakup",
+        "tire wear",
+        "photoreal paint grain"
+      ],
+      "provenance": "Imagegen-generated worn white road-paint marking texture (512x512) used as a transparent base-color decal map for lane lines, stop bars, and arrows in the photobash marking-decal layer. No real brands, logos, or store names. Runtime proof must come from browser-rendered frames."
+    },
+    "pbrChannels": [
+      "baseColor",
+      "alpha"
+    ],
+    "runtimeUsage": "Transparent base-color decal map for worn white lane/stop-bar/arrow markings in the marking-decal layer."
+  },
+  "markings/yellow_paint": {
+    "id": "markings/yellow_paint",
+    "path": "/simulation/r3f/assets/markings/yellow_paint.webp",
+    "kind": "decal",
+    "source": "imagegen-generated-road-marking-paint-texture",
+    "license": "Project-generated via imagegen; no real brands, logos, or store names; provenance in docs/compliance/r3f-asset-licenses.md",
+    "units": "meters",
+    "pbr": true,
+    "lod": "decal",
+    "maxTextureSize": 512,
+    "maxTriangles": 0,
+    "maxFileSizeBytes": 400000,
+    "realismStatus": "stage4_1_ready",
+    "visualRejectIfToyLike": true,
+    "authorship": "generated",
+    "compression": {
+      "status": "webp-runtime",
+      "geometry": "not-applicable",
+      "texture": "webp",
+      "evidence": "scripts/verify-r3f-assets.mjs"
+    },
+    "provenanceEvidencePath": "docs/compliance/r3f-asset-licenses.md",
+    "details": {
+      "dimensions": "512x512",
+      "fileSizeBytes": 173548,
+      "decalFeatures": [
+        "worn yellow road-paint marking",
+        "cracked and scuffed paint edges",
+        "alpha breakup",
+        "tire wear",
+        "photoreal paint grain"
+      ],
+      "provenance": "Imagegen-generated worn yellow road-paint marking texture (512x512) used as a transparent base-color decal map for center dividers in the photobash marking-decal layer. No real brands, logos, or store names. Runtime proof must come from browser-rendered frames."
+    },
+    "pbrChannels": [
+      "baseColor",
+      "alpha"
+    ],
+    "runtimeUsage": "Transparent base-color decal map for worn yellow center-divider markings in the marking-decal layer."
+  },
+  "markings/blue_paint": {
+    "id": "markings/blue_paint",
+    "path": "/simulation/r3f/assets/markings/blue_paint.webp",
+    "kind": "decal",
+    "source": "imagegen-generated-road-marking-paint-texture",
+    "license": "Project-generated via imagegen; no real brands, logos, or store names; provenance in docs/compliance/r3f-asset-licenses.md",
+    "units": "meters",
+    "pbr": true,
+    "lod": "decal",
+    "maxTextureSize": 512,
+    "maxTriangles": 0,
+    "maxFileSizeBytes": 400000,
+    "realismStatus": "stage4_1_ready",
+    "visualRejectIfToyLike": true,
+    "authorship": "generated",
+    "compression": {
+      "status": "webp-runtime",
+      "geometry": "not-applicable",
+      "texture": "webp",
+      "evidence": "scripts/verify-r3f-assets.mjs"
+    },
+    "provenanceEvidencePath": "docs/compliance/r3f-asset-licenses.md",
+    "details": {
+      "dimensions": "512x512",
+      "fileSizeBytes": 135720,
+      "decalFeatures": [
+        "worn blue road-paint marking",
+        "cracked and scuffed paint edges",
+        "alpha breakup",
+        "tire wear",
+        "photoreal paint grain"
+      ],
+      "provenance": "Imagegen-generated worn blue road-paint marking texture (512x512) used as a transparent base-color decal map for bus-lane borders in the photobash marking-decal layer. No real brands, logos, or store names. Runtime proof must come from browser-rendered frames."
+    },
+    "pbrChannels": [
+      "baseColor",
+      "alpha"
+    ],
+    "runtimeUsage": "Transparent base-color decal map for worn blue bus-lane-border markings in the marking-decal layer."
   }
 }

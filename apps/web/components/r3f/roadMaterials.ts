@@ -37,6 +37,8 @@ export const STAGE5_TEXTURE_ASSET_IDS = {
   crosswalkWear: "decals/crosswalk_wear",
   curbGrime: "decals/curb_grime",
   sidewalkPaverVariation: "textures/sidewalk_paver_variation",
+  sidewalkAtlasA: "textures/ground/sidewalk_atlas_a",
+  urbanGround: "textures/ground/urban_ground",
   facadeWindowEmissive: "textures/facade_window_emissive",
   stage6WeatherMaterialAtlas: "sprites/stage6_weather_material_source_atlas"
 } as const satisfies Record<string, R3FAssetId>;
@@ -53,6 +55,8 @@ export const STAGE5_TEXTURE_PATHS = {
   sidewalkPaverVariation: getR3FAssetEntry(
     STAGE5_TEXTURE_ASSET_IDS.sidewalkPaverVariation
   ).path,
+  sidewalkAtlasA: getR3FAssetEntry(STAGE5_TEXTURE_ASSET_IDS.sidewalkAtlasA).path,
+  urbanGround: getR3FAssetEntry(STAGE5_TEXTURE_ASSET_IDS.urbanGround).path,
   facadeWindowEmissive: getR3FAssetEntry(
     STAGE5_TEXTURE_ASSET_IDS.facadeWindowEmissive
   ).path,
@@ -176,6 +180,15 @@ export const ROAD_MATERIALS = {
     dithering: true
   },
   sidewalk: {
+    color: "#3a4442",
+    roughness: 0.91,
+    metalness: 0.02,
+    dithering: true
+  },
+  // East-west sidewalk slabs (u/v transposed vs north-south on the shared
+  // instanced box UVs). Identical base look; only the augmented texture
+  // repeats differ so the Task 5 paver atlas tiles square in world space.
+  sidewalkCross: {
     color: "#3a4442",
     roughness: 0.91,
     metalness: 0.02,
@@ -459,9 +472,17 @@ export function useStage5RoadMaterials(): Stage5RoadMaterialSet {
         },
         sidewalk: {
           ...ROAD_MATERIALS.sidewalk,
+          // Base-color upgraded to the imagegen photoreal paver atlas (Task 5);
+          // roughness/bump keep the procedural paver detail map. The base
+          // material's dark #3a4442 tint would multiply the albedo to ~25%
+          // brightness and hide it — lift toward neutral so the paver texture
+          // carries the color (night is graded by scene lighting, not tint).
+          // Repeats give ~4m-square tiles on the NS slabs (5.5m wide, ~380m
+          // long): [5.5/4, 380/4].
+          color: "#aab0ac",
           map: repeatTexture(
-            textures.sidewalkPaverVariation,
-            [4, 28],
+            textures.sidewalkAtlasA,
+            [1.4, 96],
             SRGBColorSpace
           ),
           roughnessMap: repeatTexture(
@@ -476,10 +497,39 @@ export function useStage5RoadMaterials(): Stage5RoadMaterialSet {
           ),
           bumpScale: 0.02
         },
+        sidewalkCross: {
+          ...ROAD_MATERIALS.sidewalkCross,
+          // Transposed twin of `sidewalk` for the EW slabs, whose box UVs swap
+          // u/v: same atlas, repeats flipped so tiles stay ~4m square.
+          color: "#aab0ac",
+          map: repeatTexture(
+            textures.sidewalkAtlasA,
+            [96, 1.4],
+            SRGBColorSpace
+          ),
+          roughnessMap: repeatTexture(
+            textures.sidewalkPaverVariation,
+            [28, 4],
+            NoColorSpace
+          ),
+          bumpMap: repeatTexture(
+            textures.sidewalkPaverVariation,
+            [32, 5],
+            NoColorSpace
+          ),
+          bumpScale: 0.02
+        },
         cityGround: {
           ...ROAD_MATERIALS.cityGround,
+          // Base-color upgraded to the imagegen urban-ground atlas (Task 5);
+          // roughness/bump keep the procedural detail maps. Same tint lift as
+          // sidewalk: the base #20292d would crush the albedo map to ~14%.
+          // urban_ground albedo averages ~0.51, so the tint sits higher than
+          // sidewalk's to land the ground a readable half-step darker than the
+          // 0.65-albedo paver band.
+          color: "#b9bfbd",
           map: repeatTexture(
-            textures.sidewalkPaverVariation,
+            textures.urbanGround,
             [18, 18],
             SRGBColorSpace
           ),

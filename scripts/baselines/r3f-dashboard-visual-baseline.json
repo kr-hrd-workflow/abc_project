@@ -1,22 +1,22 @@
 {
-  "baseline_id": "r3f-dashboard-visual-baseline-2026-07-03-photobash-default-scene-completion",
+  "baseline_id": "r3f-dashboard-visual-baseline-2026-07-04-day-fill-ground-atlas",
   "source_artifact": "artifacts/r3f-dashboard-details.json",
   "desktop": {
     "canvas_metrics": {
       "width": 914,
       "height": 680,
       "sampled_pixels": 621520,
-      "non_background_ratio": 0.9738769468400051,
-      "bright_ratio": 0.5305348178658772,
-      "dark_ratio": 0.06016861886986742,
-      "warm_light_ratio": 0.002028896897927661,
-      "cool_light_ratio": 0.05273844767666366,
-      "marking_ratio": 0.5858250740120994,
-      "saturated_ratio": 0.209579739992277,
-      "color_bucket_count": 591,
-      "luminance_stddev": 67.45888639811862
+      "non_background_ratio": 0.9620993692881967,
+      "bright_ratio": 0.26724964602908996,
+      "dark_ratio": 0.07398313811301326,
+      "warm_light_ratio": 0.0019275325009653751,
+      "cool_light_ratio": 0.049358025485905524,
+      "marking_ratio": 0.3235133221778865,
+      "saturated_ratio": 0.46248712833054445,
+      "color_bucket_count": 507,
+      "luminance_stddev": 64.33544760828592
     }
   },
-  "generated_at": "2026-07-03T06:00:00.000Z",
-  "baseline_reason": "Re-baselined for the R3F default-scene completion branch (feat/r3f-default-scene-completion). The photobash composition is now the default scene: photobash promotion, live-SUMO default, day/night + clear/rain scene UI controls, and the marking-decal draw-call merge (790->6 draw calls). The prior 2026-07-01 hero-facade baseline still accepted these renders within threshold, but the desktop canvas histogram is recentered here to describe the promoted default scene as the new reference (thresholds unchanged in verify-r3f-visual-diff.mjs). day/night x clear/rain scenario renders reviewed via codex CLI -> PASS (rain-at-night shows wet-road treatment combined with night lighting; dark night building facades are the spec-deferred sub-project-C observation, geometry/silhouettes intact)."
+  "generated_at": "2026-07-04T11:28:18.815Z",
+  "baseline_reason": "Re-baselined for Task 5 (feat/r3f-seoul-day-scene-fill): imagegen photoreal ground — sidewalk paver atlas + urban-ground base-color maps (dark procedural tints lifted so the albedo maps read), four corner plaza plates with yellow tactile L-strips at the crosswalk corners, and the NS/EW sidewalk slab split for orientation-correct square paver tiling. Intentional brightening of the ground bands moved bright_ratio/marking_ratio beyond the old thresholds (bright_ratio delta ~0.26). Day render reviewed via codex CLI -> PASS (all 4 plazas visible, tactile strips aligned, no objectionable tiling, no baked-shadow conflict). Thresholds unchanged in verify-r3f-visual-diff.mjs."
 }

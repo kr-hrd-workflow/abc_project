@@ -1,7 +1,15 @@
 "use client";
 
-import { memo, Suspense } from "react";
-import { CURB_SEGMENTS, SIDEWALK_SLABS } from "./roadGeometry";
+import { memo, Suspense, useMemo } from "react";
+import { useTexture } from "@react-three/drei";
+import { SRGBColorSpace, type Texture } from "three";
+import {
+  CURB_SEGMENTS,
+  INTERSECTION_BOX_METERS,
+  SIDEWALK_SLABS_EW,
+  SIDEWALK_SLABS_NS,
+  type Vector3Tuple
+} from "./roadGeometry";
 import { InstancedBoxBatch, InstancedPlaneBatch } from "./instancedBatches";
 import { useStage5RoadMaterials, type Stage5RoadMaterialSet } from "./roadMaterials";
 
@@ -22,11 +30,20 @@ export const GROUND_DRESSING_BATCHES = [
       }
     ]
   },
+  // Sidewalk slabs are split by orientation so the Task 5 paver atlas can tile
+  // square in world space on both (shared instanced UVs transpose u/v between
+  // NS and EW slabs; sidewalkCross carries the transposed repeats).
   {
     name: "ground-dressing-sidewalk-slabs",
     kind: "box" as const,
     materialKey: "sidewalk" as const,
-    specs: SIDEWALK_SLABS
+    specs: SIDEWALK_SLABS_NS
+  },
+  {
+    name: "ground-dressing-sidewalk-slabs-ew",
+    kind: "box" as const,
+    materialKey: "sidewalkCross" as const,
+    specs: SIDEWALK_SLABS_EW
   },
   {
     name: "ground-dressing-curbs",
@@ -35,6 +52,69 @@ export const GROUND_DRESSING_BATCHES = [
     specs: CURB_SEGMENTS
   }
 ];
+
+// Photoreal imagegen ground plates that fill the four empty pedestrian corners
+// outside the carriageway box (HALF_BOX = 18m). Each plate's road-facing edge
+// starts exactly at the curb outer face (HALF_BOX + CURB_WIDTH 0.45) so the
+// baked per-corner L (yellow tactile strip + curb ramp) lands at its crosswalk
+// corner; the two opposite edges run under the building frontage. Albedo-only
+// textures — scene lighting does the shading — so no baked shadow conflicts
+// with sun direction. Plates render only in the full scene, never in roadonly.
+// y=0.1 sits 10mm above the sidewalk box-slab tops (0.09) so the plate reads
+// where it crosses the corridor slab bands, above the city-ground apron
+// (-0.012), and entirely off-road — so it never touches the on-road marking
+// decal lift range (MARKING_HEIGHT 0.018 .. +0.026).
+const CORNER_PLATE_HALF_BOX = INTERSECTION_BOX_METERS / 2;
+const CORNER_PLATE_SIZE = 26;
+const CORNER_PLATE_CENTER = CORNER_PLATE_HALF_BOX + 0.45 + CORNER_PLATE_SIZE / 2;
+const CORNER_PLATE_Y = 0.1;
+const GROUND_TEXTURE_DIR = "/simulation/r3f/assets/textures/ground";
+
+export const CORNER_PLAZA_PLATES: {
+  id: string;
+  position: Vector3Tuple;
+  size: [number, number];
+  textureUrl: string;
+}[] = [
+  { id: "ne", sx: 1, sz: -1 },
+  { id: "nw", sx: -1, sz: -1 },
+  { id: "se", sx: 1, sz: 1 },
+  { id: "sw", sx: -1, sz: 1 }
+].map(({ id, sx, sz }) => ({
+  id: `corner-plaza-${id}`,
+  position: [sx * CORNER_PLATE_CENTER, CORNER_PLATE_Y, sz * CORNER_PLATE_CENTER],
+  size: [CORNER_PLATE_SIZE, CORNER_PLATE_SIZE],
+  textureUrl: `${GROUND_TEXTURE_DIR}/corner_plaza_${id}.webp`
+}));
+
+function CornerPlazaPlates() {
+  const maps = useTexture(CORNER_PLAZA_PLATES.map((p) => p.textureUrl));
+  const textures = useMemo(() => {
+    const list = Array.isArray(maps) ? maps : [maps];
+    for (const map of list as Texture[]) {
+      map.colorSpace = SRGBColorSpace;
+    }
+    return list as Texture[];
+  }, [maps]);
+
+  return (
+    <group name="ground-dressing-corner-plazas">
+      {CORNER_PLAZA_PLATES.map((plate, index) => (
+        <mesh
+          key={plate.id}
+          name={plate.id}
+          position={plate.position}
+          rotation={[-Math.PI / 2, 0, 0]}
+          renderOrder={-2}
+          receiveShadow
+        >
+          <planeGeometry args={plate.size} />
+          <meshStandardMaterial map={textures[index]} roughness={0.92} metalness={0} />
+        </mesh>
+      ))}
+    </group>
+  );
+}
 
 function GroundDressingContent() {
   const roadMaterials: Stage5RoadMaterialSet = useStage5RoadMaterials();
@@ -72,6 +152,7 @@ function GroundDressingContent() {
           />
         )
       )}
+      <CornerPlazaPlates />
     </group>
   );
 }
