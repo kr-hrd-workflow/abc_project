@@ -1,5 +1,9 @@
 import { describe, expect, test } from "vitest";
-import { CORNER_PLAZA_PLATES, GROUND_DRESSING_BATCHES } from "./GroundDressingLayer";
+import {
+  CORNER_PLAZA_PLATES,
+  GROUND_DRESSING_BATCHES,
+  PERIPHERY_EDGE_BLOCKS
+} from "./GroundDressingLayer";
 import { CURB_SEGMENTS, SIDEWALK_SLABS } from "./roadGeometry";
 
 describe("GroundDressingLayer batches", () => {
@@ -38,6 +42,12 @@ describe("GroundDressingLayer batches", () => {
   test("no longer batches the legacy city-apron plane (removed to kill z-fighting)", () => {
     const names = GROUND_DRESSING_BATCHES.map((b) => b.name);
     expect(names).not.toContain("ground-dressing-city-apron");
+  });
+  test("periphery edge blocks stay outside the hero-building zone (no double-rendered buildings)", () => {
+    expect(PERIPHERY_EDGE_BLOCKS.length).toBeGreaterThanOrEqual(12);
+    for (const b of PERIPHERY_EDGE_BLOCKS) {
+      expect(Math.max(Math.abs(b.position[0]), Math.abs(b.position[2]))).toBeGreaterThanOrEqual(70);
+    }
   });
   test("four corner plaza plates cover the diagonal corners", () => {
     expect(CORNER_PLAZA_PLATES).toHaveLength(4);

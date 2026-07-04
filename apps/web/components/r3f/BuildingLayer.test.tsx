@@ -10,6 +10,7 @@ import {
   FACADE_METERS_PER_TILE,
   GLASS_TINTS_DAY,
   GLASS_TINTS_NIGHT,
+  getDistantTintColors,
   composeBuildingVolumes,
   computeFacadeRepeat,
   getBuildingVarFactor,
@@ -245,6 +246,15 @@ describe("building variety", () => {
       const i = getGlassTintIndex(b.id);
       expect(i).toBeGreaterThanOrEqual(0);
       expect(i).toBeLessThan(3);
+    }
+  });
+
+  it("bakes the 5 distant footprints' tints for the far group (≥3 distinct)", () => {
+    const tints = getDistantTintColors();
+    expect(tints).toHaveLength(5);
+    expect(new Set(tints).size).toBeGreaterThanOrEqual(3);
+    for (const t of tints) {
+      expect(t).toMatch(/^#[0-9a-fA-F]{6}$/);
     }
   });
 

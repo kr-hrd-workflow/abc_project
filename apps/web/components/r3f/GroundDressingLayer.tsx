@@ -8,6 +8,7 @@ import {
   INTERSECTION_BOX_METERS,
   SIDEWALK_SLABS_EW,
   SIDEWALK_SLABS_NS,
+  STAGE6E_CITY_EDGE_BLOCKS,
   type Vector3Tuple
 } from "./roadGeometry";
 import { InstancedBoxBatch, InstancedPlaneBatch } from "./instancedBatches";
@@ -87,6 +88,39 @@ export const CORNER_PLAZA_PLATES: {
   textureUrl: `${GROUND_TEXTURE_DIR}/corner_plaza_${id}.webp`
 }));
 
+// Textured periphery edge blocks: the >=70 m subset of the stage6e city-edge
+// segments. The <70 m segments flank the near corridors where the hero
+// buildings already stand, so filtering them out prevents double-rendered
+// buildings; the far subset gives the mid-distance streets a built edge that
+// continues past the frame. One instanced draw call, one shared strip texture.
+export const PERIPHERY_EDGE_BLOCKS = STAGE6E_CITY_EDGE_BLOCKS.filter(
+  (b) => Math.max(Math.abs(b.position[0]), Math.abs(b.position[2])) >= 70
+);
+
+const EDGE_FACADE_TEXTURE_URL = `${GROUND_TEXTURE_DIR}/edge_facade_strip.webp`;
+
+function PeripheryEdgeBlocks() {
+  const map = useTexture(EDGE_FACADE_TEXTURE_URL) as Texture;
+  const edgeFacadeTexture = useMemo(() => {
+    map.colorSpace = SRGBColorSpace;
+    return map;
+  }, [map]);
+
+  return (
+    <InstancedBoxBatch
+      name="ground-dressing-edge-blocks"
+      specs={PERIPHERY_EDGE_BLOCKS}
+      material={{
+        color: "#8d949e",
+        roughness: 0.85,
+        metalness: 0.04,
+        map: edgeFacadeTexture
+      }}
+      receiveShadow
+    />
+  );
+}
+
 function CornerPlazaPlates() {
   const maps = useTexture(CORNER_PLAZA_PLATES.map((p) => p.textureUrl));
   const textures = useMemo(() => {
@@ -152,6 +186,7 @@ function GroundDressingContent() {
           />
         )
       )}
+      <PeripheryEdgeBlocks />
       <CornerPlazaPlates />
     </group>
   );

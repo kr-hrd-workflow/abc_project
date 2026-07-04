@@ -154,6 +154,15 @@ export function getGlassTintIndex(id: string): number {
   return hashId(id) % 3;
 }
 
+/**
+ * Tints of the distant-ring footprints, in footprint order. Baked as per-box
+ * vertex colours onto the merged `far` group so the horizon silhouette varies
+ * by side (see BuildingVolumeSet) without adding a draw call.
+ */
+export function getDistantTintColors(): string[] {
+  return BUILDING_FOOTPRINTS.filter((f) => f.form === "distant").map((f) => f.tint);
+}
+
 // ── Building massing composition (pure, unit-tested) ──────────────────────────
 
 /** Merge/material group a sub-volume belongs to. */
@@ -451,12 +460,13 @@ function buildPlainBox(
 }
 
 /**
- * Billboard panel box with a flat per-vertex LED colour, so the whole signage
- * group merges into one vertex-coloured geometry (1 unlit draw call) while still
- * showing varied colours. UV attribute is kept so all billboard geometries share
- * the same attribute set for merging.
+ * Box with a flat per-vertex colour so a whole merge group renders as one
+ * vertex-coloured geometry (1 draw call) while still showing varied per-box
+ * colours. Used by the LED billboard group (unlit signage) and the distant
+ * `far` group (per-side horizon tint from footprint.tint). UV attribute is kept
+ * so all geometries share the same attribute set for merging.
  */
-function buildBillboardBox(
+function buildFlatColoredBox(
   size: [number, number, number],
   center: [number, number, number],
   ledColor: string
@@ -556,9 +566,13 @@ function BuildingVolumeSet({ isNight }: { isNight: boolean }) {
         if (vol.group === "billboard") {
           push(
             vol.group,
-            buildBillboardBox(vol.size, vol.center, vol.ledColor ?? "#ffffff")
+            buildFlatColoredBox(vol.size, vol.center, vol.ledColor ?? "#ffffff")
           );
-        } else if (vol.group === "dark" || vol.group === "far") {
+        } else if (vol.group === "far") {
+          // Per-side horizon tint baked as a vertex colour so the merged far
+          // group varies by side (day) with no extra draw call.
+          push(vol.group, buildFlatColoredBox(vol.size, vol.center, fp.tint));
+        } else if (vol.group === "dark") {
           push(vol.group, buildPlainBox(vol.size, vol.center));
         } else if (vol.group === "concrete" && !isNight) {
           // buildPlainBox keeps the default 0–1 box UVs → one facade per face.
@@ -815,10 +829,15 @@ function buildGroupMaterials(
     metalness: 0.16
   });
 
+  // Day: light base (#c9d2e0) so the per-box vertex tints (footprint.tint,
+  // baked in BuildingVolumeSet) read through the multiply and the horizon
+  // silhouette varies by side. Night keeps the flat dark tone + faint glow
+  // (vertexColors off) so the existing distant-skyline look is unchanged.
   const far = new MeshStandardMaterial({
-    color: isNight ? "#0a0d16" : "#41506a",
+    color: isNight ? "#0a0d16" : "#c9d2e0",
     roughness: 0.95,
-    metalness: 0.02
+    metalness: 0.02,
+    vertexColors: !isNight
   });
   if (isNight) {
     // Faint glow so the distant skyline is not pure black at night.
