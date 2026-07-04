@@ -44,19 +44,23 @@ export const GROUND_DRESSING_BATCHES = [
 
 function GroundDressingContent() {
   const roadMaterials: Stage5RoadMaterialSet = useStage5RoadMaterials();
+  // Both plane batches (base plane + city apron) share the cityGround material
+  // and identical render props, so they draw as ONE InstancedMesh
+  // (2026-07-04 draw-call reduction). Box batches keep distinct materials.
+  const planeSpecs = GROUND_DRESSING_BATCHES.filter(
+    (batch) => batch.kind === "plane"
+  ).flatMap((batch) => batch.specs);
   return (
     <group name="ground-dressing-layer">
-      {GROUND_DRESSING_BATCHES.map((batch) =>
-        batch.kind === "plane" ? (
-          <InstancedPlaneBatch
-            key={batch.name}
-            name={batch.name}
-            specs={batch.specs}
-            material={roadMaterials[batch.materialKey]}
-            renderOrder={-3}
-            receiveShadow
-          />
-        ) : (
+      <InstancedPlaneBatch
+        name="ground-dressing-city-ground"
+        specs={planeSpecs}
+        material={roadMaterials.cityGround}
+        renderOrder={-3}
+        receiveShadow
+      />
+      {GROUND_DRESSING_BATCHES.filter((batch) => batch.kind === "box").map(
+        (batch) => (
           <InstancedBoxBatch
             key={batch.name}
             name={batch.name}

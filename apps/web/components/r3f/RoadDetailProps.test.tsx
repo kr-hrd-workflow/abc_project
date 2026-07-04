@@ -10,6 +10,9 @@ import {
 // pass). The instancing plan groups same-geometry+same-material repeats so each
 // group renders as a single InstancedMesh. These assertions guard that the plan
 // is a complete partition (no spec dropped or double-counted) and stays batched.
+// 2026-07-04: the render pass merges further — material-KIND-compatible
+// sub-groups share one InstancedMesh via instanceColor (14 -> 7 instanced
+// draws) and all unique canvas labels bake into ONE atlas mesh (5 -> 1).
 describe("buildRoadDetailInstancingPlan", () => {
   const plan = buildRoadDetailInstancingPlan(ROAD_DETAIL_PROP_SPECS);
 
@@ -23,9 +26,9 @@ describe("buildRoadDetailInstancingPlan", () => {
     expect([...groupedIds].sort()).toEqual([...specIds].sort()); // covers all
   });
 
-  test("batches into at most 14 kind+material groups", () => {
+  test("batches into at most 7 kind groups (one per prop kind)", () => {
     expect(plan.length).toBeGreaterThan(0);
-    expect(plan.length).toBeLessThanOrEqual(14);
+    expect(plan.length).toBeLessThanOrEqual(7);
   });
 
   test("each group is homogeneous (same kind → same geometry+material family)", () => {
