@@ -144,7 +144,6 @@ import type {
   Report,
   RuntimeReadiness,
   ScenarioId,
-  CityId,
   SimulationComparison,
   TrafficEvent
 } from "../lib/types";
@@ -598,9 +597,7 @@ function dashboardProps(overrides: Partial<Parameters<typeof DashboardShell>[0]>
     selectedScenarioId: "emergency" as ScenarioId,
     scenarioOptions: SCENARIO_OPTIONS,
     scenarioLoading: false,
-    selectedCityId: "seoul" as CityId,
-    cityProfiles: CITY_PROFILES,
-    onCityChange: vi.fn(),
+    cityProfile: CITY_PROFILES[0],
     onScenarioChange: vi.fn(),
     fixtures,
     latestFixtureIngest: null,
@@ -867,29 +864,14 @@ describe("DashboardShell", () => {
     expect(screen.getByText("Simulation only / No real signal control")).toBeTruthy();
   });
 
-  test("renders the selected city profile independently from the scenario", () => {
-    renderDashboard({ selectedCityId: "seoul" });
+  test("renders the Seoul city profile with no city selector", () => {
+    renderDashboard();
 
-    expect(screen.getByLabelText("도시 선택")).toBeTruthy();
     expect(screen.getByLabelText("도시 프로필")).toBeTruthy();
     expect(screen.getByText("강남대로 / 테헤란로")).toBeTruthy();
     expect(screen.getByText(/INT-SEO-0001/)).toBeTruthy();
-    expect(screen.getByRole("button", { name: /서울/ }).getAttribute("aria-pressed")).toBe("true");
-    expect(screen.getByRole("button", { name: /뉴욕/ })).toBeTruthy();
-    expect(screen.getByRole("button", { name: /파리/ })).toBeTruthy();
-    expect(screen.getByRole("button", { name: /런던/ })).toBeTruthy();
-  });
-
-  test("calls city change without touching the scenario handler", async () => {
-    const onCityChange = vi.fn();
-    const onScenarioChange = vi.fn();
-
-    renderDashboard({ onCityChange, onScenarioChange });
-
-    await userEvent.click(screen.getByRole("button", { name: /뉴욕/ }));
-
-    expect(onCityChange).toHaveBeenCalledWith("new_york");
-    expect(onScenarioChange).not.toHaveBeenCalled();
+    expect(screen.queryByLabelText("도시 선택")).toBeNull();
+    expect(screen.queryByRole("button", { name: /뉴욕|New York/ })).toBeNull();
   });
 
   test("renders the approved safety and simulation viewport copy", () => {
