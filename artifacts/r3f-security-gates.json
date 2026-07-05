@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-07-05T09:13:52.903Z",
+  "generated_at": "2026-07-05T10:02:53.367Z",
   "status": "passed",
   "results": [
     {
@@ -82,7 +82,7 @@
       "exit_code": 0,
       "error": null,
       "stdout_tail": [
-        "R3F asset verification passed. First-pass GLB + texture payload: 34.89 MB / 45.00 MB."
+        "R3F asset verification passed. First-pass GLB + texture payload: 23.78 MB / 45.00 MB."
       ],
       "stderr_tail": [
         ""
