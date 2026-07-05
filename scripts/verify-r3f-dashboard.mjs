@@ -76,9 +76,10 @@ const mobileMinFps = 30;
 const mobileMaxAverageFrameTimeMs = 33;
 // Re-baselined 2026-07-03 with user approval — hero facade textures (previously
 // unregistered/uncounted, recompressed 23->9.8 MB in d837752) are now registered, so the
-// gate finally sees the true payload (~32 MB). Same budget as verify-r3f-assets.mjs; this
-// is a second call site over the identical manifest-derived payload calculation.
-const maxPayloadBytes = 35 * 1024 * 1024;
+// gate finally sees the true payload (~34.9 MB). Same 45 MB budget as verify-r3f-assets.mjs
+// (raised 35→45 MB 2026-07-04, user-approved, commit b22853c); this is a second call site
+// over the identical manifest-derived payload calculation and must stay reconciled with it.
+const maxPayloadBytes = 45 * 1024 * 1024;
 const compositionGridColumns = 5;
 const compositionGridRows = 5;
 const minReadableSceneCoverage = 0.5;
