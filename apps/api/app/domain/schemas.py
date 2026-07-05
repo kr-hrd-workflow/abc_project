@@ -1,5 +1,5 @@
 from datetime import datetime
-from typing import Annotated
+from typing import Annotated, Literal
 
 from pydantic import BaseModel, Field
 
@@ -64,6 +64,7 @@ class SimulationComparison(BaseModel):
 
 class ChatRequest(BaseModel):
     question: str = Field(min_length=1)
+    locale: Literal["ko", "en"] | None = None
 
 
 class AgentResponseSections(BaseModel):

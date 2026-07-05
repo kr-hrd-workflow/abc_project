@@ -9415,9 +9415,9 @@ body {
 .launch-dashboard:is([data-layout="operations-cockpit"], [data-layout="spatial-command-hybrid"]) .cockpit-grid {
   display: grid;
   grid-template-columns: minmax(260px, 0.95fr) minmax(520px, 2.05fr) minmax(330px, 1fr);
-  grid-template-rows: minmax(690px, auto);
+  grid-template-rows: max-content;
   gap: 12px;
-  align-items: stretch;
+  align-items: start;
   margin-top: 0;
 }
 
@@ -9431,6 +9431,7 @@ body {
 .launch-dashboard:is([data-layout="operations-cockpit"], [data-layout="spatial-command-hybrid"]) .cockpit-right {
   display: grid;
   gap: 12px;
+  align-self: start;
   min-height: 0;
 }
 
@@ -9451,7 +9452,11 @@ body {
 
 .launch-dashboard:is([data-layout="operations-cockpit"], [data-layout="spatial-command-hybrid"]) .cockpit-right {
   align-content: start;
-  grid-template-rows: auto auto auto auto;
+  grid-auto-rows: max-content;
+  grid-template-rows: none;
+  height: max-content;
+  min-height: max-content;
+  overflow: visible;
 }
 
 .launch-dashboard:is([data-layout="operations-cockpit"], [data-layout="spatial-command-hybrid"]) .response-plan-heading {
@@ -9525,6 +9530,10 @@ body {
   background-size: auto, 84px 84px, 84px 84px;
 }
 
+.launch-dashboard[data-layout="spatial-command-hybrid"] .simulation-viewport::before {
+  content: none;
+}
+
 .launch-dashboard:is([data-layout="operations-cockpit"], [data-layout="spatial-command-hybrid"]) .sumo-playback-canvas {
   opacity: 0.64;
 }
@@ -9553,6 +9562,7 @@ body {
 .launch-dashboard:is([data-layout="operations-cockpit"], [data-layout="spatial-command-hybrid"]) .recommendation-panel,
 .launch-dashboard:is([data-layout="operations-cockpit"], [data-layout="spatial-command-hybrid"]) .metrics-panel,
 .launch-dashboard:is([data-layout="operations-cockpit"], [data-layout="spatial-command-hybrid"]) .chat-report-grid {
+  align-self: start;
   min-height: 0;
   padding: 12px;
 }
@@ -9580,9 +9590,73 @@ body {
   gap: 12px;
 }
 
+.launch-dashboard:is([data-layout="operations-cockpit"], [data-layout="spatial-command-hybrid"]) .dashboard-detail-grid {
+  display: grid;
+  grid-template-columns: minmax(420px, 0.82fr) minmax(680px, 1.38fr);
+  grid-template-areas:
+    "metrics workflow"
+    "cctv workflow";
+  gap: 14px;
+  align-items: start;
+  margin-top: 14px;
+}
+
+.launch-dashboard:is([data-layout="operations-cockpit"], [data-layout="spatial-command-hybrid"]) .dashboard-detail-grid .metrics-panel {
+  grid-area: metrics;
+  width: 100%;
+}
+
+.launch-dashboard:is([data-layout="operations-cockpit"], [data-layout="spatial-command-hybrid"]) .dashboard-detail-grid .cctv-flow-panel {
+  grid-area: cctv;
+  width: 100%;
+}
+
+.launch-dashboard:is([data-layout="operations-cockpit"], [data-layout="spatial-command-hybrid"]) .dashboard-detail-grid .chat-report-grid {
+  grid-area: workflow;
+  grid-template-columns: minmax(0, 1.05fr) minmax(280px, 0.95fr);
+  width: 100%;
+}
+
 .launch-dashboard:is([data-layout="operations-cockpit"], [data-layout="spatial-command-hybrid"]) .chat-report-grid .panel {
   min-height: 0;
   padding: 12px;
+}
+
+.launch-dashboard:is([data-layout="operations-cockpit"], [data-layout="spatial-command-hybrid"]) .chat-panel,
+.launch-dashboard:is([data-layout="operations-cockpit"], [data-layout="spatial-command-hybrid"]) .report-panel,
+.launch-dashboard:is([data-layout="operations-cockpit"], [data-layout="spatial-command-hybrid"]) .chat-thread,
+.launch-dashboard:is([data-layout="operations-cockpit"], [data-layout="spatial-command-hybrid"]) .message-row,
+.launch-dashboard:is([data-layout="operations-cockpit"], [data-layout="spatial-command-hybrid"]) .message-bubble,
+.launch-dashboard:is([data-layout="operations-cockpit"], [data-layout="spatial-command-hybrid"]) .chat-form,
+.launch-dashboard:is([data-layout="operations-cockpit"], [data-layout="spatial-command-hybrid"]) .report-button,
+.launch-dashboard:is([data-layout="operations-cockpit"], [data-layout="spatial-command-hybrid"]) .report-card {
+  min-width: 0;
+  max-width: 100%;
+}
+
+.launch-dashboard:is([data-layout="operations-cockpit"], [data-layout="spatial-command-hybrid"]) .report-button {
+  grid-template-columns: 32px minmax(0, 1fr);
+  grid-template-rows: auto auto;
+  min-height: 50px;
+  overflow: hidden;
+}
+
+.launch-dashboard:is([data-layout="operations-cockpit"], [data-layout="spatial-command-hybrid"]) .report-button span:not(.report-icon),
+.launch-dashboard:is([data-layout="operations-cockpit"], [data-layout="spatial-command-hybrid"]) .report-button small {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.launch-dashboard:is([data-layout="operations-cockpit"], [data-layout="spatial-command-hybrid"]) .chat-thread,
+.launch-dashboard:is([data-layout="operations-cockpit"], [data-layout="spatial-command-hybrid"]) .report-panel {
+  overflow: visible;
+}
+
+.launch-dashboard:is([data-layout="operations-cockpit"], [data-layout="spatial-command-hybrid"]) .message-bubble,
+.launch-dashboard:is([data-layout="operations-cockpit"], [data-layout="spatial-command-hybrid"]) .report-card strong {
+  overflow-wrap: anywhere;
 }
 
 .launch-dashboard:is([data-layout="operations-cockpit"], [data-layout="spatial-command-hybrid"]) .brief-spine-dense {
@@ -9888,7 +9962,7 @@ body {
 
   .launch-dashboard:is([data-layout="operations-cockpit"], [data-layout="spatial-command-hybrid"]) .cockpit-right {
     grid-column: 1 / -1;
-    grid-template-columns: repeat(3, minmax(0, 1fr));
+    grid-template-columns: minmax(0, 1fr);
     grid-template-rows: auto auto;
   }
 
@@ -10195,6 +10269,182 @@ body {
   line-height: 1.35;
 }
 
+.launch-dashboard[data-layout="spatial-command-hybrid"] .renderer-status,
+.launch-dashboard[data-layout="spatial-command-hybrid"] .sumo-telemetry,
+.launch-dashboard[data-layout="spatial-command-hybrid"] .lane-pressure-panel,
+.launch-dashboard[data-layout="spatial-command-hybrid"] .launch-readiness-card,
+.launch-dashboard[data-layout="spatial-command-hybrid"] .simulation-cctv-surface,
+.launch-dashboard[data-layout="spatial-command-hybrid"] .playback-badge,
+.launch-dashboard[data-layout="spatial-command-hybrid"] .direction-badge {
+  border-radius: 10px;
+  background: rgba(5, 12, 17, 0.66);
+  box-shadow: 0 10px 22px rgba(0, 0, 0, 0.18);
+  backdrop-filter: blur(10px);
+}
+
+.launch-dashboard[data-layout="spatial-command-hybrid"] .renderer-status {
+  display: none;
+}
+
+.launch-dashboard[data-layout="spatial-command-hybrid"] .renderer-status strong,
+.launch-dashboard[data-layout="spatial-command-hybrid"] .renderer-status span {
+  font-size: 0.66rem;
+}
+
+.launch-dashboard[data-layout="spatial-command-hybrid"] .sumo-telemetry {
+  top: 58px;
+  left: 10px;
+  width: min(360px, calc(100% - 20px));
+  gap: 5px;
+  padding: 7px 8px;
+}
+
+.launch-dashboard[data-layout="spatial-command-hybrid"] .sumo-telemetry strong,
+.launch-dashboard[data-layout="spatial-command-hybrid"] .lane-pressure-panel strong {
+  font-size: 0.72rem;
+}
+
+.launch-dashboard[data-layout="spatial-command-hybrid"] .telemetry-grid {
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 4px;
+}
+
+.launch-dashboard[data-layout="spatial-command-hybrid"] .telemetry-grid span {
+  min-height: 22px;
+  padding: 4px 5px;
+  font-size: 0.58rem;
+}
+
+.launch-dashboard[data-layout="spatial-command-hybrid"] .sumo-telemetry em {
+  display: none;
+}
+
+.launch-dashboard[data-layout="spatial-command-hybrid"] .lane-pressure-panel {
+  top: 14px;
+  right: 14px;
+  width: 170px;
+  gap: 5px;
+  padding: 7px;
+}
+
+.launch-dashboard[data-layout="spatial-command-hybrid"] .pressure-bars {
+  gap: 4px;
+}
+
+.launch-dashboard[data-layout="spatial-command-hybrid"] .pressure-row {
+  grid-template-columns: 24px 1fr;
+  min-height: 19px;
+  padding: 2px 7px;
+}
+
+.launch-dashboard[data-layout="spatial-command-hybrid"] .pressure-row small,
+.launch-dashboard[data-layout="spatial-command-hybrid"] .pressure-row b {
+  font-size: 0.62rem;
+}
+
+.launch-dashboard[data-layout="spatial-command-hybrid"] .launch-readiness-card {
+  top: 162px;
+  right: 14px;
+  width: 220px;
+  gap: 3px;
+  padding: 8px 10px;
+}
+
+.launch-dashboard[data-layout="spatial-command-hybrid"] .launch-readiness-card span {
+  font-size: 0.6rem;
+  letter-spacing: 0;
+  text-transform: none;
+}
+
+.launch-dashboard[data-layout="spatial-command-hybrid"] .launch-readiness-card strong {
+  font-size: 0.78rem;
+}
+
+.launch-dashboard[data-layout="spatial-command-hybrid"] .launch-readiness-card small {
+  display: -webkit-box;
+  overflow: hidden;
+  font-size: 0.68rem;
+  line-height: 1.35;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+}
+
+.launch-dashboard[data-layout="spatial-command-hybrid"] .simulation-cctv-surface {
+  left: 16px;
+  bottom: 112px;
+  grid-template-columns: minmax(0, 1fr);
+  width: 260px;
+  gap: 4px;
+  padding: 8px 10px;
+}
+
+.launch-dashboard[data-layout="spatial-command-hybrid"] .simulation-cctv-surface span {
+  font-size: 0.62rem;
+  letter-spacing: 0;
+  text-transform: none;
+}
+
+.launch-dashboard[data-layout="spatial-command-hybrid"] .simulation-cctv-surface strong {
+  font-size: 0.82rem;
+}
+
+.launch-dashboard[data-layout="spatial-command-hybrid"] .simulation-cctv-surface small {
+  display: none;
+}
+
+.launch-dashboard[data-layout="spatial-command-hybrid"] .cctv-frame-lines {
+  display: none;
+}
+
+.launch-dashboard[data-layout="spatial-command-hybrid"] .playback-badge {
+  right: 14px;
+  bottom: 12px;
+  min-width: 122px;
+  padding: 7px 9px;
+}
+
+.launch-dashboard[data-layout="spatial-command-hybrid"] .playback-badge strong {
+  font-size: 0.68rem;
+}
+
+.launch-dashboard[data-layout="spatial-command-hybrid"] .playback-badge span {
+  font-size: 0.58rem;
+}
+
+.launch-dashboard[data-layout="spatial-command-hybrid"] .direction-badge {
+  min-width: 58px;
+  gap: 1px;
+  padding: 7px 8px;
+}
+
+.launch-dashboard[data-layout="spatial-command-hybrid"] .direction-badge strong {
+  font-size: 0.92rem;
+}
+
+.launch-dashboard[data-layout="spatial-command-hybrid"] .direction-badge small {
+  font-size: 0.62rem;
+}
+
+.launch-dashboard[data-layout="spatial-command-hybrid"] .direction-badge span {
+  font-size: 1rem;
+}
+
+.launch-dashboard[data-layout="spatial-command-hybrid"] .direction-badge.north {
+  top: 26px;
+}
+
+.launch-dashboard[data-layout="spatial-command-hybrid"] .direction-badge.south {
+  bottom: 58px;
+}
+
+.launch-dashboard[data-layout="spatial-command-hybrid"] .direction-badge.east {
+  right: 14px;
+}
+
+.launch-dashboard[data-layout="spatial-command-hybrid"] .direction-badge.west {
+  left: 14px;
+}
+
 .launch-dashboard:is([data-layout="operations-cockpit"], [data-layout="spatial-command-hybrid"]) .simulation-viewport::before {
   content: "REC 04:18:27  UNITY-CCTV  SIMULATION";
   position: absolute;
@@ -10208,6 +10458,10 @@ body {
   letter-spacing: 0.12em;
   text-shadow: 0 1px 6px rgba(0, 0, 0, 0.8);
   pointer-events: none;
+}
+
+.launch-dashboard[data-layout="spatial-command-hybrid"] .simulation-viewport::before {
+  content: none;
 }
 
 @keyframes cctvRain {
@@ -10247,7 +10501,8 @@ body {
 
 .launch-dashboard[data-layout="spatial-command-hybrid"] .cockpit-grid {
   grid-template-columns: minmax(280px, 0.72fr) minmax(660px, 1.9fr) minmax(330px, 0.86fr);
-  grid-template-rows: minmax(760px, 78dvh);
+  grid-template-rows: max-content;
+  align-items: start;
   gap: 14px;
 }
 
@@ -10289,7 +10544,7 @@ body {
 .launch-dashboard[data-layout="spatial-command-hybrid"] .cockpit-left,
 .launch-dashboard[data-layout="spatial-command-hybrid"] .cockpit-right {
   align-content: start;
-  grid-auto-rows: min-content;
+  grid-auto-rows: max-content;
 }
 
 .launch-dashboard[data-layout="spatial-command-hybrid"] .cockpit-left .timeline-panel,
@@ -10322,8 +10577,8 @@ body {
 .launch-dashboard[data-layout="spatial-command-hybrid"] .spatial-command-kicker {
   position: absolute;
   z-index: 20;
-  top: 86px;
-  left: 18px;
+  top: 84px;
+  left: 16px;
   width: min(210px, calc(100% - 36px));
   background: rgba(3, 13, 20, 0.74);
   backdrop-filter: blur(10px);
@@ -10414,7 +10669,7 @@ body {
 
   .launch-dashboard[data-layout="spatial-command-hybrid"] .cockpit-right {
     grid-column: 1 / -1;
-    grid-template-columns: repeat(3, minmax(0, 1fr));
+    grid-template-columns: minmax(0, 1fr);
   }
 
   .launch-dashboard[data-layout="spatial-command-hybrid"] .cockpit-right .chat-report-grid {

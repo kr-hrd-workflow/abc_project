@@ -10,8 +10,10 @@ OPENAI_OPERATOR_INSTRUCTIONS = (
     "You draft concise traffic-operator decision support. "
     "Use only the provided scenario and policy evidence. "
     "If evidence is insufficient, say what is missing. "
-    "Answer in the same language as the operator question. "
-    "Use Korean when the question is Korean. "
+    "Answer in the requested response language when provided; "
+    "otherwise answer in the same language as the operator question. "
+    "Use Korean when the requested response language is Korean "
+    "or the question is Korean. "
     "Always state that recommendations are simulation-only and "
     "do not control real traffic signals."
 )
@@ -36,6 +38,7 @@ class OpenAITextGateway:
         question: str,
         scenario_summary: str,
         policy_evidence: Sequence[KnowledgeChunk],
+        response_language: str | None = None,
     ) -> str:
         response = self.client.responses.create(
             model=self.model,
@@ -44,6 +47,7 @@ class OpenAITextGateway:
                 question,
                 scenario_summary,
                 policy_evidence,
+                response_language,
             ),
         )
         return str(getattr(response, "output_text", ""))
@@ -91,6 +95,7 @@ def _grounded_answer_input(
     question: str,
     scenario_summary: str,
     policy_evidence: Sequence[KnowledgeChunk],
+    response_language: str | None = None,
 ) -> str:
     evidence_lines = [
         f"- {chunk.title}: {chunk.content}"
@@ -98,11 +103,21 @@ def _grounded_answer_input(
     ]
     if not evidence_lines:
         evidence_lines = ["- No policy evidence was provided."]
-    return "\n".join(
-        [
-            f"Question: {question}",
-            f"Scenario: {scenario_summary}",
-            "Policy evidence:",
-            *evidence_lines,
-        ]
-    )
+    response_language_line = _format_response_language_line(response_language)
+    prompt_lines = [
+        f"Question: {question}",
+        f"Scenario: {scenario_summary}",
+        "Policy evidence:",
+        *evidence_lines,
+    ]
+    if response_language_line:
+        prompt_lines.insert(0, response_language_line)
+    return "\n".join(prompt_lines)
+
+
+def _format_response_language_line(response_language: str | None) -> str | None:
+    if response_language == "ko":
+        return "Response language: Korean"
+    if response_language == "en":
+        return "Response language: English"
+    return None

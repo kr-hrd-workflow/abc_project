@@ -42,7 +42,7 @@ export function SimulationViewportFallback({
   runtimeReadiness,
   locale,
   simulationStreamUrl,
-  renderMode = "Digital twin fallback"
+  renderMode = "digital_twin_fallback"
 }: SimulationViewportFallbackProps) {
   const t = copy[locale];
   const emergencyEvent = events.find(
@@ -90,18 +90,18 @@ export function SimulationViewportFallback({
       />
       <div className="playback-badge">
         <strong>{locale === "ko" ? "실사형 가상 CCTV" : "Photoreal virtual CCTV"}</strong>
-        <span>{renderMode}</span>
+        <span>{formatRenderMode(renderMode, locale)}</span>
       </div>
       <section
         className="simulation-cctv-surface"
         aria-label={locale === "ko" ? "시뮬레이션 스트림 뷰어" : "Simulation stream viewer"}
       >
         <div>
-          <span>{locale === "ko" ? "Stream-ready Render Slot" : "Stream-ready Render Slot"}</span>
+          <span>{locale === "ko" ? "스트림 준비 렌더 슬롯" : "Stream-ready Render Slot"}</span>
           <strong>{locale === "ko" ? "실사형 가상 CCTV / 디지털 트윈" : "Photoreal virtual CCTV / digital twin"}</strong>
           <small>
             {locale === "ko"
-              ? "NEXT_PUBLIC_SIMULATION_STREAM_URL로 Hosted simulation stream 플레이어 연결 / legacy stream alias도 임시 호환"
+              ? "NEXT_PUBLIC_SIMULATION_STREAM_URL로 호스팅 시뮬레이션 스트림 플레이어 연결 / 레거시 스트림 별칭도 임시 호환"
               : "Connects to the Hosted simulation stream player from NEXT_PUBLIC_SIMULATION_STREAM_URL; legacy stream alias remains temporarily supported"}
           </small>
         </div>
@@ -111,19 +111,22 @@ export function SimulationViewportFallback({
           <i />
         </div>
       </section>
-      <section className={`launch-readiness-card ${openaiReady ? "ready" : "pending"}`} aria-label="OpenAI launch readiness">
-        <span>{locale === "ko" ? "Launch gate" : "Launch gate"}</span>
+      <section
+        className={`launch-readiness-card ${openaiReady ? "ready" : "pending"}`}
+        aria-label={locale === "ko" ? "OpenAI 실행 준비 상태" : "OpenAI launch readiness"}
+      >
+        <span>{locale === "ko" ? "실행 준비" : "Launch gate"}</span>
         <strong>{openaiReady ? "OpenAI live ready" : "OPENAI_API_KEY 대기"}</strong>
         <small>
           {openaiReady
-            ? (locale === "ko" ? "키 감지됨. live AI 답변 모드 사용 가능" : "Key detected. Live AI answer mode is available")
-            : (locale === "ko" ? "키만 입력하면 live AI 답변으로 전환" : "Enter only OPENAI_API_KEY to enable live AI answers")}
+            ? (locale === "ko" ? "키 감지됨. 실시간 AI 답변 모드 사용 가능" : "Key detected. Live AI answer mode is available")
+            : (locale === "ko" ? "키만 입력하면 실시간 AI 답변으로 전환" : "Enter only OPENAI_API_KEY to enable live AI answers")}
         </small>
       </section>
-      <div className="renderer-status" aria-label="Simulation renderer status">
-        <strong>SUMO/TraCI Renderer</strong>
+      <div className="renderer-status" aria-label={locale === "ko" ? "시뮬레이션 렌더러 상태" : "Simulation renderer status"}>
+        <strong>{locale === "ko" ? "SUMO/TraCI 렌더러" : "SUMO/TraCI Renderer"}</strong>
         <span>{simulation.source}</span>
-        <span>Delay {formatPercent(delayPercent)}</span>
+        <span>{locale === "ko" ? "지연" : "Delay"} {formatPercent(delayPercent)}</span>
       </div>
       <div className="city-block block-nw" />
       <div className="city-block block-ne" />
@@ -194,10 +197,10 @@ export function SimulationViewportFallback({
         <EventMarker key={event.id} event={event} locale={locale} />
       ))}
 
-      <DirectionBadge direction="north" label={formatDirection("north", locale)} value={status.queues.north} />
-      <DirectionBadge direction="south" label={formatDirection("south", locale)} value={status.queues.south} />
-      <DirectionBadge direction="east" label={formatDirection("east", locale)} value={status.queues.east} />
-      <DirectionBadge direction="west" label={formatDirection("west", locale)} value={status.queues.west} />
+      <DirectionBadge direction="north" label={formatDirection("north", locale)} locale={locale} value={status.queues.north} />
+      <DirectionBadge direction="south" label={formatDirection("south", locale)} locale={locale} value={status.queues.south} />
+      <DirectionBadge direction="east" label={formatDirection("east", locale)} locale={locale} value={status.queues.east} />
+      <DirectionBadge direction="west" label={formatDirection("west", locale)} locale={locale} value={status.queues.west} />
 
       <VehicleLane side="north" count={status.queues.north} />
       <VehicleLane side="south" count={status.queues.south} />
@@ -219,7 +222,7 @@ export function SimulationViewportFallback({
           </strong>
           <small>
             {locale === "ko"
-              ? "Emergency Vehicle"
+              ? "긴급차량"
               : `Emergency from ${formatDirection(emergencyDirection, locale)}`}
           </small>
         </div>
@@ -230,7 +233,7 @@ export function SimulationViewportFallback({
         </div>
       ) : null}
       <div className="live-badge">
-        <strong>LIVE</strong>
+        <strong>{locale === "ko" ? "실시간" : "LIVE"}</strong>
         <time>{formatTime(status.captured_at)}</time>
       </div>
       <div className="zoom-stack" aria-hidden="true">
@@ -315,13 +318,18 @@ function SimulationPlaybackCanvas({
 function DirectionBadge({
   direction,
   label,
+  locale,
   value
 }: {
   direction: "north" | "south" | "east" | "west";
   label: string;
+  locale: Locale;
   value: number;
 }) {
-  const directionName = direction.toUpperCase();
+  const directionName =
+    locale === "ko"
+      ? ({ north: "북측", south: "남측", east: "동측", west: "서측" } as const)[direction]
+      : direction.toUpperCase();
 
   return (
     <div className={`direction-badge ${direction}`}>
@@ -330,6 +338,25 @@ function DirectionBadge({
       <span>{value}</span>
     </div>
   );
+}
+
+function formatRenderMode(mode: string, locale: Locale) {
+  const labels: Record<string, Record<Locale, string>> = {
+    hosted_stream: {
+      ko: "호스팅 시뮬레이션 스트림",
+      en: "Hosted simulation stream"
+    },
+    legacy_stream: {
+      ko: "레거시 스트림 별칭",
+      en: "Legacy stream alias"
+    },
+    digital_twin_fallback: {
+      ko: "디지털 트윈 폴백",
+      en: "Digital twin fallback"
+    }
+  };
+
+  return labels[mode]?.[locale] ?? mode;
 }
 
 function VehicleLane({ side, count }: { side: string; count: number }) {
@@ -611,7 +638,7 @@ function buildPressureRows(queues: IntersectionStatus["queues"], locale: Locale)
     const value = queues[direction];
     return {
       direction,
-      label: direction.toUpperCase(),
+      label: formatDirection(direction, locale),
       valueLabel: locale === "ko" ? `${formatDirection(direction, locale)} ${value}대` : `${formatDirection(direction, locale)} ${value}`,
       pressure: `${Math.max(18, Math.round((value / maxQueue) * 100))}%`,
       level: pressureLevel(value)

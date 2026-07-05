@@ -47,6 +47,7 @@ import type {
 } from "../lib/types";
 import { SCENARIO_OPTIONS } from "../lib/types";
 import { CITY_PROFILES } from "../lib/cities";
+import type { Locale } from "../lib/i18n";
 import {
   DEFAULT_SCENE_PRESENTATION,
   getStage6PresentationMode,
@@ -329,8 +330,8 @@ export function DashboardRoute() {
     }
   }
 
-  async function handleAskQuestion(question: string) {
-    const chat = await askQuestion(question, selectedScenarioId);
+  async function handleAskQuestion(question: string, locale: Locale) {
+    const chat = await askQuestion(question, selectedScenarioId, locale);
     setData((current) => (current ? { ...current, chat } : current));
   }
 

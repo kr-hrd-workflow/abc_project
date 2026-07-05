@@ -848,12 +848,12 @@ describe("DashboardShell", () => {
     expect(
       screen.getByRole("heading", { level: 1, name: "스마트 교차로 운영 시스템" })
     ).toBeTruthy();
-    expect(screen.getByLabelText("Scenario Rail")).toBeTruthy();
-    expect(screen.getByText("Incident Brief Spine")).toBeTruthy();
-    expect(screen.getByLabelText("Spatial command surface")).toBeTruthy();
-    expect(screen.getByText("Response Plan")).toBeTruthy();
+    expect(screen.getByLabelText("시나리오 레일")).toBeTruthy();
+    expect(screen.getByText("현장 증거 흐름")).toBeTruthy();
+    expect(screen.getByLabelText("공간 명령 화면")).toBeTruthy();
+    expect(screen.getByText("대응 계획")).toBeTruthy();
     expect(screen.getAllByText("긴급차량 우선 통과").length).toBeGreaterThanOrEqual(1);
-    expect(screen.getByText("Simulation only / No real signal control")).toBeTruthy();
+    expect(screen.getByText("시뮬레이션 전용 / 실제 신호 제어 없음")).toBeTruthy();
   });
 
   test("renders the Seoul city profile with no city selector", () => {
@@ -929,7 +929,7 @@ describe("DashboardShell", () => {
 
     expect(screen.getByText("자동 준비 중")).toBeTruthy();
     expect(screen.getByText("신뢰도 92%")).toBeTruthy();
-    expect(screen.getByText("다음 권고 emergency_priority")).toBeTruthy();
+    expect(screen.getByText("다음 권고 긴급차량 우선")).toBeTruthy();
 
     await userEvent.click(screen.getByRole("button", { name: "관리자 직접 검토" }));
 
@@ -969,7 +969,7 @@ describe("DashboardShell", () => {
       screen.getByRole("button", { name: "전송" }),
       screen.getByRole("button", { name: /리포트 생성/ }),
       screen.getByRole("button", { name: "다운로드" }),
-      screen.getByRole("button", { name: /긴급차량/ }),
+      screen.getByRole("button", { name: /긴급차량 우선 통과/ }),
       screen.getByRole("button", { name: "SUMO 시뮬레이션 갱신" }),
       screen.getByRole("link", { name: /알림/ }),
       screen.getByRole("link", { name: /리포트/ }),
@@ -984,17 +984,17 @@ describe("DashboardShell", () => {
 
     expect(screen.getByText("우선순위 큐")).toBeTruthy();
     expect(screen.getByText("증거 흐름")).toBeTruthy();
-    expect(screen.getByText("CCTV Frame")).toBeTruthy();
-    expect(screen.getByText("SUMO Delta")).toBeTruthy();
+    expect(screen.getByText("CCTV 프레임")).toBeTruthy();
+    expect(screen.getByText("SUMO 변화량")).toBeTruthy();
   });
 
   test("promotes the response plan into a focus-first command stack", () => {
     renderDashboard();
 
-    expect(screen.getByText("Decision focus")).toBeTruthy();
+    expect(screen.getByText("판단 초점")).toBeTruthy();
     expect(screen.getByText("권고안 검토")).toBeTruthy();
     expect(screen.getByText("실행 전 승인 필요")).toBeTruthy();
-    expect(screen.getByText("Response stack")).toBeTruthy();
+    expect(screen.getByText("대응 스택")).toBeTruthy();
   });
 
   test("renders the accepted B plus A spatial command dashboard structure", () => {
@@ -1003,20 +1003,20 @@ describe("DashboardShell", () => {
     const shell = container.querySelector(".dashboard-shell");
     expect(shell?.getAttribute("data-layout")).toBe("spatial-command-hybrid");
     expect(shell?.getAttribute("data-concept")).toBe("b-plus-a");
-    expect(screen.getByLabelText("Spatial command surface")).toBeTruthy();
-    expect(screen.getByLabelText("Operational detail rail")).toBeTruthy();
-    expect(screen.getByLabelText("Command decision rail")).toBeTruthy();
-    expect(screen.getByText("Spatial command")).toBeTruthy();
-    expect(screen.getByText("Live evidence rail")).toBeTruthy();
-    expect(screen.getByText("Operator action stack")).toBeTruthy();
+    expect(screen.getByLabelText("공간 명령 화면")).toBeTruthy();
+    expect(screen.getByLabelText("운영 상세 레일")).toBeTruthy();
+    expect(screen.getByLabelText("명령 의사결정 레일")).toBeTruthy();
+    expect(screen.getByText("공간 명령")).toBeTruthy();
+    expect(screen.getByText("실시간 증거 레일")).toBeTruthy();
+    expect(screen.getByText("운영자 조치 스택")).toBeTruthy();
   });
 
   test("renders the replaceable SUMO simulation viewport boundary", () => {
     renderDashboard();
 
-    expect(screen.getByText("SUMO/TraCI Renderer")).toBeTruthy();
+    expect(screen.getByText("SUMO/TraCI 렌더러")).toBeTruthy();
     expect(screen.getAllByText("sumo_traci").length).toBeGreaterThanOrEqual(1);
-    expect(screen.getByText("Delay -18%")).toBeTruthy();
+    expect(screen.getByText("지연 -18%")).toBeTruthy();
   });
 
   test("renders aggregate SUMO telemetry without claiming vehicle trajectories", () => {
@@ -1026,9 +1026,9 @@ describe("DashboardShell", () => {
     expect(screen.getByLabelText("SUMO 스타일 교통 재생")).toBeTruthy();
     expect(screen.getByLabelText("시뮬레이션 스트림 뷰어")).toBeTruthy();
     expect(screen.getByText("실사형 가상 CCTV")).toBeTruthy();
-    expect(screen.getByText("Digital twin fallback")).toBeTruthy();
+    expect(screen.getByText("디지털 트윈 폴백")).toBeTruthy();
     expect(screen.getByText("실사형 가상 CCTV / 디지털 트윈")).toBeTruthy();
-    expect(screen.getByText("NEXT_PUBLIC_SIMULATION_STREAM_URL로 Hosted simulation stream 플레이어 연결 / legacy stream alias도 임시 호환")).toBeTruthy();
+    expect(screen.getByText("NEXT_PUBLIC_SIMULATION_STREAM_URL로 호스팅 시뮬레이션 스트림 플레이어 연결 / 레거시 스트림 별칭도 임시 호환")).toBeTruthy();
     expect(screen.getByText("주기 22s")).toBeTruthy();
     expect(screen.getByText("대기 72s -> 59s")).toBeTruthy();
     expect(screen.getByText("처리량 +13%")).toBeTruthy();
@@ -1863,7 +1863,7 @@ describe("DashboardShell", () => {
     expect(screen.getByTestId("r3f-canvas")).toBeTruthy();
     expect(screen.getByText("R3F digital twin")).toBeTruthy();
     expect(screen.queryByText("Digital twin fallback")).toBeNull();
-    expect(screen.getByText("Simulation only / No real signal control")).toBeTruthy();
+    expect(screen.getByText("시뮬레이션 전용 / 실제 신호 제어 없음")).toBeTruthy();
     expect(viewport.getAttribute("data-r3f-simulation-ready")).toBe("true");
     expect(viewport.getAttribute("data-r3f-renderer-mode")).toBe(STAGE5_RENDERER_MODE);
     expect(viewport.getAttribute("data-r3f-photoreal-stage")).toBe("5");
@@ -1991,7 +1991,7 @@ describe("DashboardShell", () => {
     expect(screen.getByTestId("r3f-frame-stale-badge").textContent).toContain(
       "degraded"
     );
-    expect(screen.getByText("Simulation only / No real signal control")).toBeTruthy();
+    expect(screen.getByText("시뮬레이션 전용 / 실제 신호 제어 없음")).toBeTruthy();
   });
 
   test("uses explicit fixture queue fallback when the simulation frame is absent", async () => {
@@ -2078,10 +2078,10 @@ describe("DashboardShell", () => {
 
     renderDashboard();
 
-    expect(screen.getByText("Digital twin fallback")).toBeTruthy();
+    expect(screen.getByText("디지털 트윈 폴백")).toBeTruthy();
     expect(screen.getByText("실사형 가상 CCTV / 디지털 트윈")).toBeTruthy();
     expect(screen.queryByTestId("r3f-simulation-viewport")).toBeNull();
-    expect(screen.getByText("Simulation only / No real signal control")).toBeTruthy();
+    expect(screen.getByText("시뮬레이션 전용 / 실제 신호 제어 없음")).toBeTruthy();
   });
 
   test("keeps the fallback viewport when R3F is enabled but WebGL is unavailable", () => {
@@ -2090,10 +2090,10 @@ describe("DashboardShell", () => {
 
     renderDashboard();
 
-    expect(screen.getByText("Digital twin fallback")).toBeTruthy();
+    expect(screen.getByText("디지털 트윈 폴백")).toBeTruthy();
     expect(screen.getByText("실사형 가상 CCTV / 디지털 트윈")).toBeTruthy();
     expect(screen.queryByTestId("r3f-simulation-viewport")).toBeNull();
-    expect(screen.getByText("Simulation only / No real signal control")).toBeTruthy();
+    expect(screen.getByText("시뮬레이션 전용 / 실제 신호 제어 없음")).toBeTruthy();
   });
 
   test("mounts the hosted simulation stream URL before the legacy alias", () => {
@@ -2107,7 +2107,7 @@ describe("DashboardShell", () => {
 
     expect(streamFrame?.getAttribute("src")).toBe("https://pixel.example/stream");
     expect(streamFrame?.getAttribute("title")).toBe("시뮬레이션 스트림");
-    expect(screen.getByText("Hosted simulation stream")).toBeTruthy();
+    expect(screen.getByText("호스팅 시뮬레이션 스트림")).toBeTruthy();
     expect(screen.queryByTestId("r3f-simulation-viewport")).toBeNull();
   });
 
@@ -2124,11 +2124,11 @@ describe("DashboardShell", () => {
     expect(streamFrame?.className).toContain("simulation-stream-frame");
     expect(streamFrame?.className).toContain("hosted-simulation-stream-frame");
     expect(streamFrame?.getAttribute("allow")).toContain("fullscreen");
-    expect(screen.getByText("Hosted simulation stream")).toBeTruthy();
-    expect(screen.queryByText("Legacy stream alias")).toBeNull();
+    expect(screen.getByText("호스팅 시뮬레이션 스트림")).toBeTruthy();
+    expect(screen.queryByText("레거시 스트림 별칭")).toBeNull();
     expect(screen.queryByTestId("r3f-simulation-viewport")).toBeNull();
-    expect(screen.getByText("Simulation only / No real signal control")).toBeTruthy();
-    expect(screen.getByText("SUMO/TraCI Renderer")).toBeTruthy();
+    expect(screen.getByText("시뮬레이션 전용 / 실제 신호 제어 없음")).toBeTruthy();
+    expect(screen.getByText("SUMO/TraCI 렌더러")).toBeTruthy();
   });
 
   test("keeps NEXT_PUBLIC_UNITY_WEBGL_URL as a legacy stream fallback alias", () => {
@@ -2140,7 +2140,7 @@ describe("DashboardShell", () => {
     const streamFrame = container.querySelector("iframe.simulation-stream-frame");
 
     expect(streamFrame?.getAttribute("src")).toBe("/unity/index.html");
-    expect(screen.getByText("Legacy stream alias")).toBeTruthy();
+    expect(screen.getByText("레거시 스트림 별칭")).toBeTruthy();
     expect(screen.queryByTestId("r3f-simulation-viewport")).toBeNull();
   });
 
@@ -2161,11 +2161,11 @@ describe("DashboardShell", () => {
   test("renders scenario options and marks the selected scenario", () => {
     renderDashboard({ selectedScenarioId: "blocked" });
 
-    expect(screen.getByRole("button", { name: /차단/ }).getAttribute("aria-pressed")).toBe(
+    expect(screen.getByRole("button", { name: /교차로 막힘 대응/ }).getAttribute("aria-pressed")).toBe(
       "true"
     );
     expect(
-      screen.getByRole("button", { name: /긴급차량/ }).getAttribute("aria-pressed")
+      screen.getByRole("button", { name: /긴급차량 우선 통과/ }).getAttribute("aria-pressed")
     ).toBe("false");
   });
 
@@ -2195,20 +2195,40 @@ describe("DashboardShell", () => {
     );
   });
 
+  test("renders replaceable dashboard chrome in Korean by default", () => {
+    renderDashboard();
+
+    expect(screen.getByText("스마트 교차로 운영 시스템")).toBeTruthy();
+    expect(screen.getByText("선택된 교차로")).toBeTruthy();
+    expect(screen.getByText("운영 중")).toBeTruthy();
+    expect(screen.getAllByText("실시간").length).toBeGreaterThanOrEqual(1);
+    expect(screen.getByText("AI 에이전트")).toBeTruthy();
+    expect(screen.getByText("온라인")).toBeTruthy();
+    expect(screen.getAllByText("리포트").length).toBeGreaterThanOrEqual(1);
+    expect(screen.getByText("리포트 생성")).toBeTruthy();
+    expect(screen.getAllByText("현재 상황").length).toBeGreaterThanOrEqual(1);
+
+    expect(screen.queryByText("AI Agent")).toBeNull();
+    expect(screen.queryByText("Online")).toBeNull();
+    expect(screen.queryByText("Reports")).toBeNull();
+    expect(screen.queryByText("Generate Report")).toBeNull();
+    expect(screen.queryByText("Current Situation")).toBeNull();
+  });
+
   test("renders analysis intake fixtures and latest job status", () => {
     renderDashboard({
       latestFixtureIngest,
       latestAnalysisJob
     });
 
-    expect(screen.getByText("Analysis Intake")).toBeTruthy();
-    expect(screen.getByText("운영자가 샘플·업로드 분석을 시작하고 job 상태를 확인합니다.")).toBeTruthy();
+    expect(screen.getAllByText("분석 인입").length).toBeGreaterThanOrEqual(1);
+    expect(screen.getByText("운영자가 샘플·업로드 분석을 시작하고 작업 상태를 확인합니다.")).toBeTruthy();
     expect(screen.getByRole("button", { name: /emergency-east-frame.jpg/ })).toBeTruthy();
     expect(screen.getByRole("button", { name: /blocked-intersection-clip.mp4/ })).toBeTruthy();
-    expect(screen.getByText("Fixture ingested")).toBeTruthy();
+    expect(screen.getByText("샘플 인입 완료")).toBeTruthy();
     expect(screen.getByText("job-123")).toBeTruthy();
     expect(screen.getByText("completed")).toBeTruthy();
-    expect(screen.getByText("Simulation-only analysis")).toBeTruthy();
+    expect(screen.getByText("시뮬레이션 전용 분석")).toBeTruthy();
   });
 
   test("calls fixture ingestion and job refresh handlers from analysis intake", async () => {
@@ -2221,7 +2241,7 @@ describe("DashboardShell", () => {
     });
 
     await userEvent.click(screen.getByRole("button", { name: /emergency-east-frame.jpg/ }));
-    await userEvent.click(screen.getByRole("button", { name: "Job status refresh" }));
+    await userEvent.click(screen.getByRole("button", { name: "작업 상태 새로고침" }));
 
     expect(onIngestFixture).toHaveBeenCalledWith("emergency-east-frame");
     expect(onRefreshAnalysisJob).toHaveBeenCalledWith("job-123");
@@ -2272,15 +2292,15 @@ describe("DashboardShell", () => {
       new File(["fixture"], "intersection-frame.jpg", { type: "image/jpeg" })
     );
 
-    expect(await screen.findByText("Fixture ingested")).toBeTruthy();
+    expect(await screen.findByText("샘플 인입 완료")).toBeTruthy();
     expect(await screen.findByText("job-123")).toBeTruthy();
 
     await userEvent.click(screen.getByRole("button", { name: /보행자/ }));
 
-    expect(screen.queryByText("Fixture ingested")).toBeNull();
+    expect(screen.queryByText("샘플 인입 완료")).toBeNull();
     expect(screen.queryByText("job-123")).toBeNull();
     expect(screen.getByText("아직 인입된 샘플이 없습니다.")).toBeTruthy();
-    expect(screen.getByText("No job")).toBeTruthy();
+    expect(screen.getByText("작업 없음")).toBeTruthy();
   });
 
   test("keeps recommendation and simulation copy aligned to non-emergency data", () => {
@@ -2347,10 +2367,10 @@ describe("DashboardShell", () => {
     expect(screen.queryByLabelText("긴급차량")).toBeNull();
   });
 
-  test("renders structured AI agent sections when the API provides them", async () => {
+  test("renders the latest AI agent answer without fixed structured sections", async () => {
     renderDashboard({
       chat: {
-        answer: "Fallback answer",
+        answer: "동쪽 접근부 대기열이 증가하고 있습니다.",
         referenced_event_ids: [1],
         sections: {
           current_situation: "현재 상황 내용",
@@ -2363,20 +2383,9 @@ describe("DashboardShell", () => {
       }
     });
 
-    expect(screen.getAllByText("현재 상황").length).toBeGreaterThanOrEqual(1);
-    expect(screen.getByText("추천 조치")).toBeTruthy();
-    expect(screen.getAllByText("추천 근거").length).toBeGreaterThanOrEqual(1);
-    expect(screen.getByText("권한 한계")).toBeTruthy();
-    expect(screen.getByText("시뮬레이션 결과")).toBeTruthy();
-    expect(screen.getByText("근거 A")).toBeTruthy();
-
-    await userEvent.click(screen.getByRole("button", { name: "EN" }));
-
-    expect(screen.getAllByText("Current Situation").length).toBeGreaterThanOrEqual(1);
-    expect(screen.getAllByText("Recommended Action").length).toBeGreaterThanOrEqual(1);
-    expect(screen.getByText("Recommendation Rationale")).toBeTruthy();
-    expect(screen.getByText("Authority Limit")).toBeTruthy();
-    expect(screen.getByText("Simulation Result")).toBeTruthy();
+    expect(screen.getByText("동쪽 접근부 대기열이 증가하고 있습니다.")).toBeTruthy();
+    expect(screen.queryByText("근거 A")).toBeNull();
+    expect(screen.queryByText("시뮬레이션 결과 내용")).toBeNull();
   });
 
   test("submits chat questions through the provided handler", async () => {
@@ -2389,7 +2398,7 @@ describe("DashboardShell", () => {
     );
     await userEvent.click(screen.getByRole("button", { name: "전송" }));
 
-    expect(onAskQuestion).toHaveBeenCalledWith("동쪽 상황은?");
+    expect(onAskQuestion).toHaveBeenCalledWith("동쪽 상황은?", "ko");
   });
 
   test("shows recoverable chat errors without clearing the operator question", async () => {

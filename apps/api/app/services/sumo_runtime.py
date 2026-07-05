@@ -295,9 +295,9 @@ class SumoRuntimeService:
             return calibrated
         if self.settings.sumo_config_dir:
             config_path = self._scenario_config_path_from_dir(scenario_id, mode)
+            config_path_text = str(config_path)
         else:
-            config_path = Path(self.settings.sumo_config_path)
-        config_path_text = str(config_path)
+            config_path_text = self.settings.sumo_config_path
         if not self._path_exists(config_path_text):
             raise SumoConfigurationError(
                 f"SUMO config not found: {config_path_text}",

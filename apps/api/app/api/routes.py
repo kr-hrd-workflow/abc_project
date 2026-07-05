@@ -460,7 +460,12 @@ def chat(
     _status, events = ensure_scenario_snapshot(session, observation)
     event_ids = [event.id for event in events]
     policy_evidence = _retrieve_policy_evidence(request.question, session)
-    answer = _answer_chat_question(request.question, observation, policy_evidence)
+    answer = _answer_chat_question(
+        request.question,
+        observation,
+        policy_evidence,
+        request.locale,
+    )
     action, plan, evidence = recommend_signal_action(observation)
     simulation = simulation_adapter.compare_signal_plan(scenario_id)
     sections = build_agent_sections(
@@ -549,8 +554,14 @@ def _answer_chat_question(
     question: str,
     observation: VisionObservation,
     policy_evidence: list[KnowledgeChunk],
+    response_locale: str | None = None,
 ) -> str:
-    local_answer = answer_question(question, observation, policy_evidence)
+    local_answer = answer_question(
+        question,
+        observation,
+        policy_evidence,
+        response_locale=response_locale,
+    )
     if settings.openai_answer_mode == "local":
         return local_answer
     if (
@@ -576,6 +587,7 @@ def _answer_chat_question(
         question=question,
         scenario_summary=_scenario_summary(observation),
         policy_evidence=policy_evidence,
+        response_language=_response_language(response_locale),
     )
 
 
@@ -583,6 +595,14 @@ def _configured_openai_api_key() -> str:
     if settings.openai_api_key and settings.openai_api_key.strip():
         return settings.openai_api_key.strip()
     return require_openai_api_key()
+
+
+def _response_language(response_locale: str | None) -> str | None:
+    if response_locale == "ko":
+        return "ko"
+    if response_locale == "en":
+        return "en"
+    return None
 
 
 def _openai_explanation_criterion_label(name: str) -> str:

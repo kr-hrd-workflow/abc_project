@@ -52,10 +52,13 @@ export function DigitalTwin({
   }
 
   return (
-    <section className="panel simulation-panel" aria-label="Digital Twin Simulation">
+    <section
+      className="panel simulation-panel"
+      aria-label={locale === "ko" ? "디지털 트윈 시뮬레이션" : "Digital Twin Simulation"}
+    >
       <div className="panel-heading simulation-heading">
         <div>
-          <h2>Digital Twin Simulation</h2>
+          <h2>{locale === "ko" ? "디지털 트윈 시뮬레이션" : "Digital Twin Simulation"}</h2>
           <p>
             {t.simulationViewport}
             <span>{t.simulationViewportSub}</span>
@@ -101,9 +104,9 @@ export function DigitalTwin({
 
       <div className="simulation-legend">
         <span>{t.signalState}</span>
-        <span><i className="dot green" /> GREEN</span>
-        <span><i className="dot amber" /> YELLOW</span>
-        <span><i className="dot red" /> RED</span>
+        <span><i className="dot green" /> {locale === "ko" ? "녹색" : "GREEN"}</span>
+        <span><i className="dot amber" /> {locale === "ko" ? "황색" : "YELLOW"}</span>
+        <span><i className="dot red" /> {locale === "ko" ? "적색" : "RED"}</span>
         <span><i className="dot vehicle" /> {t.vehicle}</span>
         <span><i className="dot cyan" /> {t.pedestrian}</span>
         <span><i className="dot emergency" /> {t.emergency}</span>

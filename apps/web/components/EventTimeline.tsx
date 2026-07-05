@@ -42,10 +42,12 @@ export function EventTimeline({ events, locale }: EventTimelineProps) {
                 <span className={`severity ${event.severity}`}>
                   {formatSeverity(event.severity, locale)}
                 </span>
-                <span className="severity-en">{event.severity.toUpperCase()}</span>
+                <span className="severity-en">
+                  {locale === "ko" ? formatSeverity(event.severity, locale) : event.severity.toUpperCase()}
+                </span>
               </div>
               <strong>{formatEventType(event.event_type, locale)}</strong>
-              <p>{event.ai_summary}</p>
+              <p>{formatEventSummary(event.ai_summary, locale)}</p>
             </div>
             <span
               className={`event-icon ${event.event_type}`}
@@ -64,7 +66,7 @@ export function EventTimeline({ events, locale }: EventTimelineProps) {
           </strong>
           <small>
             {latestEvent
-              ? latestEvent.recommendation
+              ? formatEventRecommendation(latestEvent.recommendation, locale)
               : locale === "ko"
                 ? "대기 중인 이벤트 없음"
                 : "No queued event"}
@@ -73,11 +75,11 @@ export function EventTimeline({ events, locale }: EventTimelineProps) {
         <div className="evidence-trail-card">
           <span>{locale === "ko" ? "증거 흐름" : "Evidence trail"}</span>
           <div>
-            <small>CCTV Frame</small>
+            <small>{locale === "ko" ? "CCTV 프레임" : "CCTV Frame"}</small>
             <strong>{latestEvent ? formatTime(latestEvent.occurred_at) : "--:--:--"}</strong>
           </div>
           <div>
-            <small>SUMO Delta</small>
+            <small>{locale === "ko" ? "SUMO 변화량" : "SUMO Delta"}</small>
             <strong>{locale === "ko" ? "대기열 비교 준비" : "Queue comparison ready"}</strong>
           </div>
           <div>
@@ -103,4 +105,20 @@ function formatTime(value: string) {
     minute: "2-digit",
     second: "2-digit"
   });
+}
+
+function formatEventSummary(summary: string, locale: Locale) {
+  if (locale !== "ko") return summary;
+  const labels: Record<string, string> = {
+    "No priority event detected.": "우선 처리 이벤트가 감지되지 않았습니다."
+  };
+  return labels[summary] ?? summary;
+}
+
+function formatEventRecommendation(recommendation: string, locale: Locale) {
+  if (locale !== "ko") return recommendation;
+  const labels: Record<string, string> = {
+    "Maintain normal cycle in the simulation.": "시뮬레이션에서는 기본 신호 주기를 유지합니다."
+  };
+  return labels[recommendation] ?? recommendation;
 }

@@ -67,6 +67,7 @@ def test_openai_text_gateway_calls_responses_with_policy_evidence() -> None:
         question="Should we prioritize the emergency vehicle?",
         scenario_summary="Emergency vehicle is approaching from east.",
         policy_evidence=evidence,
+        response_language="ko",
     )
 
     assert result == "Recommended operator summary grounded in policy evidence."
@@ -77,12 +78,15 @@ def test_openai_text_gateway_calls_responses_with_policy_evidence() -> None:
                 "You draft concise traffic-operator decision support. "
                 "Use only the provided scenario and policy evidence. "
                 "If evidence is insufficient, say what is missing. "
-                "Answer in the same language as the operator question. "
-                "Use Korean when the question is Korean. "
+                "Answer in the requested response language when provided; "
+                "otherwise answer in the same language as the operator question. "
+                "Use Korean when the requested response language is Korean "
+                "or the question is Korean. "
                 "Always state that recommendations are simulation-only and "
                 "do not control real traffic signals."
             ),
             "input": (
+                "Response language: Korean\n"
                 "Question: Should we prioritize the emergency vehicle?\n"
                 "Scenario: Emergency vehicle is approaching from east.\n"
                 "Policy evidence:\n"

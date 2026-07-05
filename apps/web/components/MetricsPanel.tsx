@@ -27,7 +27,7 @@ export function MetricsPanel({ status, simulation, locale }: MetricsPanelProps) 
     {
       icon: "queue",
       label: locale === "ko" ? "대기열 (최대)" : "Queue Length (Max)",
-      sublabel: locale === "ko" ? "Queue Length (Max)" : "Queue Length (Max)",
+      sublabel: locale === "ko" ? "최대 대기 차량 수" : "Queue Length (Max)",
       fixed: `${maxQueue + 11}${locale === "ko" ? "대" : " veh"}`,
       recommended: `${maxQueue}${locale === "ko" ? "대" : " veh"}`,
       change: `-11${locale === "ko" ? "대" : ""}`,
@@ -37,7 +37,7 @@ export function MetricsPanel({ status, simulation, locale }: MetricsPanelProps) 
     {
       icon: "wait",
       label: locale === "ko" ? "평균 대기" : "Average Wait",
-      sublabel: "Average Wait",
+      sublabel: locale === "ko" ? "평균 대기 시간" : "Average Wait",
       fixed: `${simulation.baseline.average_wait_seconds}${locale === "ko" ? "초" : " sec"}`,
       recommended: `${simulation.recommended.average_wait_seconds}${locale === "ko" ? "초" : " sec"}`,
       change: `${formatDelta(averageWaitDelta)}${locale === "ko" ? "초" : " sec"}`,
@@ -47,7 +47,7 @@ export function MetricsPanel({ status, simulation, locale }: MetricsPanelProps) 
     {
       icon: "delay",
       label: locale === "ko" ? "지연" : "Delay",
-      sublabel: "Delay",
+      sublabel: locale === "ko" ? "전체 지연 시간" : "Delay",
       fixed: `${simulation.baseline.total_delay_seconds}${locale === "ko" ? "초" : " sec"}`,
       recommended: `${simulation.recommended.total_delay_seconds}${locale === "ko" ? "초" : " sec"}`,
       change: `${formatDelta(delayDelta)}${locale === "ko" ? "초" : " sec"}`,
@@ -57,7 +57,7 @@ export function MetricsPanel({ status, simulation, locale }: MetricsPanelProps) 
     {
       icon: "congestion",
       label: locale === "ko" ? "혼잡도" : "Congestion Level",
-      sublabel: "Congestion Level",
+      sublabel: locale === "ko" ? "교통 혼잡 수준" : "Congestion Level",
       fixed: "0.68",
       recommended: "0.52",
       change: "-0.16",
@@ -74,7 +74,7 @@ export function MetricsPanel({ status, simulation, locale }: MetricsPanelProps) 
           <span>{t.performanceSub}</span>
         </div>
         <div className="metrics-window" aria-label={locale === "ko" ? "성과 비교 기간" : "Comparison window"}>
-          <span>5 min</span>
+          <span>{locale === "ko" ? "5분" : "5 min"}</span>
           <small>{locale === "ko" ? "현재 시뮬레이션 기준" : "Current simulation window"}</small>
         </div>
       </div>

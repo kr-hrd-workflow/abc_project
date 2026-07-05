@@ -76,7 +76,7 @@ export function RecommendationPanel({
       <div className="situation-block">
         <span>
           {t.currentSituation}
-          <small>Current Situation</small>
+          <small>{locale === "ko" ? "교통 흐름 요약" : "Current Situation"}</small>
         </span>
         <p>{situationText}</p>
       </div>
@@ -85,7 +85,7 @@ export function RecommendationPanel({
         <div>
           <span>{t.recommendedAction}</span>
           <strong>{actionLabel}</strong>
-          <small>{recommendation.action}</small>
+          <small>{formatRecommendationToken(recommendation.action, locale)}</small>
         </div>
         <div className="signal-preview" aria-hidden="true">
           <i className="red-light" />
@@ -117,19 +117,39 @@ function formatEvidenceKey(key: string, locale: Locale) {
     reason: { ko: "추천 근거", en: "Reason" },
     direction: { ko: "접근 방향", en: "Approach" },
     estimated_arrival_seconds: { ko: "예상 도착", en: "Estimated arrival" },
-    queue: { ko: "대기열", en: "Queue" }
+    queue: { ko: "대기열", en: "Queue" },
+    policy_priority: { ko: "정책 우선순위", en: "Policy priority" },
+    candidate_scores: { ko: "후보 점수", en: "Candidate scores" },
+    constraints: { ko: "제약 조건", en: "Constraints" },
+    policy_scorecard: { ko: "정책 점수표", en: "Policy scorecard" }
   };
 
   return labels[key]?.[locale] ?? key;
 }
 
-function formatEvidenceValue(key: string, value: string | number, locale: Locale) {
+function formatEvidenceValue(key: string, value: unknown, locale: Locale) {
   if (key === "direction") return formatDirection(String(value), locale);
   if (key === "reason") return formatReason(String(value), locale);
+  if (key === "policy_priority") return formatRecommendationToken(String(value), locale);
   if (key === "estimated_arrival_seconds") {
     return locale === "ko" ? `${value}초` : `${value} sec`;
   }
+  if (typeof value === "object" && value !== null) {
+    return locale === "ko" ? "세부 데이터 있음" : "Detailed data available";
+  }
   return String(value);
+}
+
+function formatRecommendationToken(value: string, locale: Locale) {
+  if (locale !== "ko") return value;
+  const labels: Record<string, string> = {
+    maintain_cycle: "기본 신호 주기 유지",
+    emergency_priority: "긴급차량 우선",
+    all_red_safety: "전체 적색 안전 간격",
+    green_extension: "녹색 연장",
+    pedestrian_phase: "보행자 횡단"
+  };
+  return labels[value] ?? value;
 }
 
 function formatRecommendationAction(

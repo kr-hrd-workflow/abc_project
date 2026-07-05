@@ -10,7 +10,7 @@ type ChatReportPanelProps = {
   chat: ChatResponse | null;
   report: Report;
   locale: Locale;
-  onAskQuestion: (question: string) => Promise<void>;
+  onAskQuestion: (question: string, locale: Locale) => Promise<void>;
   onGenerateReport: () => Promise<void>;
 };
 
@@ -23,6 +23,7 @@ export function ChatReportPanel({
 }: ChatReportPanelProps) {
   const t = copy[locale];
   const [question, setQuestion] = useState("");
+  const [lastQuestion, setLastQuestion] = useState("");
   const [chatState, setChatState] = useState<"idle" | "submitting">("idle");
   const [chatError, setChatError] = useState(false);
   const [reportState, setReportState] = useState<"idle" | "generating">("idle");
@@ -35,7 +36,8 @@ export function ChatReportPanel({
     setChatState("submitting");
     setChatError(false);
     try {
-      await onAskQuestion(trimmed);
+      await onAskQuestion(trimmed, locale);
+      setLastQuestion(trimmed);
       setQuestion("");
     } catch {
       setChatError(true);
@@ -73,59 +75,32 @@ export function ChatReportPanel({
         <div className="panel-heading">
           <div className="heading-copy">
             <h2>{t.aiAgent}</h2>
-            <span>AI Agent</span>
+            <span>{locale === "ko" ? "AI 지원" : "AI Agent"}</span>
           </div>
-          <span className="online">Online</span>
+          <span className="online">{locale === "ko" ? "온라인" : "Online"}</span>
         </div>
         <div className="chat-thread">
           <div className="chat-prompt-label">
             <strong>{t.askPrompt}</strong>
-            <span>Ask about current traffic situation</span>
-          </div>
-          <div className="message-bubble user-message">
-            <p>
+            <span>
               {locale === "ko"
-                ? "현재 교차로 상황과 권고 조치의 효과는 어떤가요?"
-                : "What is the current intersection status and recommendation effect?"}
-            </p>
-            <time>08:42</time>
+                ? "현재 교통 상황을 질문하세요"
+                : "Ask about current traffic situation"}
+            </span>
           </div>
+          {lastQuestion ? (
+            <div className="message-bubble user-message">
+              <p>{lastQuestion}</p>
+              <time>{formatChatTime()}</time>
+            </div>
+          ) : null}
           <div className="message-row">
             <span className="agent-avatar" aria-hidden="true" />
             <div className="message-bubble assistant-message">
-              {chat?.sections ? (
-                <div className="agent-sections">
-                  <section>
-                    <h3>{t.agentCurrentSituation}</h3>
-                    <p>{chat.sections.current_situation}</p>
-                  </section>
-                  <section>
-                    <h3>{t.agentRecommendedAction}</h3>
-                    <p>{chat.sections.recommended_action}</p>
-                  </section>
-                  <section>
-                    <h3>{t.agentRecommendationRationale}</h3>
-                    <ul>
-                      {chat.sections.recommendation_rationale.map((item, index) => (
-                        <li key={`${item}-${index}`}>{item}</li>
-                      ))}
-                    </ul>
-                  </section>
-                  <section>
-                    <h3>{t.agentAuthorityLimit}</h3>
-                    <p>{chat.sections.authority_limit}</p>
-                  </section>
-                  <section>
-                    <h3>{t.agentSimulationResult}</h3>
-                    <p>{chat.sections.simulation_result}</p>
-                  </section>
-                </div>
-              ) : (
-                <p className={chat ? "" : "chat-empty"}>
-                  {chat?.answer ?? t.chatEmpty}
-                </p>
-              )}
-              <time>08:42</time>
+              <p className={chat ? "" : "chat-empty"}>
+                {chat?.answer ?? t.chatEmpty}
+              </p>
+              <time>{formatChatTime()}</time>
             </div>
           </div>
         </div>
@@ -161,7 +136,7 @@ export function ChatReportPanel({
         <div className="panel-heading">
           <div className="heading-copy">
             <h2>{t.reports}</h2>
-            <span>Reports</span>
+            <span>{locale === "ko" ? "운영 리포트" : "Reports"}</span>
           </div>
         </div>
         <button
@@ -171,8 +146,10 @@ export function ChatReportPanel({
           disabled={reportState === "generating"}
         >
           <span aria-hidden="true" className="report-icon" />
-          <span>{reportState === "generating" ? t.reportGenerating : t.generateReport}</span>
-          <small>Generate Report</small>
+          <span>
+            {reportState === "generating" ? t.reportGenerating : t.generateReport}
+          </span>
+          <small>{locale === "ko" ? "운영 리포트 생성" : "Generate Report"}</small>
         </button>
         {reportError ? (
           <p className="action-error" role="alert">
@@ -181,7 +158,7 @@ export function ChatReportPanel({
         ) : null}
         <div className="report-card">
           <span>{t.latestReport}</span>
-          <strong>{report.summary}</strong>
+          <strong>{formatReportSummary(report.summary, locale)}</strong>
           <dl>
             <div>
               <dt>{t.generatedTime}</dt>
@@ -201,4 +178,20 @@ export function ChatReportPanel({
       </div>
     </section>
   );
+}
+
+function formatChatTime() {
+  return new Date().toLocaleTimeString([], {
+    hour: "2-digit",
+    minute: "2-digit"
+  });
+}
+
+function formatReportSummary(summary: string, locale: Locale) {
+  if (locale !== "ko") return summary;
+  const labels: Record<string, string> = {
+    "10-minute traffic summary for INT-0001: south has the longest queue with 5 vehicles. Congestion level is low. No emergency vehicle approach detected. No pedestrian waiting request is active.":
+      "INT-0001 10분 교통 요약: 남측 접근부 대기열이 5대로 가장 깁니다. 혼잡도는 낮고, 긴급차량 접근이나 보행자 대기 요청은 감지되지 않았습니다."
+  };
+  return labels[summary] ?? summary;
 }

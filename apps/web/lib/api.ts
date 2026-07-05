@@ -13,6 +13,7 @@ import type {
   TrafficEvent,
   UploadAnalysisResult
 } from "./types";
+import type { Locale } from "./i18n";
 import type { SimulationFrameSnapshot } from "./simulationSnapshot";
 
 const API_BASE_URL = normalizeApiBaseUrl(
@@ -131,12 +132,13 @@ export function isSimulationFrameRouteMissingError(error: unknown): boolean {
 
 export async function askQuestion(
   question: string,
-  scenarioId?: ScenarioId
+  scenarioId?: ScenarioId,
+  locale?: Locale
 ): Promise<ChatResponse> {
   try {
     return await requestScenarioJson<ChatResponse>("/api/chat", scenarioId, {
       method: "POST",
-      body: JSON.stringify({ question })
+      body: JSON.stringify({ question, locale })
     });
   } catch (error) {
     if (isMissingRouteError(error)) {

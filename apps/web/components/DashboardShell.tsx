@@ -55,7 +55,7 @@ export type DashboardShellProps = {
   cityProfile: CityProfile;
   scenePresentation: ScenePresentationState;
   onScenePresentationChange: (next: ScenePresentationState) => void;
-  onAskQuestion: (question: string) => Promise<void>;
+  onAskQuestion: (question: string, locale: Locale) => Promise<void>;
   onGenerateReport: () => Promise<void>;
   onIngestFixture: (fixtureId: string) => Promise<FixtureIngestResult>;
   onAnalyzeUpload: (file: File) => Promise<UploadAnalysisResult>;
@@ -122,7 +122,7 @@ export function DashboardShell({
           locale === "ko" ? "자동 준비 중" : "Preparing automatically",
           locale === "ko" ? "신뢰도 92%" : "Confidence 92%",
           locale === "ko"
-            ? `다음 권고 ${recommendation.action}`
+            ? `다음 권고 ${formatActionToken(recommendation.action)}`
             : `Next recommendation ${recommendation.action}`
         ]
       : [
@@ -188,15 +188,15 @@ export function DashboardShell({
             </small>
             <em>{cityMobilityProfile}</em>
           </section>
-          <div className="incident-token" aria-label="Current incident">
+          <div className="incident-token" aria-label={locale === "ko" ? "현재 사건" : "Current incident"}>
             <span>INC-2025-0516-0007</span>
-            <strong>{locale === "ko" ? "Active" : "Active"}</strong>
+            <strong>{locale === "ko" ? "운영 중" : "Active"}</strong>
           </div>
-          <div className="live-clock" aria-label="Live clock">
-            <span>Live</span>
+          <div className="live-clock" aria-label={locale === "ko" ? "실시간 시각" : "Live clock"}>
+            <span>{locale === "ko" ? "실시간" : "Live"}</span>
             <strong>{new Date(status.captured_at).toLocaleTimeString("en-GB")}</strong>
           </div>
-          <div className="status-strip" aria-label="Dashboard status">
+          <div className="status-strip" aria-label={locale === "ko" ? "대시보드 상태" : "Dashboard status"}>
             <div className="status-chip success">
               <span>
                 <strong>{t.analysisReady}</strong>
@@ -210,7 +210,7 @@ export function DashboardShell({
               </span>
             </div>
           </div>
-          <nav className="top-actions" aria-label="Dashboard actions">
+          <nav className="top-actions" aria-label={locale === "ko" ? "대시보드 작업" : "Dashboard actions"}>
             <a href="#events" className="icon-action alert-action motion-pressable command-pressable">
               <span aria-hidden="true" className="toolbar-icon bell" />
               <span>{t.alerts}</span>
@@ -249,7 +249,7 @@ export function DashboardShell({
                 onClick={() => setOperationMode("ai")}
               >
                 <strong>{t.aiAutomatic}</strong>
-                <small>{locale === "ko" ? "AI Automatic" : "Autonomy guard"}</small>
+                <small>{locale === "ko" ? "AI 자동화" : "Autonomy guard"}</small>
               </button>
               <button
                 type="button"
@@ -259,7 +259,7 @@ export function DashboardShell({
                 onClick={() => setOperationMode("manual")}
               >
                 <strong>{t.adminManual}</strong>
-                <small>{locale === "ko" ? "Admin Manual" : "Human approval"}</small>
+                <small>{locale === "ko" ? "운영자 승인" : "Human approval"}</small>
               </button>
             </div>
             <div
@@ -348,14 +348,18 @@ export function DashboardShell({
             </div>
           </section>
           <div className="safety-command-banner" role="status">
-            <strong>Simulation only / No real signal control</strong>
+            <strong>
+              {locale === "ko"
+                ? "시뮬레이션 전용 / 실제 신호 제어 없음"
+                : "Simulation only / No real signal control"}
+            </strong>
             <span>{t.safetyCopy}</span>
           </div>
           <div className="operator-card" aria-label={t.operator}>
             <span aria-hidden="true" className="operator-avatar" />
             <div>
               <strong>{t.operator}</strong>
-              <small>Operator A</small>
+              <small>{locale === "ko" ? "운영자 A" : "Operator A"}</small>
             </div>
             <span aria-hidden="true" className="chevron" />
           </div>
@@ -363,16 +367,24 @@ export function DashboardShell({
       </header>
 
       <div className="dashboard-grid cockpit-grid">
-        <aside className="cockpit-left motion-enter" data-mobile-priority="incidents" aria-label="Operational detail rail">
-          <div className="rail-kicker">Live evidence rail</div>
+        <aside
+          className="cockpit-left motion-enter"
+          data-mobile-priority="incidents"
+          aria-label={locale === "ko" ? "운영 상세 레일" : "Operational detail rail"}
+        >
+          <div className="rail-kicker">
+            {locale === "ko" ? "실시간 증거 레일" : "Live evidence rail"}
+          </div>
           <EventTimeline events={events} locale={locale} />
         </aside>
         <section
           className="cockpit-center motion-enter"
-          aria-label="Spatial command surface"
+          aria-label={locale === "ko" ? "공간 명령 화면" : "Spatial command surface"}
           data-mobile-priority="map"
         >
-          <div className="spatial-command-kicker">Spatial command</div>
+          <div className="spatial-command-kicker">
+            {locale === "ko" ? "공간 명령" : "Spatial command"}
+          </div>
           <DigitalTwin
             status={status}
             events={events}
@@ -388,16 +400,18 @@ export function DashboardShell({
         </section>
         <aside
           className="cockpit-right motion-enter"
-          aria-label="Command decision rail"
+          aria-label={locale === "ko" ? "명령 의사결정 레일" : "Command decision rail"}
           data-mobile-priority="response"
         >
-          <div className="rail-kicker">Operator action stack</div>
+          <div className="rail-kicker">
+            {locale === "ko" ? "운영자 조치 스택" : "Operator action stack"}
+          </div>
           <div className="response-plan-heading">
-            <span>Response Plan</span>
-            <small>Response stack</small>
+            <span>{locale === "ko" ? "대응 계획" : "Response Plan"}</span>
+            <small>{locale === "ko" ? "대응 스택" : "Response stack"}</small>
           </div>
           <div className="response-focus-card">
-            <span>Decision focus</span>
+            <span>{locale === "ko" ? "판단 초점" : "Decision focus"}</span>
             <strong>{locale === "ko" ? "권고안 검토" : "Recommendation review"}</strong>
             <small>{locale === "ko" ? "실행 전 승인 필요" : "Approval required before execution"}</small>
           </div>
@@ -406,22 +420,13 @@ export function DashboardShell({
             locale={locale}
             onRefreshRecommendation={onRefreshRecommendation}
           />
-          <MetricsPanel status={status} simulation={simulation} locale={locale} />
-          <CctvFlowPanel flow={cctvFlow} locale={locale} />
-          <ChatReportPanel
-            chat={chat}
-            report={report}
-            locale={locale}
-            onAskQuestion={onAskQuestion}
-            onGenerateReport={onGenerateReport}
-          />
         </aside>
       </div>
 
       <section
         id="scenario-control"
         className="scenario-control scenario-rail motion-enter"
-        aria-label="Scenario Rail"
+        aria-label={locale === "ko" ? "시나리오 레일" : "Scenario Rail"}
       >
         <div className="scenario-control-copy">
           <strong>{selectedScenarioLabel ? selectedScenarioLabel : t.scenario}</strong>
@@ -461,6 +466,21 @@ export function DashboardShell({
         </div>
       </section>
 
+      <section
+        className="dashboard-detail-grid motion-enter"
+        aria-label={locale === "ko" ? "운영자 작업 세부 정보" : "Operator workflow details"}
+      >
+        <MetricsPanel status={status} simulation={simulation} locale={locale} />
+        <CctvFlowPanel flow={cctvFlow} locale={locale} />
+        <ChatReportPanel
+          chat={chat}
+          report={report}
+          locale={locale}
+          onAskQuestion={onAskQuestion}
+          onGenerateReport={onGenerateReport}
+        />
+      </section>
+
       <AnalysisIntakePanel
         fixtures={fixtures}
         latestFixtureIngest={latestFixtureIngest}
@@ -472,4 +492,16 @@ export function DashboardShell({
       />
     </main>
   );
+}
+
+function formatActionToken(action: string) {
+  const labels: Record<string, string> = {
+    maintain_cycle: "기본 신호 주기 유지",
+    emergency_priority: "긴급차량 우선",
+    all_red_safety: "전체 적색 안전 간격",
+    green_extension: "녹색 연장",
+    pedestrian_phase: "보행자 횡단"
+  };
+
+  return labels[action] ?? action;
 }
