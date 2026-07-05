@@ -1,22 +1,22 @@
 {
-  "baseline_id": "r3f-dashboard-visual-baseline-2026-07-04-day-fill-ground-atlas",
+  "baseline_id": "r3f-dashboard-visual-baseline-2026-07-05-day-scene-fill",
   "source_artifact": "artifacts/r3f-dashboard-details.json",
   "desktop": {
     "canvas_metrics": {
       "width": 914,
       "height": 680,
       "sampled_pixels": 621520,
-      "non_background_ratio": 0.9620993692881967,
-      "bright_ratio": 0.26724964602908996,
-      "dark_ratio": 0.07398313811301326,
-      "warm_light_ratio": 0.0019275325009653751,
-      "cool_light_ratio": 0.049358025485905524,
-      "marking_ratio": 0.3235133221778865,
-      "saturated_ratio": 0.46248712833054445,
-      "color_bucket_count": 507,
-      "luminance_stddev": 64.33544760828592
+      "non_background_ratio": 0.9798059595829579,
+      "bright_ratio": 0.5853295147380615,
+      "dark_ratio": 0.04583762388981851,
+      "warm_light_ratio": 0.0018132964345475607,
+      "cool_light_ratio": 0.01681361822628395,
+      "marking_ratio": 0.64699929205818,
+      "saturated_ratio": 0.15737063972197193,
+      "color_bucket_count": 632,
+      "luminance_stddev": 67.57865786824935
     }
   },
-  "generated_at": "2026-07-04T11:28:18.815Z",
-  "baseline_reason": "Re-baselined for Task 5 (feat/r3f-seoul-day-scene-fill): imagegen photoreal ground — sidewalk paver atlas + urban-ground base-color maps (dark procedural tints lifted so the albedo maps read), four corner plaza plates with yellow tactile L-strips at the crosswalk corners, and the NS/EW sidewalk slab split for orientation-correct square paver tiling. Intentional brightening of the ground bands moved bright_ratio/marking_ratio beyond the old thresholds (bright_ratio delta ~0.26). Day render reviewed via codex CLI -> PASS (all 4 plazas visible, tactile strips aligned, no objectionable tiling, no baked-shadow conflict). Thresholds unchanged in verify-r3f-visual-diff.mjs."
+  "generated_at": "2026-07-05T08:09:07.208Z",
+  "baseline_reason": "Re-baselined for Task 10 (feat/r3f-seoul-day-scene-fill): full day scene-fill landed (Tasks 1-9) — photoreal ground atlas + corner plazas, periphery distant tints + textured edge blocks, manhole/wear road decals, regenerated rooftop variety, north-skyline dedup, aerial-perspective hazy far field, and periphery edge-block lateral clearance. The added static fill (brighter ground bands + denser markings) moved bright_ratio (~0.27->0.59) and marking_ratio (~0.32->0.65) beyond the old thresholds. Operator day-high (operatorWide, PRODUCT-BINDING) + operator CCTV (operatorCctv via ?viewpoint=cctv, PRODUCT-BINDING) + photorealProof (observational) reviewed via codex CLI -> PASS x3 on the in-scope scene-fill criterion (stylized vehicle/signal art is C-phase out of scope; pale-blue distant mass is intended aerial perspective, not a placeholder). Thresholds in verify-r3f-visual-diff.mjs UNTOUCHED."
 }
