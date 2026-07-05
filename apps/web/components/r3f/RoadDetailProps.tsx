@@ -1,10 +1,30 @@
 "use client";
 
-import { memo, useEffect, useMemo } from "react";
-import { SRGBColorSpace, type Texture } from "three";
+import { memo, useEffect, useMemo, useRef, type ReactNode } from "react";
+import {
+  CanvasTexture,
+  Color,
+  DoubleSide,
+  Euler,
+  LinearFilter,
+  Matrix4,
+  PlaneGeometry,
+  Quaternion,
+  SRGBColorSpace,
+  Vector3,
+  type BufferGeometry,
+  type InstancedMesh,
+  type Texture
+} from "three";
+import { mergeGeometries } from "three/examples/jsm/utils/BufferGeometryUtils.js";
 
 import type { R3FAssetId } from "./assetManifest";
-import { CanvasTextPlane } from "./CanvasTextPlane";
+import {
+  CANVAS_TEXT_CELL_HEIGHT,
+  CANVAS_TEXT_CELL_WIDTH,
+  drawCanvasTextCell,
+  type CanvasTextCellOptions
+} from "./CanvasTextPlane";
 import type { Vector3Tuple } from "./roadGeometry";
 import {
   createStage6WeatherAtlasCellTexture,
@@ -215,6 +235,128 @@ export const ROAD_DETAIL_PROP_SPECS: RoadDetailPropSpec[] = [
   }
 ];
 
+// --- Instancing plan ------------------------------------------------------
+// The scene renders every repeated same-geometry+same-material primitive through
+// a single InstancedMesh instead of one <mesh> per prop. The plan partitions the
+// specs by kind (each kind maps to a fixed geometry+material family); the render
+// pass then splits a compound kind (road_sign, bus_stop_shelter, storm_drain,
+// tactile_paving) into one InstancedMesh per sub-material. Genuinely per-instance
+// content (the CanvasTextPlane labels) stays as individual meshes.
+
+export type RoadDetailInstanceGroup = {
+  key: string;
+  kind: RoadDetailPropKind;
+  specs: RoadDetailPropSpec[];
+};
+
+export function buildRoadDetailInstancingPlan(
+  specs: readonly RoadDetailPropSpec[] = ROAD_DETAIL_PROP_SPECS
+): RoadDetailInstanceGroup[] {
+  const byKind = new Map<RoadDetailPropKind, RoadDetailPropSpec[]>();
+  for (const spec of specs) {
+    const bucket = byKind.get(spec.kind);
+    if (bucket) bucket.push(spec);
+    else byKind.set(spec.kind, [spec]);
+  }
+  return [...byKind].map(([kind, kindSpecs]) => ({
+    key: `${kind}-instances`,
+    kind,
+    specs: kindSpecs
+  }));
+}
+
+// --- World-matrix helpers -------------------------------------------------
+// Reproduce the exact world transform Three would compute for each original
+// mesh so the instanced output is pixel-equivalent. Simple props were a single
+// <mesh position rotationY scale>; compound props were sub-meshes inside a
+// <group position rotationY> with their own local position+scale.
+const _pos = new Vector3();
+const _quat = new Quaternion();
+const _euler = new Euler();
+const _scale = new Vector3();
+
+function meshMatrix(
+  position: Vector3Tuple,
+  rotationY: number,
+  scale: Vector3Tuple
+): Matrix4 {
+  return new Matrix4().compose(
+    _pos.set(position[0], position[1], position[2]),
+    _quat.setFromEuler(_euler.set(0, rotationY, 0)),
+    _scale.set(scale[0], scale[1], scale[2])
+  );
+}
+
+// world = parent(group position+rotationY) · local(child position+scale)
+function childMeshMatrix(
+  groupPosition: Vector3Tuple,
+  groupRotationY: number,
+  localPosition: Vector3Tuple,
+  localScale: Vector3Tuple
+): Matrix4 {
+  return meshMatrix(groupPosition, groupRotationY, [1, 1, 1]).multiply(
+    meshMatrix(localPosition, 0, localScale)
+  );
+}
+
+function signPoleHeight(spec: RoadDetailPropSpec): number {
+  return Math.max(1.8, spec.position[1] - spec.scale[1] * 0.18);
+}
+
+// --- Instanced primitive --------------------------------------------------
+// Shared by RoadDetailProps and SignalHardware. `colors` (one hex per matrix)
+// rides instanceColor on a white base material, so groups that differ ONLY by
+// color merge into a single draw call with exact per-instance colors.
+const _instanceColor = new Color();
+
+export function InstancedProceduralMesh({
+  name,
+  matrices,
+  colors,
+  userData,
+  receiveShadow = false,
+  children
+}: {
+  name: string;
+  matrices: Matrix4[];
+  colors?: readonly string[];
+  userData?: Record<string, unknown>;
+  receiveShadow?: boolean;
+  children: ReactNode; // geometry + material JSX
+}) {
+  const meshRef = useRef<InstancedMesh>(null);
+
+  useEffect(() => {
+    const mesh = meshRef.current;
+    // jsdom/mocked Canvas renders host tags as inert DOM nodes with no
+    // InstancedMesh API — no-op there (matches instancedBatches' guard).
+    if (!mesh || typeof mesh.setMatrixAt !== "function") return;
+    matrices.forEach((matrix, index) => mesh.setMatrixAt(index, matrix));
+    mesh.instanceMatrix.needsUpdate = true;
+    if (colors && typeof mesh.setColorAt === "function") {
+      colors.forEach((color, index) =>
+        mesh.setColorAt(index, _instanceColor.set(color))
+      );
+      if (mesh.instanceColor) mesh.instanceColor.needsUpdate = true;
+    }
+    mesh.computeBoundingSphere();
+  }, [matrices, colors]);
+
+  if (matrices.length === 0) return null;
+
+  return (
+    <instancedMesh
+      ref={meshRef}
+      name={name}
+      args={[undefined, undefined, matrices.length]}
+      receiveShadow={receiveShadow}
+      userData={userData}
+    >
+      {children}
+    </instancedMesh>
+  );
+}
+
 function RoadDetailPropsComponent() {
   const atlasTexture = useStage6WeatherAtlasTexture();
   const atlasTextures = useMemo<RoadDetailPropAtlasTextures>(
@@ -245,6 +387,159 @@ function RoadDetailPropsComponent() {
     [atlasTextures]
   );
 
+  const specsByKind = useMemo(() => {
+    const map = {} as Record<RoadDetailPropKind, RoadDetailPropSpec[]>;
+    for (const group of buildRoadDetailInstancingPlan(ROAD_DETAIL_PROP_SPECS)) {
+      map[group.kind] = group.specs;
+    }
+    return map;
+  }, []);
+
+  // 2026-07-04 draw-call reduction: sub-material groups that share a geometry
+  // family and a material KIND (opaque meshStandardMaterial, no map) are merged
+  // into single InstancedMesh batches; the per-group color moves to
+  // instanceColor (exact — white base x instance color). Only roughness/
+  // metalness are averaged within a batch, imperceptible on these small dark
+  // props. 14 instanced groups -> 7.
+  const matrices = useMemo(() => {
+    const bollards = specsByKind.bollard ?? [];
+    const cones = specsByKind.traffic_cone ?? [];
+    const guardrails = specsByKind.guardrail ?? [];
+    const stormDrains = specsByKind.storm_drain ?? [];
+    const tactile = specsByKind.tactile_paving ?? [];
+    const signs = specsByKind.road_sign ?? [];
+    const shelters = specsByKind.bus_stop_shelter ?? [];
+
+    const entry = (matrix: Matrix4, color: string) => ({ matrix, color });
+
+    // Cylinders: bollards + sign poles (sign poles were 10-segment, now share
+    // the 14-segment unit cylinder — invisible at 0.08 m radius).
+    const cylinders = [
+      ...bollards.map((s) =>
+        entry(meshMatrix(s.position, s.rotationY, s.scale), "#b8bfc0")
+      ),
+      ...signs.map((s) =>
+        entry(
+          childMeshMatrix(
+            s.position,
+            s.rotationY,
+            [0, -signPoleHeight(s) / 2, 0],
+            [0.08, signPoleHeight(s), 0.08]
+          ),
+          "#59666b"
+        )
+      )
+    ];
+
+    // Tactile paving base + band.
+    const tactileBoxes = [
+      ...tactile.map((s) =>
+        entry(meshMatrix(s.position, s.rotationY, s.scale), "#b5a94e")
+      ),
+      ...tactile.map((s) =>
+        entry(
+          childMeshMatrix(s.position, s.rotationY, [0, 0.05, 0], [
+            s.scale[0] * 0.72,
+            0.035,
+            s.scale[2] * 0.92
+          ]),
+          "#d0bf5b"
+        )
+      )
+    ];
+
+    // Dark metal/concrete boxes: storm drains (base+grate), sign backings,
+    // shelter floors/roofs/posts.
+    const darkBoxes = [
+      ...stormDrains.map((s) =>
+        entry(meshMatrix(s.position, s.rotationY, s.scale), "#20282b")
+      ),
+      ...stormDrains.map((s) =>
+        entry(
+          childMeshMatrix(s.position, s.rotationY, [0, 0.04, 0], [
+            s.scale[0] * 0.78,
+            0.018,
+            s.scale[2] * 1.08
+          ]),
+          "#667177"
+        )
+      ),
+      ...signs.map((s) =>
+        entry(meshMatrix(s.position, s.rotationY, s.scale), "#435156")
+      ),
+      ...shelters.map((s) =>
+        entry(
+          childMeshMatrix(s.position, s.rotationY, [0, -0.96, 0], [
+            s.scale[0],
+            0.08,
+            s.scale[2]
+          ]),
+          "#2d363a"
+        )
+      ),
+      ...shelters.map((s) =>
+        entry(
+          childMeshMatrix(s.position, s.rotationY, [0, 1.28, 0], [
+            s.scale[0] * 1.08,
+            0.14,
+            s.scale[2] * 1.08
+          ]),
+          "#263138"
+        )
+      ),
+      ...shelters.flatMap((s) =>
+        [-1, 1].map((side) =>
+          entry(
+            childMeshMatrix(
+              s.position,
+              s.rotationY,
+              [side * s.scale[0] * 0.42, 0, 0.42],
+              [0.08, s.scale[1], 0.08]
+            ),
+            "#5f6b70"
+          )
+        )
+      )
+    ];
+
+    return {
+      cone: cones.map((s) => meshMatrix(s.position, s.rotationY, s.scale)),
+      guardrail: guardrails.map((s) =>
+        meshMatrix(s.position, s.rotationY, s.scale)
+      ),
+      signFace: signs.map((s) =>
+        childMeshMatrix(
+          s.position,
+          s.rotationY,
+          [0, 0, s.scale[2] * 0.5 + 0.004],
+          [s.scale[0], s.scale[1], 1]
+        )
+      ),
+      shelterGlass: shelters.map((s) =>
+        childMeshMatrix(s.position, s.rotationY, [0, 0.05, -0.48], [
+          s.scale[0],
+          s.scale[1],
+          0.08
+        ])
+      ),
+      cylinders: {
+        matrices: cylinders.map((e) => e.matrix),
+        colors: cylinders.map((e) => e.color)
+      },
+      tactile: {
+        matrices: tactileBoxes.map((e) => e.matrix),
+        colors: tactileBoxes.map((e) => e.color)
+      },
+      darkBoxes: {
+        matrices: darkBoxes.map((e) => e.matrix),
+        colors: darkBoxes.map((e) => e.color)
+      }
+    };
+  }, [specsByKind]);
+
+  const signSpecs = specsByKind.road_sign ?? [];
+  const shelterSpecs = specsByKind.bus_stop_shelter ?? [];
+
   return (
     <group
       name="stage6-road-detail-props"
@@ -254,74 +549,26 @@ function RoadDetailPropsComponent() {
         proceduralProxyReason: "background road props without new asset downloads"
       }}
     >
-      {ROAD_DETAIL_PROP_SPECS.map((prop) => (
-        <RoadDetailProp
-          key={prop.id}
-          atlasTextures={atlasTextures}
-          prop={prop}
-        />
-      ))}
-    </group>
-  );
-}
-
-export const RoadDetailProps = memo(RoadDetailPropsComponent);
-RoadDetailProps.displayName = "RoadDetailProps";
-
-function RoadDetailProp({
-  atlasTextures,
-  prop
-}: {
-  atlasTextures: RoadDetailPropAtlasTextures;
-  prop: RoadDetailPropSpec;
-}) {
-  if (prop.kind === "traffic_cone") {
-    return (
-      <mesh
-        name={prop.id}
-        position={prop.position}
-        rotation={[0, prop.rotationY, 0]}
-        scale={prop.scale}
-        userData={prop}
-      >
-        <coneGeometry args={[0.42, 1, 10]} />
-        <meshStandardMaterial
-          color="#d06437"
-          roughness={0.58}
-          metalness={0.02}
-        />
-      </mesh>
-    );
-  }
-
-  if (prop.kind === "bollard") {
-    return (
-      <mesh
-        name={prop.id}
-        position={prop.position}
-        rotation={[0, prop.rotationY, 0]}
-        scale={prop.scale}
-        userData={prop}
+      <InstancedProceduralMesh
+        name="road-detail-cylinders"
+        matrices={matrices.cylinders.matrices}
+        colors={matrices.cylinders.colors}
       >
         <cylinderGeometry args={[1, 1, 1, 14]} />
-        <meshStandardMaterial
-          color="#b8bfc0"
-          roughness={0.42}
-          metalness={0.28}
-        />
-      </mesh>
-    );
-  }
+        {/* ponytail: bollards+sign poles share one averaged metal material
+            (was r0.42/m0.28 and r0.5/m0.24); split again if it ever shows */}
+        <meshStandardMaterial color="#ffffff" roughness={0.46} metalness={0.26} />
+      </InstancedProceduralMesh>
 
-  if (prop.kind === "guardrail") {
-    return (
-      <mesh
-        name={prop.id}
-        position={prop.position}
-        rotation={[0, prop.rotationY, 0]}
-        scale={prop.scale}
+      <InstancedProceduralMesh name="road-detail-traffic-cones" matrices={matrices.cone}>
+        <coneGeometry args={[0.42, 1, 10]} />
+        <meshStandardMaterial color="#d06437" roughness={0.58} metalness={0.02} />
+      </InstancedProceduralMesh>
+
+      <InstancedProceduralMesh
+        name="road-detail-guardrails"
+        matrices={matrices.guardrail}
         userData={{
-          ...prop,
           atlasCell: ROAD_DETAIL_PROP_ATLAS_CELLS.guardrail,
           sourceAsset: STAGE6_WEATHER_ATLAS_ASSET_ID
         }}
@@ -334,151 +581,32 @@ function RoadDetailProp({
           metalness={0.38}
           envMapIntensity={0.72}
         />
-      </mesh>
-    );
-  }
+      </InstancedProceduralMesh>
 
-  if (prop.kind === "bus_stop_shelter") {
-    return (
-      <group
-        name={prop.id}
-        position={prop.position}
-        rotation={[0, prop.rotationY, 0]}
-        userData={prop}
+      <InstancedProceduralMesh
+        name="road-detail-tactile-paving"
+        matrices={matrices.tactile.matrices}
+        colors={matrices.tactile.colors}
       >
-        <mesh position={[0, -0.96, 0]} scale={[prop.scale[0], 0.08, prop.scale[2]]}>
-          <boxGeometry args={[1, 1, 1]} />
-          <meshStandardMaterial color="#2d363a" roughness={0.66} metalness={0.12} />
-        </mesh>
-        <mesh position={[0, 0.05, -0.48]} scale={[prop.scale[0], prop.scale[1], 0.08]}>
-          <boxGeometry args={[1, 1, 1]} />
-          <meshStandardMaterial
-            color="#6b838c"
-            roughness={0.34}
-            metalness={0.18}
-            transparent
-            opacity={0.44}
-          />
-        </mesh>
-        <mesh position={[0, 1.28, 0]} scale={[prop.scale[0] * 1.08, 0.14, prop.scale[2] * 1.08]}>
-          <boxGeometry args={[1, 1, 1]} />
-          <meshStandardMaterial color="#263138" roughness={0.48} metalness={0.28} />
-        </mesh>
-        {[-1, 1].map((side) => (
-          <mesh
-            key={`${prop.id}-post-${side}`}
-            position={[side * prop.scale[0] * 0.42, 0, 0.42]}
-            scale={[0.08, prop.scale[1], 0.08]}
-          >
-            <boxGeometry args={[1, 1, 1]} />
-            <meshStandardMaterial color="#5f6b70" roughness={0.5} metalness={0.32} />
-          </mesh>
-        ))}
-        {prop.labelText ? (
-          <CanvasTextPlane
-            backgroundColor="rgba(17,50,61,0.86)"
-            borderColor="rgba(225,245,239,0.42)"
-            position={[0, 0.62, 0.5]}
-            renderOrder={7}
-            size={[prop.scale[0] * 0.72, 0.48]}
-            text={prop.labelText}
-            textColor="#effaf3"
-            userData={{
-              labelText: prop.labelText,
-              realBrandClaim: false,
-              transitCue: prop.transitCue,
-              visibilityTier: prop.visibilityTier
-            }}
-          />
-        ) : null}
-      </group>
-    );
-  }
-
-  if (prop.kind === "storm_drain") {
-    return (
-      <group
-        name={prop.id}
-        position={prop.position}
-        rotation={[0, prop.rotationY, 0]}
-        userData={prop}
-      >
-        <mesh scale={prop.scale}>
-          <boxGeometry args={[1, 1, 1]} />
-          <meshStandardMaterial color="#20282b" roughness={0.58} metalness={0.46} />
-        </mesh>
-        <mesh
-          name={`${prop.id}-grate-lines`}
-          position={[0, 0.04, 0]}
-          scale={[prop.scale[0] * 0.78, 0.018, prop.scale[2] * 1.08]}
-        >
-          <boxGeometry args={[1, 1, 1]} />
-          <meshStandardMaterial color="#667177" roughness={0.48} metalness={0.5} />
-        </mesh>
-      </group>
-    );
-  }
-
-  if (prop.kind === "tactile_paving") {
-    return (
-      <group
-        name={prop.id}
-        position={prop.position}
-        rotation={[0, prop.rotationY, 0]}
-        userData={prop}
-      >
-        <mesh scale={prop.scale}>
-          <boxGeometry args={[1, 1, 1]} />
-          <meshStandardMaterial color="#b5a94e" roughness={0.7} metalness={0.03} />
-        </mesh>
-        <mesh
-          name={`${prop.id}-raised-tactile-band`}
-          position={[0, 0.05, 0]}
-          scale={[prop.scale[0] * 0.72, 0.035, prop.scale[2] * 0.92]}
-        >
-          <boxGeometry args={[1, 1, 1]} />
-          <meshStandardMaterial color="#d0bf5b" roughness={0.68} metalness={0.02} />
-        </mesh>
-      </group>
-    );
-  }
-
-  const signPoleHeight = Math.max(1.8, prop.position[1] - prop.scale[1] * 0.18);
-
-  return (
-    <group
-      name={prop.id}
-      position={prop.position}
-      rotation={[0, prop.rotationY, 0]}
-      userData={{
-        ...prop,
-        atlasCell: ROAD_DETAIL_PROP_ATLAS_CELLS.roadSign,
-        sourceAsset: STAGE6_WEATHER_ATLAS_ASSET_ID
-      }}
-    >
-      <mesh
-        position={[0, -signPoleHeight / 2, 0]}
-        scale={[0.08, signPoleHeight, 0.08]}
-      >
-        <cylinderGeometry args={[1, 1, 1, 10]} />
-        <meshStandardMaterial
-          color="#59666b"
-          roughness={0.5}
-          metalness={0.24}
-        />
-      </mesh>
-      <mesh scale={prop.scale}>
         <boxGeometry args={[1, 1, 1]} />
-        <meshStandardMaterial
-          color="#435156"
-          roughness={0.62}
-          metalness={0.08}
-        />
-      </mesh>
-      <mesh
-        name={`${prop.id}-atlas-face`}
-        position={[0, 0, prop.scale[2] * 0.5 + 0.004]}
-        scale={[prop.scale[0], prop.scale[1], 1]}
+        <meshStandardMaterial color="#ffffff" roughness={0.69} metalness={0.025} />
+      </InstancedProceduralMesh>
+
+      <InstancedProceduralMesh
+        name="road-detail-dark-boxes"
+        matrices={matrices.darkBoxes.matrices}
+        colors={matrices.darkBoxes.colors}
+      >
+        <boxGeometry args={[1, 1, 1]} />
+        {/* ponytail: storm drains + sign backings + shelter floors/roofs/posts
+            share one averaged dark material (r0.48-0.66/m0.08-0.5 originals);
+            split again if the compromise ever shows */}
+        <meshStandardMaterial color="#ffffff" roughness={0.55} metalness={0.29} />
+      </InstancedProceduralMesh>
+
+      <InstancedProceduralMesh
+        name="road-detail-sign-faces"
+        matrices={matrices.signFace}
         userData={{
           atlasCell: ROAD_DETAIL_PROP_ATLAS_CELLS.roadSign,
           sourceAsset: STAGE6_WEATHER_ATLAS_ASSET_ID
@@ -494,23 +622,190 @@ function RoadDetailProp({
           roughness={0.5}
           toneMapped={false}
         />
-      </mesh>
-      {prop.labelText ? (
-        <CanvasTextPlane
-          backgroundColor="rgba(16,67,78,0.9)"
-          borderColor="rgba(237,248,239,0.46)"
-          position={[0, 0, prop.scale[2] * 0.5 + 0.01]}
-          renderOrder={8}
-          size={[prop.scale[0] * 0.96, prop.scale[1] * 0.72]}
-          text={prop.labelText}
-          textColor="#f6fbf5"
-          userData={{
-            labelText: prop.labelText,
-            realBrandClaim: false,
-            visibilityTier: prop.visibilityTier
-          }}
+      </InstancedProceduralMesh>
+
+      <InstancedProceduralMesh name="road-detail-shelter-glass" matrices={matrices.shelterGlass}>
+        <boxGeometry args={[1, 1, 1]} />
+        <meshStandardMaterial
+          color="#6b838c"
+          roughness={0.34}
+          metalness={0.18}
+          transparent
+          opacity={0.44}
         />
-      ) : null}
+      </InstancedProceduralMesh>
+
+      {/* All unique canvas labels baked into ONE atlas texture + one merged
+          mesh (was 5 individual CanvasTextPlane meshes; 2026-07-04). */}
+      <RoadDetailLabelAtlas signSpecs={signSpecs} shelterSpecs={shelterSpecs} />
     </group>
   );
 }
+
+// --- Label atlas ------------------------------------------------------------
+// Bakes every labelText into one vertical canvas atlas (1024x512 per cell,
+// same cell drawing as CanvasTextPlane) and renders all label planes as ONE
+// mesh: per-label PlaneGeometries get their UVs remapped to their atlas row,
+// are transformed to their exact former world placement, and merged.
+type RoadDetailLabelCell = CanvasTextCellOptions & {
+  size: [number, number];
+  worldMatrix: Matrix4;
+  meta: Record<string, unknown>;
+};
+
+function buildRoadDetailLabelCells(
+  signSpecs: RoadDetailPropSpec[],
+  shelterSpecs: RoadDetailPropSpec[]
+): RoadDetailLabelCell[] {
+  const cells: RoadDetailLabelCell[] = [];
+  for (const spec of signSpecs) {
+    if (!spec.labelText) continue;
+    cells.push({
+      text: spec.labelText,
+      backgroundColor: "rgba(16,67,78,0.9)",
+      borderColor: "rgba(237,248,239,0.46)",
+      textColor: "#f6fbf5",
+      fontWeight: 800,
+      size: [spec.scale[0] * 0.96, spec.scale[1] * 0.72],
+      worldMatrix: childMeshMatrix(
+        spec.position,
+        spec.rotationY,
+        [0, 0, spec.scale[2] * 0.5 + 0.01],
+        [1, 1, 1]
+      ),
+      meta: {
+        labelText: spec.labelText,
+        realBrandClaim: false,
+        visibilityTier: spec.visibilityTier
+      }
+    });
+  }
+  for (const spec of shelterSpecs) {
+    if (!spec.labelText) continue;
+    cells.push({
+      text: spec.labelText,
+      backgroundColor: "rgba(17,50,61,0.86)",
+      borderColor: "rgba(225,245,239,0.42)",
+      textColor: "#effaf3",
+      fontWeight: 800,
+      size: [spec.scale[0] * 0.72, 0.48],
+      worldMatrix: childMeshMatrix(
+        spec.position,
+        spec.rotationY,
+        [0, 0.62, 0.5],
+        [1, 1, 1]
+      ),
+      meta: {
+        labelText: spec.labelText,
+        realBrandClaim: false,
+        transitCue: spec.transitCue,
+        visibilityTier: spec.visibilityTier
+      }
+    });
+  }
+  return cells;
+}
+
+function RoadDetailLabelAtlas({
+  signSpecs,
+  shelterSpecs
+}: {
+  signSpecs: RoadDetailPropSpec[];
+  shelterSpecs: RoadDetailPropSpec[];
+}) {
+  const cells = useMemo(
+    () => buildRoadDetailLabelCells(signSpecs, shelterSpecs),
+    [signSpecs, shelterSpecs]
+  );
+
+  const atlas = useMemo<{
+    texture: Texture;
+    geometry: BufferGeometry;
+  } | null>(() => {
+    if (
+      typeof document === "undefined" ||
+      isJsdomRuntime() ||
+      cells.length === 0
+    ) {
+      return null;
+    }
+
+    const canvas = document.createElement("canvas");
+    canvas.width = CANVAS_TEXT_CELL_WIDTH;
+    canvas.height = CANVAS_TEXT_CELL_HEIGHT * cells.length;
+    const context = canvas.getContext("2d");
+    if (!context) return null;
+
+    cells.forEach((cell, index) =>
+      drawCanvasTextCell(context, index * CANVAS_TEXT_CELL_HEIGHT, cell)
+    );
+
+    const texture = new CanvasTexture(canvas);
+    texture.colorSpace = SRGBColorSpace;
+    texture.anisotropy = 8;
+    texture.minFilter = LinearFilter;
+    texture.magFilter = LinearFilter;
+    texture.needsUpdate = true;
+
+    const cellCount = cells.length;
+    const planes = cells.map((cell, index) => {
+      const plane = new PlaneGeometry(cell.size[0], cell.size[1]);
+      const uv = plane.attributes.uv;
+      // Row `index` (top-down canvas, flipY texture) spans
+      // v in [1-(index+1)/n, 1-index/n].
+      for (let k = 0; k < uv.count; k += 1) {
+        uv.setY(k, (uv.getY(k) + (cellCount - 1 - index)) / cellCount);
+      }
+      plane.applyMatrix4(cell.worldMatrix);
+      return plane;
+    });
+    const geometry = mergeGeometries(planes);
+    planes.forEach((plane) => plane.dispose());
+    if (!geometry) {
+      texture.dispose();
+      return null;
+    }
+
+    return { texture, geometry };
+  }, [cells]);
+
+  useEffect(
+    () => () => {
+      atlas?.texture.dispose();
+      atlas?.geometry.dispose();
+    },
+    [atlas]
+  );
+
+  if (!atlas) return null;
+
+  return (
+    <mesh
+      name="road-detail-label-atlas"
+      geometry={atlas.geometry}
+      renderOrder={8}
+      userData={{
+        runtimeLabelRenderer: "canvas_texture_atlas",
+        labels: cells.map((cell) => cell.meta)
+      }}
+    >
+      <meshBasicMaterial
+        map={atlas.texture}
+        side={DoubleSide}
+        toneMapped={false}
+        transparent
+        depthWrite={false}
+      />
+    </mesh>
+  );
+}
+
+function isJsdomRuntime() {
+  return (
+    typeof window !== "undefined" &&
+    /jsdom/i.test(window.navigator.userAgent)
+  );
+}
+
+export const RoadDetailProps = memo(RoadDetailPropsComponent);
+RoadDetailProps.displayName = "RoadDetailProps";

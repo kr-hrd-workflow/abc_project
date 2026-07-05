@@ -89,6 +89,12 @@ vi.mock("./r3f/MarkingDecalLayer", () => ({
 vi.mock("./r3f/BuildingLayer", () => ({
   BuildingLayer: () => null
 }));
+// GroundDressingLayer (Task 5) loads corner-plaza plate textures via useTexture
+// (drei hook), which also requires a real R3F Canvas context. Stub it for the
+// same reason.
+vi.mock("./r3f/GroundDressingLayer", () => ({
+  GroundDressingLayer: () => null
+}));
 // LimitedOrbitControls wraps drei's OrbitControls, which calls useThree and thus
 // requires a real R3F Canvas context. Stub it — this suite renders SimulationScene
 // without a Canvas to assert CameraRig target application.
@@ -138,7 +144,6 @@ import type {
   Report,
   RuntimeReadiness,
   ScenarioId,
-  CityId,
   SimulationComparison,
   TrafficEvent
 } from "../lib/types";
@@ -369,9 +374,179 @@ const stage4RequiredAssetIds = [
   "decals/curb_grime",
   "textures/sidewalk_paver_variation",
   "textures/facade_window_emissive",
+  "textures/hero/gangnam-n-east-commercial_back",
+  "textures/hero/gangnam-n-east-commercial_front",
+  "textures/hero/gangnam-n-east-commercial_left",
+  "textures/hero/gangnam-n-east-commercial_right",
+  "textures/hero/gangnam-n-east-commercial_top",
+  "textures/hero/gangnam-n-east-fill_back",
+  "textures/hero/gangnam-n-east-fill_front",
+  "textures/hero/gangnam-n-east-fill_left",
+  "textures/hero/gangnam-n-east-fill_right",
+  "textures/hero/gangnam-n-east-fill_top",
+  "textures/hero/gangnam-n-west-commercial_back",
+  "textures/hero/gangnam-n-west-commercial_front",
+  "textures/hero/gangnam-n-west-commercial_left",
+  "textures/hero/gangnam-n-west-commercial_right",
+  "textures/hero/gangnam-n-west-commercial_top",
+  "textures/hero/gangnam-n-west-fill_back",
+  "textures/hero/gangnam-n-west-fill_front",
+  "textures/hero/gangnam-n-west-fill_left",
+  "textures/hero/gangnam-n-west-fill_right",
+  "textures/hero/gangnam-n-west-fill_top",
+  "textures/hero/gangnam-s-east-commercial_back",
+  "textures/hero/gangnam-s-east-commercial_front",
+  "textures/hero/gangnam-s-east-commercial_left",
+  "textures/hero/gangnam-s-east-commercial_right",
+  "textures/hero/gangnam-s-east-commercial_top",
+  "textures/hero/gangnam-s-east-fill_back",
+  "textures/hero/gangnam-s-east-fill_front",
+  "textures/hero/gangnam-s-east-fill_left",
+  "textures/hero/gangnam-s-east-fill_right",
+  "textures/hero/gangnam-s-east-fill_top",
+  "textures/hero/gangnam-s-west-commercial_back",
+  "textures/hero/gangnam-s-west-commercial_front",
+  "textures/hero/gangnam-s-west-commercial_left",
+  "textures/hero/gangnam-s-west-commercial_right",
+  "textures/hero/gangnam-s-west-commercial_top",
+  "textures/hero/gangnam-s-west-fill_back",
+  "textures/hero/gangnam-s-west-fill_front",
+  "textures/hero/gangnam-s-west-fill_left",
+  "textures/hero/gangnam-s-west-fill_right",
+  "textures/hero/gangnam-s-west-fill_top",
+  "textures/hero/gt-tower_back",
+  "textures/hero/gt-tower_front",
+  "textures/hero/gt-tower_left",
+  "textures/hero/gt-tower_right",
+  "textures/hero/gt-tower_top",
+  "textures/hero/meritz-tower_back",
+  "textures/hero/meritz-tower_front",
+  "textures/hero/meritz-tower_left",
+  "textures/hero/meritz-tower_right",
+  "textures/hero/meritz-tower_top",
+  "textures/hero/ne_back",
+  "textures/hero/ne_front",
+  "textures/hero/ne_left",
+  "textures/hero/ne_right",
+  "textures/hero/ne_top",
+  "textures/hero/nw_back",
+  "textures/hero/nw_front",
+  "textures/hero/nw_left",
+  "textures/hero/nw_right",
+  "textures/hero/nw_top",
+  "textures/hero/samsung-town-c2_back",
+  "textures/hero/samsung-town-c2_front",
+  "textures/hero/samsung-town-c2_left",
+  "textures/hero/samsung-town-c2_right",
+  "textures/hero/samsung-town-c2_top",
+  "textures/hero/samsung-town-c3_back",
+  "textures/hero/samsung-town-c3_front",
+  "textures/hero/samsung-town-c3_left",
+  "textures/hero/samsung-town-c3_right",
+  "textures/hero/samsung-town-c3_top",
+  "textures/hero/samsung-town-main_back",
+  "textures/hero/samsung-town-main_front",
+  "textures/hero/samsung-town-main_left",
+  "textures/hero/samsung-town-main_right",
+  "textures/hero/samsung-town-main_top",
+  "textures/hero/se_back",
+  "textures/hero/se_front",
+  "textures/hero/se_left",
+  "textures/hero/se_right",
+  "textures/hero/se_top",
+  "textures/hero/seocheo-n1_back",
+  "textures/hero/seocheo-n1_front",
+  "textures/hero/seocheo-n1_left",
+  "textures/hero/seocheo-n1_right",
+  "textures/hero/seocheo-n1_top",
+  "textures/hero/seocheo-s1_back",
+  "textures/hero/seocheo-s1_front",
+  "textures/hero/seocheo-s1_left",
+  "textures/hero/seocheo-s1_right",
+  "textures/hero/seocheo-s1_top",
+  "textures/hero/seocheo-s2_back",
+  "textures/hero/seocheo-s2_front",
+  "textures/hero/seocheo-s2_left",
+  "textures/hero/seocheo-s2_right",
+  "textures/hero/seocheo-s2_top",
+  "textures/hero/seocheo-w-mid_back",
+  "textures/hero/seocheo-w-mid_front",
+  "textures/hero/seocheo-w-mid_left",
+  "textures/hero/seocheo-w-mid_right",
+  "textures/hero/seocheo-w-mid_top",
+  "textures/hero/sw_back",
+  "textures/hero/sw_front",
+  "textures/hero/sw_left",
+  "textures/hero/sw_right",
+  "textures/hero/sw_top",
+  "textures/hero/teheran-e1-near_back",
+  "textures/hero/teheran-e1-near_front",
+  "textures/hero/teheran-e1-near_left",
+  "textures/hero/teheran-e1-near_right",
+  "textures/hero/teheran-e1-near_top",
+  "textures/hero/teheran-e2_back",
+  "textures/hero/teheran-e2_front",
+  "textures/hero/teheran-e2_left",
+  "textures/hero/teheran-e2_right",
+  "textures/hero/teheran-e2_top",
+  "textures/hero/teheran-e3_back",
+  "textures/hero/teheran-e3_front",
+  "textures/hero/teheran-e3_left",
+  "textures/hero/teheran-e3_right",
+  "textures/hero/teheran-e3_top",
+  "textures/hero/teheran-e4-far_back",
+  "textures/hero/teheran-e4-far_front",
+  "textures/hero/teheran-e4-far_left",
+  "textures/hero/teheran-e4-far_right",
+  "textures/hero/teheran-e4-far_top",
+  "textures/hero/teheran-frontage-n1_back",
+  "textures/hero/teheran-frontage-n1_front",
+  "textures/hero/teheran-frontage-n1_left",
+  "textures/hero/teheran-frontage-n1_right",
+  "textures/hero/teheran-frontage-n1_top",
+  "textures/hero/teheran-frontage-n2_back",
+  "textures/hero/teheran-frontage-n2_front",
+  "textures/hero/teheran-frontage-n2_left",
+  "textures/hero/teheran-frontage-n2_right",
+  "textures/hero/teheran-frontage-n2_top",
+  "textures/hero/teheran-frontage-n3_back",
+  "textures/hero/teheran-frontage-n3_front",
+  "textures/hero/teheran-frontage-n3_left",
+  "textures/hero/teheran-frontage-n3_right",
+  "textures/hero/teheran-frontage-n3_top",
+  "textures/hero/teheran-frontage-s1_back",
+  "textures/hero/teheran-frontage-s1_front",
+  "textures/hero/teheran-frontage-s1_left",
+  "textures/hero/teheran-frontage-s1_right",
+  "textures/hero/teheran-frontage-s1_top",
+  "textures/hero/teheran-frontage-s2_back",
+  "textures/hero/teheran-frontage-s2_front",
+  "textures/hero/teheran-frontage-s2_left",
+  "textures/hero/teheran-frontage-s2_right",
+  "textures/hero/teheran-frontage-s2_top",
+  "textures/hero/teheran-frontage-s3_back",
+  "textures/hero/teheran-frontage-s3_front",
+  "textures/hero/teheran-frontage-s3_left",
+  "textures/hero/teheran-frontage-s3_right",
+  "textures/hero/teheran-frontage-s3_top",
   "textures/vehicle_paint_detail",
   "textures/vehicle_paint_normal",
-  "sprites/stage6_weather_material_source_atlas"
+  "sprites/stage6_weather_material_source_atlas",
+  // Task 5 day-scene ground fill: imagegen ground atlas + corner plaza plates,
+  // plus the 3 pre-existing (previously unregistered) imagegen marking paints.
+  "textures/ground/sidewalk_atlas_a",
+  "textures/ground/sidewalk_atlas_b",
+  "textures/ground/urban_ground",
+  "textures/ground/edge_facade_strip",
+  "textures/ground/manhole",
+  "textures/ground/wear_patch",
+  "textures/ground/corner_plaza_ne",
+  "textures/ground/corner_plaza_nw",
+  "textures/ground/corner_plaza_se",
+  "textures/ground/corner_plaza_sw",
+  "markings/white_paint",
+  "markings/yellow_paint",
+  "markings/blue_paint"
 ];
 
 const runtimeReadiness: RuntimeReadiness = {
@@ -422,9 +597,7 @@ function dashboardProps(overrides: Partial<Parameters<typeof DashboardShell>[0]>
     selectedScenarioId: "emergency" as ScenarioId,
     scenarioOptions: SCENARIO_OPTIONS,
     scenarioLoading: false,
-    selectedCityId: "seoul" as CityId,
-    cityProfiles: CITY_PROFILES,
-    onCityChange: vi.fn(),
+    cityProfile: CITY_PROFILES[0],
     onScenarioChange: vi.fn(),
     fixtures,
     latestFixtureIngest: null,
@@ -691,29 +864,14 @@ describe("DashboardShell", () => {
     expect(screen.getByText("Simulation only / No real signal control")).toBeTruthy();
   });
 
-  test("renders the selected city profile independently from the scenario", () => {
-    renderDashboard({ selectedCityId: "seoul" });
+  test("renders the Seoul city profile with no city selector", () => {
+    renderDashboard();
 
-    expect(screen.getByLabelText("도시 선택")).toBeTruthy();
     expect(screen.getByLabelText("도시 프로필")).toBeTruthy();
     expect(screen.getByText("강남대로 / 테헤란로")).toBeTruthy();
     expect(screen.getByText(/INT-SEO-0001/)).toBeTruthy();
-    expect(screen.getByRole("button", { name: /서울/ }).getAttribute("aria-pressed")).toBe("true");
-    expect(screen.getByRole("button", { name: /뉴욕/ })).toBeTruthy();
-    expect(screen.getByRole("button", { name: /파리/ })).toBeTruthy();
-    expect(screen.getByRole("button", { name: /런던/ })).toBeTruthy();
-  });
-
-  test("calls city change without touching the scenario handler", async () => {
-    const onCityChange = vi.fn();
-    const onScenarioChange = vi.fn();
-
-    renderDashboard({ onCityChange, onScenarioChange });
-
-    await userEvent.click(screen.getByRole("button", { name: /뉴욕/ }));
-
-    expect(onCityChange).toHaveBeenCalledWith("new_york");
-    expect(onScenarioChange).not.toHaveBeenCalled();
+    expect(screen.queryByLabelText("도시 선택")).toBeNull();
+    expect(screen.queryByRole("button", { name: /뉴욕|New York/ })).toBeNull();
   });
 
   test("renders the approved safety and simulation viewport copy", () => {
@@ -1140,7 +1298,7 @@ describe("DashboardShell", () => {
       const asset = getR3FAssetEntry(assetId);
 
       expect(asset.id).toBe(assetId);
-      expect(asset.path).toMatch(/^\/simulation\/r3f\/assets\/(glb|textures|sprites)\//);
+      expect(asset.path).toMatch(/^\/simulation\/r3f\/assets\/(glb|textures|sprites|markings)\//);
       expect(asset.units).toBe("meters");
       expect(asset.source.length).toBeGreaterThan(0);
       expect(asset.license.length).toBeGreaterThan(0);
@@ -1750,8 +1908,21 @@ describe("DashboardShell", () => {
     expect(
       Number(viewport.getAttribute("data-r3f-visible-vehicle-count"))
     ).toBeGreaterThan(0);
-    expect(viewport.getAttribute("data-r3f-glb-vehicle-count")).toBe("5");
-    expect(viewport.getAttribute("data-r3f-street-shadow-count")).toBe("7");
+    // glb-vehicle-count now measures the live count of vehicles rendered as
+    // detailed GLB models (precise vehicles), not a static hero placement list.
+    // It is a subset of the visible vehicles and tracks mounted content.
+    const glbVehicleCount = Number(
+      viewport.getAttribute("data-r3f-glb-vehicle-count")
+    );
+    const visibleVehicleCount = Number(
+      viewport.getAttribute("data-r3f-visible-vehicle-count")
+    );
+    expect(glbVehicleCount).toBeGreaterThan(0);
+    expect(glbVehicleCount).toBeLessThanOrEqual(visibleVehicleCount);
+    // street-shadow-count now measures the mounted StreetFurnitureLayer contact
+    // shadows — STREET_FURNITURE_CONTACT_SHADOWS.length is a deterministic module
+    // constant (8 tree + 2 cafe = 10), so pin the exact value, not a loose bound.
+    expect(viewport.getAttribute("data-r3f-street-shadow-count")).toBe("10");
     expect(viewport.getAttribute("data-r3f-vehicle-silhouette-part-count")).toBe("12");
   });
 

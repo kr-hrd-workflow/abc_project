@@ -2,7 +2,7 @@ export type Direction = "north" | "south" | "east" | "west";
 
 export type ScenarioId = "emergency" | "pedestrian" | "normal" | "blocked";
 
-export type CityId = "seoul" | "new_york" | "paris" | "london";
+export type CityId = "seoul";
 
 export type CityProfile = {
   id: CityId;

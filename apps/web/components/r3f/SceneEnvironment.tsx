@@ -6,7 +6,6 @@ import { PMREMGenerator, type Scene, type WebGLRenderer } from "three";
 import { RoomEnvironment } from "three/examples/jsm/environments/RoomEnvironment.js";
 
 import { GANGNAM_NIGHT_GRADE } from "./seamlessGrade";
-import { getStage6EnvironmentPreset } from "./EnvironmentLayer";
 import { LightingRig } from "./LightingRig";
 import { WeatherAndAtmosphere } from "./WeatherAndAtmosphere";
 import type { SceneSnapshot } from "./buildSceneSnapshot";
@@ -21,7 +20,7 @@ import { getStage6QualityPreset } from "./stage6Quality";
 const DAY_IBL_BLUR = 0.014;
 const DAY_IBL_INTENSITY = 0.82;
 
-// Night IBL settings — dark, neon-warm, same as NightSeamlessLighting.
+// Night IBL settings — dark, neon-warm.
 const NIGHT_IBL_BLUR = 0.06;
 
 type NightEnvConfig = {
@@ -40,6 +39,22 @@ function resolveNightEnvConfig(): NightEnvConfig {
     ambientIntensity: GANGNAM_NIGHT_GRADE.environmentIntensity * 0.6,
     keyIntensity: GANGNAM_NIGHT_GRADE.environmentIntensity * 1.4
   };
+}
+
+export type Stage5EnvironmentPreset = "day" | "cloudy" | "rain" | "night";
+
+export function getStage6EnvironmentPreset({
+  weather,
+  timeOfDay
+}: {
+  weather: Stage6WeatherPresetName;
+  timeOfDay: Stage6TimeOfDay;
+}): Stage5EnvironmentPreset {
+  if (timeOfDay === "night") return "night";
+  if (weather === "rain") return "rain";
+  if (weather === "cloudy") return "cloudy";
+
+  return "day";
 }
 
 // ---------------------------------------------------------------------------
@@ -139,7 +154,7 @@ function SceneDayEnvironment({
 SceneDayEnvironment.displayName = "SceneDayEnvironment";
 
 // ---------------------------------------------------------------------------
-// Night path (mirrors NightSeamlessLighting)
+// Night path
 // ---------------------------------------------------------------------------
 
 function SceneNightEnvironmentComponent({

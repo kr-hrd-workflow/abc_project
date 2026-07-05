@@ -7,11 +7,14 @@ import { BuildingLayer } from "./BuildingLayer";
 import { CameraRig } from "./CameraRig";
 import { DynamicPedestrianLayer } from "./DynamicPedestrianLayer";
 import { DynamicVehicleLayer } from "./DynamicVehicleLayer";
+import { GroundDressingLayer } from "./GroundDressingLayer";
 import { LimitedOrbitControls } from "./LimitedOrbitControls";
 import { MarkingDecalLayer } from "./MarkingDecalLayer";
 import { NightVehicleTreatment } from "./NightVehicleTreatment";
+import { RoadDetailProps } from "./RoadDetailProps";
 import { RoadSurfaceLayer } from "./RoadSurfaceLayer";
 import { SceneEnvironment } from "./SceneEnvironment";
+import { StreetFurnitureLayer } from "./StreetFurnitureLayer";
 import { ScenePostFX } from "./ScenePostFX";
 import { deriveSignalLightingPreset, SignalLayer } from "./SignalLayer";
 import { StructuralGuideLayer } from "./StructuralGuideLayer";
@@ -105,9 +108,16 @@ export function SimulationScene({
       {!isRoadOnly && (
         <BuildingLayerBoundary timeOfDay={timeOfDay} qualityPreset={qualityPreset} />
       )}
+      {!isRoadOnly && (
+        <Suspense fallback={null}>
+          <StreetFurnitureLayer />
+          <RoadDetailProps />
+        </Suspense>
+      )}
       <Suspense fallback={null}>
         <RoadSurfaceLayer isNight={isNight} suppressVectorMarkings />
       </Suspense>
+      {!isRoadOnly && <GroundDressingLayer isNight={isNight} />}
       <MarkingDecalLayer />
       {!isRoadOnly && (
         <DynamicVehicleLayerWithWeather
@@ -134,7 +144,6 @@ export function SimulationScene({
 
 // SceneEnvironment unifies day IBL + Sky + LightingRig + WeatherAndAtmosphere
 // (day) and night IBL + neon lights (night) into one timeOfDay-aware component.
-// Replaces the former split: EnvironmentLayer (day) vs NightSeamlessLighting (night).
 function SceneLighting({
   sceneSnapshot,
   qualityPreset,

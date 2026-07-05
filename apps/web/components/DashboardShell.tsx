@@ -16,7 +16,6 @@ import type {
   RuntimeReadiness,
   ScenarioId,
   ScenarioOption,
-  CityId,
   CityProfile,
   SimulationComparison,
   TrafficEvent,
@@ -53,11 +52,9 @@ export type DashboardShellProps = {
   selectedScenarioId: ScenarioId;
   scenarioOptions: ScenarioOption[];
   scenarioLoading: boolean;
-  selectedCityId: CityId;
-  cityProfiles: CityProfile[];
+  cityProfile: CityProfile;
   scenePresentation: ScenePresentationState;
   onScenePresentationChange: (next: ScenePresentationState) => void;
-  onCityChange: (cityId: CityId) => void;
   onAskQuestion: (question: string) => Promise<void>;
   onGenerateReport: () => Promise<void>;
   onIngestFixture: (fixtureId: string) => Promise<FixtureIngestResult>;
@@ -85,11 +82,9 @@ export function DashboardShell({
   selectedScenarioId,
   scenarioOptions,
   scenarioLoading,
-  selectedCityId,
-  cityProfiles,
+  cityProfile,
   scenePresentation,
   onScenePresentationChange,
-  onCityChange,
   onAskQuestion,
   onGenerateReport,
   onIngestFixture,
@@ -107,8 +102,7 @@ export function DashboardShell({
   const selectedScenario = scenarioOptions.find(
     (option) => option.id === selectedScenarioId
   );
-  const selectedCity =
-    cityProfiles.find((city) => city.id === selectedCityId) ?? cityProfiles[0];
+  const selectedCity = cityProfile;
   const cityIntersectionName =
     locale === "ko" ? selectedCity.intersectionNameKo : selectedCity.intersectionNameEn;
   const cityDistrict = locale === "ko" ? selectedCity.districtKo : selectedCity.districtEn;
@@ -234,27 +228,6 @@ export function DashboardShell({
         </div>
 
         <div className="dashboard-scenario-row operation-row motion-enter">
-          <section className="city-segment-control" aria-label={locale === "ko" ? "도시 선택" : "City selection"}>
-            {cityProfiles.map((city) => {
-              const selected = city.id === selectedCityId;
-              const cityLabel = locale === "ko" ? city.labelKo : city.labelEn;
-              const profile = locale === "ko" ? city.mobilityProfileKo : city.mobilityProfileEn;
-
-              return (
-                <button
-                  key={city.id}
-                  type="button"
-                  aria-pressed={selected}
-                  className={`motion-pressable command-pressable${selected ? " active" : ""}`}
-                  disabled={selected}
-                  onClick={() => onCityChange(city.id)}
-                >
-                  <strong>{cityLabel}</strong>
-                  <span>{profile}</span>
-                </button>
-              );
-            })}
-          </section>
           <section className="operation-mode-panel" aria-label={t.operationMode}>
             <div className="operation-copy">
               <strong>{t.operationMode}</strong>

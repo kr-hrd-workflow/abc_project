@@ -27,11 +27,7 @@ import {
   STAGE5_TRAFFIC_VEHICLE_SILHOUETTE_PARTS,
   buildTrafficDensityRenderPlan
 } from "./TrafficDensityLayer";
-import { SCENE_CLUTTER_SPECS } from "./SceneClutterLayer";
-import {
-  STAGE5_STREET_FURNITURE_CONTACT_SHADOW_PLACEMENTS,
-  STAGE5_VISIBLE_TRAFFIC_GLB_PLACEMENTS
-} from "./Stage5SceneAssets";
+import { STREET_FURNITURE_CONTACT_SHADOWS } from "./StreetFurnitureLayer";
 
 export const STAGE5_RENDERER_MODE = "r3f_photoreal_stage5";
 
@@ -76,10 +72,13 @@ export function R3FSimulationViewport({
   );
   const visibleVehicleCount =
     trafficRenderPlan.preciseVehicles.length + trafficRenderPlan.farVehicles.length;
+  // Vehicles rendered as detailed GLB models (PreciseVehicleGlbs). This is the
+  // honest "GLB vehicle count" — the mounted detailed-vehicle content that
+  // replaces the retired static hero-placement constant.
+  const glbVehicleCount = trafficRenderPlan.preciseVehicles.length;
   const visibleSumoPedestrianCount = sceneSnapshot.pedestrians.length;
-  const ambientPedestrianCount = SCENE_CLUTTER_SPECS.filter(
-    (spec) => spec.kind === "pedestrian_silhouette"
-  ).length;
+  // ambient pedestrians retired with SceneClutterLayer; SUMO persons arrive in sub-project B
+  const ambientPedestrianCount = 0;
   const highQualityVehicleCount = trafficRenderPlan.preciseVehicles.filter(
     (vehicle) => vehicle.highQualityGlbEligible
   ).length;
@@ -144,12 +143,10 @@ export function R3FSimulationViewport({
       data-r3f-ambient-pedestrian-count={ambientPedestrianCount}
       data-r3f-ambient-pedestrian-source="procedural_background_proxy"
       data-r3f-pedestrian-truth-separated="true"
-      data-r3f-glb-vehicle-count={STAGE5_VISIBLE_TRAFFIC_GLB_PLACEMENTS.length}
+      data-r3f-glb-vehicle-count={glbVehicleCount}
       data-r3f-shadow-enabled={STAGE5_SHADOWS_ENABLED ? "true" : "false"}
       data-r3f-shadow-caster-count={shadowCasterCount}
-      data-r3f-street-shadow-count={
-        STAGE5_STREET_FURNITURE_CONTACT_SHADOW_PLACEMENTS.length
-      }
+      data-r3f-street-shadow-count={STREET_FURNITURE_CONTACT_SHADOWS.length}
       data-r3f-vehicle-silhouette-part-count={visibleVehiclePartCount}
     >
       <SimulationCanvas

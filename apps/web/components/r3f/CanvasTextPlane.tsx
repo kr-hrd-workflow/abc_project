@@ -41,8 +41,73 @@ export type CanvasTextLayout = {
 
 const TEXTURE_WIDTH = 1024;
 const TEXTURE_HEIGHT = 512;
+export const CANVAS_TEXT_CELL_WIDTH = TEXTURE_WIDTH;
+export const CANVAS_TEXT_CELL_HEIGHT = TEXTURE_HEIGHT;
 const KOREAN_FONT_STACK =
   "'Malgun Gothic', 'Apple SD Gothic Neo', 'Noto Sans KR', system-ui, sans-serif";
+
+export type CanvasTextCellOptions = {
+  text: string;
+  backgroundColor: string;
+  borderColor: string;
+  textColor: string;
+  fontWeight: number;
+};
+
+// Draws one 1024x512 label cell with its top-left corner at (0, originY).
+// Extracted from CanvasTextPlane so RoadDetailProps' label atlas can bake N
+// labels into ONE shared texture with pixel-identical output to the
+// individual-plane path (2026-07-04 draw-call reduction).
+export function drawCanvasTextCell(
+  context: CanvasRenderingContext2D,
+  originY: number,
+  { text, backgroundColor, borderColor, textColor, fontWeight }: CanvasTextCellOptions
+) {
+  const layout = getCanvasTextLayout(text, {
+    horizontalPadding: 96,
+    maxFontSize: 210,
+    minFontSize: 72,
+    textureHeight: TEXTURE_HEIGHT,
+    textureWidth: TEXTURE_WIDTH,
+    measureTextWidth: (line, fontSize) => {
+      context.font = `${fontWeight} ${fontSize}px ${KOREAN_FONT_STACK}`;
+      return context.measureText(line).width;
+    }
+  });
+
+  context.save();
+  context.translate(0, originY);
+
+  context.clearRect(0, 0, TEXTURE_WIDTH, TEXTURE_HEIGHT);
+  context.fillStyle = backgroundColor;
+  context.fillRect(0, 0, TEXTURE_WIDTH, TEXTURE_HEIGHT);
+
+  if (borderColor !== "rgba(255,255,255,0)") {
+    context.strokeStyle = borderColor;
+    context.lineWidth = 18;
+    context.strokeRect(16, 16, TEXTURE_WIDTH - 32, TEXTURE_HEIGHT - 32);
+  }
+
+  const { fontSize, lineHeight, lines } = layout;
+  const firstBaseline =
+    TEXTURE_HEIGHT / 2 - ((lines.length - 1) * lineHeight) / 2;
+
+  context.font = `${fontWeight} ${fontSize}px ${KOREAN_FONT_STACK}`;
+  context.textAlign = "center";
+  context.textBaseline = "middle";
+  context.lineJoin = "round";
+  context.strokeStyle = "rgba(0,0,0,0.62)";
+  context.lineWidth = 14;
+  context.fillStyle = textColor;
+
+  lines.forEach((line, index) => {
+    const y = firstBaseline + index * lineHeight;
+    context.strokeText(line, TEXTURE_WIDTH / 2, y);
+    context.fillText(line, TEXTURE_WIDTH / 2, y);
+  });
+
+  context.restore();
+}
 
 export function CanvasTextPlane({
   text,
@@ -73,44 +138,12 @@ export function CanvasTextPlane({
 
     if (!context) return null;
 
-    const layout = getCanvasTextLayout(text, {
-      horizontalPadding: 96,
-      maxFontSize: 210,
-      minFontSize: 72,
-      textureHeight: TEXTURE_HEIGHT,
-      textureWidth: TEXTURE_WIDTH,
-      measureTextWidth: (line, fontSize) => {
-        context.font = `${fontWeight} ${fontSize}px ${KOREAN_FONT_STACK}`;
-        return context.measureText(line).width;
-      }
-    });
-
-    context.clearRect(0, 0, TEXTURE_WIDTH, TEXTURE_HEIGHT);
-    context.fillStyle = backgroundColor;
-    context.fillRect(0, 0, TEXTURE_WIDTH, TEXTURE_HEIGHT);
-
-    if (borderColor !== "rgba(255,255,255,0)") {
-      context.strokeStyle = borderColor;
-      context.lineWidth = 18;
-      context.strokeRect(16, 16, TEXTURE_WIDTH - 32, TEXTURE_HEIGHT - 32);
-    }
-
-    const { fontSize, lineHeight, lines } = layout;
-    const firstBaseline =
-      TEXTURE_HEIGHT / 2 - ((lines.length - 1) * lineHeight) / 2;
-
-    context.font = `${fontWeight} ${fontSize}px ${KOREAN_FONT_STACK}`;
-    context.textAlign = "center";
-    context.textBaseline = "middle";
-    context.lineJoin = "round";
-    context.strokeStyle = "rgba(0,0,0,0.62)";
-    context.lineWidth = 14;
-    context.fillStyle = textColor;
-
-    lines.forEach((line, index) => {
-      const y = firstBaseline + index * lineHeight;
-      context.strokeText(line, TEXTURE_WIDTH / 2, y);
-      context.fillText(line, TEXTURE_WIDTH / 2, y);
+    drawCanvasTextCell(context, 0, {
+      text,
+      backgroundColor,
+      borderColor,
+      textColor,
+      fontWeight
     });
 
     const nextTexture = new CanvasTexture(canvas);

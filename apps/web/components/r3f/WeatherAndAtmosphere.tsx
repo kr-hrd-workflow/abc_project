@@ -46,14 +46,6 @@ export type HazePlaneSpec = {
   opacity: number;
 };
 
-export type DistantCityBackdropSpec = {
-  id: string;
-  position: Vector3Tuple;
-  size: [number, number];
-  color: string;
-  opacity: number;
-};
-
 export const STAGE5_ATMOSPHERE = {
   background: "#17242b",
   fog: "#23343c",
@@ -61,6 +53,30 @@ export const STAGE5_ATMOSPHERE = {
   fogFar: 170,
   haze: "#5d7378"
 } as const;
+
+// Clear/cloudy daytime aerial perspective: a light sky-toned haze fog (matches
+// the GradientSky horizon + BuildingLayer's DISTANT_HAZE_TONE) with a pushed-out
+// near plane so the near/mid intersection stays crisp while the distant ring and
+// the far road/ground edges wash toward the sky — no dark navy cut-outs, no hard
+// white periphery edge — at high operator/CCTV orbit angles. Rain keeps the
+// darker STAGE5 mist above (weather === "rain"); night never mounts fog
+// (WeatherAndAtmosphere is sceneryless at night), so both stay untouched.
+export const DAY_HAZE_ATMOSPHERE = {
+  // Soft daytime haze tone (a blue-grey with body, matched to the GradientSky
+  // horizon + BuildingLayer DISTANT_HAZE_TONE) that the far field converges to.
+  // Deliberately NOT near-white: a blown-white periphery read as a blank void,
+  // and NOT dark: a dark tone read as navy cut-outs. Background carries the same
+  // tone so the frame corners — where the high camera looks past the far edge of
+  // the sky dome (clipped to the clear colour) — read as hazy sky.
+  background: "#b9c7d6",
+  fog: "#b9c7d6",
+  fogNear: 130,
+  fogFar: 340
+} as const;
+
+function resolveDayAtmosphere(weather: Stage6WeatherPresetName) {
+  return weather === "rain" ? STAGE5_ATMOSPHERE : DAY_HAZE_ATMOSPHERE;
+}
 
 const REFLECTION_TINTS = {
   streetlight: "#ffb24a",
@@ -71,14 +87,6 @@ const REFLECTION_TINTS = {
 const ROAD_EDGE_REFLECTION_OFFSET = ROAD_WIDTH_METERS / 2 - 2.8;
 const ROAD_SURFACE_OVERLAY_Y = 0.046;
 const HAZE_HEIGHT = 7.2;
-
-const DISTANT_CITY_BACKDROP: DistantCityBackdropSpec = {
-  id: "north-distant-city-depth-backdrop",
-  position: [0, 42, -210],
-  size: [360, 120],
-  color: "#151f24",
-  opacity: 0.28
-};
 
 export const WET_ROAD_REFLECTION_HIGHLIGHTS: WetRoadHighlightSpec[] = [
   ...STREETLIGHT_POOLS.map((light): WetRoadHighlightSpec => {
@@ -141,13 +149,8 @@ export const HAZE_PLANES: HazePlaneSpec[] = [
     size: [78, 40],
     opacity: 0.06
   },
-  {
-    id: "east-corridor-depth-haze",
-    position: [118, HAZE_HEIGHT, 0],
-    rotation: [0, Math.PI / 2, 0],
-    size: [76, 38],
-    opacity: 0.055
-  },
+  // east-corridor-depth-haze removed 2026-07-04 (task 6 codex A/B): it read as a
+  // floating gray slab across the east road from the operator camera.
   {
     id: "west-corridor-depth-haze",
     position: [-112, HAZE_HEIGHT, 0],
@@ -192,7 +195,6 @@ export function WeatherAndAtmosphere({
 }) {
   const reflectionFalloffTexture = useSoftReflectionTexture();
   const hazeFalloffTexture = useSoftHazeTexture();
-  const distantCityTexture = useDistantCityTexture();
   const wetRoadReflectionHighlights = useMemo(
     () => [
       ...WET_ROAD_REFLECTION_HIGHLIGHTS,
@@ -205,32 +207,22 @@ export function WeatherAndAtmosphere({
     <group name="stage5-weather-and-atmosphere">
       {!sceneryless && (
         <>
-          <color attach="background" args={[STAGE5_ATMOSPHERE.background]} />
+          <color attach="background" args={[resolveDayAtmosphere(weather).background]} />
           <fog
             attach="fog"
             args={[
-              STAGE5_ATMOSPHERE.fog,
-              STAGE5_ATMOSPHERE.fogNear,
-              STAGE5_ATMOSPHERE.fogFar
+              resolveDayAtmosphere(weather).fog,
+              resolveDayAtmosphere(weather).fogNear,
+              resolveDayAtmosphere(weather).fogFar
             ]}
           />
 
-          <mesh
-            name={DISTANT_CITY_BACKDROP.id}
-            position={DISTANT_CITY_BACKDROP.position}
-            renderOrder={-1}
-          >
-            <planeGeometry args={DISTANT_CITY_BACKDROP.size} />
-            <meshBasicMaterial
-              color="#ffffff"
-              map={distantCityTexture}
-              transparent
-              opacity={DISTANT_CITY_BACKDROP.opacity}
-              depthWrite={false}
-              side={DoubleSide}
-            />
-          </mesh>
-
+          {/* 2026-07-04 codex A/B (task 6): the north painted-skyline backdrop
+              plane read as a DOUBLE-SKYLINE artifact over the real distant
+              building boxes (now vertex-tinted in BuildingLayer), so it was
+              removed. The east depth-haze card read as a floating gray slab
+              across the east road (operator-camera complaint) — also removed.
+              North/south/west corridor haze kept. */}
           {HAZE_PLANES.map((haze) => (
             <mesh
               key={haze.id}
@@ -286,10 +278,6 @@ function useSoftReflectionTexture() {
 
 function useSoftHazeTexture() {
   return useGeneratedTexture(createSoftHazeCanvas);
-}
-
-function useDistantCityTexture() {
-  return useGeneratedTexture(createDistantCityCanvas);
 }
 
 function useGeneratedTexture(createCanvas: () => HTMLCanvasElement | null) {
@@ -374,68 +362,6 @@ function createSoftHazeCanvas() {
   }
 
   context.putImageData(image, 0, 0);
-  return canvas;
-}
-
-function createDistantCityCanvas() {
-  if (typeof document === "undefined") return null;
-
-  const canvas = document.createElement("canvas");
-  canvas.width = 512;
-  canvas.height = 160;
-  const context = canvas.getContext("2d");
-  if (!context) return null;
-
-  const skyGradient = context.createLinearGradient(0, 0, 0, canvas.height);
-  skyGradient.addColorStop(0, "rgba(74, 94, 104, 0)");
-  skyGradient.addColorStop(0.18, "rgba(74, 94, 104, 0.34)");
-  skyGradient.addColorStop(0.56, "rgba(48, 66, 74, 0.32)");
-  skyGradient.addColorStop(1, "rgba(18, 27, 32, 0)");
-  context.fillStyle = skyGradient;
-  context.fillRect(0, 0, canvas.width, canvas.height);
-
-  const buildings = [
-    { x: 12, width: 42, height: 82 },
-    { x: 62, width: 58, height: 112 },
-    { x: 132, width: 38, height: 74 },
-    { x: 178, width: 64, height: 128 },
-    { x: 254, width: 52, height: 96 },
-    { x: 318, width: 44, height: 118 },
-    { x: 374, width: 72, height: 88 },
-    { x: 456, width: 44, height: 108 }
-  ];
-
-  buildings.forEach((building, buildingIndex) => {
-    const y = canvas.height - building.height;
-    context.fillStyle =
-      buildingIndex % 2 === 0
-        ? "rgba(18, 27, 32, 0.44)"
-        : "rgba(24, 35, 40, 0.4)";
-    context.fillRect(building.x, y, building.width, building.height);
-
-    for (let row = 0; row < Math.floor(building.height / 11); row += 1) {
-      for (let column = 0; column < Math.floor(building.width / 10); column += 1) {
-        const lit = (row * 5 + column * 3 + buildingIndex) % 4 !== 0;
-        if (!lit) continue;
-
-        const windowX = building.x + 6 + column * 10;
-        const windowY = y + 8 + row * 11;
-        const warm = (row + buildingIndex) % 3 !== 0;
-        context.fillStyle = warm
-          ? "rgba(255, 232, 184, 0.68)"
-          : "rgba(188, 228, 248, 0.6)";
-        context.fillRect(windowX, windowY, 4, 2);
-      }
-    }
-  });
-
-  const hazeGradient = context.createLinearGradient(0, 0, 0, canvas.height);
-  hazeGradient.addColorStop(0, "rgba(210, 226, 224, 0)");
-  hazeGradient.addColorStop(0.62, "rgba(185, 206, 208, 0.16)");
-  hazeGradient.addColorStop(1, "rgba(185, 206, 208, 0)");
-  context.fillStyle = hazeGradient;
-  context.fillRect(0, 0, canvas.width, canvas.height);
-
   return canvas;
 }
 

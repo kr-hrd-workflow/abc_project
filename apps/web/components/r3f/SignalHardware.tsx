@@ -4,11 +4,16 @@ import { useEffect, useMemo } from "react";
 import {
   CanvasTexture,
   DoubleSide,
+  Euler,
   LinearFilter,
-  SRGBColorSpace
+  Matrix4,
+  Quaternion,
+  SRGBColorSpace,
+  Vector3
 } from "three";
 
 import type { Direction } from "../../lib/types";
+import { InstancedProceduralMesh } from "./RoadDetailProps";
 import type { SceneSnapshot } from "./buildSceneSnapshot";
 import {
   APPROACH_CORRIDORS,
@@ -139,6 +144,7 @@ export function SignalHardware({
 
   return (
     <group name="seoul-signal-hardware" userData={{ signalCount: perApproach.length }}>
+      <InstancedSignalStructures signals={perApproach} />
       {perApproach.map((signal) => (
         <SeoulSignalHardwareAssembly
           key={`signal-${signal.direction}`}
@@ -148,6 +154,126 @@ export function SignalHardware({
         />
       ))}
     </group>
+  );
+}
+
+// --- Instanced structural hardware ------------------------------------------
+// 2026-07-04 draw-call reduction: the 4 approaches' identical poles, mast arms
+// and state beacons render as THREE InstancedMesh draws instead of 12 meshes.
+// Beacon color rides instanceColor (white base x exact lens color) and follows
+// signal.state because the matrices/colors memo recomputes per signals change.
+// Assumes the standard 8.5 m mast-arm reach (the only variant mounted live).
+const STANDARD_MAST_ARM_REACH = 8.5;
+
+const _pos = new Vector3();
+const _quat = new Quaternion();
+const _euler = new Euler();
+const _scl = new Vector3();
+
+function composeSignalMatrix(
+  position: Vector3Tuple,
+  rotation: Vector3Tuple,
+  scale: Vector3Tuple
+): Matrix4 {
+  return new Matrix4().compose(
+    _pos.set(position[0], position[1], position[2]),
+    _quat.setFromEuler(_euler.set(rotation[0], rotation[1], rotation[2])),
+    _scl.set(scale[0], scale[1], scale[2])
+  );
+}
+
+function InstancedSignalStructures({
+  signals
+}: {
+  signals: SignalSnapshot[];
+}) {
+  const { poles, masts, beacons, beaconColors } = useMemo(() => {
+    const reach = STANDARD_MAST_ARM_REACH;
+    const poleMatrices: Matrix4[] = [];
+    const mastMatrices: Matrix4[] = [];
+    const beaconMatrices: Matrix4[] = [];
+    const colors: string[] = [];
+    for (const signal of signals) {
+      const placement = SIGNAL_PLACEMENTS[signal.direction];
+      const group = composeSignalMatrix(
+        placement.position,
+        [0, placement.rotationY, 0],
+        [1, 1, 1]
+      );
+      poleMatrices.push(
+        group
+          .clone()
+          .multiply(composeSignalMatrix([0, -2.42, 0], [0, 0, 0], [1, 1, 1]))
+      );
+      mastMatrices.push(
+        group
+          .clone()
+          .multiply(
+            composeSignalMatrix(
+              [-reach / 2, 0.12, 0],
+              [0, 0, 0],
+              [reach, 0.12, 0.12]
+            )
+          )
+      );
+      beaconMatrices.push(
+        group
+          .clone()
+          .multiply(
+            composeSignalMatrix(
+              [-(reach - 0.3), 0.7, 0],
+              [-Math.PI / 2, 0, 0],
+              [1, 1, 1]
+            )
+          )
+      );
+      colors.push(LENS_COLORS[signal.state] ?? LENS_OFF);
+    }
+    return {
+      poles: poleMatrices,
+      masts: mastMatrices,
+      beacons: beaconMatrices,
+      beaconColors: colors
+    };
+  }, [signals]);
+
+  const signalStates = signals.map((signal) => ({
+    direction: signal.direction,
+    state: signal.state
+  }));
+
+  return (
+    <>
+      <InstancedProceduralMesh
+        name="seoul-signal-poles"
+        matrices={poles}
+        receiveShadow
+      >
+        <cylinderGeometry args={[0.09, 0.13, 5.05, 10]} />
+        <meshStandardMaterial {...SIGNAL_MATERIALS.pole} />
+      </InstancedProceduralMesh>
+      <InstancedProceduralMesh name="seoul-signal-mast-arms" matrices={masts}>
+        <boxGeometry args={[1, 1, 1]} />
+        <meshStandardMaterial {...SIGNAL_MATERIALS.pole} />
+      </InstancedProceduralMesh>
+      {/* Upward-facing STATE BEACONS over the stop lines: the vertical signal
+          faces are edge-on (nearly invisible) from the high traffic-monitoring
+          camera, so these bright discs show each approach's red/yellow/green
+          state read from above. Driven by SceneSnapshot.signals. */}
+      <InstancedProceduralMesh
+        name="seoul-signal-beacons"
+        matrices={beacons}
+        colors={beaconColors}
+        userData={{
+          signalStateSource: "SceneSnapshot.signals",
+          realSignalControlClaim: false,
+          signalStates
+        }}
+      >
+        <circleGeometry args={[1.7, 24]} />
+        <meshBasicMaterial color="#ffffff" side={DoubleSide} toneMapped={false} />
+      </InstancedProceduralMesh>
+    </>
   );
 }
 
@@ -170,12 +296,10 @@ function SeoulSignalHardwareAssembly({
     ? `foreground-${signal.direction}`
     : signal.direction;
   // The group is rotated by placement.rotationY so the face-plane normal (+Z)
-  // already points back at the oncoming inbound traffic. Cantilever the mast arm
-  // and head out over the roadway along local -X so the head hangs above the
-  // inbound stop line instead of behind the roadside pole.
-  const mastArmReach = isProofForeground ? 5.2 : 8.5;
-  const mastArmPosition: Vector3Tuple = [-mastArmReach / 2, 0.12, 0];
-  const mastArmScale: Vector3Tuple = [mastArmReach, 0.12, 0.12];
+  // already points back at the oncoming inbound traffic. The head hangs at the
+  // end of the cantilever mast arm (pole/arm/beacon render via
+  // InstancedSignalStructures; this assembly owns only the unique canvas face).
+  const mastArmReach = isProofForeground ? 5.2 : STANDARD_MAST_ARM_REACH;
   const facePosition: Vector3Tuple = [-(mastArmReach - 0.3), -0.52, 0];
 
   return (
@@ -191,24 +315,6 @@ function SeoulSignalHardwareAssembly({
         visibilityTier: isProofForeground ? "proof_foreground" : "background"
       }}
     >
-      <mesh
-        name={`seoul-signal-pole-${nameSuffix}`}
-        position={[0, -2.42, 0]}
-        castShadow={false}
-        receiveShadow
-      >
-        <cylinderGeometry args={[0.09, 0.13, 5.05, 10]} />
-        <meshStandardMaterial {...SIGNAL_MATERIALS.pole} />
-      </mesh>
-      <mesh
-        name={`seoul-signal-mast-arm-${nameSuffix}`}
-        position={mastArmPosition}
-        scale={mastArmScale}
-        castShadow={false}
-      >
-        <boxGeometry args={[1, 1, 1]} />
-        <meshStandardMaterial {...SIGNAL_MATERIALS.pole} />
-      </mesh>
       <mesh
         name={`seoul-signal-canvas-face-${nameSuffix}`}
         position={facePosition}
@@ -227,27 +333,6 @@ function SeoulSignalHardwareAssembly({
           side={DoubleSide}
           toneMapped={false}
           transparent
-        />
-      </mesh>
-      {/* Upward-facing STATE BEACON over the stop line: the vertical signal
-          face is edge-on (nearly invisible) from the high traffic-monitoring
-          camera, so this bright disc shows each approach's red/yellow/green
-          state read from above. Driven by SceneSnapshot.signals (signal.state). */}
-      <mesh
-        name={`seoul-signal-beacon-${nameSuffix}`}
-        position={[facePosition[0], 0.7, 0]}
-        rotation={[-Math.PI / 2, 0, 0]}
-        userData={{
-          signalStateSource: "SceneSnapshot.signals",
-          signalState: signal.state,
-          realSignalControlClaim: false
-        }}
-      >
-        <circleGeometry args={[1.7, 24]} />
-        <meshBasicMaterial
-          color={LENS_COLORS[signal.state] ?? LENS_OFF}
-          side={DoubleSide}
-          toneMapped={false}
         />
       </mesh>
     </group>

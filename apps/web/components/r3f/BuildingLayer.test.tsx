@@ -10,6 +10,8 @@ import {
   FACADE_METERS_PER_TILE,
   GLASS_TINTS_DAY,
   GLASS_TINTS_NIGHT,
+  getDistantTintColors,
+  getDistantHazeTintColors,
   composeBuildingVolumes,
   computeFacadeRepeat,
   getBuildingVarFactor,
@@ -246,6 +248,49 @@ describe("building variety", () => {
       expect(i).toBeGreaterThanOrEqual(0);
       expect(i).toBeLessThan(3);
     }
+  });
+
+  it("bakes the 5 distant footprints' tints for the far group (≥3 distinct)", () => {
+    const tints = getDistantTintColors();
+    expect(tints).toHaveLength(5);
+    expect(new Set(tints).size).toBeGreaterThanOrEqual(3);
+    for (const t of tints) {
+      expect(t).toMatch(/^#[0-9a-fA-F]{6}$/);
+    }
+  });
+
+  it("derives aerial-perspective haze tints: light, desaturated, lighter than raw, varied", () => {
+    // Relative luminance (Rec.709) + HSL saturation on 0–1 sRGB channels.
+    const rgb = (hex: string) => {
+      const n = parseInt(hex.slice(1), 16);
+      return [((n >> 16) & 255) / 255, ((n >> 8) & 255) / 255, (n & 255) / 255];
+    };
+    const lum = ([r, g, b]: number[]) => 0.2126 * r + 0.7152 * g + 0.0722 * b;
+    const sat = ([r, g, b]: number[]) => {
+      const max = Math.max(r, g, b);
+      const min = Math.min(r, g, b);
+      const l = (max + min) / 2;
+      if (max === min) return 0;
+      return (max - min) / (1 - Math.abs(2 * l - 1));
+    };
+
+    const raw = getDistantTintColors();
+    const haze = getDistantHazeTintColors();
+
+    expect(haze).toHaveLength(raw.length);
+    // Variation across sides is preserved (aerial perspective, not one flat slab).
+    expect(new Set(haze).size).toBeGreaterThanOrEqual(3);
+
+    haze.forEach((h, i) => {
+      expect(h).toMatch(/^#[0-9a-fA-F]{6}$/);
+      const hl = lum(rgb(h));
+      // Reads as bright daylight haze near the sky tone (dark navy raw ≈ 0.28).
+      expect(hl).toBeGreaterThan(0.6);
+      // Desaturated so it melts into the sky rather than reading as a colored box.
+      expect(sat(rgb(h))).toBeLessThan(0.35);
+      // Every side lightens toward the sky vs its raw dark-navy massing tint.
+      expect(hl).toBeGreaterThan(lum(rgb(raw[i])) + 0.25);
+    });
   });
 
   it("provides matching day + night tint palettes (3 each)", () => {
