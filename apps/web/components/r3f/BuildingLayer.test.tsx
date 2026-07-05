@@ -5,7 +5,6 @@ import { describe, expect, it } from "vitest";
 
 import {
   BuildingLayer,
-  FACADE_DAY_TEXTURE_PATH,
   FACADE_NIGHT_TEXTURE_PATH,
   FACADE_METERS_PER_TILE,
   GLASS_TINTS_DAY,
@@ -174,10 +173,7 @@ describe("BuildingLayer", () => {
 // ── Facade texture system (P2b) ───────────────────────────────────────────────
 
 describe("facade texture assets", () => {
-  it("points at the day + night facade webp files under public/", () => {
-    expect(FACADE_DAY_TEXTURE_PATH).toBe(
-      "/simulation/r3f/assets/textures/facade-glass-day.webp"
-    );
+  it("points at the night facade webp file under public/", () => {
     expect(FACADE_NIGHT_TEXTURE_PATH).toBe(
       "/simulation/r3f/assets/textures/facade-windows-night.webp"
     );

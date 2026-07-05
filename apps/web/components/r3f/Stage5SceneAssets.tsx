@@ -28,7 +28,6 @@ import {
 } from "./assetManifest";
 import {
   STAGE6_BUILDING_FACADE_MATERIAL_CONTROLS,
-  STAGE5_TEXTURE_ASSET_IDS,
   useStage5RoadMaterials
 } from "./roadMaterials";
 import { STAGE5_SHADOWS_ENABLED } from "./shadowPolicy";
@@ -349,7 +348,10 @@ export const STAGE5_FACADE_PANELS: Stage5FacadePanelSpec[] =
 
 export function getStage6FacadePanelMaterialContract() {
   return {
-    sourceAsset: STAGE5_TEXTURE_ASSET_IDS.facadeWindowEmissive,
+    // "textures/facade_window_emissive" was deleted (dead: never fed a
+    // rendered GroundDressingLayer material) — this contract's id keeps its
+    // last known value since this whole component tree has no live importer.
+    sourceAsset: "textures/facade_window_emissive",
     textureRole: "facadeWindowEmissive",
     baseColorMap: "none",
     emissiveOnly: true,

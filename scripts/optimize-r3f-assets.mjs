@@ -29,13 +29,9 @@ const stage6EFirstPassRuntimeAssetIds = new Set([
   "vehicles/taxi_far",
   "vehicles/bus_far",
   "vehicles/truck_far",
-  "textures/wet_asphalt_albedo",
   "textures/wet_asphalt_roughness",
-  "decals/worn_lane_markings",
-  "decals/crosswalk_wear",
   "decals/curb_grime",
-  "textures/sidewalk_paver_variation",
-  "textures/facade_window_emissive"
+  "textures/sidewalk_paver_variation"
 ]);
 const stage6GeneratedAssetIds = new Set([
   "sprites/stage6_weather_material_source_atlas"

@@ -351,7 +351,6 @@ const latestAnalysisJob: AnalysisJob = {
 
 const stage4RequiredAssetIds = [
   "vehicles/passenger_car_near",
-  "vehicles/passenger_car_medium",
   "vehicles/passenger_car_far",
   "vehicles/taxi_near",
   "vehicles/taxi_far",
@@ -359,21 +358,14 @@ const stage4RequiredAssetIds = [
   "vehicles/bus_far",
   "vehicles/truck_near",
   "vehicles/truck_far",
-  "vehicles/emergency_ambulance_near",
   "vehicles/emergency_ambulance_medium",
-  "props/traffic_signal_pole",
-  "props/traffic_signal_heads",
   "props/streetlight",
   "props/tree_cluster",
   "props/curb_details",
   "props/outdoor_table_chair_set_01",
-  "textures/wet_asphalt_albedo",
   "textures/wet_asphalt_roughness",
-  "decals/worn_lane_markings",
-  "decals/crosswalk_wear",
   "decals/curb_grime",
   "textures/sidewalk_paver_variation",
-  "textures/facade_window_emissive",
   "textures/hero/gangnam-n-east-commercial_back",
   "textures/hero/gangnam-n-east-commercial_front",
   "textures/hero/gangnam-n-east-commercial_left",
@@ -1312,9 +1304,6 @@ describe("DashboardShell", () => {
     }
 
     expect(getR3FAssetEntry("vehicles/passenger_car_near").lowerDetailId).toBe(
-      "vehicles/passenger_car_medium"
-    );
-    expect(getR3FAssetEntry("vehicles/passenger_car_medium").lowerDetailId).toBe(
       "vehicles/passenger_car_far"
     );
     expect(getR3FAssetEntry("vehicles/taxi_near").lowerDetailId).toBe(
@@ -1326,9 +1315,6 @@ describe("DashboardShell", () => {
     expect(getR3FAssetEntry("vehicles/truck_near").lowerDetailId).toBe(
       "vehicles/truck_far"
     );
-    expect(
-      getR3FAssetEntry("vehicles/emergency_ambulance_near").lowerDetailId
-    ).toBe("vehicles/emergency_ambulance_medium");
 
     const nearOrHeroAssets = assets.filter((asset) =>
       ["near", "hero"].includes(asset.lod)
@@ -1339,23 +1325,11 @@ describe("DashboardShell", () => {
   });
 
   test("defines the Stage 5 runtime material texture contract", () => {
-    expect(STAGE5_TEXTURE_PATHS.wetAsphaltAlbedo).toBe(
-      "/simulation/r3f/assets/textures/wet_asphalt_albedo.webp"
-    );
     expect(STAGE5_TEXTURE_PATHS.wetAsphaltRoughness).toBe(
       "/simulation/r3f/assets/textures/wet_asphalt_roughness.webp"
     );
-    expect(STAGE5_TEXTURE_PATHS.wornLaneMarkings).toBe(
-      "/simulation/r3f/assets/textures/worn_lane_markings.png"
-    );
-    expect(STAGE5_TEXTURE_PATHS.crosswalkWear).toBe(
-      "/simulation/r3f/assets/textures/crosswalk_wear.png"
-    );
     expect(STAGE5_TEXTURE_PATHS.sidewalkPaverVariation).toBe(
       "/simulation/r3f/assets/textures/sidewalk_paver_variation.webp"
-    );
-    expect(STAGE5_TEXTURE_PATHS.facadeWindowEmissive).toBe(
-      "/simulation/r3f/assets/textures/facade_window_emissive.webp"
     );
   });
 

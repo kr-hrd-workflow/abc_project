@@ -31,35 +31,24 @@ export type Stage6RoadMaterialName =
   | "roadEdgeGrime";
 
 export const STAGE5_TEXTURE_ASSET_IDS = {
-  wetAsphaltAlbedo: "textures/wet_asphalt_albedo",
   wetAsphaltRoughness: "textures/wet_asphalt_roughness",
-  wornLaneMarkings: "decals/worn_lane_markings",
-  crosswalkWear: "decals/crosswalk_wear",
   curbGrime: "decals/curb_grime",
   sidewalkPaverVariation: "textures/sidewalk_paver_variation",
   sidewalkAtlasA: "textures/ground/sidewalk_atlas_a",
   urbanGround: "textures/ground/urban_ground",
-  facadeWindowEmissive: "textures/facade_window_emissive",
   stage6WeatherMaterialAtlas: "sprites/stage6_weather_material_source_atlas"
 } as const satisfies Record<string, R3FAssetId>;
 
 export const STAGE5_TEXTURE_PATHS = {
-  wetAsphaltAlbedo: getR3FAssetEntry(STAGE5_TEXTURE_ASSET_IDS.wetAsphaltAlbedo).path,
   wetAsphaltRoughness: getR3FAssetEntry(
     STAGE5_TEXTURE_ASSET_IDS.wetAsphaltRoughness
   ).path,
-  wornLaneMarkings: getR3FAssetEntry(STAGE5_TEXTURE_ASSET_IDS.wornLaneMarkings)
-    .path,
-  crosswalkWear: getR3FAssetEntry(STAGE5_TEXTURE_ASSET_IDS.crosswalkWear).path,
   curbGrime: getR3FAssetEntry(STAGE5_TEXTURE_ASSET_IDS.curbGrime).path,
   sidewalkPaverVariation: getR3FAssetEntry(
     STAGE5_TEXTURE_ASSET_IDS.sidewalkPaverVariation
   ).path,
   sidewalkAtlasA: getR3FAssetEntry(STAGE5_TEXTURE_ASSET_IDS.sidewalkAtlasA).path,
   urbanGround: getR3FAssetEntry(STAGE5_TEXTURE_ASSET_IDS.urbanGround).path,
-  facadeWindowEmissive: getR3FAssetEntry(
-    STAGE5_TEXTURE_ASSET_IDS.facadeWindowEmissive
-  ).path,
   stage6WeatherMaterialAtlas: getR3FAssetEntry(
     STAGE5_TEXTURE_ASSET_IDS.stage6WeatherMaterialAtlas
   ).path
@@ -546,18 +535,11 @@ export function useStage5RoadMaterials(): Stage5RoadMaterialSet {
           bumpScale: 0.014
         },
         buildingBlock: ROAD_MATERIALS.buildingBlock,
-        buildingEdge: {
-          ...ROAD_MATERIALS.buildingEdge,
-          color: STAGE6_BUILDING_FACADE_MATERIAL_CONTROLS.baseColor,
-          emissive: STAGE6_BUILDING_FACADE_MATERIAL_CONTROLS.emissive,
-          emissiveIntensity:
-            STAGE6_BUILDING_FACADE_MATERIAL_CONTROLS.emissiveIntensity,
-          emissiveMap: repeatTexture(
-            textures.facadeWindowEmissive,
-            [8, 6],
-            SRGBColorSpace
-          )
-        }
+        // facade_window_emissive was the only asset feeding this material's
+        // emissiveMap; buildingEdge is never a rendered GroundDressingLayer
+        // materialKey either way (dead since before Stage 5), so this stays a
+        // plain passthrough now that the texture is deleted.
+        buildingEdge: ROAD_MATERIALS.buildingEdge
       };
     },
     [textures]
