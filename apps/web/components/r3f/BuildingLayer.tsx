@@ -163,17 +163,25 @@ export function getDistantTintColors(): string[] {
   return BUILDING_FOOTPRINTS.filter((f) => f.form === "distant").map((f) => f.tint);
 }
 
-// Daytime atmospheric-haze tone the distant ring lifts toward — a soft
-// blue-grey WITH BODY, matched to the GradientSky day horizon and the scene
-// haze fog (DAY_HAZE_ATMOSPHERE) so the far field melts seamlessly into the
-// sky. Aerial perspective: far structures wash toward this tone instead of
-// standing as dark navy cut-outs when a high operator/CCTV orbit looks over the
-// building ring into the sky (the raw footprint tints, ≈#3a4a5a, read as dark
-// boxes). Not near-white — a blown-white periphery reads as a blank void.
-export const DISTANT_HAZE_TONE = "#b9c7d6";
+// Daytime atmospheric-haze tone the distant ring lifts toward — a light
+// blue-grey matched to the UPPER daytime sky the distant ring actually sits
+// against at a high operator/CCTV orbit (measured ≈#e0e4e6 / luminance ≈0.9
+// where the exposed distant slabs project). The far boxes wash toward this tone
+// so an exposed slab against the open sky melts into it rather than standing as
+// a dark navy cut-out OR a distinctly-darker hard silhouette. Kept just under
+// the sky value (a lone box tinted to the darker HORIZON haze tone ≈#b9c7d6
+// still reads ≈0.09 darker than the bright sky behind it, so its crisp edge
+// survives — codex flagged that as a placeholder cube). This tone lifts ONLY
+// the distant boxes; the fog/background/GradientSky horizon stay at #b9c7d6, so
+// the periphery is not blown to a white void.
+export const DISTANT_HAZE_TONE = "#d8e0e5";
 // Blend factor toward the haze tone. High (mostly haze) so the boxes read as a
-// faint hazy skyline; the residual 18% keeps each side's raw variation.
-const DISTANT_HAZE_MIX = 0.82;
+// faint hazy skyline; the residual keeps each side's raw variation (kept ≥3
+// distinct hazed tints — 0.85/0.88 collapse near-identical raw tints together).
+// Pushed from 0.82 → 0.87 so an EXPOSED distant box (e.g. bg-north-west against
+// open sky in a corner) sits close enough to the sky tone that its silhouette
+// melts rather than standing as a distinct slab.
+const DISTANT_HAZE_MIX = 0.87;
 
 /** Lerp two "#rrggbb" colours in sRGB space (matches how tints are authored). */
 function mixHex(a: string, b: string, t: number): string {
@@ -875,22 +883,35 @@ function buildGroupMaterials(
     metalness: 0.16
   });
 
-  // Day: WHITE base so the per-box aerial-perspective haze tints
-  // (distantHazeTint, baked in BuildingVolumeSet) carry at full lightness — a
-  // coloured base would re-darken them via the vertex-colour multiply back into
-  // a dark navy cut-out. The haze tints already vary by side for silhouette.
-  // Night keeps the flat dark tone + faint glow (vertexColors off) so the
-  // existing distant-skyline look is unchanged.
-  const far = new MeshStandardMaterial({
-    color: isNight ? "#0a0d16" : "#ffffff",
-    roughness: 0.95,
-    metalness: 0.02,
-    vertexColors: !isNight
-  });
+  // Distant ring material.
+  // Day: UNLIT (MeshBasicMaterial). A LIT far box shades face-by-normal, so an
+  // exposed distant slab against the open sky reads as a hard 3D placeholder
+  // cube (codex-flagged: "distinct flat lit/shaded faces"). Unlit renders every
+  // face flat at the same aerial-perspective haze vertex tint (distantHazeTint,
+  // baked in BuildingVolumeSet) — so distant massing melts into the sky as a
+  // soft flat silhouette, not a lit cube. Fog still applies; cheaper than the
+  // lit path. Night keeps the LIT flat dark tone + faint emissive glow
+  // (vertexColors off) so the existing distant-skyline look is unchanged.
+  let far: MeshStandardMaterial | MeshBasicMaterial;
   if (isNight) {
+    const nightFar = new MeshStandardMaterial({
+      color: "#0a0d16",
+      roughness: 0.95,
+      metalness: 0.02,
+      vertexColors: false
+    });
     // Faint glow so the distant skyline is not pure black at night.
-    far.emissive.set("#1a2438");
-    far.emissiveIntensity = 0.5;
+    nightFar.emissive.set("#1a2438");
+    nightFar.emissiveIntensity = 0.5;
+    far = nightFar;
+  } else {
+    // fog OFF: the boxes are already tinted directly to the sky tone
+    // (DISTANT_HAZE_TONE ≈ upper-sky), so scene fog would only ADD a per-fragment
+    // depth gradient ACROSS each box — the near face fogs differently from the
+    // receding face, which re-reveals the box's planar faces / 3D-cube read even
+    // when unlit. Without fog the box is one flat uniform patch at the sky tone:
+    // a soft low-contrast silhouette, not a faceted placeholder cube.
+    far = new MeshBasicMaterial({ vertexColors: true, fog: false });
   }
 
   // LED billboard signage: unlit, full-brightness vertex colours so panels read
