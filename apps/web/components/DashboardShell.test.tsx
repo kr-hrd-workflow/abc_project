@@ -1851,8 +1851,7 @@ describe("DashboardShell", () => {
     expect(glassGroup?.tintable).toBe(false);
   });
 
-  test("mounts frame-backed browser-only R3F when it is enabled and WebGL is supported", async () => {
-    vi.stubEnv("NEXT_PUBLIC_R3F_SIMULATION_ENABLED", "true");
+  test("mounts frame-backed browser-only R3F by default when WebGL is supported", async () => {
     mockWebGLSupport(true);
 
     renderDashboard();
@@ -2074,6 +2073,7 @@ describe("DashboardShell", () => {
   });
 
   test("keeps the fallback viewport when R3F is disabled", () => {
+    vi.stubEnv("NEXT_PUBLIC_R3F_SIMULATION_ENABLED", "false");
     mockWebGLSupport(true);
 
     renderDashboard();

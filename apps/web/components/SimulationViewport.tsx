@@ -18,7 +18,10 @@ export function SimulationViewport(props: SimulationViewportProps) {
   const genericStreamUrl = process.env.NEXT_PUBLIC_SIMULATION_STREAM_URL?.trim();
   const legacyStreamUrl = process.env.NEXT_PUBLIC_UNITY_WEBGL_URL?.trim();
   const simulationStreamUrl = genericStreamUrl || legacyStreamUrl;
-  const r3fEnabled = process.env.NEXT_PUBLIC_R3F_SIMULATION_ENABLED === "true";
+  const r3fDisabled =
+    process.env.NEXT_PUBLIC_R3F_SIMULATION_ENABLED?.trim().toLowerCase() ===
+    "false";
+  const r3fEnabled = !r3fDisabled;
   const [webglSupported, setWebglSupported] = useState(false);
   const [webglChecked, setWebglChecked] = useState(false);
 
