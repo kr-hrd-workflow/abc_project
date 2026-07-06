@@ -21,6 +21,7 @@ const mobileOverlayScreenshotPath = path.join(artifactsDir, "r3f-dashboard-mobil
 const fallbackScreenshotPath = path.join(artifactsDir, "r3f-dashboard-webgl-off.png");
 const stage6ScenarioArtifactPaths = {
   dayHigh: path.join(artifactsDir, "r3f-dashboard-scenario-day-high.png"),
+  dayCctv: path.join(artifactsDir, "r3f-dashboard-scenario-day-cctv.png"),
   nightHigh: path.join(artifactsDir, "r3f-dashboard-scenario-night-high.png"),
   rainHigh: path.join(artifactsDir, "r3f-dashboard-scenario-rain-high.png"),
   rainLowFallback: path.join(
@@ -30,6 +31,7 @@ const stage6ScenarioArtifactPaths = {
 };
 const stage6ScenarioCanvasArtifactPaths = {
   dayHigh: path.join(artifactsDir, "r3f-dashboard-scenario-day-high-canvas.png"),
+  dayCctv: path.join(artifactsDir, "r3f-dashboard-scenario-day-cctv-canvas.png"),
   nightHigh: path.join(artifactsDir, "r3f-dashboard-scenario-night-high-canvas.png"),
   rainHigh: path.join(artifactsDir, "r3f-dashboard-scenario-rain-high-canvas.png"),
   rainLowFallback: path.join(
@@ -3092,6 +3094,15 @@ const stage6ScenarioSpecs = [
     density: 1.0
   },
   {
+    id: "day/cctv",
+    artifactKey: "dayCctv",
+    qualityPreset: "high",
+    weather: "clear",
+    timeOfDay: "day",
+    viewpoint: "cctv",
+    density: 1.0
+  },
+  {
     id: "night/high",
     artifactKey: "nightHigh",
     qualityPreset: "high",
@@ -3233,11 +3244,17 @@ async function captureStage6ScenarioProof(browser, baseUrl, spec) {
 }
 
 function buildStage6ScenarioQuery(spec) {
-  return new URLSearchParams({
+  const params = new URLSearchParams({
     r3fQuality: spec.qualityPreset,
     r3fWeather: spec.weather,
     r3fTimeOfDay: spec.timeOfDay
-  }).toString();
+  });
+
+  if (spec.viewpoint) {
+    params.set("viewpoint", spec.viewpoint);
+  }
+
+  return params.toString();
 }
 
 async function runBrowserVerification(baseUrl) {
@@ -4102,7 +4119,7 @@ function addFinalAssertions() {
         telemetry.pedestrian_truth.sumo_pedestrian_source !== null &&
         Number.isFinite(telemetry.pedestrian_truth.ambient_pedestrian_count) &&
         telemetry.pedestrian_truth.ambient_pedestrian_source ===
-          "procedural_background_proxy" &&
+          "ambient_background_proxy" &&
         telemetry.pedestrian_truth.truth_separated === true
       ),
     JSON.stringify(telemetry.pedestrian_truth ?? null)

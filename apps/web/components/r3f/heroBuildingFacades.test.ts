@@ -138,6 +138,14 @@ describe("HERO_BUILDINGS face mapping", () => {
     );
   });
 
+  test("rear city-fill buildings stay out of the per-building hero mesh path", () => {
+    const ids = new Set(HERO_BUILDINGS.map((h) => h.id));
+    expect(ids.has("northwest-rear-fill")).toBe(false);
+    expect(ids.has("northeast-rear-fill")).toBe(false);
+    expect(ids.has("southwest-rear-fill")).toBe(false);
+    expect(ids.has("southeast-rear-fill")).toBe(false);
+  });
+
   test("west-side gangnam frontage buildings front the avenue via +x (group 0)", () => {
     for (const id of [
       "gangnam-n-west-commercial",

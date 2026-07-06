@@ -26,6 +26,11 @@ import {
   publishStage5CanvasProof
 } from "./SimulationCanvas";
 import type { SceneSnapshot } from "./buildSceneSnapshot";
+import {
+  AMBIENT_PEDESTRIAN_SPECS,
+  AMBIENT_PEDESTRIAN_TRUTH_SOURCE
+} from "./AmbientPedestrianLayer";
+import { getAmbientPedestrianTelemetryState } from "./R3FSimulationViewport";
 import { buildFixtureSceneSnapshot } from "./buildSceneSnapshot";
 import {
   STAGE5_NEAR_VEHICLE_SHADOW_LIMIT,
@@ -174,6 +179,17 @@ describe("SimulationCanvas Stage 5 telemetry", () => {
     expect(presentation.qualityPreset.name).toBe("medium");
   });
 
+  test("reports ambient pedestrian telemetry only when the ambient layer is mounted", () => {
+    expect(getAmbientPedestrianTelemetryState("")).toEqual({
+      count: AMBIENT_PEDESTRIAN_SPECS.length,
+      source: AMBIENT_PEDESTRIAN_TRUTH_SOURCE
+    });
+    expect(getAmbientPedestrianTelemetryState("?roadonly=1")).toEqual({
+      count: 0,
+      source: null
+    });
+  });
+
   test("uses the browser location for verifier scenario mode by default", () => {
     const originalUrl = window.location.href;
     window.history.pushState(
@@ -218,10 +234,13 @@ describe("SimulationCanvas Stage 5 telemetry", () => {
       "data-r3f-sumo-pedestrian-source",
       "simulation_frame_snapshot"
     );
-    viewport.setAttribute("data-r3f-ambient-pedestrian-count", "6");
+    viewport.setAttribute(
+      "data-r3f-ambient-pedestrian-count",
+      String(AMBIENT_PEDESTRIAN_SPECS.length)
+    );
     viewport.setAttribute(
       "data-r3f-ambient-pedestrian-source",
-      "procedural_background_proxy"
+      AMBIENT_PEDESTRIAN_TRUTH_SOURCE
     );
     viewport.setAttribute("data-r3f-pedestrian-truth-separated", "true");
     viewport.append(renderer.domElement);
@@ -303,8 +322,8 @@ describe("SimulationCanvas Stage 5 telemetry", () => {
         pedestrian_truth: {
           sumo_pedestrian_count: 2,
           sumo_pedestrian_source: "simulation_frame_snapshot",
-          ambient_pedestrian_count: 6,
-          ambient_pedestrian_source: "procedural_background_proxy",
+          ambient_pedestrian_count: AMBIENT_PEDESTRIAN_SPECS.length,
+          ambient_pedestrian_source: AMBIENT_PEDESTRIAN_TRUTH_SOURCE,
           truth_separated: true
         }
       })
@@ -359,6 +378,7 @@ describe("SimulationCanvas Stage 5 telemetry", () => {
       "react.suspense",     // Suspense-wrapped RoadSurfaceLayer (asphalt texture)
       "GroundDressingLayer", // continuous ground/sidewalks/curbs/apron under the road
       "MarkingDecalLayer",  // metric marking decals (photobash default) replace flat vector markings
+      "AmbientPedestrianLayer",
       "DynamicVehicleLayer",
       "DynamicPedestrianLayer",
       "SignalLayer",

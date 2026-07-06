@@ -23,6 +23,7 @@ import {
   BUILDING_SAFE_Z,
   type BuildingForm
 } from "./buildingFootprints";
+import { HERO_BUILDING_IDS } from "./heroBuildingFacades";
 
 // ── buildingFootprints data validation ───────────────────────────────────────
 
@@ -91,6 +92,32 @@ describe("buildingFootprints (faithful 강남역 skyline)", () => {
       // Further east (larger x) → taller.
       expect(east[i].size[1]).toBeGreaterThan(east[i - 1].size[1]);
       expect(east[i].form).toBe("glassTower");
+    }
+  });
+
+  it("adds named rear city-fill footprints using low-cost skyline forms", () => {
+    const cityFillIds = [
+      "northwest-rear-fill",
+      "northeast-rear-fill",
+      "southwest-rear-fill",
+      "southeast-rear-fill"
+    ];
+    const fillers = cityFillIds.map((id) => {
+      const footprint = BUILDING_FOOTPRINTS.find((b) => b.id === id);
+      expect(footprint, `Missing city-fill footprint "${id}"`).toBeDefined();
+      return footprint!;
+    });
+
+    expect(fillers).toHaveLength(4);
+    expect(
+      fillers.every((b) => b.form === "distant" || b.form === "midriseCommercial")
+    ).toBe(true);
+    expect(fillers.every((b) => b.size[1] >= 24 && b.size[1] <= 90)).toBe(true);
+    for (const filler of fillers) {
+      expect(
+        HERO_BUILDING_IDS.has(filler.id),
+        `City-fill footprint "${filler.id}" must stay on the merged shared-material path`
+      ).toBe(false);
     }
   });
 

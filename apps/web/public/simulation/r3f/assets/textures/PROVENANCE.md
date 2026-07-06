@@ -21,6 +21,29 @@ This atlas is runtime source material, not standalone proof. Runtime proof comes
 from browser-rendered `/dashboard` R3F screenshots showing the sampled cells in
 the scene.
 
+## Ambient Pedestrian Commuter Atlas
+
+Generated with the built-in ImageGen tool on 2026-07-06 and copied into the
+project by the primary agent:
+
+- Runtime/source path: `apps/web/public/simulation/r3f/assets/sprites/pedestrian-commuter-atlas.png`
+- Built-in ImageGen original: `C:\Users\100ri\.codex\generated_images\019f35cf-a322-71a1-964f-3cdd305c7a6c\ig_04c80e2eb64a0316016a4b49fca3e081918a8396253a075ff2.png`
+- Generation mode: built-in `image_gen`
+- Asset role: runtime alpha sprite atlas for ambient sidewalk pedestrians in the R3F dashboard scene.
+- Runtime usage: sampled by `AmbientPedestrianLayer` through fixed UV cells as 3D-positioned sprite impostors for sidewalk/background pedestrian visual context only.
+- Truth boundary: these sprites are never SUMO pedestrian truth, TraCI truth, detector truth, CCTV truth, or signal-control input. Runtime telemetry labels them as `ambient_background_proxy`.
+- Processing: repo-installed `sharp` converted the solid green chroma background into alpha and applied a small despill pass before copying the PNG into the runtime sprite directory.
+- Dimensions: 1254x1254 PNG with alpha, intentionally non-power-of-two as generated. The renderer clamps fixed atlas cells and does not tile or repeat it as a material.
+- License/authorship: project-authored generated runtime sprite atlas; no external downloads, stock packs, third-party assets, logos, text, or watermarks.
+
+Prompt summary: 4x2 atlas of eight photoreal Seoul/Gangnam commuter
+pedestrians on solid green chroma background; neutral clothing, no logos, no
+text, no watermarks.
+
+This atlas is runtime source material, not standalone proof. Runtime proof comes
+from browser-rendered `/dashboard` R3F screenshots showing the sampled sprite
+impostors in the scene.
+
 ## Stage 4.1 Texture Provenance
 
 Generated locally for the R3F dashboard asset pipeline on 2026-06-17 with the repo-installed `sharp` package and deterministic project-authored procedural routines.

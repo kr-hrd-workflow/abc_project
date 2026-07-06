@@ -4,6 +4,10 @@ import { useMemo } from "react";
 
 import type { SimulationViewportProps } from "../SimulationViewportFallback";
 import type { SimulationFrameBufferEntry } from "../../lib/simulationSnapshot";
+import {
+  AMBIENT_PEDESTRIAN_SPECS,
+  AMBIENT_PEDESTRIAN_TRUTH_SOURCE
+} from "./AmbientPedestrianLayer";
 import { buildFixtureSceneSnapshot, buildSceneSnapshot } from "./buildSceneSnapshot";
 import { getCorridorLengthDataAttribute } from "./roadGeometry";
 import {
@@ -30,6 +34,18 @@ import {
 import { STREET_FURNITURE_CONTACT_SHADOWS } from "./StreetFurnitureLayer";
 
 export const STAGE5_RENDERER_MODE = "r3f_photoreal_stage5";
+
+export function getAmbientPedestrianTelemetryState(search?: string) {
+  const query =
+    search ??
+    (typeof window === "undefined" ? "" : window.location.search);
+  const isRoadOnly = new URLSearchParams(query).get("roadonly") === "1";
+
+  return {
+    count: isRoadOnly ? 0 : AMBIENT_PEDESTRIAN_SPECS.length,
+    source: isRoadOnly ? null : AMBIENT_PEDESTRIAN_TRUTH_SOURCE
+  };
+}
 
 export function R3FSimulationViewport({
   status,
@@ -77,8 +93,10 @@ export function R3FSimulationViewport({
   // replaces the retired static hero-placement constant.
   const glbVehicleCount = trafficRenderPlan.preciseVehicles.length;
   const visibleSumoPedestrianCount = sceneSnapshot.pedestrians.length;
-  // ambient pedestrians retired with SceneClutterLayer; SUMO persons arrive in sub-project B
-  const ambientPedestrianCount = 0;
+  const ambientPedestrianTelemetry = useMemo(
+    () => getAmbientPedestrianTelemetryState(),
+    []
+  );
   const highQualityVehicleCount = trafficRenderPlan.preciseVehicles.filter(
     (vehicle) => vehicle.highQualityGlbEligible
   ).length;
@@ -140,8 +158,10 @@ export function R3FSimulationViewport({
       data-r3f-visible-vehicle-count={visibleVehicleCount}
       data-r3f-sumo-pedestrian-count={visibleSumoPedestrianCount}
       data-r3f-sumo-pedestrian-source={sceneSnapshot.precisePedestrianSource}
-      data-r3f-ambient-pedestrian-count={ambientPedestrianCount}
-      data-r3f-ambient-pedestrian-source="procedural_background_proxy"
+      data-r3f-ambient-pedestrian-count={ambientPedestrianTelemetry.count}
+      data-r3f-ambient-pedestrian-source={
+        ambientPedestrianTelemetry.source ?? undefined
+      }
       data-r3f-pedestrian-truth-separated="true"
       data-r3f-glb-vehicle-count={glbVehicleCount}
       data-r3f-shadow-enabled={STAGE5_SHADOWS_ENABLED ? "true" : "false"}

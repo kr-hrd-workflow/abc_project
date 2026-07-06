@@ -3,6 +3,7 @@
 import { Suspense } from "react";
 
 import type { SceneSnapshot } from "./buildSceneSnapshot";
+import { AmbientPedestrianLayer } from "./AmbientPedestrianLayer";
 import { BuildingLayer } from "./BuildingLayer";
 import { CameraRig } from "./CameraRig";
 import { DynamicPedestrianLayer } from "./DynamicPedestrianLayer";
@@ -121,6 +122,7 @@ export function SimulationScene({
       <MarkingDecalLayer
         useTextures={qualityPreset.name === "high" || qualityPreset.name === "ultra"}
       />
+      {!isRoadOnly && <AmbientPedestrianLayer viewpoint={activeViewpoint} />}
       {!isRoadOnly && (
         <DynamicVehicleLayerWithWeather
           isNight={isNight}

@@ -6,6 +6,7 @@ import {
   buildR3FTelemetryEvent,
   publishR3FTelemetryEvent
 } from "./r3fTelemetry";
+import { AMBIENT_PEDESTRIAN_TRUTH_SOURCE } from "../components/r3f/AmbientPedestrianLayer";
 
 afterEach(() => {
   delete window.__r3fTelemetryEvent;
@@ -52,7 +53,7 @@ describe("R3F telemetry", () => {
         sumoPedestrianCount: 2,
         sumoPedestrianSource: "simulation_frame_snapshot",
         ambientPedestrianCount: 6,
-        ambientPedestrianSource: "procedural_background_proxy",
+        ambientPedestrianSource: AMBIENT_PEDESTRIAN_TRUTH_SOURCE,
         truthSeparated: true
       },
       jsHeapBytes: 2048,
@@ -111,7 +112,7 @@ describe("R3F telemetry", () => {
         sumo_pedestrian_count: 2,
         sumo_pedestrian_source: "simulation_frame_snapshot",
         ambient_pedestrian_count: 6,
-        ambient_pedestrian_source: "procedural_background_proxy",
+        ambient_pedestrian_source: AMBIENT_PEDESTRIAN_TRUTH_SOURCE,
         truth_separated: true
       },
       js_heap_bytes: 2048,

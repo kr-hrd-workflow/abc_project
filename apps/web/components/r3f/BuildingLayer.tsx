@@ -10,8 +10,10 @@
 //   • Glass towers keep the photographic curtain-wall texture (3 tints); mid-/
 //     low-rise side-street buildings use a duller concrete/small-window look so
 //     the city is not all identical glass. Dark podium bases meet the ground.
-//   • DAY: every non-distant footprint is a hero building with its own imagegen
-//     photo set (heroBuildingFacades.ts). NIGHT map+emissiveMap =
+//   • DAY: every prominent frontage/tower footprint is a hero building with
+//     its own imagegen photo set (heroBuildingFacades.ts). Rear fill stays on
+//     the merged shared-material path to keep the operator view dense without
+//     blowing the draw-call budget. NIGHT map+emissiveMap =
 //     facade-windows-night.webp so lit windows glow under bloom.
 //   • Sky: graded gradient dome (day: blue→hazy horizon + faint clouds; night:
 //     dark zenith→warm city-glow horizon) replacing the flat procedural sky.
@@ -69,12 +71,11 @@ import type { Stage6QualityPreset, Stage6TimeOfDay } from "./stage6Quality";
 
 export const FACADE_NIGHT_TEXTURE_PATH =
   "/simulation/r3f/assets/textures/facade-windows-night.webp";
-// Day glass-tower/mid-rise facades come from HERO_BUILDING_IDS's per-building
-// photo set (heroBuildingFacades.ts) instead — every non-distant footprint is
-// a hero building now, so the old shared day facade-glass/signage textures and
-// the per-building elevation pool (facade-elev-*) never render and were
-// deleted (chore/asset-cleanup). Night keeps the shared lit-window sheet below
-// since hero mode is day-only.
+// Day glass-tower/mid-rise facades for prominent frontage/tower buildings come
+// from HERO_BUILDING_IDS's per-building photo set (heroBuildingFacades.ts).
+// Rear city-fill buildings intentionally remain on the merged shared-material
+// path so they add density without extra hero meshes. Night keeps the shared
+// lit-window sheet below since hero mode is day-only.
 
 // One glass tile covers ~14 m of facade → ≈4 floors at ~3.5 m/floor.
 export const FACADE_METERS_PER_TILE = 14;
@@ -583,8 +584,8 @@ function BuildingVolumeSet({
 
   // Merge every sub-volume by material group → ~6 geometries for the whole city.
   // (Day mid-rise/glass shafts used to pull into a per-building facade-elevation
-  // pool here; every non-distant footprint is a hero building now, so that pool
-  // never received a volume — removed with the facade-elev-* textures.)
+  // pool here; prominent frontage/tower buildings are hero-skipped, while rear
+  // fill stays merged to preserve the draw-call budget.)
   const merged = useMemo(() => {
     const byGroup = new Map<VolumeGroup, BufferGeometry[]>();
     const push = (g: VolumeGroup, geo: BufferGeometry) => {
@@ -647,12 +648,10 @@ function BuildingVolumeSet({
     return t;
   };
   // Glass towers = dark Samsung glass (day) / lit windows (night); mid-rise
-  // commercial = Gangnam illuminated-signage facade (day) / lit windows
-  // (night). Both "day" cases are hero-skipped in the merge loop above so
-  // their group never renders — the day-only source textures they used to
-  // read (facade-glass-day / facade-signage-day) were dead and deleted, so
-  // both collapse to the night sheet unconditionally (only the isNight===true
-  // render path ever samples these).
+  // commercial = shared facade detail for rear fill (day) / lit windows
+  // (night). Prominent day buildings are hero-skipped in the merge loop above;
+  // rear fill deliberately samples this shared path to avoid extra hero draw
+  // calls.
   const facadeTex = useMemo(() => wrapFacade(nightTex), [nightTex]);
   const concreteFacadeTex = useMemo(() => wrapFacade(nightTex), [nightTex]);
 

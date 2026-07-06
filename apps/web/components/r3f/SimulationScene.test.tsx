@@ -88,13 +88,14 @@ describe("photoreal param retired", () => {
 });
 
 describe("default scene (no URL params)", () => {
-  test("mounts the photobash composition with pedestrians and orbit controls", () => {
+  test("mounts the photobash composition with ambient and SUMO pedestrians", () => {
     setSearch("");
     const scene = SimulationScene({ sceneSnapshot: snapshot() });
     const names = collectDeepDisplayNames(scene);
     expect(names).toContain("MarkingDecalLayer");
     expect(names).toContain("LimitedOrbitControls");
     expect(names).toContain("BuildingLayer");
+    expect(names).toContain("AmbientPedestrianLayer");
     expect(names).toContain("DynamicPedestrianLayer");
     expect(names).toContain("SignalLayer");
     expect(names).toContain("GroundDressingLayer");
@@ -123,6 +124,7 @@ describe("default scene (no URL params)", () => {
     expect(names).toContain("MarkingDecalLayer");
     expect(names).not.toContain("BuildingLayer");
     expect(names).not.toContain("DynamicVehicleLayer");
+    expect(names).not.toContain("AmbientPedestrianLayer");
     expect(names).not.toContain("SignalLayer");
     expect(names).not.toContain("GroundDressingLayer");
     expect(names).not.toContain("StreetFurnitureLayer");
@@ -138,6 +140,22 @@ describe("default scene (no URL params)", () => {
     });
     const rig = findElementByDisplayName(scene, "Stage3CameraRig");
     expect((rig?.props as { preset?: string })?.preset).toBe("operatorCctv");
+  });
+
+  test("cctv viewpoint threads into ambient pedestrians for legible impostors", () => {
+    setSearch("");
+    const scene = SimulationScene({
+      sceneSnapshot: snapshot(),
+      viewpoint: "cctv"
+    });
+    const ambientLayer = findElementByDisplayName(
+      scene,
+      "AmbientPedestrianLayer"
+    );
+
+    expect((ambientLayer?.props as { viewpoint?: string })?.viewpoint).toBe(
+      "cctv"
+    );
   });
 });
 

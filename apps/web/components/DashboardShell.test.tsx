@@ -95,6 +95,16 @@ vi.mock("./r3f/BuildingLayer", () => ({
 vi.mock("./r3f/GroundDressingLayer", () => ({
   GroundDressingLayer: () => null
 }));
+// AmbientPedestrianLayer loads the generated pedestrian atlas via useTexture
+// (drei hook), which also requires a real R3F Canvas context. Stub it for the
+// same reason.
+vi.mock("./r3f/AmbientPedestrianLayer", () => ({
+  AMBIENT_PEDESTRIAN_SPECS: Array.from({ length: 12 }, (_, index) => ({
+    id: `test-ambient-pedestrian-${index}`
+  })),
+  AMBIENT_PEDESTRIAN_TRUTH_SOURCE: "ambient_background_proxy",
+  AmbientPedestrianLayer: () => null
+}));
 // LimitedOrbitControls wraps drei's OrbitControls, which calls useThree and thus
 // requires a real R3F Canvas context. Stub it — this suite renders SimulationScene
 // without a Canvas to assert CameraRig target application.
@@ -524,6 +534,7 @@ const stage4RequiredAssetIds = [
   "textures/vehicle_paint_detail",
   "textures/vehicle_paint_normal",
   "sprites/stage6_weather_material_source_atlas",
+  "sprites/pedestrian_commuter_atlas",
   // Task 5 day-scene ground fill: imagegen ground atlas + corner plaza plates,
   // plus the 3 pre-existing (previously unregistered) imagegen marking paints.
   "textures/ground/sidewalk_atlas_a",

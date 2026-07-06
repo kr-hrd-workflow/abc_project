@@ -331,6 +331,38 @@ export const BUILDING_FOOTPRINTS: BuildingFootprint[] = [
     tint: "#54606e"
   },
 
+  // Rear quadrant fill — simple off-carriageway massing behind the hero
+  // frontage blocks, so the operator-wide camera reads as a denser city grid
+  // without adding new facade assets or simulation truth.
+  {
+    id: "northwest-rear-fill",
+    position: [-118, 32, -118],
+    size: [42, 64, 36],
+    form: "midriseCommercial",
+    tint: "#525e6a"
+  },
+  {
+    id: "northeast-rear-fill",
+    position: [126, 34, -126],
+    size: [44, 68, 38],
+    form: "midriseCommercial",
+    tint: "#566270"
+  },
+  {
+    id: "southwest-rear-fill",
+    position: [-132, 36, 126],
+    size: [46, 72, 38],
+    form: "midriseCommercial",
+    tint: "#56606c"
+  },
+  {
+    id: "southeast-rear-fill",
+    position: [132, 30, 134],
+    size: [42, 60, 36],
+    form: "midriseCommercial",
+    tint: "#54606c"
+  },
+
   // ───── Distant ring: low-detail horizon silhouette ─────
   // East ring is taller (Teheran Valley distance); other sides lower.
   {
