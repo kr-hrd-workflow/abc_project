@@ -91,7 +91,6 @@ if (
   !/jsdom/i.test(window.navigator?.userAgent ?? "")
 ) {
   useTexture.preload(FACADE_NIGHT_TEXTURE_PATH);
-  for (const p of allHeroFaceTexturePaths()) useTexture.preload(p);
 }
 
 // ── jsdom guard ───────────────────────────────────────────────────────────────
@@ -527,7 +526,10 @@ export type BuildingLayerProps = {
 
 // BuildingLayerComponent is hook-free so it can be called directly in unit
 // tests (same pattern as SceneEnvironment). Hooks live in BuildingVolumeSet.
-function BuildingLayerComponent({ timeOfDay = "day" }: BuildingLayerProps) {
+function BuildingLayerComponent({
+  timeOfDay = "day",
+  qualityPreset
+}: BuildingLayerProps) {
   const isNight = timeOfDay === "night";
 
   return (
@@ -541,7 +543,7 @@ function BuildingLayerComponent({ timeOfDay = "day" }: BuildingLayerProps) {
       {/* Merged building volumes live in a child component so useTexture/useMemo
           hooks only run during real React rendering, not when BuildingLayer is
           called directly by unit tests. */}
-      <BuildingVolumeSet isNight={isNight} />
+      <BuildingVolumeSet isNight={isNight} qualityPreset={qualityPreset} />
     </group>
   );
 }
@@ -555,8 +557,17 @@ BuildingLayer.displayName = "BuildingLayer";
 
 // ── Building volume set (has hooks) ──────────────────────────────────────────
 
-function BuildingVolumeSet({ isNight }: { isNight: boolean }) {
+function BuildingVolumeSet({
+  isNight,
+  qualityPreset
+}: {
+  isNight: boolean;
+  qualityPreset?: Stage6QualityPreset;
+}) {
   const nightTex = useTexture(FACADE_NIGHT_TEXTURE_PATH) as Texture;
+  const useHeroTextures =
+    !isNight &&
+    qualityPreset?.name !== "low";
 
   // Hero buildings: a few prominent footprints get a DISTINCT imagegen photo
   // per real-world wall (front/left/right/back/top) instead of one elevation
@@ -564,7 +575,11 @@ function BuildingVolumeSet({ isNight }: { isNight: boolean }) {
   // pipeline below (no night photoset yet). Loaded as a flat array; index
   // heroIdx*HERO_FACE_KEYS.length + faceIdx matches allHeroFaceTexturePaths()'s
   // nested order.
-  const heroTexFlat = useTexture(allHeroFaceTexturePaths()) as Texture[];
+  const heroTexturePaths = useMemo(
+    () => (useHeroTextures ? allHeroFaceTexturePaths() : [FACADE_NIGHT_TEXTURE_PATH]),
+    [useHeroTextures]
+  );
+  const heroTexFlat = useTexture(heroTexturePaths) as Texture[];
 
   // Merge every sub-volume by material group → ~6 geometries for the whole city.
   // (Day mid-rise/glass shafts used to pull into a per-building facade-elevation
@@ -579,7 +594,7 @@ function BuildingVolumeSet({ isNight }: { isNight: boolean }) {
     };
 
     for (const fp of BUILDING_FOOTPRINTS) {
-      if (!isNight && HERO_BUILDING_IDS.has(fp.id)) continue;
+      if (useHeroTextures && HERO_BUILDING_IDS.has(fp.id)) continue;
       const hash = hashId(fp.id);
       const offset: [number, number] = [(hash % 7) / 7, ((hash >> 3) % 5) / 5];
       for (const vol of composeBuildingVolumes(fp)) {
@@ -618,7 +633,7 @@ function BuildingVolumeSet({ isNight }: { isNight: boolean }) {
       if (geo) result.set(group, geo);
     }
     return result;
-  }, [isNight]);
+  }, [isNight, useHeroTextures]);
 
   // Shared facade texture: tiling is baked into UVs, so repeat stays [1,1] and
   // wrapping handles the >1 UVs. One texture instance serves every glass group.
@@ -655,7 +670,7 @@ function BuildingVolumeSet({ isNight }: { isNight: boolean }) {
     []
   );
   const heroMeshes = useMemo(() => {
-    if (isNight) return [];
+    if (!useHeroTextures) return [];
     return HERO_BUILDINGS.map((hero, heroIdx) => {
       const fp = BUILDING_FOOTPRINTS.find((b) => b.id === hero.id);
       if (!fp) return null;
@@ -719,7 +734,7 @@ function BuildingVolumeSet({ isNight }: { isNight: boolean }) {
       m !== null
     );
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isNight, heroTexFlat, roofMaterial]);
+  }, [heroTexFlat, roofMaterial, useHeroTextures]);
 
   return (
     <group name="gangnam-building-massing">

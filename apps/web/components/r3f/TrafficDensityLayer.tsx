@@ -375,6 +375,10 @@ export function TrafficDensityLayer({
       name={`stage5-traffic-density-${plan.mode}`}
       userData={{
         visibleVehicleCount: plan.farVehicles.length + plan.preciseVehicles.length,
+        vehicleMotion:
+          sceneSnapshot.source === "sumo_traci"
+            ? "sumo_frame_stream"
+            : "frame_extrapolation",
         qualityPreset: qualityPreset.name,
         stage6VehicleLodPolicy: STAGE6_VEHICLE_LOD_POLICY,
         stage6PreciseVehicleLodTiers: countStage6VehicleLodTiers(
@@ -974,6 +978,7 @@ function Stage5TrafficVehicleInstances({
       name={name}
       userData={{
         vehicleCount: vehicles.length,
+        vehicleMotion: "frame_extrapolation",
         castsRealShadows: castRealShadows,
         stage6VehicleLodTiers: countStage6VehicleLodTiers(vehicles),
         highQualityGlbEligibleVehicleCount: vehicles.filter(

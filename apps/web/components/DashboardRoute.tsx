@@ -47,6 +47,7 @@ import type {
 } from "../lib/types";
 import { SCENARIO_OPTIONS } from "../lib/types";
 import { CITY_PROFILES } from "../lib/cities";
+import type { Locale } from "../lib/i18n";
 import {
   DEFAULT_SCENE_PRESENTATION,
   getStage6PresentationMode,
@@ -54,6 +55,7 @@ import {
 } from "./r3f/stage6Quality";
 
 const DEFAULT_SCENARIO_ID: ScenarioId = "normal";
+const SUMO_SCENARIO_WARMUP_DELAY_MS = 3000;
 
 type DashboardData = {
   status: IntersectionStatus;
@@ -198,8 +200,13 @@ export function DashboardRoute() {
 
   // Best-effort, off the critical path: a CCTV measurement can take ~30s and may
   // have no source, so it must never block or fail the dashboard load.
-  // ponytail: fetch once on mount; add polling if a live-refresh tile is needed.
   useEffect(() => {
+    if (!data) return;
+    if (!shouldRequestCctvFlow(data.runtimeReadiness)) {
+      setCctvFlow(null);
+      return;
+    }
+
     let cancelled = false;
     getCctvFlow()
       .then((flow) => {
@@ -211,7 +218,34 @@ export function DashboardRoute() {
     return () => {
       cancelled = true;
     };
-  }, []);
+  }, [data?.runtimeReadiness]);
+
+  useEffect(() => {
+    if (!dashboardLoaded || !simulationFrameRouteAvailable) return;
+
+    let cancelled = false;
+    let warmupTimer: ReturnType<typeof setTimeout> | null = null;
+    const warmScenarios = async () => {
+      for (const scenarioId of SCENARIO_OPTIONS.map((option) => option.id)) {
+        if (cancelled || scenarioId === selectedScenarioIdRef.current) continue;
+        await loadSimulationFrame(scenarioId);
+      }
+    };
+
+    warmupTimer = setTimeout(
+      () =>
+        void warmScenarios().catch(() => {
+          // SUMO warmup is only a demo smoothness optimization. Normal polling
+          // and fixture fallback still own the user-visible state.
+        }),
+      SUMO_SCENARIO_WARMUP_DELAY_MS
+    );
+
+    return () => {
+      cancelled = true;
+      if (warmupTimer) clearTimeout(warmupTimer);
+    };
+  }, [dashboardLoaded, simulationFrameRouteAvailable]);
 
   useEffect(() => {
     return () => {
@@ -329,8 +363,8 @@ export function DashboardRoute() {
     }
   }
 
-  async function handleAskQuestion(question: string) {
-    const chat = await askQuestion(question, selectedScenarioId);
+  async function handleAskQuestion(question: string, locale: Locale) {
+    const chat = await askQuestion(question, selectedScenarioId, locale);
     setData((current) => (current ? { ...current, chat } : current));
   }
 
@@ -459,6 +493,10 @@ function formatDashboardError(error: string) {
     return "The API server is not reachable. Start the API service and try again.";
   }
   return error;
+}
+
+export function shouldRequestCctvFlow(readiness: RuntimeReadiness): boolean {
+  return readiness.vision.mode === "opencv_yolo" && readiness.vision.ready;
 }
 
 async function loadSimulationFrame(

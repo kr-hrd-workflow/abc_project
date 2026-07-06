@@ -212,6 +212,12 @@ def _simulation_section(
         if settings.sumo_binary_path
         else "install SUMO system binaries and keep SUMO_BINARY configured"
     )
+    netconvert_name = _netconvert_binary_name(settings)
+    netconvert_check = (
+        path_exists(netconvert_name)
+        if settings.sumo_binary_path and netconvert_name != "netconvert"
+        else binary_available(netconvert_name)
+    )
     config_name = (
         f"SUMO config dir {settings.sumo_config_dir}"
         if settings.sumo_config_dir
@@ -237,8 +243,8 @@ def _simulation_section(
                 detail=binary_detail,
             ),
             _check(
-                "binary netconvert",
-                binary_available("netconvert"),
+                f"binary {netconvert_name}",
+                netconvert_check,
                 detail="install SUMO system binaries",
             ),
             _check(
@@ -248,6 +254,16 @@ def _simulation_section(
             ),
         ],
     )
+
+
+def _netconvert_binary_name(settings: Settings) -> str:
+    if not settings.sumo_binary_path:
+        return "netconvert"
+
+    sumo_path = Path(settings.sumo_binary_path)
+    suffix = sumo_path.suffix
+    candidate = sumo_path.with_name(f"netconvert{suffix}")
+    return str(candidate)
 
 
 def _module_available(module_name: str) -> bool:

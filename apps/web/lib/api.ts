@@ -13,6 +13,7 @@ import type {
   TrafficEvent,
   UploadAnalysisResult
 } from "./types";
+import type { Locale } from "./i18n";
 import type { SimulationFrameSnapshot } from "./simulationSnapshot";
 
 const API_BASE_URL = normalizeApiBaseUrl(
@@ -131,12 +132,13 @@ export function isSimulationFrameRouteMissingError(error: unknown): boolean {
 
 export async function askQuestion(
   question: string,
-  scenarioId?: ScenarioId
+  scenarioId?: ScenarioId,
+  locale?: Locale
 ): Promise<ChatResponse> {
   try {
     return await requestScenarioJson<ChatResponse>("/api/chat", scenarioId, {
       method: "POST",
-      body: JSON.stringify({ question })
+      body: JSON.stringify({ question, locale })
     });
   } catch (error) {
     if (isMissingRouteError(error)) {
@@ -271,16 +273,16 @@ function fallbackSimulation(): SimulationComparison {
       emergency_vehicle_clearance_seconds: 42
     },
     recommended: {
-      average_wait_seconds: 46,
-      total_delay_seconds: 91.3,
-      throughput: 1321,
+      average_wait_seconds: 56,
+      total_delay_seconds: 105.3,
+      throughput: 1298,
       emergency_vehicle_clearance_seconds: 24
     },
     improvement: {
-      average_wait_delta_seconds: -22,
-      average_wait_percent: -32,
-      total_delay_percent: -29,
-      throughput_percent: 6
+      average_wait_delta_seconds: -12,
+      average_wait_percent: -17.6,
+      total_delay_percent: 18,
+      throughput_percent: 4.2
     }
   };
 }

@@ -164,6 +164,39 @@ def test_binary_available_finds_python_environment_scripts(
     assert runtime_readiness._binary_available("sumo") is True
 
 
+def test_runtime_readiness_finds_netconvert_next_to_configured_sumo_binary(
+    tmp_path: Path,
+) -> None:
+    bin_dir = tmp_path / "Scripts"
+    bin_dir.mkdir()
+    sumo_binary = bin_dir / "sumo.exe"
+    netconvert_binary = bin_dir / "netconvert.exe"
+    config_file = tmp_path / "intersection.sumocfg"
+    sumo_binary.write_text("")
+    netconvert_binary.write_text("")
+    config_file.write_text("")
+
+    readiness = get_runtime_readiness(
+        Settings(
+            sumo_simulation_mode="sumo_traci",
+            sumo_binary_path=str(sumo_binary),
+            sumo_config_path=str(config_file),
+        ),
+        module_available=lambda module_name: module_name in {"traci", "sumolib"},
+        binary_available=lambda _binary_name: False,
+        path_exists=lambda path: Path(path).exists(),
+        env={},
+        vector_extension_verified=lambda: False,
+    )
+
+    assert readiness["simulation"]["ready"] is True
+    assert readiness["simulation"]["checks"][3] == {
+        "name": f"binary {netconvert_binary}",
+        "available": True,
+        "detail": "install SUMO system binaries",
+    }
+
+
 def test_committed_sumo_network_fixture_files_exist() -> None:
     base_path = Path(__file__).resolve().parents[1] / "networks"
 

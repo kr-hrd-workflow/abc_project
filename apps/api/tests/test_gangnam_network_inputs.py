@@ -14,6 +14,14 @@ def _edges() -> dict[str, ET.Element]:
     return {e.get("id"): e for e in root.findall("edge")}
 
 
+def test_sumo_config_uses_frontend_authoritative_tick_length() -> None:
+    root = ET.parse(NET_DIR / "intersection.sumocfg").getroot()
+    step_length = root.find("./time/step-length")
+
+    assert step_length is not None
+    assert float(step_length.get("value")) == 0.1
+
+
 def test_nodes_follow_coordinate_contract() -> None:
     nodes = {n.get("id"): n for n in ET.parse(NET_DIR / "gangnam.nod.xml").getroot().findall("node")}
     assert (float(nodes["center"].get("x")), float(nodes["center"].get("y"))) == (0.0, 0.0)

@@ -49,9 +49,27 @@ export function mergeDecalGeometriesByKey(
   }));
 }
 
-type Props = { textureUrls?: Partial<Record<MarkingTextureKey, string>> };
+type Props = {
+  textureUrls?: Partial<Record<MarkingTextureKey, string>>;
+  useTextures?: boolean;
+};
 
-export function MarkingDecalLayer({ textureUrls }: Props) {
+const FALLBACK_COLORS: Record<MarkingTextureKey, string> = {
+  lane_dashed: "#d7d5cc",
+  lane_solid: "#eceadf",
+  center_yellow: "#e3c64a",
+  bus_border: "#2f6fd0",
+  stop_bar: "#eceadf",
+  crosswalk: "#e3e1d8",
+  manhole: "#2e3236",
+  wear_patch: "#4a4640",
+};
+
+export function MarkingDecalLayer({ textureUrls, useTextures = true }: Props) {
+  if (!useTextures) {
+    return <PlainMarkingDecalLayer />;
+  }
+
   const urls = { ...PLACEHOLDER_URLS, ...(textureUrls ?? {}) };
   const keys = Object.keys(urls) as MarkingTextureKey[];
   const texList = useTexture(keys.map((k) => urls[k]));
@@ -80,3 +98,25 @@ export function MarkingDecalLayer({ textureUrls }: Props) {
 }
 
 MarkingDecalLayer.displayName = "MarkingDecalLayer";
+
+function PlainMarkingDecalLayer() {
+  const groups = useMemo(() => mergeDecalGeometriesByKey(), []);
+
+  return (
+    <group name="marking-decal-layer">
+      {groups.map(({ key, geometry }) => (
+        <mesh key={key} name={`marking-decal-${key}`} geometry={geometry} renderOrder={7}>
+          <meshBasicMaterial
+            color={FALLBACK_COLORS[key]}
+            transparent={key === "wear_patch"}
+            opacity={key === "wear_patch" ? 0.36 : 1}
+            depthWrite={false}
+            toneMapped={false}
+          />
+        </mesh>
+      ))}
+    </group>
+  );
+}
+
+PlainMarkingDecalLayer.displayName = "PlainMarkingDecalLayer";

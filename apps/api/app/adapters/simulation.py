@@ -1,10 +1,11 @@
 from dataclasses import dataclass
 import hashlib
+import threading
 from typing import Protocol
 
 from app.core.binaries import resolve_binary_path
 from app.domain.schemas import SimulationComparison, SimulationMetrics
-from app.scenarios.data import SIMULATION_COMPARISON
+from app.scenarios.data import SCENARIO_SIMULATION_COMPARISONS, SIMULATION_COMPARISON
 
 
 @dataclass(frozen=True)
@@ -28,7 +29,10 @@ class SumoSimulationRunner(Protocol):
 
 class FixtureSumoSimulationRunner:
     def compare_plans(self, scenario_id: str) -> SumoSimulationResult:
-        comparison = SIMULATION_COMPARISON
+        comparison = SCENARIO_SIMULATION_COMPARISONS.get(
+            scenario_id,
+            SIMULATION_COMPARISON,
+        )
         return SumoSimulationResult(
             baseline=SumoSimulationMetrics(
                 average_wait_seconds=comparison.baseline.average_wait_seconds,
@@ -63,12 +67,14 @@ class TraciSumoSimulationRunner:
         self.step_count = step_count
         self.traci_module = traci_module or _load_traci_module()
         self.recommended_phase_duration_seconds = recommended_phase_duration_seconds
+        self._lock = threading.Lock()
 
     def compare_plans(self, scenario_id: str) -> SumoSimulationResult:
-        return SumoSimulationResult(
-            baseline=self._run_plan(scenario_id, "baseline"),
-            recommended=self._run_plan(scenario_id, "recommended"),
-        )
+        with self._lock:
+            return SumoSimulationResult(
+                baseline=self._run_plan(scenario_id, "baseline"),
+                recommended=self._run_plan(scenario_id, "recommended"),
+            )
 
     def _run_plan(
         self,

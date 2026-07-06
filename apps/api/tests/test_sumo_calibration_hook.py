@@ -1,3 +1,5 @@
+from pathlib import Path
+
 from app.core.config import Settings
 from app.services.sumo_runtime import SumoRuntimeService
 
@@ -43,7 +45,7 @@ def test_static_config_when_flag_off() -> None:
 
     path = service._configured_config_path("normal", "sumo_traci")
 
-    assert path == "networks/intersection.sumocfg"
+    assert Path(path).as_posix() == "networks/normal.sumocfg"
     assert calls == []  # calibrator never consulted
 
 
@@ -52,7 +54,7 @@ def test_falls_back_when_calibrator_returns_none() -> None:
 
     path = service._configured_config_path("normal", "sumo_traci")
 
-    assert path == "networks/intersection.sumocfg"
+    assert Path(path).as_posix() == "networks/normal.sumocfg"
 
 
 def test_falls_back_when_calibrator_raises() -> None:
@@ -63,4 +65,4 @@ def test_falls_back_when_calibrator_raises() -> None:
 
     path = service._configured_config_path("normal", "sumo_traci")
 
-    assert path == "networks/intersection.sumocfg"
+    assert Path(path).as_posix() == "networks/normal.sumocfg"

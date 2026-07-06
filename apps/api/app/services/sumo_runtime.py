@@ -295,9 +295,12 @@ class SumoRuntimeService:
             return calibrated
         if self.settings.sumo_config_dir:
             config_path = self._scenario_config_path_from_dir(scenario_id, mode)
+            config_path_text = str(config_path)
         else:
-            config_path = Path(self.settings.sumo_config_path)
-        config_path_text = str(config_path)
+            config_path_text = self._scenario_config_path_next_to_base(
+                scenario_id,
+                mode,
+            )
         if not self._path_exists(config_path_text):
             raise SumoConfigurationError(
                 f"SUMO config not found: {config_path_text}",
@@ -353,6 +356,22 @@ class SumoRuntimeService:
                 mode=mode,
             ) from exc
         return config_path
+
+    def _scenario_config_path_next_to_base(
+        self,
+        scenario_id: str,
+        mode: LiveSumoMode,
+    ) -> str:
+        if SAFE_SCENARIO_ID_PATTERN.fullmatch(scenario_id) is None:
+            raise SumoConfigurationError(
+                f"Unsafe SUMO scenario id for config lookup: {scenario_id}",
+                mode=mode,
+            )
+        base_config = Path(self.settings.sumo_config_path).expanduser()
+        scenario_config = base_config.with_name(f"{scenario_id}.sumocfg")
+        if self._path_exists(str(scenario_config)):
+            return str(scenario_config)
+        return self.settings.sumo_config_path
 
     def _close_session_client(self, session: SumoRuntimeSession) -> None:
         close = getattr(session.client, "close", None)

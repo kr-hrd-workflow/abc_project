@@ -446,6 +446,39 @@ def test_emergency_chat_answer_includes_safety_boundary(client: TestClient) -> N
     assert "does not control real traffic signals" in response.json()["answer"]
 
 
+def test_korean_locale_chat_fallback_answers_in_korean_for_english_question(
+    client: TestClient,
+) -> None:
+    response = client.post(
+        "/api/chat",
+        json={"question": "What should the operator do?", "locale": "ko"},
+    )
+
+    assert response.status_code == 200
+    payload = response.json()
+    assert "시뮬레이션 전용" in payload["answer"]
+    assert "does not control real traffic signals" not in payload["answer"]
+
+
+def test_korean_chat_wait_time_question_uses_simulation_metrics(
+    client: TestClient,
+) -> None:
+    response = client.post(
+        "/api/chat",
+        json={
+            "question": "시뮬레이션 결과 기준으로 대기시간이 얼마나 줄어?",
+            "locale": "ko",
+        },
+    )
+
+    assert response.status_code == 200
+    payload = response.json()
+    assert "평균 대기시간" in payload["answer"]
+    assert "68.0초" in payload["answer"]
+    assert "56.0초" in payload["answer"]
+    assert "12.0초 감소" in payload["answer"]
+
+
 def test_chat_includes_policy_evidence_when_question_requests_policy(
     client: TestClient,
 ) -> None:

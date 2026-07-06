@@ -41,7 +41,7 @@ export function SimulationViewport(props: SimulationViewportProps) {
       <SimulationViewportFallback
         {...props}
         simulationStreamUrl={simulationStreamUrl}
-        renderMode={genericStreamUrl ? "Hosted simulation stream" : "Legacy stream alias"}
+        renderMode={genericStreamUrl ? "hosted_stream" : "legacy_stream"}
       />
     );
   }
@@ -50,5 +50,5 @@ export function SimulationViewport(props: SimulationViewportProps) {
     return <R3FSimulationViewport {...props} />;
   }
 
-  return <SimulationViewportFallback {...props} renderMode="Digital twin fallback" />;
+  return <SimulationViewportFallback {...props} renderMode="digital_twin_fallback" />;
 }

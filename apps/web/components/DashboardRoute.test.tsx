@@ -3,7 +3,8 @@
 import { cleanup, render, screen } from "@testing-library/react";
 import { afterEach, describe, expect, test, vi } from "vitest";
 
-import { DashboardRoute } from "./DashboardRoute";
+import type { RuntimeReadiness } from "../lib/types";
+import { DashboardRoute, shouldRequestCctvFlow } from "./DashboardRoute";
 
 vi.mock("../lib/api", () => ({
   askQuestion: vi.fn(),
@@ -21,7 +22,9 @@ vi.mock("../lib/api", () => ({
       )
     ),
   getRuntimeReadiness: vi.fn().mockRejectedValue(new Error("not used")),
+  getSimulationFrame: vi.fn().mockRejectedValue(new Error("not used")),
   ingestFixture: vi.fn(),
+  isSimulationFrameRouteMissingError: vi.fn().mockReturnValue(false),
   recommendSignal: vi.fn().mockRejectedValue(new Error("not used")),
   simulateSignal: vi.fn().mockRejectedValue(new Error("not used"))
 }));
@@ -42,5 +45,50 @@ describe("DashboardRoute", () => {
     expect(screen.getByRole("link", { name: "Back to landing" }).getAttribute("href")).toBe(
       "/"
     );
+  });
+});
+
+describe("shouldRequestCctvFlow", () => {
+  test("only requests CCTV flow when the OpenCV/YOLO vision runtime is ready", () => {
+    const readiness: RuntimeReadiness = {
+      vision: {
+        ready: false,
+        mode: "fixture",
+        missing: [],
+        checks: []
+      },
+      simulation: {
+        ready: true,
+        mode: "sumo_traci",
+        missing: [],
+        checks: []
+      },
+      openai: {
+        ready: true,
+        mode: "gpt-5.5",
+        missing: [],
+        checks: []
+      },
+      pgvector: {
+        ready: false,
+        mode: "database",
+        missing: [],
+        checks: []
+      }
+    };
+
+    expect(shouldRequestCctvFlow(readiness)).toBe(false);
+    expect(
+      shouldRequestCctvFlow({
+        ...readiness,
+        vision: { ...readiness.vision, mode: "opencv_yolo", ready: false }
+      })
+    ).toBe(false);
+    expect(
+      shouldRequestCctvFlow({
+        ...readiness,
+        vision: { ...readiness.vision, mode: "opencv_yolo", ready: true }
+      })
+    ).toBe(true);
   });
 });

@@ -1,5 +1,55 @@
 # Plan: Smart Intersection Evidence Readiness
 
+## Current Local Verification Slice: 2026-07-06
+
+Target outcome:
+- Confirm dashboard features use one coherent scenario data source while SUMO
+  supplies moving vehicle/pedestrian visualization.
+
+Completed:
+- Checked `/api/intersection/status`, `/api/events`, `/api/recommend-signal`,
+  `/api/simulate-signal`, `/api/report`, `/api/simulation/frame`, and
+  `/api/chat` across `normal`, `emergency`, `pedestrian`, and `blocked`.
+- Fixed `simulation/frame` so its queues, signals, density segments, and
+  events preserve the scenario evidence used by status/events/recommend/report,
+  while live SUMO remains the vehicle-motion source.
+- Verified dashboard R3F scenario switching on PC viewport for all four
+  scenarios.
+
+Validation:
+- `apps/api/.venv/Scripts/python.exe -m pytest apps/api/tests/test_simulation_snapshot.py -k "scenario_router_sends_all_dashboard_scenarios_to_live_sumo or preserves_scenario_evidence"`
+- `apps/api/.venv/Scripts/python.exe -m pytest apps/api/tests/test_sumo_runtime.py -k "prefers_sibling_scenario_config"`
+- `apps/api/.venv/Scripts/python.exe -m pytest apps/api/tests/test_gangnam_network_inputs.py`
+- SUMO CLI load check for `intersection`, `emergency`, `blocked`, and
+  `pedestrian` configs.
+- Live API audit confirmed equal queues/events between status/events and
+  simulation frame for all four scenarios.
+
+Known local limitation:
+- `/api/traffic/cctv-flow` returns 503 in the current local fixture vision mode
+  because live OpenCV/YOLO CCTV flow requires `VISION_ANALYSIS_MODE=opencv_yolo`
+  plus a configured video source/model runtime.
+
+Mitigation added:
+- Web dashboard now requests `/api/traffic/cctv-flow` only when runtime readiness
+  reports `vision.mode=opencv_yolo` and `vision.ready=true`, so fixture-mode
+  demos no longer produce CCTV-flow 503 noise.
+- Web dashboard warms the non-selected SUMO scenarios after the initial page
+  load, reducing first-click scenario switching delay without adding public
+  SUMO control/reset routes.
+- API endpoints now accept both `scenario_id` and the shorter `scenario` query
+  alias for rehearsal/debug calls, avoiding accidental fallback to the default
+  emergency scenario during manual verification.
+
+Current presentation caveat:
+- R3F vehicles are driven by live SUMO/TraCI frame data, but the signal-plan
+  comparison endpoint still returns scenario fixture metrics from
+  `source=sumo_traci_fixture`. Present it as a scenario-backed comparison, not
+  as a live SUMO optimization result.
+- The recent motion/demand tuning experiment was reverted because it made the
+  vehicle movement feel less natural. For the demo, restart the API shortly
+  before recording so the normal scenario starts from a clean vehicle count.
+
 ## Current Review Gate: 2026-07-01
 
 Implementation is focused on real-sample readiness because additional

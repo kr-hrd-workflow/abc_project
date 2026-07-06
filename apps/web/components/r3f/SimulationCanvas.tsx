@@ -78,10 +78,8 @@ declare global {
     __r3fSimulationCanvasElement?: HTMLCanvasElement;
     __r3fSimulationMaxDrawCalls?: number;
     __r3fPublishSimulationCanvasProof?: () => Stage5CanvasProof;
-    // Forces one demand-mode render. The scene has no continuous useFrame, so
-    // under frameloop="demand" nothing redraws once the load burst settles; the
-    // draw-call verifier calls this to sample true STEADY-STATE frames (added
-    // 2026-07-04, see verify-r3f-dashboard.mjs measureSteadyStateDrawCalls).
+    // Forces one manual render for verifier snapshots. The dashboard now uses
+    // frameloop="always" so preview vehicle motion is visible during demos.
     __r3fSimulationInvalidate?: () => void;
     __r3fSimulationReadPixels?: () => {
       width: number;
@@ -127,7 +125,7 @@ export function SimulationCanvas({
         far: STAGE5_CAMERA.far
       }}
       dpr={[1, qualityPreset.maxDpr]}
-      frameloop="demand"
+      frameloop="always"
       shadows={STAGE5_SHADOWS_ENABLED ? "soft" : false}
       gl={{
         alpha: false,

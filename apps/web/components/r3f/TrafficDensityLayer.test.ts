@@ -52,6 +52,41 @@ describe("buildTrafficDensityRenderPlan precise vehicle lane normalization", () 
     );
   });
 
+  test("matches live SUMO east_in_2 lane coordinates to the R3F scene contract", () => {
+    const frame: SimulationFrameSnapshot = {
+      source: "sumo_traci",
+      intersection_id: "INT-0001",
+      scenario_id: "normal",
+      sim_time_seconds: 4,
+      captured_at: "2026-06-24T00:00:04.000Z",
+      bounds_meters: { min_x: -140, max_x: 140, min_y: -140, max_y: 140 },
+      vehicles: [
+        {
+          id: "vehicle-east-2",
+          vehicle_type: "car",
+          lane_id: "east_in_2",
+          x_meters: 117.27,
+          y_meters: -9,
+          heading_degrees: 270,
+          speed_mps: 16.6,
+          waiting_seconds: 0,
+          emergency: false
+        }
+      ],
+      pedestrians: [],
+      density_segments: [],
+      signals: [],
+      queues: { north: 0, south: 0, east: 0, west: 0 },
+      events: []
+    };
+
+    const plan = buildTrafficDensityRenderPlan(buildSceneSnapshot(frame));
+
+    expect(plan.preciseVehicles).toHaveLength(1);
+    expect(plan.preciseVehicles[0].position[0]).toBeCloseTo(117.27);
+    expect(plan.preciseVehicles[0].position[2]).toBeCloseTo(-9);
+  });
+
   test("keeps raw SUMO positions when lane identity is not a compatible approach lane", () => {
     const frame: SimulationFrameSnapshot = {
       source: "sumo_traci",

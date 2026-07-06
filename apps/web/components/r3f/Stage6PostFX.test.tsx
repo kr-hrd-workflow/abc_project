@@ -6,6 +6,10 @@ test("skips the PostFX composer for low quality", () => {
   expect(Stage6PostFX({ qualityPreset: "low" })).toBeNull();
 });
 
+test("skips the PostFX composer for the default medium quality", () => {
+  expect(Stage6PostFX({ qualityPreset: "medium" })).toBeNull();
+});
+
 test("creates an enabled bounded composer for high quality", () => {
   const element = Stage6PostFX({ qualityPreset: "high" });
 
