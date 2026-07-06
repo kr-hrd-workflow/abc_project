@@ -885,6 +885,35 @@ describe("DashboardShell", () => {
     expect(screen.getByText("OPENAI_API_KEY 대기")).toBeTruthy();
   });
 
+  test("labels fixture-backed simulation comparisons as simulation-only source evidence", () => {
+    renderDashboard({
+      simulation: {
+        ...simulation,
+        source: "sumo_traci_fixture"
+      }
+    });
+
+    expect(screen.getByText("Status source: scenario_mock")).toBeTruthy();
+    expect(screen.getByText("Comparison source: sumo_traci_fixture")).toBeTruthy();
+    expect(
+      screen.getByText("시나리오 기반 비교 - 시뮬레이션 전용, 실시간 최적화 아님")
+    ).toBeTruthy();
+  });
+
+  test("labels dashboard simulation fallbacks as simulation-only source evidence", () => {
+    renderDashboard({
+      simulation: {
+        ...simulation,
+        source: "dashboard_fallback"
+      }
+    });
+
+    expect(screen.getByText("Comparison source: dashboard_fallback")).toBeTruthy();
+    expect(
+      screen.getByText("시나리오 기반 비교 - 시뮬레이션 전용, 실시간 최적화 아님")
+    ).toBeTruthy();
+  });
+
   test("lets the operator switch between AI automatic and admin manual operation modes", async () => {
     renderDashboard();
 

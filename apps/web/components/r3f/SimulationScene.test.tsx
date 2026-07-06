@@ -101,6 +101,7 @@ describe("default scene (no URL params)", () => {
     expect(names).toContain("GroundDressingLayer");
     expect(names).toContain("StreetFurnitureLayer");
     expect(names).toContain("RoadDetailProps");
+    expect(names).not.toContain("SceneClutterLayer");
     expect(names).not.toContain("StaticRoadLayer");
   });
 
@@ -127,6 +128,7 @@ describe("default scene (no URL params)", () => {
     expect(names).not.toContain("AmbientPedestrianLayer");
     expect(names).not.toContain("SignalLayer");
     expect(names).not.toContain("GroundDressingLayer");
+    expect(names).not.toContain("SceneClutterLayer");
     expect(names).not.toContain("StreetFurnitureLayer");
     expect(names).not.toContain("RoadDetailProps");
     setSearch("");

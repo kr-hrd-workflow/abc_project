@@ -93,6 +93,35 @@ describe("simulation frame worker buffer", () => {
     ]);
   });
 
+  test("keeps SUMO vehicle snapshots through normalization and buffering", () => {
+    const vehicle: SimulationFrameSnapshot["vehicles"][number] = {
+      id: "veh-emergency-1",
+      vehicle_type: "emergency",
+      lane_id: "east_in_1",
+      x_meters: 4.25,
+      y_meters: -7.5,
+      heading_degrees: 89.5,
+      speed_mps: 11.75,
+      waiting_seconds: 0.5,
+      emergency: true
+    };
+    const entry = normalizeSimulationFrameMessage({
+      type: "simulation-frame",
+      frame: {
+        ...baseFrame,
+        vehicles: [vehicle]
+      },
+      receivedAtMs: 2600,
+      networkLatencyMs: 9
+    });
+    const buffer = createSimulationFrameRingBuffer(2);
+
+    expect(entry).not.toBeNull();
+    buffer.push(entry!);
+
+    expect(buffer.latestTwo()[0]?.frame.vehicles).toEqual([vehicle]);
+  });
+
   test("keeps the latest two authoritative frames ordered by sim time", () => {
     const buffer = createSimulationFrameRingBuffer(2);
 

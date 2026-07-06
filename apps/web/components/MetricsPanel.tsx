@@ -22,6 +22,14 @@ export function MetricsPanel({ status, simulation, locale }: MetricsPanelProps) 
     );
   const delayDelta =
     simulation.recommended.total_delay_seconds - simulation.baseline.total_delay_seconds;
+  const simulationOnlyComparison = isSimulationOnlyComparisonSource(simulation.source);
+  const comparisonBoundary = simulationOnlyComparison
+    ? locale === "ko"
+      ? "시나리오 기반 비교 - 시뮬레이션 전용, 실시간 최적화 아님"
+      : "Scenario-backed comparison - simulation-only, not live optimization"
+    : locale === "ko"
+      ? "현재 시뮬레이션 기준"
+      : "Current simulation window";
 
   const rows = [
     {
@@ -75,7 +83,9 @@ export function MetricsPanel({ status, simulation, locale }: MetricsPanelProps) 
         </div>
         <div className="metrics-window" aria-label={locale === "ko" ? "성과 비교 기간" : "Comparison window"}>
           <span>{locale === "ko" ? "5분" : "5 min"}</span>
-          <small>{locale === "ko" ? "현재 시뮬레이션 기준" : "Current simulation window"}</small>
+          <small>{`Status source: ${status.source}`}</small>
+          <small>{`Comparison source: ${simulation.source}`}</small>
+          <small>{comparisonBoundary}</small>
         </div>
       </div>
       <div className="metrics-table" role="table" aria-label={t.performance}>
@@ -98,6 +108,16 @@ export function MetricsPanel({ status, simulation, locale }: MetricsPanelProps) 
 function percentChange(baseline: number, recommended: number) {
   if (baseline === 0) return 0;
   return Math.round(((recommended - baseline) / baseline) * 100);
+}
+
+function isSimulationOnlyComparisonSource(source: string) {
+  const normalized = source.toLowerCase();
+  return (
+    normalized.includes("fixture") ||
+    normalized.includes("scenario") ||
+    normalized.includes("mock") ||
+    normalized.includes("fallback")
+  );
 }
 
 function formatDelta(value: number) {
