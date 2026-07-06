@@ -91,6 +91,11 @@ export function SimulationViewportFallback({
       <div className="playback-badge">
         <strong>{locale === "ko" ? "실사형 가상 CCTV" : "Photoreal virtual CCTV"}</strong>
         <span>{formatRenderMode(renderMode, locale)}</span>
+        <small>
+          {locale === "ko"
+            ? "시뮬레이션 전용 / 실제 신호 제어 없음 (Simulation only)"
+            : "Simulation only / No real signal control"}
+        </small>
       </div>
       <section
         className="simulation-cctv-surface"
