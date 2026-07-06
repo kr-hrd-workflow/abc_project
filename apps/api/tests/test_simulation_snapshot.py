@@ -10,11 +10,13 @@ from sqlalchemy.pool import StaticPool
 import app.services.simulation_frame_provider as frame_provider_module
 from app.db.models import Base
 from app.db.session import get_session
+from app.domain.schemas import QueueMetrics, TrafficEventRead
 from app.main import app
 from app.core.config import Settings
-from app.scenarios.data import EMERGENCY_SCENARIO
+from app.scenarios.data import EMERGENCY_SCENARIO, SCENARIOS
 from app.services.simulation_frame_provider import (
     FixtureSimulationFrameProvider,
+    LIVE_SCENARIO_IDS,
     ScenarioRoutingFrameProvider,
     SumoSimulationFrameProvider,
     get_simulation_frame_provider,
@@ -164,14 +166,30 @@ def test_all_fixture_scenarios_have_deterministic_snapshot_markers(
         snapshots[scenario_id] = first.json()
         assert snapshots[scenario_id]["source"] == "simulation_snapshot_fixture"
         assert snapshots[scenario_id]["scenario_id"] == scenario_id
-        assert snapshots[scenario_id]["pedestrians"] == []
         assert len(snapshots[scenario_id]["signals"]) == 4
 
     pedestrian = snapshots["pedestrian"]
     assert {
         event["event_type"] for event in pedestrian["events"]
     } == {"pedestrian_waiting"}
+    assert pedestrian["pedestrians"] == [
+        {
+            "id": "pedestrian-north-crosswalk-1",
+            "x_meters": -8.0,
+            "y_meters": -4.0,
+            "heading_degrees": 90.0,
+            "speed_mps": 0.4,
+            "lane_id": "north-crosswalk-lane",
+            "edge_id": None,
+            "waiting_seconds": 34.0,
+            "source": "sumo_person",
+        }
+    ]
     assert any(signal["state"] == "yellow" for signal in pedestrian["signals"])
+
+    assert snapshots["emergency"]["pedestrians"] == []
+    assert snapshots["normal"]["pedestrians"] == []
+    assert snapshots["blocked"]["pedestrians"] == []
 
     normal = snapshots["normal"]
     assert len(normal["vehicles"]) <= 3
@@ -203,6 +221,31 @@ def test_simulate_signal_remains_aggregate_comparison_without_vehicle_trajectori
     assert "signals" not in payload
 
 
+def test_simulate_signal_fixture_metrics_are_scenario_specific(
+    client: TestClient,
+) -> None:
+    payloads = {
+        scenario_id: client.post(
+            f"/api/simulate-signal?scenario_id={scenario_id}"
+        ).json()
+        for scenario_id in ["emergency", "pedestrian", "normal", "blocked"]
+    }
+
+    assert {
+        scenario_id: payload["recommended"]["average_wait_seconds"]
+        for scenario_id, payload in payloads.items()
+    } == {
+        "emergency": 56.0,
+        "pedestrian": 38.0,
+        "normal": 51.0,
+        "blocked": 74.0,
+    }
+    assert payloads["emergency"]["improvement"][
+        "emergency_clearance_delta_seconds"
+    ] == -21.0
+    assert payloads["blocked"]["improvement"]["total_delay_percent"] == 28.4
+
+
 def test_provider_factory_selects_fixture_and_sumo_modes() -> None:
     assert isinstance(
         get_simulation_frame_provider(Settings(sumo_simulation_mode="fixture")),
@@ -216,6 +259,30 @@ def test_provider_factory_selects_fixture_and_sumo_modes() -> None:
         )
         assert isinstance(provider, ScenarioRoutingFrameProvider)
         assert isinstance(provider._live_provider, SumoSimulationFrameProvider)
+
+
+class MarkerFrameProvider:
+    def __init__(self, source: str) -> None:
+        self.source = source
+
+    def build_frame(self, scenario_id, observation, event_reads):
+        return build_fixture_simulation_frame(
+            scenario_id,
+            observation,
+            event_reads,
+        ).model_copy(update={"source": self.source})
+
+
+def test_scenario_router_sends_all_dashboard_scenarios_to_live_sumo() -> None:
+    router = ScenarioRoutingFrameProvider(
+        live_provider=MarkerFrameProvider("sumo_traci"),
+        fixture_provider=MarkerFrameProvider("simulation_snapshot_fixture"),
+        live_scenario_ids=LIVE_SCENARIO_IDS,
+    )
+
+    for scenario_id, observation in SCENARIOS.items():
+        frame = router.build_frame(scenario_id, observation, [])
+        assert frame.source == "sumo_traci"
 
 
 def test_provider_factory_serializes_cold_live_provider_creation(
@@ -287,6 +354,33 @@ def test_simulation_frame_route_uses_configured_provider(
     assert response.status_code == 200
     assert calls == ["normal"]
     assert response.json()["source"] == "sumo_traci"
+
+
+def test_simulation_frame_route_accepts_scenario_alias(
+    client: TestClient,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    calls: list[str] = []
+
+    class FakeProvider:
+        def build_frame(self, scenario_id, observation, event_reads):
+            calls.append(scenario_id)
+            return build_fixture_simulation_frame(
+                scenario_id,
+                observation,
+                event_reads,
+            ).model_copy(update={"source": "sumo_traci"})
+
+    monkeypatch.setattr(
+        "app.api.routes.get_simulation_frame_provider",
+        lambda _settings: FakeProvider(),
+    )
+
+    response = client.get("/api/simulation/frame?scenario=normal")
+
+    assert response.status_code == 200
+    assert calls == ["normal"]
+    assert response.json()["scenario_id"] == "normal"
 
 
 def test_sumo_provider_first_failure_downgrades_to_fixture_source() -> None:
@@ -463,6 +557,81 @@ class SecondReadMappingFailureClient:
     def simulationStep(self) -> None:
         self.step_count += 1
         self.simulation.time = self.step_count / 10.0
+
+
+class StaticRuntimeFrameReader:
+    def __init__(self, frame):
+        self.frame = frame
+
+    def read_frame(self, scenario_id: str):
+        return self.frame.model_copy(update={"scenario_id": scenario_id})
+
+
+def test_sumo_provider_preserves_scenario_evidence_over_live_motion() -> None:
+    fixture_provider = FixtureSimulationFrameProvider()
+    live_frame = build_fixture_simulation_frame(
+        "pedestrian",
+        SCENARIOS["pedestrian"],
+        [],
+    ).model_copy(
+        update={
+            "source": "sumo_traci",
+            "vehicles": [],
+            "pedestrians": [],
+            "queues": QueueMetrics(north=0, south=0, east=0, west=0),
+            "events": [
+                TrafficEventRead(
+                    id=2,
+                    intersection_id=SCENARIOS["pedestrian"].intersection_id,
+                    occurred_at=SCENARIOS["pedestrian"].captured_at,
+                    direction="north",
+                    event_type="intersection_blocked",
+                    severity="critical",
+                    object_count=5,
+                    ai_summary="SUMO transient blockage.",
+                    recommendation="Ignore for scenario evidence test.",
+                    status="active",
+                    source="sumo_traci",
+                )
+            ],
+        }
+    )
+    scenario_event = TrafficEventRead(
+        id=1,
+        intersection_id=SCENARIOS["pedestrian"].intersection_id,
+        occurred_at=SCENARIOS["pedestrian"].captured_at,
+        direction=None,
+        event_type="pedestrian_waiting",
+        severity="warning",
+        object_count=1,
+        ai_summary="Pedestrian waiting request detected.",
+        recommendation="Review pedestrian phase.",
+        status="active",
+        source="scenario_mock",
+    )
+    provider = SumoSimulationFrameProvider(
+        runtime=StaticRuntimeFrameReader(live_frame),
+        fallback_provider=fixture_provider,
+    )
+
+    frame = provider.build_frame(
+        "pedestrian",
+        SCENARIOS["pedestrian"],
+        [scenario_event],
+    )
+
+    assert frame.source == "sumo_traci"
+    assert [event.event_type for event in frame.events] == ["pedestrian_waiting"]
+    assert frame.queues == SCENARIOS["pedestrian"].queues
+    assert {signal.direction: signal.state for signal in frame.signals} == {
+        "north": "yellow",
+        "south": "yellow",
+        "east": "red",
+        "west": "red",
+    }
+    assert [pedestrian.id for pedestrian in frame.pedestrians] == [
+        "pedestrian-north-crosswalk-1"
+    ]
 
 
 def test_sumo_provider_mapping_failure_after_live_frame_returns_last_good() -> None:

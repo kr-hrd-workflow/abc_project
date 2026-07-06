@@ -928,7 +928,7 @@ describe("DashboardShell", () => {
     renderDashboard();
 
     expect(screen.getByText("자동 준비 중")).toBeTruthy();
-    expect(screen.getByText("신뢰도 92%")).toBeTruthy();
+    expect(screen.getByText("시뮬레이션 지표 연결")).toBeTruthy();
     expect(screen.getByText("다음 권고 긴급차량 우선")).toBeTruthy();
 
     await userEvent.click(screen.getByRole("button", { name: "관리자 직접 검토" }));
@@ -1007,7 +1007,7 @@ describe("DashboardShell", () => {
     expect(screen.getByLabelText("운영 상세 레일")).toBeTruthy();
     expect(screen.getByLabelText("명령 의사결정 레일")).toBeTruthy();
     expect(screen.getByText("공간 명령")).toBeTruthy();
-    expect(screen.getByText("실시간 증거 레일")).toBeTruthy();
+    expect(screen.getByText("시뮬레이션 증거 레일")).toBeTruthy();
     expect(screen.getByText("운영자 조치 스택")).toBeTruthy();
   });
 
@@ -1851,8 +1851,7 @@ describe("DashboardShell", () => {
     expect(glassGroup?.tintable).toBe(false);
   });
 
-  test("mounts frame-backed browser-only R3F when it is enabled and WebGL is supported", async () => {
-    vi.stubEnv("NEXT_PUBLIC_R3F_SIMULATION_ENABLED", "true");
+  test("mounts frame-backed browser-only R3F by default when WebGL is supported", async () => {
     mockWebGLSupport(true);
 
     renderDashboard();
@@ -2074,6 +2073,7 @@ describe("DashboardShell", () => {
   });
 
   test("keeps the fallback viewport when R3F is disabled", () => {
+    vi.stubEnv("NEXT_PUBLIC_R3F_SIMULATION_ENABLED", "false");
     mockWebGLSupport(true);
 
     renderDashboard();

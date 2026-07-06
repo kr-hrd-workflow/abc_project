@@ -1,4 +1,4 @@
-from app.domain.schemas import VisionObservation
+from app.domain.schemas import SimulationComparison, VisionObservation
 from app.services.knowledge import KnowledgeChunk, format_policy_evidence
 
 SAFETY_NOTE = "This is simulation-only and does not control real traffic signals."
@@ -10,12 +10,37 @@ def answer_question(
     observation: VisionObservation,
     policy_evidence: list[KnowledgeChunk] | None = None,
     response_locale: str | None = None,
+    simulation: SimulationComparison | None = None,
 ) -> str:
     normalized = question.lower()
     use_korean = response_locale == "ko" or _contains_hangul(question)
     evidence_text = "" if use_korean else format_policy_evidence(policy_evidence or [])
     queues = observation.queues.model_dump()
     busiest_direction = max(queues, key=queues.get)
+
+    if _asks_about_wait_time(question, normalized) and simulation is not None:
+        wait_delta = simulation.improvement.get(
+            "average_wait_delta_seconds",
+            simulation.recommended.average_wait_seconds
+            - simulation.baseline.average_wait_seconds,
+        )
+        if use_korean:
+            return (
+                "시뮬레이션 비교 기준으로 평균 대기시간은 "
+                f"{simulation.baseline.average_wait_seconds:.1f}초에서 "
+                f"{simulation.recommended.average_wait_seconds:.1f}초로 "
+                f"{abs(wait_delta):.1f}초 감소합니다. "
+                f"총 지체 개선율은 {simulation.improvement.get('total_delay_percent', 0):.1f}%입니다. "
+                f"{KOREAN_SAFETY_NOTE}"
+            )
+        return (
+            "Based on the simulation comparison, average wait time changes from "
+            f"{simulation.baseline.average_wait_seconds:.1f}s to "
+            f"{simulation.recommended.average_wait_seconds:.1f}s, a "
+            f"{abs(wait_delta):.1f}s reduction. Total delay improves by "
+            f"{simulation.improvement.get('total_delay_percent', 0):.1f}%. "
+            f"{SAFETY_NOTE}{evidence_text}"
+        )
 
     if "congest" in normalized or "busy" in normalized or "혼잡" in question:
         if use_korean:
@@ -27,8 +52,8 @@ def answer_question(
             )
         return (
             f"The most congested direction is {busiest_direction} "
-            f"with {queues[busiest_direction]} queued vehicles."
-            f"{evidence_text}"
+            f"with {queues[busiest_direction]} queued vehicles. "
+            f"{SAFETY_NOTE}{evidence_text}"
         )
 
     if "emergency" in normalized or "긴급" in question:
@@ -66,6 +91,13 @@ def answer_question(
         f"Current congestion is {observation.congestion_level}. "
         "The dashboard recommendation is simulation-only and does not control real traffic signals."
         f"{evidence_text}"
+    )
+
+
+def _asks_about_wait_time(question: str, normalized: str) -> bool:
+    return any(
+        token in normalized or token in question
+        for token in ("wait", "delay", "대기시간", "대기 시간", "지체", "얼마나 줄")
     )
 
 

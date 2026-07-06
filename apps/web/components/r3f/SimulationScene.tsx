@@ -118,7 +118,9 @@ export function SimulationScene({
         <RoadSurfaceLayer isNight={isNight} suppressVectorMarkings />
       </Suspense>
       {!isRoadOnly && <GroundDressingLayer isNight={isNight} />}
-      <MarkingDecalLayer />
+      <MarkingDecalLayer
+        useTextures={qualityPreset.name === "high" || qualityPreset.name === "ultra"}
+      />
       {!isRoadOnly && (
         <DynamicVehicleLayerWithWeather
           isNight={isNight}

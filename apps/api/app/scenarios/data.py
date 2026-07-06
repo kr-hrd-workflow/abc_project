@@ -64,27 +64,74 @@ BLOCKED_SCENARIO = VisionObservation(
     congestion_level="high",
 )
 
-SIMULATION_COMPARISON = SimulationComparison(
-    source="scenario_mock",
-    baseline=SimulationMetrics(
-        average_wait_seconds=68,
-        total_delay_seconds=128.4,
-        throughput=1246,
-        emergency_vehicle_clearance_seconds=45,
+SCENARIO_SIMULATION_COMPARISONS = {
+    "emergency": SimulationComparison(
+        source="scenario_mock",
+        baseline=SimulationMetrics(
+            average_wait_seconds=68,
+            total_delay_seconds=128.4,
+            throughput=1246,
+            emergency_vehicle_clearance_seconds=45,
+        ),
+        recommended=SimulationMetrics(
+            average_wait_seconds=56,
+            total_delay_seconds=105.3,
+            throughput=1298,
+            emergency_vehicle_clearance_seconds=24,
+        ),
+        improvement={},
     ),
-    recommended=SimulationMetrics(
-        average_wait_seconds=56,
-        total_delay_seconds=105.3,
-        throughput=1298,
-        emergency_vehicle_clearance_seconds=24,
+    "pedestrian": SimulationComparison(
+        source="scenario_mock",
+        baseline=SimulationMetrics(
+            average_wait_seconds=52,
+            total_delay_seconds=96.0,
+            throughput=1188,
+            emergency_vehicle_clearance_seconds=0,
+        ),
+        recommended=SimulationMetrics(
+            average_wait_seconds=38,
+            total_delay_seconds=72.0,
+            throughput=1214,
+            emergency_vehicle_clearance_seconds=0,
+        ),
+        improvement={},
     ),
-    improvement={
-        "total_delay_percent": 18.0,
-        "throughput_percent": 4.2,
-        "average_wait_delta_seconds": -12,
-        "emergency_clearance_delta_seconds": -21,
-    },
-)
+    "normal": SimulationComparison(
+        source="scenario_mock",
+        baseline=SimulationMetrics(
+            average_wait_seconds=54,
+            total_delay_seconds=110.0,
+            throughput=1320,
+            emergency_vehicle_clearance_seconds=0,
+        ),
+        recommended=SimulationMetrics(
+            average_wait_seconds=51,
+            total_delay_seconds=104.0,
+            throughput=1332,
+            emergency_vehicle_clearance_seconds=0,
+        ),
+        improvement={},
+    ),
+    "blocked": SimulationComparison(
+        source="scenario_mock",
+        baseline=SimulationMetrics(
+            average_wait_seconds=103,
+            total_delay_seconds=260.0,
+            throughput=940,
+            emergency_vehicle_clearance_seconds=0,
+        ),
+        recommended=SimulationMetrics(
+            average_wait_seconds=74,
+            total_delay_seconds=186.2,
+            throughput=1006,
+            emergency_vehicle_clearance_seconds=0,
+        ),
+        improvement={},
+    ),
+}
+
+SIMULATION_COMPARISON = SCENARIO_SIMULATION_COMPARISONS["emergency"]
 
 SCENARIOS = {
     "emergency": EMERGENCY_SCENARIO,

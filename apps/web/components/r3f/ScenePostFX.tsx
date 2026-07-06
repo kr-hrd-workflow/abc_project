@@ -11,7 +11,8 @@
 // - Day: full pipeline (ToneMapping ACES + SSAO + Bloom + Noise + Vignette) via Stage6PostFX.
 // - Low quality (postFx "off"): returns null — no EffectComposer overhead.
 
-import type { ReactElement } from "react";
+import { useThree, type RootState } from "@react-three/fiber";
+import type { ReactElement, ReactNode } from "react";
 
 import { GANGNAM_NIGHT_GRADE } from "./seamlessGrade";
 
@@ -53,15 +54,56 @@ export function ScenePostFX({
   // Night: Bloom-only composer (no ACES) + renderer exposure sync.
   if (timeOfDay === "night") {
     return (
-      <>
+      <PostProcessingContextGate>
         <NightExposureSync exposure={GANGNAM_NIGHT_GRADE.toneMappingExposure} />
         <NightSeamlessPostFX />
-      </>
+      </PostProcessingContextGate>
     );
   }
 
   // Day: full cinematic pipeline (ToneMapping ACES + SSAO + Bloom + grade effects).
-  return <Stage6PostFX qualityPreset={qualityPreset.name} />;
+  return (
+    <PostProcessingContextGate>
+      <Stage6PostFX qualityPreset={qualityPreset.name} />
+    </PostProcessingContextGate>
+  );
 }
 
 ScenePostFX.displayName = "ScenePostFX";
+
+function PostProcessingContextGate({
+  children
+}: {
+  children: ReactNode;
+}): ReactElement | null {
+  const { gl } = useThree();
+
+  if (!canUsePostProcessingComposer(gl)) {
+    return null;
+  }
+
+  return <>{children}</>;
+}
+
+export function canUsePostProcessingComposer(
+  renderer: Pick<RootState["gl"], "getContext">
+): boolean {
+  try {
+    const context = renderer.getContext();
+
+    if (
+      typeof context.isContextLost === "function" &&
+      context.isContextLost()
+    ) {
+      return false;
+    }
+
+    if (typeof context.getContextAttributes !== "function") {
+      return false;
+    }
+
+    return context.getContextAttributes() !== null;
+  } catch {
+    return false;
+  }
+}

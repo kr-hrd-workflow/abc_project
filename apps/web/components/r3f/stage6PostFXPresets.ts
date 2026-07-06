@@ -60,19 +60,19 @@ export const STAGE6_POSTFX_PRESETS: Record<
     lensDistortion: 0
   },
   medium: {
-    enabled: true,
-    smaa: true,
-    ssao: "lite",
-    bloom: "signal-lite",
-    noiseOpacity: 0.025,
-    vignetteDarkness: 0.06,
+    enabled: false,
+    smaa: false,
+    ssao: "off",
+    bloom: "off",
+    noiseOpacity: 0,
+    vignetteDarkness: 0,
     toneMappingExposure: 1,
     saturation: 0.96,
     contrast: 1.1,
     blackLevel: 0.02,
-    cctvCompressionNoise: 0.035,
-    scanlineOpacity: 0.025,
-    lensDistortion: 0.01
+    cctvCompressionNoise: 0,
+    scanlineOpacity: 0,
+    lensDistortion: 0
   },
   high: {
     enabled: true,

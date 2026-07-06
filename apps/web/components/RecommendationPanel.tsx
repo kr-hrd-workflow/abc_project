@@ -90,7 +90,7 @@ export function RecommendationPanel({
         <div className="signal-preview" aria-hidden="true">
           <i className="red-light" />
           <i className="amber-light" />
-          <i className="green-arrow" />
+          <i className="green-light" />
         </div>
       </div>
 

@@ -121,11 +121,11 @@ export function SimulationViewportFallback({
         aria-label={locale === "ko" ? "OpenAI 실행 준비 상태" : "OpenAI launch readiness"}
       >
         <span>{locale === "ko" ? "실행 준비" : "Launch gate"}</span>
-        <strong>{openaiReady ? "OpenAI live ready" : "OPENAI_API_KEY 대기"}</strong>
+        <strong>{openaiReady ? (locale === "ko" ? "OpenAI 답변 준비" : "OpenAI answer ready") : "OPENAI_API_KEY 대기"}</strong>
         <small>
           {openaiReady
-            ? (locale === "ko" ? "키 감지됨. 실시간 AI 답변 모드 사용 가능" : "Key detected. Live AI answer mode is available")
-            : (locale === "ko" ? "키만 입력하면 실시간 AI 답변으로 전환" : "Enter only OPENAI_API_KEY to enable live AI answers")}
+            ? (locale === "ko" ? "키 감지됨. AI 답변 모드 사용 가능" : "Key detected. AI answer mode is available")
+            : (locale === "ko" ? "키만 입력하면 AI 답변으로 전환" : "Enter only OPENAI_API_KEY to enable AI answers")}
         </small>
       </section>
       <div className="renderer-status" aria-label={locale === "ko" ? "시뮬레이션 렌더러 상태" : "Simulation renderer status"}>

@@ -132,7 +132,9 @@ function SceneDayEnvironment({
     >
       {/* Brighter outdoor IBL via RoomEnvironment PMREM — headless-safe, no CDN fetch.
           Uses a lower blur than the cloudy/rain presets for sharper outdoor reflections. */}
-      <DayIBL />
+      {qualityPreset.name !== "low" ? (
+        <DayIBL />
+      ) : null}
       {/* LightingRig provides hemisphere + ambient + directional key + streetlights +
           signal accents + vehicle emissive accents. No extra lights added here to
           avoid doubling the rig and overexposing the scene. */}
@@ -140,7 +142,8 @@ function SceneDayEnvironment({
       {/* Fog, haze planes, rain particles, wet-road reflections. Dropped in
           cmp=A so the distant-city backdrop / haze / fog stop leaking behind the
           plate (the plate already supplies the photoreal backdrop). */}
-      {!suppressAtmosphericScenery && (
+      {!suppressAtmosphericScenery &&
+        (qualityPreset.name === "high" || qualityPreset.name === "ultra") && (
         <WeatherAndAtmosphere
           qualityPreset={qualityPreset}
           weather={weather}
@@ -177,7 +180,9 @@ function SceneNightEnvironmentComponent({
         neonColor: config.neonColor
       }}
     >
-      <NightNeonIBL config={config} />
+      {qualityPreset.name !== "low" ? (
+        <NightNeonIBL config={config} />
+      ) : null}
       {/* Neon-biased hemisphere: sky takes dominant neon cast,
           ground takes warm sodium bounce so vehicle undersides read. */}
       <hemisphereLight

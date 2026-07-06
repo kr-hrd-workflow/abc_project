@@ -82,21 +82,49 @@ class SumoSimulationFrameProvider:
                 event_reads,
             )
         self._last_good_frames[scenario_id] = CachedSimulationFrame(
-            frame=frame,
+            frame=self._merge_scenario_evidence(
+                frame,
+                scenario_id,
+                observation,
+                event_reads,
+            ),
             cached_at_monotonic=now,
         )
-        return frame
+        return self._last_good_frames[scenario_id].frame
+
+    def _merge_scenario_evidence(
+        self,
+        frame: SimulationFrameSnapshot,
+        scenario_id: str,
+        observation: VisionObservation,
+        event_reads: Sequence[TrafficEventRead],
+    ) -> SimulationFrameSnapshot:
+        fixture_frame = self._fallback_provider.build_frame(
+            scenario_id,
+            observation,
+            event_reads,
+        )
+        pedestrians = frame.pedestrians or fixture_frame.pedestrians
+        return frame.model_copy(
+            update={
+                "events": fixture_frame.events,
+                "pedestrians": pedestrians,
+                "density_segments": fixture_frame.density_segments,
+                "signals": fixture_frame.signals,
+                "queues": fixture_frame.queues,
+            }
+        )
 
 
-LIVE_SCENARIO_IDS = frozenset({"normal"})
+LIVE_SCENARIO_IDS = frozenset({"normal", "emergency", "pedestrian", "blocked"})
 
 
 class ScenarioRoutingFrameProvider:
     """Routes allowlisted scenarios to a live provider and the rest to fixture.
 
-    Live SUMO currently models one busy arterial (intersection.sumocfg); routing
-    only `normal` to it keeps the other scenarios on their deterministic fixture
-    instead of collapsing all four onto the same live sim.
+    Live SUMO models the dashboard scenarios with scenario-specific demand
+    configs when available; unsupported scenario ids stay on deterministic
+    fixture data instead of collapsing onto the live sim.
     """
 
     def __init__(

@@ -120,7 +120,7 @@ export function DashboardShell({
     operationMode === "ai"
       ? [
           locale === "ko" ? "자동 준비 중" : "Preparing automatically",
-          locale === "ko" ? "신뢰도 92%" : "Confidence 92%",
+          locale === "ko" ? "시뮬레이션 지표 연결" : "Simulation metrics linked",
           locale === "ko"
             ? `다음 권고 ${formatActionToken(recommendation.action)}`
             : `Next recommendation ${recommendation.action}`
@@ -188,12 +188,12 @@ export function DashboardShell({
             </small>
             <em>{cityMobilityProfile}</em>
           </section>
-          <div className="incident-token" aria-label={locale === "ko" ? "현재 사건" : "Current incident"}>
-            <span>INC-2025-0516-0007</span>
+          <div className="incident-token" aria-label={locale === "ko" ? "현재 시나리오" : "Current scenario"}>
+            <span>{`SCENARIO-${selectedScenarioId.toUpperCase()}`}</span>
             <strong>{locale === "ko" ? "운영 중" : "Active"}</strong>
           </div>
-          <div className="live-clock" aria-label={locale === "ko" ? "실시간 시각" : "Live clock"}>
-            <span>{locale === "ko" ? "실시간" : "Live"}</span>
+          <div className="live-clock" aria-label={locale === "ko" ? "상태 시각" : "Status time"}>
+            <span>{locale === "ko" ? "상태 시각" : "Status time"}</span>
             <strong>{new Date(status.captured_at).toLocaleTimeString("en-GB")}</strong>
           </div>
           <div className="status-strip" aria-label={locale === "ko" ? "대시보드 상태" : "Dashboard status"}>
@@ -373,7 +373,7 @@ export function DashboardShell({
           aria-label={locale === "ko" ? "운영 상세 레일" : "Operational detail rail"}
         >
           <div className="rail-kicker">
-            {locale === "ko" ? "실시간 증거 레일" : "Live evidence rail"}
+            {locale === "ko" ? "시뮬레이션 증거 레일" : "Simulation evidence rail"}
           </div>
           <EventTimeline events={events} locale={locale} />
         </aside>

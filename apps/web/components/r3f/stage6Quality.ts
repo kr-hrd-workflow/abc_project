@@ -93,7 +93,7 @@ export function getStage6QualityPreset(
     return STAGE6_QUALITY_PRESETS[key];
   }
 
-  return STAGE6_QUALITY_PRESETS.high;
+  return STAGE6_QUALITY_PRESETS.medium;
 }
 
 export function getStage6PresentationMode(

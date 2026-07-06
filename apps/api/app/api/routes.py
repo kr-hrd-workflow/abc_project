@@ -32,6 +32,7 @@ from app.db.session import SessionLocal, get_session
 from app.domain.schemas import (
     ChatRequest,
     ChatResponse,
+    SimulationComparison,
     TrafficEventRead,
     VisionObservation,
 )
@@ -94,20 +95,8 @@ upload_vision_adapter = OpenCVYoloVisionAnalysisAdapter(
     )
 )
 simulation_adapter = SumoTraciTrafficSimulationAdapter(
-    runner=(
-        TraciSumoSimulationRunner(
-            sumo_binary=settings.sumo_binary,
-            sumo_config_path=settings.sumo_config_path,
-            step_count=settings.sumo_step_count,
-        )
-        if settings.sumo_simulation_mode == "sumo_traci"
-        else FixtureSumoSimulationRunner()
-    ),
-    source=(
-        "sumo_traci"
-        if settings.sumo_simulation_mode == "sumo_traci"
-        else "sumo_traci_fixture"
-    ),
+    runner=FixtureSumoSimulationRunner(),
+    source="sumo_traci_fixture",
 )
 ANALYSIS_JOBS: dict[str, dict[str, object]] = {}
 SUPPORTED_UPLOAD_MEDIA: dict[str, tuple[str, str]] = {
@@ -345,9 +334,11 @@ def _upload_suffix(filename: str | None, media_type: str) -> str:
 
 @router.get("/api/intersection/status")
 def get_status(
-    scenario_id: str = "emergency",
+    scenario_id: str | None = None,
+    scenario: str | None = None,
     session: Session = Depends(get_session),
 ) -> dict[str, object]:
+    scenario_id = _resolve_scenario_id(scenario_id, scenario)
     observation = vision_adapter.analyze(scenario_id)
     status, _events = ensure_scenario_snapshot(session, observation)
     return status_to_payload(status)
@@ -355,9 +346,11 @@ def get_status(
 
 @router.get("/api/events")
 def get_events(
-    scenario_id: str = "emergency",
+    scenario_id: str | None = None,
+    scenario: str | None = None,
     session: Session = Depends(get_session),
 ) -> list[dict[str, object]]:
+    scenario_id = _resolve_scenario_id(scenario_id, scenario)
     observation = vision_adapter.analyze(scenario_id)
     _status, events = ensure_scenario_snapshot(session, observation)
     return [event_to_payload(event) for event in events]
@@ -365,8 +358,10 @@ def get_events(
 
 @router.get("/api/simulation/frame")
 def get_simulation_frame(
-    scenario_id: str = "emergency",
+    scenario_id: str | None = None,
+    scenario: str | None = None,
 ) -> SimulationFrameSnapshot:
+    scenario_id = _resolve_scenario_id(scenario_id, scenario)
     observation = vision_adapter.analyze(scenario_id)
     provider = get_simulation_frame_provider(settings)
     return provider.build_frame(
@@ -397,6 +392,13 @@ def _event_reads_from_observation(
     ]
 
 
+def _resolve_scenario_id(
+    scenario_id: str | None,
+    scenario: str | None,
+) -> str:
+    return scenario_id or scenario or "emergency"
+
+
 @router.post("/api/scenarios/{scenario_id}/load")
 def load_scenario(
     scenario_id: str,
@@ -414,15 +416,21 @@ def load_scenario(
 
 
 @router.post("/api/analyze")
-def analyze(scenario_id: str = "emergency") -> dict[str, object]:
+def analyze(
+    scenario_id: str | None = None,
+    scenario: str | None = None,
+) -> dict[str, object]:
+    scenario_id = _resolve_scenario_id(scenario_id, scenario)
     return vision_adapter.analyze(scenario_id).model_dump(mode="json")
 
 
 @router.post("/api/recommend-signal")
 def recommend_signal(
-    scenario_id: str = "emergency",
+    scenario_id: str | None = None,
+    scenario: str | None = None,
     session: Session = Depends(get_session),
 ) -> dict[str, object]:
+    scenario_id = _resolve_scenario_id(scenario_id, scenario)
     observation = vision_adapter.analyze(scenario_id)
     _status, events = ensure_scenario_snapshot(session, observation)
     action, plan, evidence = recommend_signal_action(observation)
@@ -441,9 +449,11 @@ def recommend_signal(
 
 @router.post("/api/simulate-signal")
 def simulate_signal(
-    scenario_id: str = "emergency",
+    scenario_id: str | None = None,
+    scenario: str | None = None,
     session: Session = Depends(get_session),
 ) -> dict[str, object]:
+    scenario_id = _resolve_scenario_id(scenario_id, scenario)
     observation = vision_adapter.analyze(scenario_id)
     comparison = simulation_adapter.compare_signal_plan(scenario_id)
     create_simulation_run(session, observation, comparison)
@@ -453,21 +463,24 @@ def simulate_signal(
 @router.post("/api/chat")
 def chat(
     request: ChatRequest,
-    scenario_id: str = "emergency",
+    scenario_id: str | None = None,
+    scenario: str | None = None,
     session: Session = Depends(get_session),
 ) -> ChatResponse:
+    scenario_id = _resolve_scenario_id(scenario_id, scenario)
     observation = vision_adapter.analyze(scenario_id)
     _status, events = ensure_scenario_snapshot(session, observation)
     event_ids = [event.id for event in events]
     policy_evidence = _retrieve_policy_evidence(request.question, session)
+    simulation = simulation_adapter.compare_signal_plan(scenario_id)
     answer = _answer_chat_question(
         request.question,
         observation,
         policy_evidence,
         request.locale,
+        simulation,
     )
     action, plan, evidence = recommend_signal_action(observation)
-    simulation = simulation_adapter.compare_signal_plan(scenario_id)
     sections = build_agent_sections(
         observation=observation,
         events=events,
@@ -555,12 +568,14 @@ def _answer_chat_question(
     observation: VisionObservation,
     policy_evidence: list[KnowledgeChunk],
     response_locale: str | None = None,
+    simulation: SimulationComparison | None = None,
 ) -> str:
     local_answer = answer_question(
         question,
         observation,
         policy_evidence,
         response_locale=response_locale,
+        simulation=simulation,
     )
     if settings.openai_answer_mode == "local":
         return local_answer
@@ -585,7 +600,7 @@ def _answer_chat_question(
     )
     return gateway.generate_grounded_answer(
         question=question,
-        scenario_summary=_scenario_summary(observation),
+        scenario_summary=_scenario_summary(observation, simulation),
         policy_evidence=policy_evidence,
         response_language=_response_language(response_locale),
     )
@@ -614,11 +629,14 @@ def _openai_explanation_criterion_label(name: str) -> str:
     return labels.get(name, name.replace("_", " ").title())
 
 
-def _scenario_summary(observation: VisionObservation) -> str:
+def _scenario_summary(
+    observation: VisionObservation,
+    simulation: SimulationComparison | None = None,
+) -> str:
     queues = observation.queues.model_dump()
     emergency = observation.emergency_vehicle
     emergency_direction = emergency.direction.value if emergency.direction else "none"
-    return (
+    summary = (
         f"intersection={observation.intersection_id}; "
         f"congestion={observation.congestion_level}; "
         f"queues={queues}; "
@@ -626,13 +644,31 @@ def _scenario_summary(observation: VisionObservation) -> str:
         f"emergency_present={emergency.present}; "
         f"emergency_direction={emergency_direction}"
     )
+    if simulation is None:
+        return summary
+    return (
+        f"{summary}; "
+        f"simulation_source={simulation.source}; "
+        f"baseline_average_wait_seconds={simulation.baseline.average_wait_seconds}; "
+        f"recommended_average_wait_seconds={simulation.recommended.average_wait_seconds}; "
+        f"average_wait_delta_seconds={simulation.improvement.get('average_wait_delta_seconds')}; "
+        f"baseline_total_delay_seconds={simulation.baseline.total_delay_seconds}; "
+        f"recommended_total_delay_seconds={simulation.recommended.total_delay_seconds}; "
+        f"total_delay_percent={simulation.improvement.get('total_delay_percent')}; "
+        f"baseline_throughput={simulation.baseline.throughput}; "
+        f"recommended_throughput={simulation.recommended.throughput}; "
+        f"throughput_percent={simulation.improvement.get('throughput_percent')}; "
+        "all values are simulation-only decision-support metrics"
+    )
 
 
 @router.post("/api/report")
 def report(
-    scenario_id: str = "emergency",
+    scenario_id: str | None = None,
+    scenario: str | None = None,
     session: Session = Depends(get_session),
 ) -> dict[str, object]:
+    scenario_id = _resolve_scenario_id(scenario_id, scenario)
     observation = vision_adapter.analyze(scenario_id)
     ensure_scenario_snapshot(session, observation)
     report_record = create_report(

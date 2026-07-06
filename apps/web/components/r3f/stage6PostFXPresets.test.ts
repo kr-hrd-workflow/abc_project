@@ -21,6 +21,19 @@ describe("Stage 6 PostFX presets", () => {
     });
   });
 
+  test("keeps the default medium preset renderer-safe without PostFX", () => {
+    expect(STAGE6_POSTFX_PRESETS.medium.enabled).toBe(false);
+    expect(STAGE6_POSTFX_PRESETS.medium.smaa).toBe(false);
+    expect(STAGE6_POSTFX_PRESETS.medium.ssao).toBe("off");
+    expect(getStage6PostFXChain("medium")).toEqual([]);
+    expect(buildStage6PostFXState("medium")).toEqual({
+      qualityPreset: "medium",
+      enabled: false,
+      chain: [],
+      chainLabel: "off"
+    });
+  });
+
   test("enables the bounded high quality CCTV postprocessing chain", () => {
     expect(getStage6PostFXPreset("high")).toEqual(
       expect.objectContaining({

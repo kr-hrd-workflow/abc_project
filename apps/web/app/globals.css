@@ -6241,24 +6241,6 @@ main[lang="ko"] .concept-a-hero h1 {
   border-radius: 50%;
 }
 
-.signal-preview .green-arrow {
-  width: 24px;
-  height: 14px;
-  border-radius: 0;
-  background: transparent;
-  color: #3fdb91;
-}
-
-.signal-preview .green-arrow::before {
-  content: "";
-  display: block;
-  width: 22px;
-  height: 10px;
-  border-top: 5px solid currentColor;
-  border-right: 5px solid currentColor;
-  transform: rotate(45deg);
-}
-
 .evidence-table h3 {
   margin: 0 0 8px;
   font-size: 13px;
@@ -8685,7 +8667,6 @@ body {
 }
 
 .launch-dashboard .green-light,
-.launch-dashboard .green-arrow,
 .launch-dashboard .dot.green,
 .launch-dashboard .dot.vehicle,
 .launch-dashboard .metric-good {

@@ -154,7 +154,7 @@ describe("SimulationCanvas Stage 5 telemetry", () => {
     expect(getStage6QualityPreset("ultra").maxDpr).toBeGreaterThan(
       getStage6QualityPreset("low").maxDpr
     );
-    expect(getStage6QualityPreset("unknown").name).toBe("high");
+    expect(getStage6QualityPreset("unknown").name).toBe("medium");
     expect(getStage6QualityPreset("low").reflections).toBe("fake");
   });
 
@@ -166,6 +166,12 @@ describe("SimulationCanvas Stage 5 telemetry", () => {
     expect(presentation.qualityPreset.name).toBe("low");
     expect(presentation.weather).toBe("clear");
     expect(presentation.timeOfDay).toBe("night");
+  });
+
+  test("defaults unspecified dashboard R3F quality to the medium preset", () => {
+    const presentation = getStage6PresentationMode("?r3fWeather=clear");
+
+    expect(presentation.qualityPreset.name).toBe("medium");
   });
 
   test("uses the browser location for verifier scenario mode by default", () => {

@@ -48,5 +48,4 @@
     <flow id="flow_bus_north"     type="bus"       route="north_through" begin="0" end="3600" period="30" departLane="4"/>
     <flow id="flow_bus_south"     type="bus"       route="south_through" begin="0" end="3600" period="30" departLane="4"/>
 
-    <vehicle id="emergency-east-1" type="emergency" route="east_through" depart="0" departLane="2"/>
 </routes>

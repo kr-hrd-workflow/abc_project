@@ -57,6 +57,12 @@ cp .env.example .env.local
 npm run launch:local
 ```
 
+Windows PowerShell에서 `npm` 또는 bash 환경이 잡혀 있지 않으면:
+
+```powershell
+.\scripts\launch-local.ps1
+```
+
 `npm run launch:local`은 다음을 수행합니다.
 
 1. `.env.local`이 없으면 `.env.example`에서 생성
@@ -220,13 +226,16 @@ npm run build:web
 npm run runtime:readiness
 ```
 
-2026-06-30 KST 로컬 재검증 결과:
+2026-07-06 KST 로컬 재검증 참고:
 
-- `npm run test:api`: 143 passed, 2 skipped
-- `npm run test:web`: 35 files passed, 281 tests passed
-- `npm run build:web`: passed
-- `npm run runtime:readiness`: fixture simulation ready, pgvector ready,
-  OpenAI key missing, live vision dependency/model missing
+- API 시나리오 연결 확인: `normal`, `emergency`, `pedestrian`, `blocked`
+  모두 `/api/simulation/frame`에서 `source=sumo_traci`를 반환합니다.
+- `/api/simulate-signal`은 현재 `source=sumo_traci_fixture`의 시나리오
+  비교 지표입니다. 실시간 TraCI 최적화 결과로 표현하지 않습니다.
+- `/api/runtime/readiness`: simulation과 OpenAI는 ready, vision은
+  fixture mode, pgvector는 PostgreSQL `vector` extension 미준비 상태입니다.
+- `pnpm` 환경에서 `sharp` build script 승인이 필요하면 web test 실행 전
+  `pnpm approve-builds` 정책을 확인해야 합니다.
 
 전체 검증:
 
@@ -377,7 +386,9 @@ scripts/verify-r3f-*.mjs  R3F asset, dashboard, performance, visual proof verifi
 - 이전 Unreal Engine / Pixel Streaming 경로는 `archive/unreal/original/`에 보관되어 있습니다. 해당 경로를 재개할 때만 archived docs/scripts를 먼저 복원합니다.
 
 ### 2. SUMO/TraCI live simulation 강화
-- fixture comparison에서 실제 TraCI stepping으로 전환
+- `/api/simulation/frame`은 live SUMO/TraCI 차량/보행자 frame을 사용합니다.
+- `/api/simulate-signal` fixture comparison을 실제 TraCI stepping 기반
+  plan comparison으로 전환
 - scenario별 route file과 detector output 추가
 - queue length, waiting time, emergency priority를 실제 simulation metrics로 계산
 - API response와 dashboard metric copy를 fixture/live 공통 contract로 고정

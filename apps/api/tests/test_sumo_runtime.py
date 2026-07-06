@@ -151,6 +151,26 @@ def test_frame_reads_after_authoritative_interval_advance_private_tick() -> None
     assert service.get_or_create_session("emergency").step_index == 2
 
 
+def test_runtime_prefers_sibling_scenario_config_when_present(tmp_path) -> None:
+    base_config = tmp_path / "intersection.sumocfg"
+    emergency_config = tmp_path / "emergency.sumocfg"
+    base_config.write_text("<configuration/>")
+    emergency_config.write_text("<configuration/>")
+    service = SumoRuntimeService(
+        Settings(
+            sumo_simulation_mode="sumo_traci",
+            sumo_config_path=str(base_config),
+        )
+    )
+
+    assert service._configured_config_path("emergency", "sumo_traci") == str(
+        emergency_config
+    )
+    assert service._configured_config_path("normal", "sumo_traci") == str(
+        base_config
+    )
+
+
 def test_session_ttl_eviction_creates_new_warm_session_after_idle_window() -> None:
     clock = FakeClock()
     created_clients: list[FakeSumoClient] = []

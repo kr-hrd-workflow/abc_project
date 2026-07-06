@@ -8,7 +8,10 @@
 
 import { describe, expect, it } from "vitest";
 
-import { ScenePostFX } from "./ScenePostFX";
+import {
+  ScenePostFX,
+  canUsePostProcessingComposer
+} from "./ScenePostFX";
 import { getStage6QualityPreset } from "./stage6Quality";
 
 describe("ScenePostFX", () => {
@@ -62,5 +65,16 @@ describe("ScenePostFX", () => {
     });
 
     expect(element).toBeNull();
+  });
+
+  it("skips the PostFX composer when WebGL context attributes are unavailable", () => {
+    const renderer = {
+      getContext: () => ({
+        isContextLost: () => false,
+        getContextAttributes: () => null
+      })
+    };
+
+    expect(canUsePostProcessingComposer(renderer)).toBe(false);
   });
 });

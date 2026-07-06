@@ -7,6 +7,7 @@ from app.domain.schemas import TrafficEventRead, VisionObservation
 from app.domain.simulation_snapshot import (
     SimulationDensitySegment,
     SimulationFrameSnapshot,
+    SimulationPedestrianSnapshot,
     SimulationSignalSnapshot,
     SimulationVehicleSnapshot,
 )
@@ -57,7 +58,7 @@ def build_fixture_simulation_frame(
         captured_at=observation.captured_at,
         bounds_meters=SNAPSHOT_BOUNDS_METERS,
         vehicles=_vehicles_for_scenario(scenario_id),
-        pedestrians=[],
+        pedestrians=_pedestrians_for_scenario(scenario_id),
         density_segments=_density_segments(observation),
         signals=_signals_for_scenario(scenario_id),
         queues=observation.queues,
@@ -196,3 +197,22 @@ def _vehicles_for_scenario(scenario_id: str) -> list[SimulationVehicleSnapshot]:
             ),
         ]
     return []
+
+
+def _pedestrians_for_scenario(
+    scenario_id: str,
+) -> list[SimulationPedestrianSnapshot]:
+    if scenario_id != "pedestrian":
+        return []
+
+    return [
+        SimulationPedestrianSnapshot(
+            id="pedestrian-north-crosswalk-1",
+            x_meters=-8.0,
+            y_meters=-4.0,
+            heading_degrees=90.0,
+            speed_mps=0.4,
+            lane_id="north-crosswalk-lane",
+            waiting_seconds=34.0,
+        )
+    ]
