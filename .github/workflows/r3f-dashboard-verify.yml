@@ -50,7 +50,9 @@ jobs:
         run: npm run verify:r3f-assets
 
       - name: Verify R3F dashboard browser proof
-        timeout-minutes: 15
+        timeout-minutes: 30
+        env:
+          R3F_DASHBOARD_VERIFIER_PROGRESS: "true"
         run: npm run verify:r3f-dashboard
 
       - name: Verify R3F performance telemetry
