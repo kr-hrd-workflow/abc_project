@@ -64,6 +64,7 @@ models/
 
 # Local analysis scratch space
 tmp/
+/scratchpad/
 .superpowers/
 output/
 

@@ -4,7 +4,8 @@
 
 ## 현재 상태
 
-최신 `main` 기준으로 아래 범위가 구현되어 있습니다.
+2026-07-12 기준 현재 MVP 개발 범위는 완료되었습니다. 최신 `main`은 아래
+기능과 검증 경계를 포함합니다.
 
 - `Next.js 16 preview + React 19 + TypeScript` 기반 웹 랜딩 페이지와 운영자 대시보드
 - `FastAPI + SQLAlchemy + Alembic` 기반 API
@@ -29,6 +30,8 @@
 - PostgreSQL `vector` extension, `knowledge_chunks.embedding` migration, pgvector 검색 경로
 - `/api/runtime/readiness`와 CLI readiness checks
 - Guarded OpenAI smoke CLI: `npm run openai:smoke`
+- synthetic replay/evaluation, policy scorecard, evidence export
+- future source adapter를 replay/evaluation에 연결하는 안정 경계 `live-input.v1`
 - 통합 검증 스크립트와 GitHub Actions workflow: `npm run verify`, `.github/workflows/r3f-dashboard-verify.yml`
 
 ## 안전 경계
@@ -38,6 +41,8 @@
 - 실제 신호 제어기와 직접 연결하지 않습니다.
 - 추천은 “운영자 참고용”이며 자동 제어 명령이 아닙니다.
 - R3F/WebGL/Unity/stream viewport는 digital twin/시연 화면입니다. live CCTV라고 표현하면 안 됩니다.
+- 실제 detector와 signal-controller의 동일 교차로 표본 연동은 완료되지 않았습니다.
+- future source adapter는 `live-input.v1`을 통해 기존 replay/evaluation 경로에 연결합니다.
 - OpenAI API key, token, password, connection string은 git에 커밋하지 않습니다.
 
 ## 빠른 실행
@@ -89,7 +94,8 @@ archive/unreal/original/docs/
 archive/unreal/original/artifacts/
 ```
 
-UE technote는 참고 자료로 `docs/technotes/`에 남아 있습니다.
+UE technote는 로컬 전용 `docs/technotes/` 작업 공간에 남아 있으며 shared
+remote에는 포함되지 않습니다.
 
 ## 대시보드 렌더러 방향
 
@@ -215,12 +221,13 @@ http://127.0.0.1:3000/dashboard
 
 ## 검증 명령
 
-렌더러(CCTV/3D/photoreal viewport) 결정을 보류한 상태에서 현재 로컬 MVP
-흐름만 확인할 때는 아래 세트를 사용합니다. 이 세트는 git 명령을 실행하지
-않고, R3F visual/performance gate도 제외합니다.
+브라우저 proof와 R3F visual/performance gate를 제외하고 API·웹의 기본 흐름만
+빠르게 확인할 때는 아래 세트를 사용합니다.
 
 ```bash
 npm run test:api
+npm run test:policy-contract
+npm run policy-contract:check
 npm run test:web
 npm run build:web
 npm run runtime:readiness
@@ -247,6 +254,8 @@ npm run verify
 
 ```bash
 npm run test:api
+npm run test:policy-contract
+npm run policy-contract:check
 npm run test:web
 npm run build:web
 npm run verify:r3f-assets
@@ -257,12 +266,17 @@ npm run verify:security
 git diff --check
 ```
 
-`npm run verify`는 기본 local quality gate입니다. API/web test, production build, R3F asset proof, R3F dashboard browser proof, performance telemetry proof, visual scenario proof, security gate, whitespace diff check를 순서대로 실행합니다.
+`npm run verify`는 기본 local quality gate입니다. API/web test, policy contract,
+production build, R3F asset proof, R3F dashboard browser proof, performance
+telemetry proof, visual scenario proof, security gate, whitespace diff check를
+순서대로 실행합니다.
 
 개별 검증:
 
 ```bash
 npm run test:api
+npm run test:policy-contract
+npm run policy-contract:check
 npm run test:web
 npm run build:web
 npm run verify:r3f-assets
@@ -362,8 +376,8 @@ scripts/verify-r3f-*.mjs  R3F asset, dashboard, performance, visual proof verifi
    - 랜딩 페이지 3D/digital-twin 레퍼런스와 이미지 방향
 5. [`docs/runtime-setup.md`](docs/runtime-setup.md)
    - YOLO/OpenCV, SUMO/TraCI, OpenAI, pgvector runtime setup
-6. [`docs/technotes/r3f-photoreal-dashboard-renderer.md`](docs/technotes/r3f-photoreal-dashboard-renderer.md)
-   - R3F dashboard renderer, proof artifact, telemetry, verification notes
+6. `docs/technotes/r3f-photoreal-dashboard-renderer.md` (로컬 전용)
+   - R3F dashboard renderer, proof artifact, telemetry, verification notes. Shared remote에서는 제외됩니다.
 7. `docs/superpowers/plans/2026-06-19-r3f-photoreal-finishing-wave.md`
    - Stage 6 R3F photoreal finishing wave 실행 계획과 acceptance gate
 8. `docs/superpowers/plans/2026-06-08-smart-intersection-mvp.md`
@@ -375,9 +389,10 @@ scripts/verify-r3f-*.mjs  R3F asset, dashboard, performance, visual proof verifi
 11. `docs/superpowers/plans/2026-06-11-launch-grade-unity-openai.md`
    - launch-grade Unity/OpenAI polish 계획
 
-## 남은 개발 범위
+## MVP 비범위와 후속 확장 후보
 
-우선순위 기준으로 아직 더 개발해야 할 부분은 아래와 같습니다.
+현재 MVP 완료 조건에는 아래 항목이 포함되지 않습니다. 실제 운영 확장이나
+새 표본이 확보될 때만 별도 작업으로 재개합니다.
 
 ### 1. R3F dashboard 운영 고도화
 
@@ -401,7 +416,7 @@ scripts/verify-r3f-*.mjs  R3F asset, dashboard, performance, visual proof verifi
 - Lighthouse 기준 LCP/INP/CLS 확인
 - 필요 시 hero만 preload하고 나머지 section 이미지는 lazy strategy로 전환
 
-### 4. Phase B frontend migration
+### 4. 선택적 Phase B frontend migration
 
 - `docs/superpowers/plans/2026-06-11-phase-b-vite-react-spa-migration.md` 기준으로 Vite React SPA 전환
 - 현재 Next.js page/component를 route 단위로 이동
